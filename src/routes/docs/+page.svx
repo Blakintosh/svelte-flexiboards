@@ -1,0 +1,9 @@
+<script lang="ts">
+	import FlexiBoard from '$lib/components/flexi-board.svelte';
+</script>
+
+# Installation
+
+<FlexiBoard>
+
+</FlexiBoard>
