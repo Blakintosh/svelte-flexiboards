@@ -5,20 +5,22 @@
 */
 
 import { getContext, setContext } from "svelte";
-import type { MousePosition } from "./types.js";
+import type { Position } from "./types.js";
 import type { FlexiWidget } from "./widget.svelte.js";
 
-export class MousePositionWatcher {
-    #position: MousePosition = $state({
+export class PointerPositionWatcher {
+    #position: Position = $state({
         x: 0,
         y: 0
     });
-    #ref: { ref: HTMLElement | null } = $state();
+    #ref: { ref: HTMLElement | null } = $state({
+        ref: null
+    });
 
     constructor(ref: { ref: HTMLElement | null }) {
         this.#ref = ref;
 
-        const onMouseMove = (event: MouseEvent) => {    
+        const onPointerMove = (event: PointerEvent) => {    
             if(!this.#ref.ref) {
                 return;
             }
@@ -27,12 +29,16 @@ export class MousePositionWatcher {
 
             this.#position.x = event.clientX - rect.left;
             this.#position.y = event.clientY - rect.top;
+
+            event.preventDefault();
         };
 
         $effect(() => {
-            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('pointermove', onPointerMove);
 
-            return () => window.removeEventListener('mousemove', onMouseMove);
+            return () => {
+                window.removeEventListener('pointermove', onPointerMove);
+            };
         });
     }
 

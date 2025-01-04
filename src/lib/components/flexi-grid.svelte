@@ -12,9 +12,9 @@
 <script lang="ts">
 	let { children, class: className }: FlexiGridProps = $props();
 
-	const { grid, onmousemove } = flexigrid();
+	const { grid } = flexigrid();
 </script>
 
-<div class={twMerge('grid gap-4', className)} {onmousemove} bind:this={grid.ref} style={grid.style}>
+<div class={twMerge('grid gap-4', className)} bind:this={grid.ref} style={grid?.style}>
 	{@render children?.()}
 </div>

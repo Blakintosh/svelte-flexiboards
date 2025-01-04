@@ -37,26 +37,26 @@
 			<h3>Bitmaps</h3>
 
 			<div class="bitmaps row">
-				{#each target.debug_gridBitmaps as bitmap}
+				<!-- {#each target.debug_gridBitmaps as bitmap}
 					<div class="bitmap row">
 						{#each bitmapToBitArray(bitmap, target.columns) as bit}
 							<div class="bitmap-cell {bit ? 'filled' : 'empty'}"></div>
 						{/each}
 					</div>
-				{/each}
+				{/each} -->
 			</div>
 		</div>
 		<div>
 			<h3>Stored Layout</h3>
 
 			<div class="grid-layout">
-				{#each target.debug_gridLayout as row (row)}
+				<!-- {#each target.debug_gridLayout as row (row)}
 					<div class="grid-row">
 						{#each row as cell}
 							<div class="grid-cell {cell ? 'filled' : 'empty'}"></div>
 						{/each}
 					</div>
-				{/each}
+				{/each} -->
 			</div>
 		</div>
 	</div>

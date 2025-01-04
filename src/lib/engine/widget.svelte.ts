@@ -13,9 +13,9 @@ class FlexiWidget {
         draggable: false,
         width: 1,
         height: 1,
-        snippet: null,
-        component: null,
-        className: null,
+        snippet: undefined,
+        component: undefined,
+        className: undefined,
         x: 0,
         y: 0
     });
@@ -45,28 +45,35 @@ class FlexiWidget {
         this.width = config.width ?? 1;
         this.height = config.height ?? 1;
 
-        this.snippet = snippet ?? null;
+        this.snippet = snippet;
 
         this.resizable = config.resizable ?? false;
         this.draggable = config.draggable ?? false;
 
-        this.component = config.component ?? null;
-        this.className = className ?? null;
+        this.component = config.component;
+        this.className = className;
 
         this.isShadow = isShadow;
 
         // Allows the event handlers to be called without binding to the widget instance.
-        this.onmousedown = this.onmousedown.bind(this);
+        this.onpointerdown = this.onpointerdown.bind(this);
     }
 
-    onmousedown(event: MouseEvent) {
+    onpointerdown(event: PointerEvent) {
         if(!this.draggable || !event.target) return;
 
-        const rect = (event.target as HTMLElement).getBoundingClientRect();
+        this.grabWidget(event.target as HTMLElement, event.clientX, event.clientY);
+        // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
+        (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+        event.preventDefault();
+    }
+
+    grabWidget(element: HTMLElement, clientX: number, clientY: number) {
+        const rect = element.getBoundingClientRect();
 
         // Get the offset of the cursor relative to the widget's bounds.
-        const xOffset = event.clientX - rect.left;
-        const yOffset = event.clientY - rect.top;
+        const xOffset = clientX - rect.left;
+        const yOffset = clientY - rect.top;
 
         // Propagate an event up to the parent target, indicating that the widget has been grabbed.
         this.grabbed = this.target.onwidgetgrabbed({
@@ -152,7 +159,7 @@ class FlexiWidget {
         return this.#state.component;
     }
 
-    set component(value: Component | null) {
+    set component(value: Component | undefined) {
         this.#state.component = value;
     }
 
@@ -163,7 +170,7 @@ class FlexiWidget {
         return this.#state.snippet;
     }
 
-    set snippet(value: FlexiWidgetChildrenSnippet | null) {
+    set snippet(value: FlexiWidgetChildrenSnippet | undefined) {
         this.#state.snippet = value;
     }
 
@@ -174,7 +181,7 @@ class FlexiWidget {
         return this.#state.className;
     }
 
-    set className(value: string | null) {
+    set className(value: string | undefined) {
         this.#state.className = value;
     }
 
@@ -226,17 +233,17 @@ type FlexiWidgetState = {
     /**
      * The component that is rendered by this widget. Snippet mode cannot be used in conjunction with this property.
      */
-    component: Component | null;
+    component?: Component;
 
     /**
      * The snippet that is rendered by this widget. Component mode cannot be used in conjunction with this property.
      */
-    snippet: FlexiWidgetChildrenSnippet | null;
+    snippet?: FlexiWidgetChildrenSnippet;
 
     /**
      * The class name that is applied to this widget.
      */
-    className: string | null;
+    className?: string;
 
     /**
      * The column (x-coordinate) of the widget.
@@ -300,7 +307,7 @@ function flexiwidget(config: BoardWidgetConfiguration, snippet: FlexiWidgetChild
     setContext(contextKey, widget);
     return {
         widget,
-        onmousedown: (event: MouseEvent) => widget.onmousedown(event)
+        onpointerdown: (event: PointerEvent) => widget.onpointerdown(event)
     };
 }
 

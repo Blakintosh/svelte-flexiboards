@@ -1,21 +1,11 @@
 import { getContext, setContext } from "svelte";
 import { getFlexiboardCtx, type FlexiBoard } from "./provider.svelte.js";
 import { FlexiWidget, type BoardWidgetConfiguration, type FlexiWidgetChildrenSnippet } from "./widget.svelte.js";
-import type { FlexiTargetConfiguration, FlexiTargetDefaults, GrabbedWidgetOverEvent, MouseGridCellMoveEvent, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import type { FlexiTargetConfiguration, FlexiTargetDefaults, FlexiTargetPartialConfiguration, GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
-import { FlexiGrid, type GridSnapshot } from "./grid.svelte.js";
-
-type DropzoneWidget = {
-    widget: FlexiWidget | null;
-    position: {
-        x: number;
-        y: number;
-    } | null;
-}
+import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid } from "./grid.svelte.js";
 
 class FlexiTarget {
-    onmouseenter: () => void;
-    onmouseleave: () => void;
     widgets: SvelteSet<FlexiWidget> = $state(new SvelteSet());
 
     provider: FlexiBoard;
@@ -30,35 +20,35 @@ class FlexiTarget {
         rendered: false
     });
 
-    #dropzoneWidget: DropzoneWidget = $state({
-        widget: null,
-        position: null
+    #dropzoneWidget: ProxiedValue<FlexiWidget | null> = $state({
+        value: null
     });
 
-    #targetConfig: FlexiTargetConfiguration = $state({});
+    #mouseCellPosition: Position = $state({
+        x: 0,
+        y: 0
+    });
 
-    #grid: FlexiGrid;
+    #targetConfig: FlexiTargetPartialConfiguration = $state({});
 
-    #gridSnapshot: GridSnapshot | null = null;
+    #grid: FlexiGrid | null = null;
+
+    #gridSnapshot: unknown | null = null;
 
     config: FlexiTargetConfiguration = $derived({
-        placementStrategy: this.#targetConfig.placementStrategy ?? this.#providerTargetDefaults?.placementStrategy ?? "append",
-        expansionStrategy: this.#targetConfig.expansionStrategy ?? this.#providerTargetDefaults?.expansionStrategy ?? "row",
         capacity: this.#targetConfig.capacity ?? this.#providerTargetDefaults?.capacity ?? undefined,
-        columns: this.#targetConfig.columns ?? this.#providerTargetDefaults?.columns ?? undefined,
-        rows: this.#targetConfig.rows ?? this.#providerTargetDefaults?.rows ?? undefined,
+        minColumns: this.#targetConfig.minColumns ?? this.#providerTargetDefaults?.minColumns ?? undefined,
+        minRows: this.#targetConfig.minRows ?? this.#providerTargetDefaults?.minRows ?? undefined,
         layout: this.#targetConfig.layout ?? this.#providerTargetDefaults?.layout ?? {
-            type: "sparse"
-        },
-        expandColumns: this.#targetConfig.expandColumns ?? this.#providerTargetDefaults?.expandColumns ?? false,
-        expandRows: this.#targetConfig.expandRows ?? this.#providerTargetDefaults?.expandRows ?? false
+            type: "free"
+        }
     });
 
     style: string = $derived.by(() => {
         return `grid-template-columns: repeat(${this.columns}, 1fr); grid-template-rows: repeat(${this.rows}, 1fr);`;
     });
     
-    constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration) {
+    constructor(provider: FlexiBoard, config?: FlexiTargetPartialConfiguration) {
         this.provider = provider;
         this.#providerTargetDefaults = provider.config?.targetDefaults;
         if(config) {
@@ -66,22 +56,17 @@ class FlexiTarget {
         }
 
         $inspect(this.config);
-        const { onmouseenter, onmouseleave } = provider.addTarget(this);
-
-        this.onmouseenter = onmouseenter;
-        this.onmouseleave = onmouseleave;
+        provider.addTarget(this);
 
         // Once mounted, switch from our pre-rendered widgets to the actual interactive widgets.
         $effect(() => {
             this.rendered = true;
         });
-
-        this.initDropzone();
     }
 
     tryAddWidget(widget: FlexiWidget, x?: number, y?: number): boolean {
         // TODO: Dense layouts must be able to figure out the x and y coordinates of the widget.
-        const added = this.#grid.tryPlaceWidget(widget, x, y);
+        const added = this.grid.tryPlaceWidget(widget, x, y);
         if(added) {
             this.widgets.add(widget);
         }
@@ -93,16 +78,20 @@ class FlexiTarget {
             console.warn("A grid already exists but is being replaced. If this is due to a hot reload, this is no cause for alarm.");
         }
 
-        this.#grid = new FlexiGrid(this, this.#targetConfig);
+        const layout = this.config.layout;
+        switch(layout.type) {
+            case "free":
+                this.#grid = new FreeFormFlexiGrid(this, this.config, layout);
+                break;
+            case "flow":
+                this.#grid = new FlowFlexiGrid(this, this.config, layout);
+                break;
+        }
         return this.#grid;
     }
 
     createWidget(config: BoardWidgetConfiguration, snippet: FlexiWidgetChildrenSnippet | undefined, className: string | undefined) {
         const [x, y] = [config.x, config.y];
-
-        if(this.config.layout!.type == "sparse" && (x === undefined || y === undefined)) {
-            throw new Error("Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.");
-        }
         const widget = new FlexiWidget(this, config, snippet, className);
         
         if(!this.tryAddWidget(widget, x, y)) {
@@ -125,111 +114,121 @@ class FlexiTarget {
         return shadow;
     }
 
-    initDropzone() {
-        // This effect monitors whether the target is currently hovered, and if a widget is currently being grabbed
-        // it will create a dropzone widget to indicate where the widget will be dropped.
+    // Events
+    onpointerenter() {
+        this.hovered = true;
 
-        $effect(() => {
-            // Show a shadow of the grabbed widget that's currently hovering over this target.
-            if(this.hovered && this.widgetOver && !this.#dropzoneWidget.widget && this.#dropzoneWidget.position) {
-                this.#dropzoneWidget.widget = this.#createShadow(this.widgetOver);
-
-                this.#grid.tryPlaceWidget(this.#dropzoneWidget.widget, this.#dropzoneWidget.position!.x, this.#dropzoneWidget.position!.y);
-                return;
-            }
-
-            // There was a grabbed widget hovering over this target, but it's not anymore.
-            if(!this.widgetOver && this.#dropzoneWidget.widget) {
-                this.widgets.delete(this.#dropzoneWidget.widget);
-                this.#grid.removeWidget(this.#dropzoneWidget.widget);
-
-                this.#grid.restoreFromSnapshot(this.#gridSnapshot!);
-                this.#gridSnapshot = null;
-
-                this.#dropzoneWidget.widget = null;
-                // this.#dropzoneWidget.position = null;
-            }
+        this.provider.onpointerentertarget({
+            target: this
         });
     }
 
-    // Events
+    onpointerleave() {
+        this.hovered = false;
+        console.log("pointer is leaving")
+
+        this.provider.onpointerleavetarget({
+            target: this
+        });
+    }
+
     onwidgetgrabbed(event: WidgetGrabbedEvent) {
-        this.widgetOver = event.widget;
-
-        console.log("widget grabbed at ", this.widgetOver.x, this.widgetOver.y);
-
-        // Set this now before the widget is removed from the grid, otherwise we'll no longer have this information.
-        this.#dropzoneWidget.position = {
-            x: this.widgetOver.x,
-            y: this.widgetOver.y
-        };
-
-        // Remove the widget from the grid.
-        this.#grid.removeWidget(event.widget);
-
-        this.#gridSnapshot = this.#grid.takeSnapshot();
+        // Remove the widget from the grid as it's now in a floating state.
+        this.grid.removeWidget(event.widget);
 
         return this.provider.onwidgetgrabbed(event);
     }
 
     onwidgetdropped(event: WidgetDroppedEvent) {
+        console.log("widget dropped", event.widget);
         this.widgetOver = null;
+        this.#removeDropzoneWidget();
 
-        this.#grid.removeWidget(this.#dropzoneWidget.widget!);
-        this.widgets.delete(this.#dropzoneWidget.widget!);
-        this.#dropzoneWidget.widget = null;
-        this.#dropzoneWidget.position = null;
+        // Try to formally place the widget in the grid, which will also serve as a final check that
+        // the drop is possible.
+        const grid = this.grid;
 
-        this.#grid.restoreFromSnapshot(this.#gridSnapshot!);
+        const position = grid.mouseCellPosition;
+        const canPlace = grid.tryPlaceWidget(event.widget, position.x, position.y);
 
-
-        const position = this.#grid.mouseCellPosition;
-        const canPlace = this.#grid.tryPlaceWidget(event.widget, position.x, position.y);
+        // Don't go ahead with the drop, the placement is not possible.
         if(!canPlace) {
             event.preventDefault();
-            console.log("Restoring grid snapshot");
-            this.#grid.restoreFromSnapshot(this.#gridSnapshot!);
         }
     }
 
     onmousegridcellmove(event: MouseGridCellMoveEvent) {
-        console.log("mouse grid cell move at ", event.cellX, event.cellY);
-
-        // console.log("Does the widget exist?", !!this.#dropzoneWidget.widget);
-        // console.log("Does the position exist?", !!this.#dropzoneWidget.position);
-
-        if(this.widgetOver && !this.#dropzoneWidget.widget) {
-            this.#gridSnapshot = this.#grid.takeSnapshot();
-            this.#dropzoneWidget.widget = this.#createShadow(this.widgetOver);
-        }
-
-        if(this.#dropzoneWidget.widget && this.#dropzoneWidget.position) {
-            if(event.cellX === this.#dropzoneWidget.position.x && event.cellY === this.#dropzoneWidget.position.y) {
-                return;
-            }
-
-            console.log("widget is at ", event.cellX, event.cellY);
-
-            this.#dropzoneWidget.position = {
-                x: event.cellX,
-                y: event.cellY
-            };
-
-
-            this.#grid.removeWidget(this.#dropzoneWidget.widget);
-            this.#grid.restoreFromSnapshot(this.#gridSnapshot!);
-
-            this.#grid.tryPlaceWidget(this.#dropzoneWidget.widget, this.#dropzoneWidget.position.x, this.#dropzoneWidget.position.y);
-        }
+        // TODO: it would be helpful if we could establish when the position has not changed AND the dropzone widget is there, in which case we wouldn't
+        // need to update it in the grid (which is expensive).
+        this.#updateMouseCellPosition(event.cellX, event.cellY);
+        this.#updateDropzoneWidget();
     }
 
-    ongrabbedwidgetover(event: GrabbedWidgetOverEvent) {
-        // TODO: This doesn't always fire. We want to obsolete the effect that monitors .widgetOver, as it's a bit hacky.
-        // Generally, the app should follow the general principle of events change state, not state changes state.
-
-        // TODO: Additionally, move the onmouseover/onmouseleave events into this file, as it doesn't make sense that the provider creates them.
-        console.log("grabbed widget over !");
+    ongrabbedwidgetover(event: GrabbedWidgetMouseEvent) {
         this.widgetOver = event.widget;
+
+        this.#createDropzoneWidget();
+    }
+
+    ongrabbedwidgetleave() {
+        console.log("grabbed widget leave", this.widgetOver);
+        this.widgetOver = null;
+        this.#removeDropzoneWidget();
+    }
+
+    #updateMouseCellPosition(x: number, y: number) {
+        this.#mouseCellPosition.x = x;
+        this.#mouseCellPosition.y = y;
+    }
+
+    #createDropzoneWidget() {
+        if(this.dropzoneWidget || !this.widgetOver) {
+            return;
+        }
+        const grid = this.grid;
+
+        // Take a snapshot of the grid so we can restore its state if the hover stops.
+        this.#gridSnapshot = grid.takeSnapshot();
+
+        console.log("create dropzone widget", this.widgetOver);
+        this.dropzoneWidget = this.#createShadow(this.widgetOver);
+
+        console.log("DROPonz widget will be placed at", this.#mouseCellPosition.x, this.#mouseCellPosition.y);
+        console.log("dropzone widget", this.dropzoneWidget);
+
+        grid.tryPlaceWidget(this.dropzoneWidget, this.#mouseCellPosition.x, this.#mouseCellPosition.y);
+    }
+
+    #updateDropzoneWidget() {
+
+        if(!this.dropzoneWidget || (this.dropzoneWidget.x === this.#mouseCellPosition.x && this.dropzoneWidget.y === this.#mouseCellPosition.y)) {
+            return;
+        }
+
+        // The dropzone position has changed, so we need to reposition it in the grid.
+        const grid = this.grid;
+
+        grid.removeWidget(this.dropzoneWidget);
+        grid.restoreFromSnapshot(this.#gridSnapshot!);
+
+        grid.tryPlaceWidget(this.dropzoneWidget, this.#mouseCellPosition.x, this.#mouseCellPosition.y);
+    }
+
+    #removeDropzoneWidget() {
+        console.log("remove dropzone widget", this.dropzoneWidget);
+        if(!this.dropzoneWidget) {
+            return;
+        }
+
+        const grid = this.grid;
+
+        grid.removeWidget(this.dropzoneWidget);
+        this.widgets.delete(this.dropzoneWidget);
+
+        grid.restoreFromSnapshot(this.#gridSnapshot!);
+        this.#gridSnapshot = null;
+
+        this.dropzoneWidget = null;
     }
 
     // State-related getters and setters
@@ -283,20 +282,28 @@ class FlexiTarget {
         return this.#grid?.rows;
     }
 
-    get gridRef() {
-        return this.#grid.ref;
+    // get debug_gridLayout() {
+    //     return this.grid.layout;
+    // }
+
+    // get debug_gridBitmaps() {
+    //     return this.grid.bitmaps;
+    // }
+
+    get grid() {
+        const grid = this.#grid;
+        if(!grid) {
+            throw new Error("Grid is not initialised. Ensure that a FlexiGrid has been created before accessing it.");
+        }
+        return grid;
     }
 
-    set gridRef(value: HTMLElement | null) {
-        this.#grid.ref = value;
+    get dropzoneWidget() {
+        return this.#dropzoneWidget.value;
     }
 
-    get debug_gridLayout() {
-        return this.#grid.layout;
-    }
-
-    get debug_gridBitmaps() {
-        return this.#grid.bitmaps;
+    set dropzoneWidget(value: FlexiWidget | null) {
+        this.#dropzoneWidget.value = value;
     }
 }
 
@@ -330,8 +337,8 @@ function flexitarget(config?: FlexiTargetConfiguration) {
     setContext(contextKey, target);
 
     return {
-        onmouseenter: () => target.onmouseenter(),
-        onmouseleave: () => target.onmouseleave(),
+        onpointerenter: () => target.onpointerenter(),
+        onpointerleave: () => target.onpointerleave(),
         onwidgetgrabbed: (event: WidgetGrabbedEvent) => target.onwidgetgrabbed(event),
         target
     };

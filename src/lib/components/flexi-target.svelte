@@ -1,10 +1,11 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
+	import { flexitarget, type FlexiTarget } from '$lib/engine/target.svelte.js';
 	import { twMerge } from 'tailwind-merge';
 	import type { FlexiTargetConfiguration } from '$lib/engine/types.js';
 
 	export type FlexiTargetProps = {
-		header?: Snippet;
+		header?: Snippet<[{ target: FlexiTarget }]>;
 		children?: Snippet;
 		footer?: Snippet;
 		containerClass?: string;
@@ -16,7 +17,6 @@
 </script>
 
 <script lang="ts">
-	import { flexitarget } from '$lib/engine/target.svelte.js';
 	import FlexiWidget from './flexi-widget.svelte';
 	import FlexiWidgetWrapper from './flexi-widget-wrapper.svelte';
 	import FlexiDebug from './flexi-debug.svelte';
@@ -32,7 +32,7 @@
 		containerClass
 	}: FlexiTargetProps = $props();
 
-	const { onmouseenter, onmouseleave, target } = flexitarget(config);
+	const { onpointerenter, onpointerleave, target } = flexitarget(config);
 
 	let rendered = $derived(false);
 </script>
@@ -40,12 +40,12 @@
 <div>
 	<div
 		class={twMerge(containerClass, target.hovered && 'border-green-500')}
-		{onmouseenter}
-		{onmouseleave}
+		{onpointerenter}
+		{onpointerleave}
 		role="grid"
 		tabindex={0}
 	>
-		{@render header?.()}
+		{@render header?.({ target })}
 
 		<!-- Allow user to specify components directly, then mount them to the actual target list dynamically -->
 		<!-- TODO: We still need to handle the SSR case where we've received widgets up front. -->

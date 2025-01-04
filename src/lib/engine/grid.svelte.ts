@@ -1,5 +1,5 @@
 import type { FlexiWidget } from "./widget.svelte.js";
-import type { FlexiTargetConfiguration, WidgetDroppedEvent } from "./types.js";
+import type { FlowTargetLayout as FlowTargetLayout, FlexiTargetConfiguration, FreeFormTargetLayout as FreeFormTargetLayout } from "./types.js";
 import { setContext } from "svelte";
 import { getContext } from "svelte";
 import type { FlexiTarget } from "./target.svelte.js";
@@ -16,7 +16,7 @@ type FlexiGridLayout = (FlexiWidget | null)[][];
 //     next?: GridEntry;
 // }
 
-type MoveOperation = {
+export type MoveOperation = {
     widget: FlexiWidget;
     newX: number;
     newY: number;
@@ -24,12 +24,18 @@ type MoveOperation = {
     oldY: number;
 }
 
-type GridSnapshot = {
+type FreeFormGridSnapshot = {
     layout: FlexiGridLayout;
     bitmaps: number[];
     rows: number;
     columns: number;
     widgets: WidgetSnapshot[];
+}
+
+type FlowGridSnapshot = {
+    widgets: WidgetSnapshot[];
+    rows: number;
+    columns: number;
 }
 
 type WidgetSnapshot = {
@@ -42,78 +48,124 @@ type WidgetSnapshot = {
 
 const MAX_COLUMNS = 32;
 
-export class FlexiGrid {
-    #widgets: Set<FlexiWidget> = new Set();
-    
-	#ref: { ref: HTMLElement | null } = $state({ ref: null});
+export abstract class FlexiGrid {
+    abstract tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean;
+    abstract removeWidget(widget: FlexiWidget): boolean;
+    abstract takeSnapshot(): unknown;
+    abstract restoreFromSnapshot(snapshot: unknown): void;
 
-    #state: FlexiGridState = $state({
-        rows: 0,
-        columns: 0,
-        layout: [],
-        bitmaps: []
-    });
+    _target: FlexiTarget;
+    _targetConfig: FlexiTargetConfiguration;
 
-    // TODO: Will never update to reflect state changes, nor will it propagate defaults from the provider.
-    #targetConfig: FlexiTargetConfiguration;
-
-    #target: FlexiTarget;
-
-    #position: { x: number, y: number } = $state({
+    mouseCellPosition: { x: number, y: number } = $state({
         x: 0,
         y: 0
     });
 
+
+	#ref: { ref: HTMLElement | null } = $state({ ref: null });
+
     constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration) {
-        this.#target = target;
-        this.#targetConfig = targetConfig;
+        this._target = target;
+        this._targetConfig = targetConfig;
 
-        this.#rows = targetConfig.rows ?? 1;
-        this.#columns = targetConfig.columns ?? 1;
-        
-        this.#bitmaps = new Array(this.#rows).fill(0);
+        this.onpointermove = this.onpointermove.bind(this);
 
-        this.onmousemove = this.onmousemove.bind(this);
+        $effect(() => {
+            window.addEventListener('pointermove', this.onpointermove);
 
-        this.#layout = new Array(this.#rows).fill(new Array(this.#columns).fill(null));
+            return () => {
+                window.removeEventListener('pointermove', this.onpointermove);
+            };
+        });
     }
 
     style: string = $derived.by(() => {
         return `grid-template-columns: repeat(${this.columns}, minmax(0, 1fr)); grid-template-rows: repeat(${this.rows}, minmax(0, 1fr));`;
     });
 
-    onmousemove(event: MouseEvent) {
-        if (!this.#ref.ref) return;
-        
-        const rect = this.#ref.ref.getBoundingClientRect();
-        
+    #updatePointerPosition(clientX: number, clientY: number) {
+        if (!this.ref) {
+            return;
+        }
+
+        const rect = this.ref.getBoundingClientRect();
+
         // Get position relative to grid element
-        const relativeX = event.clientX - rect.left;
-        const relativeY = event.clientY - rect.top;
+        const relativeX = clientX - rect.left;
+        const relativeY = clientY - rect.top;
 
         // Calculate size of each grid cell
-        const unitX = rect.width / this.#columns;
-        const unitY = rect.height / this.#rows;
+        const unitX = rect.width / this.columns;
+        const unitY = rect.height / this.rows;
 
         // Convert to grid cell indices
-        const cellX = Math.min(Math.max(0, Math.floor(relativeX / unitX)), this.#columns - 1);
-        const cellY = Math.min(Math.max(0, Math.floor(relativeY / unitY)), this.#rows - 1);
+        const cellX = Math.min(Math.max(0, Math.floor(relativeX / unitX)), this.columns - 1);
+        const cellY = Math.min(Math.max(0, Math.floor(relativeY / unitY)), this.rows - 1);
 
-        const changed = cellX !== this.#position.x || cellY !== this.#position.y;
+        this.mouseCellPosition.x = cellX;
+        this.mouseCellPosition.y = cellY;
 
-        this.#position.x = cellX;
-        this.#position.y = cellY;
-
-        if(changed) {
-            this.#target.onmousegridcellmove({
-                cellX,
-                cellY
-            });
-        }
+        this._target.onmousegridcellmove({
+            cellX,
+            cellY
+        });
     }
 
-    tryPlaceWidget(widget: FlexiWidget, cellX: number, cellY: number): boolean {
-        // When placing a widget, we should constrain it so that it can only make so many more columns/rows more than the current grid.
+    onpointermove(event: PointerEvent) {
+        this.#updatePointerPosition(event.clientX, event.clientY);
+    }
+
+    // Getters
+    abstract get rows(): number;
+    abstract get columns(): number;
+
+    get ref() {
+        return this.#ref.ref;
+    }
+    set ref(ref: HTMLElement | null) {
+        this.#ref.ref = ref;
+    }
+}
+
+/**
+ * Free-form Flexigrid Layout
+ * 
+ * A grid layout where widgets are explicitly placed in particular cells, and the grid allows for gaps between widgets.
+ * A free grid can grow and shrink if required when enabled.
+ */
+export class FreeFormFlexiGrid extends FlexiGrid {
+    #widgets: Set<FlexiWidget> = new Set();
+
+    #state: FlexiFreeFormGridState = $state({
+        rows: 0,
+        columns: 0,
+        layout: [],
+        bitmaps: []
+    });
+
+    #layoutConfig: FreeFormTargetLayout;
+
+    constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration, layoutConfig: FreeFormTargetLayout) {
+        super(target, targetConfig);
+
+        this.#layoutConfig = layoutConfig;
+
+        this.#rows = targetConfig.minRows ?? 1;
+        this.#columns = targetConfig.minColumns ?? 1;
+
+        this.#bitmaps = new Array(this.#rows).fill(0);
+
+        this.#layout = new Array(this.#rows).fill(new Array(this.#columns).fill(null));
+    }
+
+    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean {
+        // Need both coordinates to place a widget.
+        if(cellX === undefined || cellY === undefined) {
+            throw new Error("Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.");
+        }
+
+        // When placing a widget, we should constrain it so that it can only make so many more columns/rows more than the current grid size.
         if(cellX >= this.#columns) {
             cellX = this.#columns - 1;
         }
@@ -165,14 +217,11 @@ export class FlexiGrid {
                 if(!collidingWidget) {
                     continue;
                 }
-                console.log("colliding widget at ", i, j);
                 const moveBy = (cellX + widget.width) - collidingWidget.x;
-                console.log("will ask to move by: ", moveBy);
 
-                if(!this.prepareMoveWidgetX(collidingWidget, moveBy, operations)) {
+                if(!this.#prepareMoveWidgetX(collidingWidget, moveBy, operations)) {
                     // TODO: If moving along the x-axis is not possible, we then want to try via the y-axis.
                     // If that's not possible either, then the overall operation is not possible.
-                    console.log("move not possible")
                     return false;
                 }
                 // Don't need to do this again for this row.
@@ -180,13 +229,14 @@ export class FlexiGrid {
             }
         }
 
+        // No collisions, or we can resolve them.
+
         // Apply all other necessary move operations.
         for(const operation of operations.values()) {
-            console.log("move to ", operation.newX, operation.newY);
             this.#doMoveOperation(operation.widget, operation);
         }
 
-        // No collisions, or we resolved them. Place the widget.
+        // Place the widget now that all other widgets have been moved out of the way.
         for(let i = cellX; i < cellX + widget.width; i++) {
             for(let j = cellY; j < cellY + widget.height; j++) {
                 this.#layout[j][i] = widget;
@@ -205,7 +255,7 @@ export class FlexiGrid {
         return true;
     }
 
-    prepareMoveWidgetX(widget: FlexiWidget, delta: number, operationMap: Map<FlexiWidget, MoveOperation>): boolean {
+    #prepareMoveWidgetX(widget: FlexiWidget, delta: number, operationMap: Map<FlexiWidget, MoveOperation>): boolean {
         // If the widget is not draggable then we definitely can't push it.
         if(!widget.draggable) {
             return false;
@@ -248,10 +298,7 @@ export class FlexiGrid {
 
                 // TODO: Heuristic to immediately cancel move if delta - gapSize > available space.
 
-                console.log("Recursing to move widget ", " by ", delta - gapSize);
-                console.log("Is widget self? ", cell === widget);
-                // TODO: Why is it colliding with itself? It shouldn't be in the grid at this point.
-                if(!this.prepareMoveWidgetX(cell, delta - gapSize, operationMap)) {
+                if(!this.#prepareMoveWidgetX(cell, delta - gapSize, operationMap)) {
                     return false;
                 }
                 // We can move the colliding widget, we don't need to check this row any further as the move
@@ -301,7 +348,7 @@ export class FlexiGrid {
         return true;
     }
 
-    takeSnapshot(): GridSnapshot {
+    takeSnapshot(): FreeFormGridSnapshot {
         // Deep copy the layout array, storing only the widget IDs
         const layoutCopy = this.#layout.map(row => 
             row.map(cell => cell)
@@ -322,7 +369,7 @@ export class FlexiGrid {
         };
     }
 
-    restoreFromSnapshot(snapshot: GridSnapshot) {
+    restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
         this.#layout = snapshot.layout;
         this.#bitmaps = snapshot.bitmaps;
         this.#rows = snapshot.rows;
@@ -346,18 +393,12 @@ export class FlexiGrid {
                     this.#layout[i][j] = null;
 
                     removedBitmaps[i - operation.oldY] |= (1 << j);
-
-                    console.log("row bitmap at ", i, " is ", this.#bitmaps[i].toString(2).padStart(32, '0'));
-                    console.log("removed row bitmap at ", i, " is ", removedBitmaps[i - operation.oldY].toString(2).padStart(32, '0'));
                 }
             }
         }
 
         // Update the bitmaps to reflect the widget's removal, again, only where this widget was removed.
         for(let i = operation.oldY; i < operation.oldY + widget!.height; i++) {
-            console.log("removing row bitmap at ", i);
-            console.log("bitmap: ", this.#bitmaps[i]);
-            console.log("removed: ", removedBitmaps[i - operation.oldY]);
             this.#bitmaps[i] &= ~removedBitmaps[i - operation.oldY];
         }
 
@@ -402,22 +443,17 @@ export class FlexiGrid {
     }
 
     #tryExpandColumns(count: number) {
-        console.log("try expand columns? to ", count);
-        if(!this.#targetConfig.expandColumns || count > MAX_COLUMNS) {
-            console.log("not allowed")
+        if(!this.#layoutConfig.expandColumns || count > MAX_COLUMNS) {
             return false;
         }
 
         this.#columns = count;
-        console.log("columns is now ", this.#columns);
         this.#layout.forEach(row => row.push(...new Array(count - this.#columns).fill(null)));
         return true;
     }
 
     #tryExpandRows(count: number) {
-        console.log("try expand rows? to ", count);
-        if(!this.#targetConfig.expandRows) {
-            console.log("not allowed")
+        if(!this.#layoutConfig.expandRows) {
             return false;
         }
 
@@ -428,7 +464,7 @@ export class FlexiGrid {
     }
 
     #removeTrailingEmptyRows() {
-        const minRows = this.#targetConfig.rows ?? 1;
+        const minRows = this._targetConfig.minRows ?? 1;
 
         for(let i = this.#rows - 1; i >= minRows; i--) {
             if(this.#bitmaps[i]) {
@@ -442,7 +478,7 @@ export class FlexiGrid {
     }
 
     #removeTrailingEmptyColumns() {
-        const minColumns = this.#targetConfig.columns ?? 1;
+        const minColumns = this._targetConfig.minColumns ?? 1;
 
         for(let i = this.#columns - 1; i >= minColumns; i--) {
             // If the ith bit is set on this column in any row, then it can't be removed.
@@ -513,21 +549,358 @@ export class FlexiGrid {
     set #columns(value: number) {
         this.#state.columns = value;
     }
+}
 
-	set ref(ref: HTMLElement | null) {
-		this.#ref.ref = ref;
-	}
+/**
+ * Flow-based FlexiGrid Layout
+ * 
+ * A grid layout where widgets are placed using a flow strategy. The flow axis determines which axis the widgets are placed along,
+ * and the cross axis can be configured to expand when the flow axis is full.
+ */
+export class FlowFlexiGrid extends FlexiGrid {
+    #layoutConfig: FlowTargetLayout;
+    #maxFlowAxis: number;
+    #flowAxis: "row" | "column";
+    #isRowFlow: boolean;
 
-    get mouseCellPosition() {
-        return this.#position;
+    #state: FlexiFlowGridState = $state({
+        rows: 0,
+        columns: 0,
+        widgets: []
+    });
+
+    constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration, layoutConfig: FlowTargetLayout) {
+        super(target, targetConfig);
+
+        this.#layoutConfig = layoutConfig;
+        // TODO: not reactive - don't see why it should be
+        this.#maxFlowAxis = layoutConfig.maxFlowAxis ?? Infinity;
+        this.#flowAxis = layoutConfig.flowAxis ?? "row";
+        this.#isRowFlow = this.#flowAxis === "row";
+        this.#rows = this._targetConfig.minRows ?? 1;
+        this.#columns = this._targetConfig.minColumns ?? 1;
+    }
+
+    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean {
+        const isRowFlow = this.#isRowFlow;
+
+        // If the coordinate for the non-extending axis is greater than the axis's length, then this operation fails.
+        if(isRowFlow && cellX !== undefined && cellX > this.columns) {
+            return false;
+        } else if(!isRowFlow && cellY !== undefined && cellY > this.rows) {
+            return false;
+        }
+
+        let cellPosition: number | null = null;
+        
+        if(cellX !== undefined && cellY !== undefined && !this.#layoutConfig.disallowInsert) {
+            cellPosition = this.#convert2DPositionTo1D(cellX, cellY);
+        }
+        // If it's null then coordinate is missing, or we can't allow insertion. Replace coordinates based on the placement strategy.
+        cellPosition ??= this.#resolveNextPlacementPosition();
+
+        // If the width/height of the widget is greater than the flow axis' length, then constrain it to the flow axis' length.
+        if(isRowFlow && widget.width > this.columns) {
+            widget.width = this.columns;
+        } else if(!isRowFlow && widget.height > this.rows) {
+            widget.height = this.rows;
+        }
+
+        // Find the nearest widget to the proposed position, and determine the precise location based on it. 
+        const [index, nearestWidget] = this.#findNearestWidget(cellPosition, 0, this.#widgets.length - 1);
+
+        // Easy - no widgets to search and none to shift. Just add ours at the start.
+        if(!nearestWidget) {
+            this.#widgets.push(widget);
+            widget.setBounds(0, 0, widget.width, widget.height);
+            return true;
+        }
+
+        const nearestWidgetPosition = this.#convert2DPositionTo1D(nearestWidget.x, nearestWidget.y);
+
+        const operations: MoveOperation[] = [];
+
+        // If the found widget is to the left of the proposed position, then our widget will immediately succeed it.
+        if(nearestWidgetPosition < cellPosition) {
+            const cellPosition = nearestWidgetPosition + this.#getNonFlowLength(nearestWidget);
+
+            // Prepare to shift the remaining widgets to the right.
+            if(!this.#moveAndShiftWidgets(index + 1, cellPosition, operations)) {
+                return false;
+            }
+
+            // If this widget has placed itself at the end, then we need to make sure the flow axis fits it.
+            if(index + 1 === this.#widgets.length) {
+                if(isRowFlow && Math.floor(cellPosition / this.columns) >= this.rows) {
+                    const newRows = Math.floor(cellPosition / this.columns) + 1;
+                    if(newRows > this.#maxFlowAxis) {
+                        return false;
+                    }
+
+                    this.#rows = newRows;
+                } else {
+                    const newColumns = Math.floor(cellPosition / this.rows) + 1;
+                    if(newColumns > this.#maxFlowAxis) {
+                        return false;
+                    }
+
+                    this.#columns = newColumns;
+                }
+            }
+            this.#widgets.splice(index + 1, 0, widget);
+        // Otherwise, our widget will immediately precede it and shift it along.
+        } else if(nearestWidgetPosition >= cellPosition) {
+            // Prepare to shift the remaining widgets to the right.
+            if(!this.#moveAndShiftWidgets(index, nearestWidgetPosition + this.#getNonFlowLength(widget), operations)) {
+                return false;
+            }
+            this.#widgets.splice(index, 0, widget);
+        }
+
+        // Carry out the operations, as they all cleared.
+        for(const operation of operations) {
+            operation.widget.setBounds(operation.newX, operation.newY, isRowFlow ? operation.widget.width : 1, isRowFlow ? 1 : operation.widget.height);
+        }
+
+        // Finally, add the widget to the grid.
+        const [newX, newY] = this.#convert1DPositionTo2D(cellPosition);
+        widget.setBounds(newX, newY, isRowFlow ? 1 : widget.width, isRowFlow ? widget.height : 1);
+
+        return true;
+    }
+
+    #resolveNextPlacementPosition(): number {
+        if(!this.#widgets.length) {
+            return 0;
+        }
+
+        switch(this.#layoutConfig.placementStrategy) {
+            case "prepend":
+            {
+                return 0;
+            }
+            case "append":
+            {
+                // Find the last widget and place it after it.
+                const lastWidget = this.#widgets[this.#widgets.length - 1];
+
+                return this.#convert2DPositionTo1D(lastWidget.x, lastWidget.y) + this.#getNonFlowLength(lastWidget);
+            }
+        }
+    }
+
+    removeWidget(widget: FlexiWidget): boolean {
+        const widgetPosition = this.#convert2DPositionTo1D(widget.x, widget.y);
+
+        // Find the widget in the grid.
+        const [index, foundWidget] = this.#findNearestWidget(widgetPosition, 0, this.#widgets.length - 1);
+
+        if(foundWidget !== widget) {
+            return false;
+        }
+
+        // Remove the widget from the grid.
+        this.#widgets.splice(index, 1);
+
+        const operations: MoveOperation[] = [];
+
+        // Shift the remaining widgets to the left if possible.
+        if(!this.#moveAndShiftWidgets(index, widgetPosition, operations)) {
+            return false;
+        }
+
+        // Carry out the operations, as they all cleared.
+        for(const operation of operations) {
+            operation.widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
+        }
+
+        // Shrink the grid if necessary.
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, lastWidget] = this.#findNearestWidget(Infinity, 0, this.#widgets.length - 1);
+
+        if(lastWidget) {
+            if(this.#layoutConfig.flowAxis === "row" && this.rows > lastWidget.y + lastWidget.height) {
+                this.#rows = lastWidget.y + lastWidget.height;
+            } else if(this.#layoutConfig.flowAxis === "column" && this.columns > lastWidget.x + lastWidget.width) {
+                this.#columns = lastWidget.x + lastWidget.width;
+            }
+        } else {
+            this.#rows = 1;
+            this.#columns = 1;
+        }
+
+        return true;
+    }
+
+    takeSnapshot(): FlowGridSnapshot {
+        // Copy the widget positions and sizes.
+        const widgets = this.#widgets.map(widget => {
+            return {
+                widget,
+                x: widget.x,
+                y: widget.y,
+                width: widget.width,
+                height: widget.height
+            };
+        });
+
+        return {
+            widgets,
+            rows: this.#rows,
+            columns: this.#columns
+        };
+    }
+
+    restoreFromSnapshot(snapshot: FlowGridSnapshot): void {
+        // Clear the grid without replacing it outright so reactivity proxies are preserved.
+        this.#widgets.length = 0;
+
+        for(const widget of snapshot.widgets) {
+            widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
+            this.#widgets.push(widget.widget);
+        }
+
+        this.#rows = snapshot.rows;
+        this.#columns = snapshot.columns;
+    }
+
+    #findNearestWidget(position: number, searchStart: number, searchEnd: number): [number, FlexiWidget | null] {
+        if(this.#widgets.length === 0) {
+            return [0, null];
+        }
+    
+        if(searchStart === searchEnd) {
+            return [searchStart, this.#widgets[searchStart]];
+        }
+    
+        const median = Math.floor((searchStart + searchEnd) / 2);
+        const widget = this.#widgets[median];
+    
+        const widgetValue = this.#convert2DPositionTo1D(widget.x, widget.y);
+    
+        if(widgetValue === position) {
+            return [median, widget];
+        } else if(widgetValue < position) {
+            return this.#findNearestWidget(position, median + 1, searchEnd);
+        } else {
+            return this.#findNearestWidget(position, searchStart, median);
+        }
+    }
+
+    #moveAndShiftWidgets(startIndex: number, basePosition: number, operations: MoveOperation[]): boolean {
+        if(startIndex >= this.#widgets.length) {
+            return true;
+        }
+
+        let lastPosition = basePosition;
+
+        for(let i = startIndex; i < this.#widgets.length; i++) {
+            const widget = this.#widgets[i];
+
+            const [newX, newY] = this.#convert1DPositionTo2D(lastPosition);
+
+            if(newY >= this.rows && !this.#tryExpandRows(newY + 1)) {
+                return false;
+            }
+
+            operations.push({
+                widget,
+                oldX: widget.x,
+                oldY: widget.y,
+                newX,
+                newY
+            });
+
+            lastPosition = lastPosition + this.#getNonFlowLength(widget);
+        }
+
+        return true;
+    }
+
+    #convert2DPositionTo1D(x: number, y: number): number {
+        if(this.#isRowFlow) {
+            return y * this.columns + x;
+        }
+
+        return x * this.rows + y;
+    }
+
+    #convert1DPositionTo2D(index: number): [number, number] {
+        if(this.#isRowFlow) {
+            return [index % this.columns, Math.floor(index / this.columns)];
+        }
+
+        return [Math.floor(index / this.rows), index % this.rows];
+    }
+
+    #getNonFlowLength(widget: FlexiWidget): number {
+        if(this.#isRowFlow) {
+            return widget.width;
+        }
+
+        return widget.height;
+    }
+
+    #tryExpandColumns(newCount: number): boolean {
+        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis) {
+            return false;
+        }
+
+        this.#columns = newCount;
+        return true;
+    }
+
+    #tryExpandRows(newCount: number): boolean {
+        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis) {
+            return false;
+        }
+
+        this.#rows = newCount;
+        return true;
+    }
+
+    get rows(): number {
+        return this.#state.rows;
+    }
+    get columns(): number {
+        return this.#state.columns;
+    }
+
+    get #rows(): number {
+        return this.#state.rows;
+    }
+    set #rows(value: number) {
+        this.#state.rows = value;
+    }
+    get #columns(): number {
+        return this.#state.columns;
+    }
+    set #columns(value: number) {
+        this.#state.columns = value;
+    }
+
+    get widgets(): FlexiWidget[] {
+        return this.#state.widgets;
+    }
+    get #widgets(): FlexiWidget[] {
+        return this.#state.widgets;
+    }
+    set #widgets(value: FlexiWidget[]) {
+        this.#state.widgets = value;
     }
 }
 
-type FlexiGridState = {
+type FlexiFreeFormGridState = {
     rows: number;
     columns: number;
     layout: FlexiGridLayout;
     bitmaps: number[];
+}
+
+type FlexiFlowGridState = {
+    rows: number;
+    columns: number;
+    widgets: FlexiWidget[];
 }
 
 const contextKey = Symbol('flexigrid');
@@ -543,8 +916,7 @@ function flexigrid() {
     setContext(contextKey, grid);
 
     return {
-        grid,
-        onmousemove: (event: MouseEvent) => grid.onmousemove(event)
+        grid
     };
 }
 
@@ -553,7 +925,7 @@ function getFlexigridCtx() {
 }
 
 export {
-    type GridSnapshot,
+    type FreeFormGridSnapshot as GridSnapshot,
     type WidgetSnapshot,
     flexigrid,
     getFlexigridCtx

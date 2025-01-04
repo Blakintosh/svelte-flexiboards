@@ -10,8 +10,12 @@
 
 <Header />
 
-<article class="grid w-full grow place-items-center overflow-y-auto">
-	<div class="max-w-[1440px]">
+<main class="grid w-full grow place-items-center overflow-y-auto">
+	<div class="max-w-[1440px] px-8">
 		{@render children()}
 	</div>
-</article>
+</main>
+
+<footer class="w-full py-4 text-center text-sm text-muted-foreground">
+	Work in progress. Expect bugs!
+</footer>

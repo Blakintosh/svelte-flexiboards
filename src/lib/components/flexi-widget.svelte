@@ -18,17 +18,12 @@
 </script>
 
 <script lang="ts">
-	let {
-		children: childrenSnippet,
-		component,
-		class: className,
-		...config
-	}: FlexiWidgetProps = $props();
+	let { children: childrenSnippet, class: className, ...config }: FlexiWidgetProps = $props();
 
-	const { onmousedown, widget } = flexiwidget(config, childrenSnippet, className);
+	const { onpointerdown, widget } = flexiwidget(config, childrenSnippet, className);
 
-	let children: Snippet<[{ widget: FlexiWidget }]> | null = childrenSnippet ?? widget.snippet;
-	let Component: Component | null = component ?? widget.component;
+	let children: Snippet<[{ widget: FlexiWidget }]> | undefined = childrenSnippet ?? widget.snippet;
+	let Component: Component | undefined = config.component ?? widget.component;
 </script>
 
 <div
@@ -39,7 +34,7 @@
 		widget.isShadow && 'opacity-50'
 	)}
 	style={widget.style}
-	{onmousedown}
+	{onpointerdown}
 	aria-grabbed={!!widget.grabbed}
 	aria-label="Flexi Widget"
 	aria-roledescription="Flexi Widget"

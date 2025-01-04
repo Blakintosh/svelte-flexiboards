@@ -1,8 +1,8 @@
 import { getContext, setContext } from "svelte";
-import type { FlexiBoardConfiguration, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import type { FlexiBoardConfiguration, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
 import type { FlexiTarget } from "./target.svelte.js";
 import type { FlexiWidget } from "./widget.svelte.js";
-import { MousePositionWatcher } from "./utils.svelte.js";
+import { PointerPositionWatcher } from "./utils.svelte.js";
 
 class FlexiBoard {
 	grabbed: GrabbedWidget | null = $state(null);
@@ -12,7 +12,7 @@ class FlexiBoard {
 
 	#ref: { ref: HTMLElement | null } = $state({ ref: null});
 
-	#positionWatcher: MousePositionWatcher = new MousePositionWatcher(this.#ref);
+	#positionWatcher: PointerPositionWatcher = new PointerPositionWatcher(this.#ref);
 
 	config?: FlexiBoardConfiguration = $state(undefined);
 
@@ -28,51 +28,43 @@ class FlexiBoard {
 		this.#targets = [];
 		this.config = config;
 
-		this.onMouseUp = this.onMouseUp.bind(this);
+		this.onPointerUp = this.onPointerUp.bind(this);
 
         $effect(() => {
-            window.addEventListener('mouseup', this.onMouseUp);
+            window.addEventListener('pointerup', this.onPointerUp);
 
-            return () => window.removeEventListener('mouseup', this.onMouseUp);
+            return () => {
+				window.removeEventListener('pointerup', this.onPointerUp);
+			};
         });
 
 		// $inspect(this.#locator.position);
 	}
 
 	addTarget(target: FlexiTarget) {
-		// Get the index of the target in the array.
-		const index = this.#targets.length;
-
 		this.#targets.push(target);
+	}
 
-		return {
-			onmouseenter: () => {
-				this.#hoveredTarget = target;
+	onpointerentertarget(event: HoveredTargetEvent) {
+		this.#hoveredTarget = event.target;
 
-				if(this.grabbed) {
-					target.widgetOver = this.grabbed.widget;
-					target.ongrabbedwidgetover({
-						widget: this.grabbed.widget
-					});
-				}
-				
-				// Inform the target that it is hovered.
-				target.hovered = true;
-			},
-			onmouseleave: () => {
-				// Failsafe in case another target is already registered as hovered.
-				if(this.#hoveredTarget === this.#targets[index]) {
-					this.#hoveredTarget = null;
-				}
+		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
+		if(this.grabbed) {
+			event.target.ongrabbedwidgetover({
+				widget: this.grabbed.widget
+			});
+		}
+	}
 
-				if(target.widgetOver) {
-					target.widgetOver = null;
-				}
+	onpointerleavetarget(event: HoveredTargetEvent) {
+		// Failsafe in case another target is already registered as hovered.
+		if(this.#hoveredTarget === event.target) {
+			this.#hoveredTarget = null;
+		}
 
-				// Inform the target that it is no longer hovered.
-				target.hovered = false;
-			}
-		};
+		if(this.grabbed) {
+			event.target.ongrabbedwidgetleave();
+		}
 	}
 
 	onwidgetgrabbed(event: WidgetGrabbedEvent) {
@@ -85,13 +77,56 @@ class FlexiBoard {
 			capturedWidth: event.capturedWidth,
 			positionWatcher: this.#positionWatcher
 		};
+
+		this.#lockViewport();
+
+		event.target.ongrabbedwidgetover({
+			widget: event.widget
+		});
+
 		return this.grabbed;
 	}
 
-	onMouseUp(event: MouseEvent) {
+	#lockViewport() {
+        document.documentElement.style.overscrollBehaviorY = 'contain';
+        document.documentElement.style.overflow = 'hidden';
+		document.documentElement.style.touchAction = 'none';
+
+		this.stopScroll = this.stopScroll.bind(this);
+
+		document.addEventListener('touchmove', this.stopScroll, { passive: false });
+	}
+
+	#unlockViewport() {
+		console.log("Unlocking viewport");
+
+        document.documentElement.style.overscrollBehaviorY = 'auto';
+        document.documentElement.style.overflow = 'auto';
+		document.documentElement.style.touchAction = 'auto';
+		
+		document.removeEventListener('touchmove', this.stopScroll);
+	}
+
+	stopScroll(event: TouchEvent) {
+		// If a scroll is in progress, there's nothing we can do to stop it and so we'll just release the widget.
+		if(!event.cancelable) {
+			this.handleWidgetRelease();
+			return;
+		}
+
+		event.preventDefault();
+	}
+
+	onPointerUp(event: PointerEvent) {
 		if(!this.grabbed) {
 			return;
 		}
+
+		this.handleWidgetRelease();
+	}
+
+	handleWidgetRelease() {
+		this.#unlockViewport();
 
 		// Move the widget to the hovered target if it exists.
 		if(this.#hoveredTarget) {

@@ -1,6 +1,10 @@
 import type { FlexiWidget } from "./widget.svelte.js";
 import type { FlexiTarget } from "./target.svelte.js";
-import type { MousePositionWatcher } from "./utils.svelte.js";
+import type { PointerPositionWatcher } from "./utils.svelte.js";
+
+export type ProxiedValue<T> = {
+    value: T;
+}
 
 export type FlexiBoardConfiguration = {
     widgetDefaults?: FlexiWidgetDefaults;
@@ -16,59 +20,77 @@ export type FlexiWidgetDefaults = {
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults;
 
 export type FlexiTargetDefaults = {
-    placementStrategy?: PlacementStrategy;
     // TODO: Look at this again when we have more features done.
     expansionStrategy?: ExpansionStrategy;
     capacity?: number;
-    columns?: number;
-    rows?: number;
-
-    /**
-     * Whether columns should be expanded to fit a widget that's being moved or placed beyond existing bounds.
-     */
-    expandColumns?: boolean;
-    
-    /**
-     * Whether rows should be expanded to fit a widget that's being moved or placed beyond existing bounds.
-     */
-    expandRows?: boolean;
+    minColumns?: number;
+    minRows?: number;
 
     layout?: TargetLayout;
 };
-export type FlexiTargetConfiguration = FlexiTargetDefaults;
+export type FlexiTargetPartialConfiguration = FlexiTargetDefaults;
 
-type SimpleRowLayout = {
-    rows: number;
-}
-
-type SimpleColumnLayout = {
-    columns: number;
-}
-
-type DenseRowAndColumnLayout = {
-    rows: number;
-    columns: number;
-    fillDirection: "row" | "column";
-}
+export type FlexiTargetConfiguration = FlexiTargetDefaults & {
+    layout: TargetLayout;
+};
 
 // TODO: We want to do different layouts, which specify strategy.
 // append/prepend must be dense, they'll insert at the end.
 // insert might be dense, might be sparse.
-type DenseTargetLayout = (SimpleRowLayout | SimpleColumnLayout | DenseRowAndColumnLayout) & {
-    type: "dense";
+export type FlowTargetLayout = {
+    type: "flow";
+
+    /**
+     * Specifies how widgets should be added when no coordinates are specified.
+     * 
+     * - "append" will add a widget after the last widget in the grid.
+     * - "prepend" will add a widget before the first widget in the grid.
+     */
+    placementStrategy: "append" | "prepend";
+    
+    /**
+     * When set to true, the grid will ignore coordinates provided when adding widgets and instead
+     * default to the placement strategy's behaviour.
+     */
+    disallowInsert?: boolean;
+
+    /**
+     * The axis that widgets are placed along.
+     * 
+     * - When set to "row", widgets are added along the columns of a row before wrapping to the next row.
+     * - When set to "column", widgets are added along the rows of a column before wrapping to the next column.
+     */
+    flowAxis: "row" | "column";
+
+    /**
+     * Whether the grid should be blocked from automatically expanding when all cell space is used.
+     * 
+     * - When unset and the flow axis is set to "row", the grid will create new rows when the last row is full.
+     * - When unset and the flow axis is set to "column", the grid will create new columns when the last column is full.
+     * - When set to true, the grid will be at capacity when all cells are used.
+     */
+    disallowExpansion?: boolean;
+
+    /**
+     * The maximum number of rows or columns that can be used depending on what the flow axis is set to.
+     * 
+     * - When flowAxis is set to "row", the grid will not allow more rows than this value.
+     * - When flowAxis is set to "column", the grid will not allow more columns than this value.
+     */
+    maxFlowAxis?: number;
 };
 
-type SparseTargetLayout = {
-    type: "sparse";
-    // placementStrategy: "insert";
+export type FreeFormTargetLayout = {
+    type: "free";
+    expandColumns?: boolean;
+    expandRows?: boolean;
 }
 
-type TargetLayout = DenseTargetLayout | SparseTargetLayout;
+export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 
-type PlacementStrategy = "insert" | "append" | "prepend";
 type ExpansionStrategy = "none" | "column" | "row" | "both";
 
-export type MousePosition = {
+export type Position = {
     x: number;
     y: number;
 }
@@ -78,7 +100,7 @@ export type GrabbedWidget = {
     target: FlexiTarget;
     offsetX: number;
     offsetY: number;
-    positionWatcher: MousePositionWatcher;
+    positionWatcher: PointerPositionWatcher;
     capturedHeight: number;
     capturedWidth: number;
 }   
@@ -99,13 +121,13 @@ export type WidgetGrabbedEvent = {
 
 export type WidgetDroppedEvent = {
     widget: FlexiWidget;
-    position: MousePosition;
+    position: Position;
     preventDefault: () => void;
 }
 
 export type WidgetOverEvent = {
     widget: FlexiWidget;
-    mousePosition: MousePosition;
+    mousePosition: Position;
 }
 
 export type WidgetOutEvent = {
@@ -117,6 +139,10 @@ export type MouseGridCellMoveEvent = {
     cellY: number;
 }
 
-export type GrabbedWidgetOverEvent = {
+export type GrabbedWidgetMouseEvent = {
     widget: FlexiWidget;
+}
+
+export type HoveredTargetEvent = {
+    target: FlexiTarget;
 }
