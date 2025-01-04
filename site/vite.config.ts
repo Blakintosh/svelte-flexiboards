@@ -5,13 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		fs: {
-			allow: ['../packages/svelte-flexiboards/']
-		},
-		watch: {
-			ignored: ['!**/node_modules/svelte-flexiboards/**']
+			strict: false
 		}
-	},
-	optimizeDeps: {
-		exclude: ['svelte-flexiboards']
 	}
 });

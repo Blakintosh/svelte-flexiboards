@@ -54,6 +54,7 @@
 	{#if children}
 		{@render children({ widget })}
 	{/if}
+	<!-- test test test -->
 
 	<!-- Component mode -->
 	{#if Component}

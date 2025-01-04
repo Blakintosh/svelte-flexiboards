@@ -4,23 +4,20 @@
   "version": "0.1.0",
   "description": "Drag-and-drop components for Svelte.",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build && npm run package",
-		"preview": "vite preview",
+		"dev": "pnpm watch",
+		"build": "pnpm package",
 		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
+		"prepublishOnly": "pnpm run package",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"watch": "svelte-kit sync && svelte-package --watch"
 	},
 	"files": [
 		"dist",
 		"!dist/**/*.test.*",
 		"!dist/**/*.spec.*"
-	],
-	"sideEffects": [
-		"**/*.css"
 	],
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",

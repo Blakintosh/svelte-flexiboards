@@ -2,12 +2,13 @@
 	"name": "svelte-flexiboards-docs",
 	"licence": "MIT",
 	"version": "0.0.1",
+	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && npm run package",
+		"build": "vite build && pnpm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
+		"prepublishOnly": "pnpm run package",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
@@ -65,6 +66,6 @@
 	},
 	"dependencies": {
 		"mode-watcher": "^0.5.0",
-		"svelte-flexiboards": "*"
+		"svelte-flexiboards": "workspace:^"
 	}
 }

@@ -7,15 +7,6 @@ import { getFlexitargetCtx } from "./target.svelte.js";
 
 type FlexiGridLayout = (FlexiWidget | null)[][];
 
-// type GridEntry = {
-//     widget: FlexiWidget | null;
-//     x: number;
-//     y: number;
-//     width: number;
-//     height: number;
-//     next?: GridEntry;
-// }
-
 export type MoveOperation = {
     widget: FlexiWidget;
     newX: number;

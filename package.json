@@ -3,15 +3,14 @@
 	"licence": "MIT",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build && npm run package",
-		"preview": "vite preview",
-		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"build": "pnpm -r build",
+		"build:packages": "pnpm -F \"./packages/**\" --parallel build",
+		"check": "pnpm build:packages && pnpm -r check",
+		"ci:publish": "pnpm build:packages && changeset publish",
+		"dev": "pnpm -r --parallel dev",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"lint:fix": "eslint --fix ."
 	},
 	"files": [
 		"dist",
@@ -45,7 +44,7 @@
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0"
 	},
-	"workspaces": [
-		"packages/svelte-flexiboards"
-	]
+	"dependencies": {
+		"svelte-flexiboards": "workspace:^"
+	}
 }
