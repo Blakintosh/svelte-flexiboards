@@ -1,15 +1,38 @@
 import { getContext, setContext } from "svelte";
 import { getFlexiboardCtx, type FlexiBoard } from "./provider.svelte.js";
-import { FlexiWidget, type BoardWidgetConfiguration, type FlexiWidgetChildrenSnippet, type FlexiWidgetClasses } from "./widget.svelte.js";
-import type { FlexiTargetConfiguration, FlexiTargetDefaults, FlexiTargetPartialConfiguration, GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import { FlexiWidget, type FlexiWidgetConfiguration, type FlexiWidgetDefaults } from "./widget.svelte.js";
+import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
-import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid } from "./grid.svelte.js";
+import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid, type FlowTargetLayout, type FreeFormTargetLayout } from "./grid.svelte.js";
+import type { FlexiTargetProps } from "$lib/components/flexi-target.svelte";
+
+type TargetSizingFn = ({ target, grid }: { target: FlexiTarget, grid: FlexiGrid }) => string;
+export type TargetSizing = TargetSizingFn | string;
+
+export type FlexiTargetDefaults = {
+    capacity?: number | null;
+    minColumns?: number | null;
+    minRows?: number | null;
+    rowSizing?: TargetSizing;
+    columnSizing?: TargetSizing;
+
+    layout?: TargetLayout;
+};
+export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
+    widgetDefaults?: FlexiWidgetDefaults;
+};
+
+export type FlexiTargetConfiguration = Required<FlexiTargetPartialConfiguration>;
+
+export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 
 class FlexiTarget {
     widgets: SvelteSet<FlexiWidget> = $state(new SvelteSet());
 
-    provider: FlexiBoard;
-    #providerTargetDefaults: FlexiTargetDefaults | undefined = $state(undefined);
+    provider?: FlexiBoard = $state(undefined);
+
+    #providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
+    providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
 
     /**
      * Stores the underlying state of the target.
@@ -29,33 +52,33 @@ class FlexiTarget {
         y: 0
     });
 
-    #targetConfig: FlexiTargetPartialConfiguration = $state({});
 
     #grid: FlexiGrid | null = null;
 
     #gridSnapshot: unknown | null = null;
 
-    config: FlexiTargetConfiguration = $derived({
-        capacity: this.#targetConfig.capacity ?? this.#providerTargetDefaults?.capacity ?? undefined,
-        minColumns: this.#targetConfig.minColumns ?? this.#providerTargetDefaults?.minColumns ?? undefined,
-        minRows: this.#targetConfig.minRows ?? this.#providerTargetDefaults?.minRows ?? undefined,
-        layout: this.#targetConfig.layout ?? this.#providerTargetDefaults?.layout ?? {
-            type: "free"
-        }
-    });
+    #targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
-    style: string = $derived.by(() => {
-        return `grid-template-columns: repeat(${this.columns}, 1fr); grid-template-rows: repeat(${this.rows}, 1fr);`;
+    config: FlexiTargetConfiguration = $derived({
+        capacity: this.#targetConfig?.capacity ?? this.#providerTargetDefaults?.capacity ?? null,
+        minColumns: this.#targetConfig?.minColumns ?? this.#providerTargetDefaults?.minColumns ?? null,
+        minRows: this.#targetConfig?.minRows ?? this.#providerTargetDefaults?.minRows ?? null,
+        layout: this.#targetConfig?.layout ?? this.#providerTargetDefaults?.layout ?? {
+            type: "flow",
+            flowAxis: "row",
+            placementStrategy: "append"
+        },
+        rowSizing: this.#targetConfig?.rowSizing ?? this.#providerTargetDefaults?.rowSizing ?? "minmax(1rem, auto)",
+        columnSizing: this.#targetConfig?.columnSizing ?? this.#providerTargetDefaults?.columnSizing ?? "minmax(0, 1fr)",
+        widgetDefaults: this.#targetConfig?.widgetDefaults ?? null
     });
     
-    constructor(provider: FlexiBoard, config?: FlexiTargetPartialConfiguration) {
+    constructor(provider: FlexiBoard, config: FlexiTargetConfiguration) {
         this.provider = provider;
-        this.#providerTargetDefaults = provider.config?.targetDefaults;
-        if(config) {
-            this.#targetConfig = config;
-        }
 
-        $inspect(this.config);
+        this.#targetConfig = config;
+
+        // $inspect(this.config);
         provider.addTarget(this);
 
         // Once mounted, switch from our pre-rendered widgets to the actual interactive widgets.
@@ -65,8 +88,8 @@ class FlexiTarget {
     }
 
     tryAddWidget(widget: FlexiWidget, x?: number, y?: number): boolean {
-        // TODO: Dense layouts must be able to figure out the x and y coordinates of the widget.
         const added = this.grid.tryPlaceWidget(widget, x, y);
+        
         if(added) {
             this.widgets.add(widget);
         }
@@ -90,9 +113,9 @@ class FlexiTarget {
         return this.#grid;
     }
 
-    createWidget(config: BoardWidgetConfiguration, snippet: FlexiWidgetChildrenSnippet | undefined, className: FlexiWidgetClasses | undefined) {
+    createWidget(config: FlexiWidgetConfiguration) {
         const [x, y] = [config.x, config.y];
-        const widget = new FlexiWidget(this, config, snippet, className);
+        const widget = new FlexiWidget(this, config);
         
         if(!this.tryAddWidget(widget, x, y)) {
             throw new Error("Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision.");
@@ -107,8 +130,10 @@ class FlexiTarget {
             height: of.height,
             component: of.component,
             draggable: of.draggable,
-            resizable: of.resizable
-        }, of.snippet, of.className, true);
+            resizable: of.resizable,
+            snippet: of.snippet,
+            className: of.className
+        }, true);
         this.widgets.add(shadow);
 
         return shadow;
@@ -125,7 +150,6 @@ class FlexiTarget {
 
     onpointerleave() {
         this.hovered = false;
-        console.log("pointer is leaving")
 
         this.provider.onpointerleavetarget({
             target: this
@@ -330,9 +354,9 @@ const contextKey = Symbol('flexitarget');
  * Creates a new FlexiTarget instance in the context of the current FlexiBoard.
  * @returns A FlexiTarget class instance.
  */
-function flexitarget(config?: FlexiTargetConfiguration) {
+function flexitarget(props: FlexiTargetProps) {
     const provider = getFlexiboardCtx();
-    const target = new FlexiTarget(provider, config);
+    const target = new FlexiTarget(provider, props);
 
     setContext(contextKey, target);
 

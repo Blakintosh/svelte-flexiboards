@@ -2,10 +2,11 @@
 	import { FlexiBoard, FlexiWidget, FlexiTarget } from 'svelte-flexiboards';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import FlexionKanbanList from './flexion-kanban-list.svelte';
 </script>
 
-<nav class="flex justify-between border-b">
-	<ul class="flex gap-2">
+<nav class="flex w-full min-w-0 justify-between border-b">
+	<ul class="flex w-full min-w-0 gap-2">
 		<li>
 			<Button variant="ghost" class="rounded-none border-b-2 border-primary font-bold">
 				<svg
@@ -100,52 +101,27 @@
 			}
 		}
 	}}
-	class="flex items-start justify-center gap-12 px-4 py-4"
+	class="flex w-full min-w-0 items-start justify-center gap-12 px-4 py-4"
 >
-	<FlexiTarget name="today" class="w-72">
-		{#snippet header({ target })}
-			<div class="mb-4 flex items-center gap-4 text-muted-foreground">
-				<h3
-					class="inline-flex items-center gap-2 rounded-full bg-green-300 px-3 py-1 text-sm text-primary-foreground"
-				>
-					<div class="size-3 rounded-full bg-green-500"></div>
-					Today
-				</h3>
-				{target.widgets.size}
-			</div>
-		{/snippet}
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Eggs</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Bread</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Milk</FlexiWidget>
-	</FlexiTarget>
-	<FlexiTarget name="tomorrow" class="w-72">
-		{#snippet header({ target })}
-			<div class="mb-4 flex items-center gap-4 text-muted-foreground">
-				<h3
-					class="inline-flex items-center gap-2 rounded-full bg-amber-300 px-3 py-1 text-sm text-primary-foreground"
-				>
-					<div class="size-3 rounded-full bg-amber-500"></div>
-					Tomorrow
-				</h3>
-				{target.widgets.size}
-			</div>
-		{/snippet}
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Fish</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Chips</FlexiWidget>
-	</FlexiTarget>
-	<FlexiTarget name="never" class="w-72">
-		{#snippet header({ target })}
-			<div class="mb-4 flex items-center gap-4 text-muted-foreground">
-				<h3
-					class="inline-flex items-center gap-2 rounded-full bg-red-300 px-3 py-1 text-sm text-primary-foreground"
-				>
-					<div class="size-3 rounded-full bg-red-500"></div>
-					Never
-				</h3>
-				{target.widgets.size}
-			</div>
-		{/snippet}
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Pasta</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-muted px-4 py-2">Ice cream</FlexiWidget>
-	</FlexiTarget>
+	<FlexionKanbanList
+		category="today"
+		categoryLabel="Today"
+		bgClass="bg-green-300"
+		dotClass="bg-green-500"
+		items={['Eggs', 'Bread', 'Milk']}
+	/>
+	<FlexionKanbanList
+		category="tomorrow"
+		categoryLabel="Tomorrow"
+		bgClass="bg-amber-300"
+		dotClass="bg-amber-500"
+		items={['Fish', 'Chips']}
+	/>
+	<FlexionKanbanList
+		category="never"
+		categoryLabel="Never"
+		bgClass="bg-red-300"
+		dotClass="bg-red-500"
+		items={['Pasta', 'Ice cream']}
+	/>
 </FlexiBoard>

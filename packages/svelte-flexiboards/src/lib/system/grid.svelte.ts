@@ -1,11 +1,60 @@
 import type { FlexiWidget } from "./widget.svelte.js";
-import type { FlowTargetLayout as FlowTargetLayout, FlexiTargetConfiguration, FreeFormTargetLayout as FreeFormTargetLayout } from "./types.js";
 import { setContext } from "svelte";
 import { getContext } from "svelte";
-import type { FlexiTarget } from "./target.svelte.js";
+import type { FlexiTarget, FlexiTargetConfiguration, TargetSizing } from "./target.svelte.js";
 import { getFlexitargetCtx } from "./target.svelte.js";
+import { GridDimensionTracker } from "./utils.svelte.js";
 
 type FlexiGridLayout = (FlexiWidget | null)[][];
+
+export type FlowTargetLayout = {
+    type: "flow";
+
+    /**
+     * Specifies how widgets should be added when no coordinates are specified.
+     * 
+     * - "append" will add a widget after the last widget in the grid.
+     * - "prepend" will add a widget before the first widget in the grid.
+     */
+    placementStrategy: "append" | "prepend";
+    
+    /**
+     * When set to true, the grid will ignore coordinates provided when adding widgets and instead
+     * default to the placement strategy's behaviour.
+     */
+    disallowInsert?: boolean;
+
+    /**
+     * The axis that widgets are placed along.
+     * 
+     * - When set to "row", widgets are added along the columns of a row before wrapping to the next row.
+     * - When set to "column", widgets are added along the rows of a column before wrapping to the next column.
+     */
+    flowAxis: "row" | "column";
+
+    /**
+     * Whether the grid should be blocked from automatically expanding when all cell space is used.
+     * 
+     * - When unset and the flow axis is set to "row", the grid will create new rows when the last row is full.
+     * - When unset and the flow axis is set to "column", the grid will create new columns when the last column is full.
+     * - When set to true, the grid will be at capacity when all cells are used.
+     */
+    disallowExpansion?: boolean;
+
+    /**
+     * The maximum number of rows or columns that can be used depending on what the flow axis is set to.
+     * 
+     * - When flowAxis is set to "row", the grid will not allow more rows than this value.
+     * - When flowAxis is set to "column", the grid will not allow more columns than this value.
+     */
+    maxFlowAxis?: number;
+};
+
+export type FreeFormTargetLayout = {
+    type: "free";
+    expandColumns?: boolean;
+    expandRows?: boolean;
+}
 
 export type MoveOperation = {
     widget: FlexiWidget;
@@ -56,9 +105,13 @@ export abstract class FlexiGrid {
 
 	#ref: { ref: HTMLElement | null } = $state({ ref: null });
 
+    _dimensionTracker: GridDimensionTracker;
+
     constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration) {
         this._target = target;
         this._targetConfig = targetConfig;
+
+        this._dimensionTracker = new GridDimensionTracker(this, targetConfig);
 
         this.onpointermove = this.onpointermove.bind(this);
 
@@ -72,35 +125,40 @@ export abstract class FlexiGrid {
     }
 
     style: string = $derived.by(() => {
-        return `display: grid; grid-template-columns: repeat(${this.columns}, minmax(0, 1fr)); grid-template-rows: repeat(${this.rows}, minmax(0, 1fr));`;
+        return `display: grid; grid-template-columns: ${this.#getSizing(this.columns, this._targetConfig.columnSizing)}; grid-template-rows: ${this.#getSizing(this.rows, this._targetConfig.rowSizing)};`;
     });
+
+    #getSizing(axisCount: number, sizing: TargetSizing) {
+        if(typeof sizing === "string") {
+            return `repeat(${axisCount}, ${sizing})`;
+        }
+        return sizing({ target: this._target, grid: this });
+    }
 
     #updatePointerPosition(clientX: number, clientY: number) {
         if (!this.ref) {
             return;
         }
 
-        const rect = this.ref.getBoundingClientRect();
+        const cell = this._dimensionTracker.getCellFromPointerPosition(clientX, clientY);
 
-        // Get position relative to grid element
-        const relativeX = clientX - rect.left;
-        const relativeY = clientY - rect.top;
+        // console.log("At: ", cell);
 
-        // Calculate size of each grid cell
-        const unitX = rect.width / this.columns;
-        const unitY = rect.height / this.rows;
-
-        // Convert to grid cell indices
-        const cellX = Math.min(Math.max(0, Math.floor(relativeX / unitX)), this.columns - 1);
-        const cellY = Math.min(Math.max(0, Math.floor(relativeY / unitY)), this.rows - 1);
-
-        this.mouseCellPosition.x = cellX;
-        this.mouseCellPosition.y = cellY;
+        this.mouseCellPosition.x = cell?.column ?? 0;
+        this.mouseCellPosition.y = cell?.row ?? 0;
 
         this._target.onmousegridcellmove({
-            cellX,
-            cellY
+            cellX: this.mouseCellPosition.x,
+            cellY: this.mouseCellPosition.y
         });
+    }
+
+    watchGridElementDimensions() {
+        if(!this.ref) {
+            return;
+        }
+
+        this._dimensionTracker.watchGrid();
     }
 
     onpointermove(event: PointerEvent) {
@@ -235,6 +293,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         }
 
         this.#widgets.add(widget);
+        // this._dimensionTracker.trackWidget(widget, widget.ref);
 
         // Update the row bitmaps to reflect the widget's placement.
         for(let i = cellY; i < cellY + widget.height; i++) {
@@ -242,7 +301,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         }
 
         widget.setBounds(cellX, cellY, widget.width, widget.height);
-
         return true;
     }
 
@@ -896,7 +954,7 @@ type FlexiFlowGridState = {
 
 const contextKey = Symbol('flexigrid');
 
-function flexigrid() {
+export function flexigrid() {
     const target = getFlexitargetCtx();
 
     if(!target) {
@@ -906,18 +964,16 @@ function flexigrid() {
     const grid = target.createGrid();
     setContext(contextKey, grid);
 
+    // Tell the grid's dimension tracker to watch the grid element.
+    $effect(() => {
+        grid.watchGridElementDimensions();
+    })
+
     return {
         grid
     };
 }
 
-function getFlexigridCtx() {
+export function getFlexigridCtx() {
     return getContext<FlexiGrid | undefined>(contextKey);
 }
-
-export {
-    type FreeFormGridSnapshot as GridSnapshot,
-    type WidgetSnapshot,
-    flexigrid,
-    getFlexigridCtx
-};

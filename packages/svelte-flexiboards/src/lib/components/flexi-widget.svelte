@@ -1,41 +1,51 @@
 <script module lang="ts">
-	import type { Component, Snippet } from 'svelte';
+	import { untrack, type Component, type Snippet } from 'svelte';
 	import {
 		FlexiWidget,
 		flexiwidget,
-		type BoardWidgetConfiguration,
+		type FlexiWidgetConfiguration,
 		type FlexiWidgetChildrenSnippet,
 		type FlexiWidgetClasses
 	} from '$lib/system/widget.svelte.js';
 
-	export type FlexiWidgetProps = BoardWidgetConfiguration & {
-		children?: FlexiWidgetChildrenSnippet;
-		component?: Component;
+	export type FlexiWidgetProps = Exclude<FlexiWidgetConfiguration, 'className' | 'snippet'> & {
 		class?: FlexiWidgetClasses;
-		style?: string;
+		children?: FlexiWidgetChildrenSnippet;
 	};
 </script>
 
 <script lang="ts">
-	let { children: childrenSnippet, class: className, ...config }: FlexiWidgetProps = $props();
+	let {
+		class: className = $bindable(),
+		children = $bindable(),
+		...propsConfig
+	}: FlexiWidgetProps = $props();
 
-	const { onpointerdown, widget } = flexiwidget(config, childrenSnippet, className);
+	let config: FlexiWidgetConfiguration = $state({
+		...propsConfig,
+		className: className,
+		snippet: children
+	});
 
-	let children: Snippet<[{ widget: FlexiWidget }]> | undefined = childrenSnippet ?? widget.snippet;
-	let Component: Component | undefined = config.component ?? widget.component;
+	const { onpointerdown, widget } = flexiwidget(config);
+
+	let childrenSnippet: FlexiWidgetChildrenSnippet | undefined = $derived(
+		config.snippet ?? widget.snippet
+	);
+	let Component: Component | undefined = $derived(config.component ?? widget.component);
 
 	let derivedClassName = $derived.by(() => {
-		if(typeof widget.className === 'function') {
+		if (typeof widget.className === 'function') {
 			return widget.className(widget);
-		} else if(typeof widget.className === 'object') {
+		} else if (typeof widget.className === 'object') {
 			return [
-				widget.className.default, 
-				widget.grabbed && widget.className.grabbed, 
+				widget.className.default,
+				widget.grabbed && widget.className.grabbed,
 				widget.isShadow && widget.className.shadow
 			];
 		}
 
-		return className;
+		return widget.className;
 	});
 </script>
 
@@ -50,14 +60,9 @@
 	role="gridcell"
 	tabindex={0}
 >
-	<!-- Snippets mode -->
-	{#if children}
-		{@render children({ widget })}
-	{/if}
-	<!-- test test test -->
-
-	<!-- Component mode -->
-	{#if Component}
+	{#if childrenSnippet}
+		{@render childrenSnippet({ widget, Component })}
+	{:else if Component}
 		<Component />
 	{/if}
 </div>

@@ -1,6 +1,5 @@
 <script module lang="ts">
-	import { flexiboard } from '$lib/system/provider.svelte.js';
-	import { type FlexiBoardConfiguration } from '$lib/system/types.js';
+	import { flexiboard, type FlexiBoardConfiguration } from '$lib/system/provider.svelte.js';
 	import type { Snippet } from 'svelte';
 
 	export type FlexiBoardProps = {
@@ -11,11 +10,18 @@
 </script>
 
 <script lang="ts">
-	let { children, class: className, config }: FlexiBoardProps = $props();
+	let props: FlexiBoardProps = $props();
 
-	const provider = flexiboard(config);
+	const provider = flexiboard(props);
+
+	let test = props.config;
+
+	$inspect('is original config draggable?', test?.widgetDefaults?.draggable);
+
+	$inspect('is config draggable?', props.config?.widgetDefaults?.draggable);
+	$inspect('is provider draggable?', provider.config?.widgetDefaults?.draggable);
 </script>
 
-<div class={className} bind:this={provider.ref} style={provider.style}>
-	{@render children()}
+<div class={props.class} bind:this={provider.ref} style={provider.style}>
+	{@render props.children()}
 </div>

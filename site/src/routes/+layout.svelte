@@ -6,12 +6,16 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<title>Flexiboards</title>
+</svelte:head>
+
 <ModeWatcher />
 
 <Header />
 
 <main class="grid w-full grow place-items-center overflow-y-auto">
-	<div class="max-w-[1440px] px-8">
+	<div class="w-full px-8 py-8 lg:max-w-[1440px]">
 		{@render children()}
 	</div>
 </main>

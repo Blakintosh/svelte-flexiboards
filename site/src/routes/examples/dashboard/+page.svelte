@@ -1,53 +1,81 @@
-<script>
+<script lang="ts">
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { Switch } from '$lib/components/ui/switch/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
+	import type { FlexiBoardConfiguration } from 'svelte-flexiboards';
+	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
+
+	let editMode = $state(true);
+
+	let boardConfig: FlexiBoardConfiguration = $state({
+		widgetDefaults: {
+			draggable: true,
+			resizable: true
+		}
+	});
 </script>
 
 <svelte:head>
 	<title>Flexiboards</title>
 </svelte:head>
 
-<div class="not-prose">
-	<FlexiBoard>
-		<FlexiTarget
-			class="h-full w-full rounded-lg border px-4 py-2"
-			name="left"
-			debug
-			config={{
-				minRows: 5,
-				minColumns: 5,
-				layout: {
-					type: 'free',
-					expandColumns: true,
-					expandRows: true
-				}
-			}}
-		>
-			{#snippet header()}
-				<h2 class="text-lg font-bold">Drag and drop dashboard</h2>
-			{/snippet}
-			<FlexiWidget class="w-full rounded-lg bg-muted px-8 py-4" draggable x={0} y={0}
-				>A nice widget.</FlexiWidget
+<Sidebar.Provider>
+	<AppSidebar />
+	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-16 py-8">
+		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
+			Dashboard
+			<div class="flex items-center gap-2">
+				<Switch
+					id="edit-mode"
+					bind:checked={editMode}
+					onCheckedChange={() => {
+						boardConfig.widgetDefaults = {
+							draggable: editMode,
+							resizable: editMode
+						};
+					}}
+				/>
+				<Label for="edit-mode">Edit mode</Label>
+			</div>
+		</h1>
+
+		<FlexiBoard class={'grow'} config={boardConfig}>
+			<FlexiTarget
+				name="left"
+				class={'h-full gap-4'}
+				config={{
+					minRows: 4,
+					minColumns: 3,
+					layout: {
+						type: 'free',
+						expandColumns: true,
+						expandRows: true
+					}
+				}}
 			>
-			<FlexiWidget class="w-full rounded-lg bg-muted px-8 py-4" draggable width={2} x={1} y={1}
-				>Another nice widget.</FlexiWidget
-			>
-			<FlexiWidget
-				class="w-full rounded-lg bg-muted px-8 py-4"
-				draggable
-				width={2}
-				height={2}
-				x={2}
-				y={2}
-			>
-				{#snippet children({ widget })}
-					{#if widget.grabbed}
-						I'm currently being dragged.
-					{:else}
-						I'm currently placed at ({widget.x}, {widget.y}), and I've got a width of {widget.width}
-						and a height of {widget.height}.
-					{/if}
-				{/snippet}
-			</FlexiWidget>
-		</FlexiTarget>
-	</FlexiBoard>
-</div>
+				<DashboardTile title="Overall Score" x={0} y={0} draggable={false}>
+					<div class="text-2xl font-bold">87</div>
+					<p class="text-xs text-muted-foreground">+8 from last month</p>
+				</DashboardTile>
+				<DashboardTile title="Total Revenue" x={1} y={0}>
+					<div class="text-2xl font-bold">$45,231.89</div>
+					<p class="text-xs text-muted-foreground">+20.1% from last month</p>
+				</DashboardTile>
+				<DashboardTile title="Subscriptions" x={2} y={0}>
+					<div class="text-2xl font-bold">+2350</div>
+					<p class="text-xs text-muted-foreground">-30.4% from last month</p>
+				</DashboardTile>
+				<DashboardTile title="Sales" x={0} y={1} width={3}>
+					<div class="text-2xl font-bold">+12,234</div>
+					<p class="text-xs text-muted-foreground">+19.1% from last month</p>
+				</DashboardTile>
+				<DashboardTile title="Active Now" x={0} y={2}>
+					<div class="text-2xl font-bold">+573</div>
+					<p class="text-xs text-muted-foreground">+201 since last hour</p>
+				</DashboardTile>
+			</FlexiTarget>
+		</FlexiBoard>
+	</main>
+</Sidebar.Provider>

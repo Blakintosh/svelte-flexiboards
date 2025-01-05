@@ -1,10 +1,16 @@
 import { getContext, setContext } from "svelte";
-import type { FlexiBoardConfiguration, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
-import type { FlexiTarget } from "./target.svelte.js";
-import type { FlexiWidget } from "./widget.svelte.js";
+import type { GrabbedWidget, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import type { FlexiTarget, FlexiTargetDefaults } from "./target.svelte.js";
+import type { FlexiWidget, FlexiWidgetDefaults } from "./widget.svelte.js";
 import { PointerPositionWatcher } from "./utils.svelte.js";
+import type { FlexiBoardProps } from "$lib/components/flexi-board.svelte";
 
-class FlexiBoard {
+export type FlexiBoardConfiguration = {
+    widgetDefaults?: FlexiWidgetDefaults;
+    targetDefaults?: FlexiTargetDefaults;
+};
+
+export class FlexiBoard {
 	grabbed: GrabbedWidget | null = $state(null);
 
 	#targets: FlexiTarget[] = $state([]);
@@ -14,7 +20,8 @@ class FlexiBoard {
 
 	#positionWatcher: PointerPositionWatcher = new PointerPositionWatcher(this.#ref);
 
-	config?: FlexiBoardConfiguration = $state(undefined);
+	#rawProps?: FlexiBoardProps = $state(undefined);
+	config?: FlexiBoardConfiguration = $derived(this.#rawProps?.config);
 
 	style: string = $derived.by(() => {
 		if(!this.grabbed) {
@@ -24,9 +31,12 @@ class FlexiBoard {
 		return `position: relative; overflow: hidden;`;
 	})
 	
-	constructor(config?: FlexiBoardConfiguration) {
+	constructor(props: FlexiBoardProps) {
 		this.#targets = [];
-		this.config = config;
+		// Track the props proxy so our config reactively updates.
+		this.#rawProps = props;
+
+		$inspect("draggable?", this.config?.widgetDefaults?.draggable);
 
 		this.onPointerUp = this.onPointerUp.bind(this);
 
@@ -176,19 +186,10 @@ class FlexiBoard {
 	}
 }
 
-type GrabbedWidget = {
-	widget: FlexiWidget;
-	target?: FlexiTarget;
-	offsetX: number;
-	offsetY: number;
-	capturedHeight: number;
-	capturedWidth: number;
-}
-
 const contextKey = Symbol('flexiboard');
 
-function flexiboard(config?: FlexiBoardConfiguration) {
-    const board = new FlexiBoard(config);
+export function flexiboard(props: FlexiBoardProps) {
+    const board = new FlexiBoard(props);
     
     setContext(contextKey, board);
     return board;
@@ -198,7 +199,7 @@ function flexiboard(config?: FlexiBoardConfiguration) {
  * Gets the current {@link FlexiBoard} instance, if any.
  * @returns A {@link FlexiBoard} instance, otherwise `undefined`.
  */
-function getFlexiboardCtx() {
+export function getFlexiboardCtx() {
     const board = getContext<FlexiBoard | undefined>(contextKey);
 
     // No provider to attach to.
@@ -207,11 +208,4 @@ function getFlexiboardCtx() {
     }
 
     return board;
-}
-
-export {
-	type FlexiBoard,
-	type GrabbedWidget,
-	flexiboard,
-	getFlexiboardCtx
 }

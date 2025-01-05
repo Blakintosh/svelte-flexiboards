@@ -10,7 +10,6 @@
 		containerClass?: string;
 		class?: string;
 		name?: string;
-		debug?: boolean;
 		config?: FlexiTargetConfiguration;
 	};
 </script>
@@ -26,7 +25,6 @@
 		class: className,
 		header,
 		footer,
-		debug,
 		config,
 		containerClass
 	}: FlexiTargetProps = $props();
@@ -37,13 +35,7 @@
 </script>
 
 <div>
-	<div
-		class={containerClass}
-		{onpointerenter}
-		{onpointerleave}
-		role="grid"
-		tabindex={0}
-	>
+	<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
 		{@render header?.({ target })}
 
 		<!-- Allow user to specify components directly, then mount them to the actual target list dynamically -->
@@ -61,8 +53,4 @@
 		</FlexiGrid>
 		{@render footer?.()}
 	</div>
-
-	{#if debug}
-		<FlexiDebug {target} />
-	{/if}
 </div>

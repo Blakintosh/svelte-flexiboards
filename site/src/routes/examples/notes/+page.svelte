@@ -1,21 +1,42 @@
 <script lang="ts">
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
+	import AppSidebar from '$lib/components/examples/flexion/app-sidebar.svelte';
 	import FlexionTextBlock from '$lib/components/examples/flexion/flexion-text-block.svelte';
 	import FlexionHeadingBlock from '$lib/components/examples/flexion/flexion-heading-block.svelte';
 	import FlexionKanbanBlock from '$lib/components/examples/flexion/flexion-kanban-block.svelte';
+	import FlexionBlockContainer from '$lib/components/examples/flexion/flexion-block-container.svelte';
 </script>
 
-<h1 class="mb-4 text-5xl font-semibold">Flexion</h1>
-<h2 class="mb-8 text-2xl text-muted-foreground">A well known note taking app.</h2>
-
-<div class="flex h-[810px] w-[1440px] items-stretch min-h-0 overflow-clip rounded-lg border">
-	<aside class="w-72 shrink-0 bg-muted px-8 py-4">Acme Inc.</aside>
-	<main class="grow px-8 py-4 flex flex-col min-h-0">
+<Sidebar.Provider>
+	<AppSidebar />
+	<main class="flex min-h-0 grow flex-col px-4 py-4 lg:px-8">
 		<header class="mb-8 flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<ul class="flex items-center">
+				<Button variant={'ghost'} size={'icon'} class={'lg:hidden [&_svg]:size-5'}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="lucide lucide-menu"
+						><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line
+							x1="4"
+							x2="20"
+							y1="18"
+							y2="18"
+						/></svg
+					>
+				</Button>
+
+				<ul class="hidden items-center lg:flex">
 					<li>
 						<Button variant={'ghost'} size={'icon'} class={'[&_svg]:size-5'}>
 							<svg
@@ -56,7 +77,7 @@
 			</div>
 
 			<ul class="flex items-center gap-2">
-				<Button variant={'ghost'}>Share</Button>
+				<Button variant={'ghost'} class="hidden lg:block">Share</Button>
 
 				<Button variant={'ghost'} size={'icon'} class={'[&_svg]:size-5'}>
 					<svg
@@ -79,8 +100,8 @@
 				</Button>
 			</ul>
 		</header>
-		<article class="flex w-full flex-col grow overflow-y-auto px-16 py-8 min-h-0">
-			<h1 class="mb-8 text-4xl font-semibold">My First Page</h1>
+		<article class="flex min-h-0 w-full grow flex-col overflow-y-auto py-8 lg:pl-8 lg:pr-16">
+			<h1 class="mb-8 pl-8 text-4xl font-semibold">My First Page</h1>
 			<FlexiBoard
 				config={{
 					targetDefaults: {
@@ -95,13 +116,13 @@
 					}
 				}}
 			>
-				<FlexiTarget name="page">
-					<FlexiWidget component={FlexionTextBlock} />
-					<FlexiWidget component={FlexionKanbanBlock} />
-					<FlexiWidget component={FlexionHeadingBlock} />
-					<FlexiWidget component={FlexionTextBlock} />
+				<FlexiTarget name="page" class="gap-8">
+					<FlexionBlockContainer component={FlexionTextBlock} />
+					<FlexionBlockContainer component={FlexionKanbanBlock} />
+					<FlexionBlockContainer component={FlexionHeadingBlock} />
+					<FlexionBlockContainer component={FlexionTextBlock} />
 				</FlexiTarget>
 			</FlexiBoard>
 		</article>
 	</main>
-</div>
+</Sidebar.Provider>

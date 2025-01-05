@@ -2,12 +2,8 @@
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
 
-<svelte:head>
-	<title>Flexiboards</title>
-</svelte:head>
-
 <div class="flex min-h-0 flex-col items-center gap-16 py-8 lg:py-16">
-	<div class="flex items-end">
+	<div class="flex flex-col items-center gap-4 lg:flex-row lg:items-end lg:gap-0">
 		<FlexiBoard>
 			<FlexiTarget
 				config={{
@@ -17,7 +13,7 @@
 					minRows: 3,
 					minColumns: 3
 				}}
-				class="size-16 gap-0.5 lg:size-32 lg:gap-1"
+				class="size-24 gap-[0.175rem] lg:size-32 lg:gap-1"
 			>
 				<FlexiWidget class="h-full w-full rounded-sm bg-orange-500" draggable x={0} y={1} width={2}
 				></FlexiWidget>
@@ -46,7 +42,7 @@
 		}
 	}}
 >
-	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="left" debug>
+	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="left">
 		{#snippet header()}
 			<h2 class="text-lg font-bold">Backlog</h2>
 		{/snippet}
@@ -70,7 +66,7 @@
 		</FlexiWidget>
 	</FlexiTarget>
 
-	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="right" debug>
+	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="right">
 		{#snippet header()}
 			<h2 class="text-lg font-bold">Done</h2>
 		{/snippet}
