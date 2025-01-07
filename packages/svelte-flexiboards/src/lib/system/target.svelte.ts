@@ -22,7 +22,9 @@ export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
     widgetDefaults?: FlexiWidgetDefaults;
 };
 
-export type FlexiTargetConfiguration = Required<FlexiTargetPartialConfiguration>;
+export type FlexiTargetConfiguration = Required<FlexiTargetDefaults> & {
+    widgetDefaults?: FlexiWidgetDefaults;
+};
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 
@@ -52,6 +54,8 @@ class FlexiTarget {
         y: 0
     });
 
+    id?: string;
+
 
     #grid: FlexiGrid | null = null;
 
@@ -70,11 +74,13 @@ class FlexiTarget {
         },
         rowSizing: this.#targetConfig?.rowSizing ?? this.#providerTargetDefaults?.rowSizing ?? "minmax(1rem, auto)",
         columnSizing: this.#targetConfig?.columnSizing ?? this.#providerTargetDefaults?.columnSizing ?? "minmax(0, 1fr)",
-        widgetDefaults: this.#targetConfig?.widgetDefaults ?? null
+        widgetDefaults: this.#targetConfig?.widgetDefaults
     });
     
     constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration) {
         this.provider = provider;
+        // TODO: this needs to come from the props, doesn't need to be reactive (if anything, shouldn't be).
+        this.id = config?.id;
 
         this.#targetConfig = config;
 
@@ -122,6 +128,12 @@ class FlexiTarget {
         }
 
         return widget;
+    }
+
+    importLayout(layout: FlexiWidgetConfiguration[]) {
+        for(const config of layout) {
+            this.createWidget(config);
+        }
     }
 
     #createShadow(of: FlexiWidget) {

@@ -7,6 +7,9 @@ import FlexiResize from "./components/flexi-resize.svelte";
 import type { FlexiBoardConfiguration } from "./system/provider.svelte.js";
 import type { FlexiTargetConfiguration } from "./system/target.svelte.js";
 import type { FlexiWidgetConfiguration } from "./system/widget.svelte.js";
+import type { FlexiBoard as FlexiBoardController } from "./system/provider.svelte.js";
+import type { FlexiTarget as FlexiTargetController } from "./system/target.svelte.js";
+import type { FlexiWidget as FlexiWidgetController } from "./system/widget.svelte.js";
 
 export * from "./system/types.js";
 
@@ -21,5 +24,8 @@ export {
 	type FlexiWidgetConfiguration,
 	type FlexiWidgetProps,
 	FlexiGrab,
-	FlexiResize
+	FlexiResize,
+	type FlexiWidgetController,
+	type FlexiBoardController,
+	type FlexiTargetController
 };

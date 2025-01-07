@@ -8,20 +8,22 @@ export type FlexiWidgetChildrenSnippet = Snippet<[{ widget: FlexiWidget, Compone
 export type FlexiWidgetClassFunction = (widget: FlexiWidget) => SvelteClassValue;
 export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
 
-export type FlexiWidgetDefaults = {
+export type FlexiWidgetDefaults<T extends Record<string, any> = {}> = {
     draggable?: boolean;
     resizability?: WidgetResizability;
     width?: number;
     height?: number;
     snippet?: FlexiWidgetChildrenSnippet;
-    component?: Component;
+    component?: Component<T>;
+    componentProps?: T;
     className?: FlexiWidgetClasses;
 };
 
-export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+export type FlexiWidgetConfiguration<T extends Record<string, any> = {}> = FlexiWidgetDefaults<T> & {
     name?: string;
     x?: number;
     y?: number;
+    metadata?: Record<string, any>;
 };
 
 type FlexiWidgetState = {
@@ -42,6 +44,11 @@ type FlexiWidgetDerivedConfiguration = {
      * The component that is rendered by this item. This is optional if a snippet is provided.
      */
     component?: Component;
+
+    /**
+     * The props applied to the component rendered, if it has one.
+     */
+    componentProps?: Record<string, any>;
 
     /**
      * The snippet that is rendered by this widget. This is optional when a component is provided. If used alongside component, then this snippet is passed the component and should render it.
@@ -82,10 +89,11 @@ export class FlexiWidget {
      */
     #config: FlexiWidgetDerivedConfiguration = $derived({
         component: this.#rawConfig.component ?? this.#targetWidgetDefaults?.component ?? this.#providerWidgetDefaults?.component,
+        componentProps: this.#rawConfig.componentProps ?? this.#targetWidgetDefaults?.componentProps ?? this.#providerWidgetDefaults?.componentProps,
         snippet: this.#rawConfig.snippet ?? this.#targetWidgetDefaults?.snippet ?? this.#providerWidgetDefaults?.snippet,
         resizability: this.#rawConfig.resizability ?? this.#targetWidgetDefaults?.resizability ?? this.#providerWidgetDefaults?.resizability ?? "none",
         draggable: this.#rawConfig.draggable ?? this.#targetWidgetDefaults?.draggable ?? this.#providerWidgetDefaults?.draggable ?? true,
-        className: this.#rawConfig.className ?? this.#targetWidgetDefaults?.className ?? this.#providerWidgetDefaults?.className
+        className: this.#rawConfig.className ?? this.#targetWidgetDefaults?.className ?? this.#providerWidgetDefaults?.className,
     });
 
     /**
@@ -420,6 +428,17 @@ export class FlexiWidget {
      */
     get y() {
         return this.#state.y;
+    }
+
+    /**
+     * The props applied to the component rendered, if it has one.
+     */
+    get componentProps() {
+        return this.#config.componentProps;
+    }
+
+    set componentProps(value: Record<string, any> | undefined) {
+        this.#rawConfig.componentProps = value;
     }
 }
 

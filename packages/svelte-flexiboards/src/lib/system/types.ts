@@ -14,6 +14,11 @@ export type Position = {
     y: number;
 }
 
+export type FlexiCommonProps<T> = {
+    this?: T;
+    onfirstcreate?: (instance: T) => void;
+}
+
 export type WidgetResizability = "none" | "horizontal" | "vertical" | "both";
 
 export type WidgetGrabAction = {
@@ -95,3 +100,5 @@ export type GrabbedWidgetMouseEvent = {
 export type HoveredTargetEvent = {
     target: FlexiTarget;
 }
+
+export type FlexiSavedLayout = Record<string, FlexiWidget[]>;

@@ -1,5 +1,5 @@
 import { getContext, setContext } from "svelte";
-import type { WidgetAction, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent, WidgetStartResizeEvent, WidgetGrabAction, WidgetResizeAction } from "./types.js";
+import type { WidgetAction, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent, WidgetStartResizeEvent, WidgetGrabAction, WidgetResizeAction, FlexiSavedLayout } from "./types.js";
 import type { FlexiTarget, FlexiTargetDefaults } from "./target.svelte.js";
 import type { FlexiWidget, FlexiWidgetDefaults } from "./widget.svelte.js";
 import { PointerPositionWatcher } from "./utils.svelte.js";
@@ -29,7 +29,12 @@ export class FlexiBoard {
 		}
 
 		return `position: relative; overflow: hidden;`;
-	})
+	});
+
+	#nextTargetIndex = 0;
+
+	#storedLoadLayout: FlexiSavedLayout | null = null;
+	#ready: boolean = false;
 	
 	constructor(props: FlexiBoardProps) {
 		this.#targets = [];
@@ -52,6 +57,7 @@ export class FlexiBoard {
 	}
 
 	addTarget(target: FlexiTarget) {
+		target.id ??= this.#nextTargetId();
 		this.#targets.push(target);
 	}
 
@@ -197,6 +203,33 @@ export class FlexiBoard {
 
 	}
 
+	oninitialloadcomplete() {
+		this.#ready = true;
+		console.log("Houston, we're cleared for launch!");
+
+		console.log(this.#targets);
+
+		if(this.#storedLoadLayout) {
+			this.importLayout(this.#storedLoadLayout);
+		}
+		// this.#targets.forEach(target => {
+		// 	target.loadLayout();
+		// });
+	}
+
+	importLayout(layout: FlexiSavedLayout) {
+		// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
+		if(!this.#ready) {
+			this.#storedLoadLayout = layout;
+			return;
+		}
+
+		// Good to go - import the widgets into their respective targets.
+		this.#targets.forEach(target => {
+			target.importLayout(layout[target.id]);
+		});
+	}
+
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
 		// If no target is hovered, then just release the widget.
 		if(!this.#hoveredTarget) {
@@ -263,6 +296,10 @@ export class FlexiBoard {
 
 		widget.target = to;
 		to.widgets.add(widget);
+	}
+
+	#nextTargetId() {
+		return `target-${this.#nextTargetIndex++}`;
 	}
 
 	get ref() {

@@ -3,6 +3,8 @@
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import LayoutPanelLeft from 'lucide-svelte/icons/layout-panel-left';
+	import { Button } from '$lib/components/ui/button/index.js';
+
 	let { data, children } = $props();
 
 	const pages = {
@@ -30,7 +32,7 @@
 	See Flexiboards in action. Examples built with shadcn-svelte and Tailwind CSS.
 </h2>
 
-<div class="mb-4 flex items-center gap-16">
+<div class="mb-4 flex items-center justify-between gap-16">
 	<!-- TODO: figure out how to stop this changing on click -->
 	<Tabs.Root value={data.slug}>
 		<Tabs.List>
@@ -43,6 +45,14 @@
 			{/each}
 		</Tabs.List>
 	</Tabs.Root>
+
+	<!-- TODO: Point this to the correct URL. -->
+	<Button
+		href="https://github.com/flexiboards/flexiboards/tree/main/examples"
+		target="_blank"
+		rel="noopener noreferrer"
+		variant={'secondary'}>View source code</Button
+	>
 </div>
 
 <div class="w-[1440px] divide-y overflow-clip rounded-lg border">

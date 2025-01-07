@@ -4,7 +4,7 @@
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
-	import type { FlexiBoardConfiguration } from 'svelte-flexiboards';
+	import type { FlexiBoardConfiguration, FlexiBoardController } from 'svelte-flexiboards';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
 
 	let editMode = $state(true);
@@ -15,6 +15,13 @@
 			resizability: 'horizontal'
 		}
 	});
+
+	let onBoardReady = (board: FlexiBoardController) => {
+		console.log('The board has landed!', board);
+
+		// board.importLayout();
+		// board.exportLayout();
+	};
 </script>
 
 <svelte:head>
@@ -41,7 +48,7 @@
 			</div>
 		</h1>
 
-		<FlexiBoard class={'grow'} config={boardConfig}>
+		<FlexiBoard class={'grow'} config={boardConfig} onfirstcreate={onBoardReady}>
 			<FlexiTarget
 				name="left"
 				class={'h-full gap-4'}

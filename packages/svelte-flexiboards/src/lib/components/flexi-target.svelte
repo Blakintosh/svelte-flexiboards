@@ -1,10 +1,14 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
-	import { flexitarget, type FlexiTarget as FlexiTargetSystem } from '$lib/system/target.svelte.js';
-	import type { FlexiTargetConfiguration } from '$lib/system/types.js';
+	import {
+		flexitarget,
+		type FlexiTargetConfiguration,
+		type FlexiTarget as FlexiTargetController
+	} from '$lib/system/target.svelte.js';
+	import type { FlexiCommonProps } from '$lib/system/types.js';
 
-	export type FlexiTargetProps = {
-		header?: Snippet<[{ target: FlexiTargetSystem }]>;
+	export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
+		header?: Snippet<[{ target: FlexiTargetController }]>;
 		children?: Snippet;
 		footer?: Snippet;
 		containerClass?: string;
@@ -17,7 +21,6 @@
 <script lang="ts">
 	import FlexiWidget from './flexi-widget.svelte';
 	import FlexiWidgetWrapper from './flexi-widget-wrapper.svelte';
-	import FlexiDebug from './flexi-debug.svelte';
 	import FlexiGrid from './flexi-grid.svelte';
 
 	let {
@@ -26,10 +29,16 @@
 		header,
 		footer,
 		config,
-		containerClass
+		containerClass,
+		this: _thisTarget = $bindable(),
+		onfirstcreate
 	}: FlexiTargetProps = $props();
 
 	const { onpointerenter, onpointerleave, target } = flexitarget(config);
+
+	// Target created, allow the caller to access it.
+	_thisTarget = target;
+	onfirstcreate?.(target);
 
 	let rendered = $derived(false);
 </script>
