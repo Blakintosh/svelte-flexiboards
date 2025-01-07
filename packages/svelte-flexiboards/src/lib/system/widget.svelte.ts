@@ -1,32 +1,16 @@
 import { getContext, onDestroy, setContext, type Component, type Snippet } from "svelte";
 import { getFlexitargetCtx, type FlexiTarget, type FlexiTargetConfiguration } from "./target.svelte.js";
-import type { GrabbedWidget } from "./types.js";
+import type { WidgetAction, SvelteClassValue, WidgetGrabAction, WidgetResizeAction, WidgetResizability } from "./types.js";
 import { getFlexiwidgetwrapperCtx } from "./utils.svelte.js";
 
 export type FlexiWidgetChildrenSnippet = Snippet<[{ widget: FlexiWidget, Component?: Component }]>;
 
-export type FlexiWidgetClassFunction = (widget: FlexiWidget) => string;
-
-export type FlexiWidgetClasses = string | {
-    /**
-     * The base class name for the widget.
-     */
-    default: string;
-
-    /**
-     * The class name that is added when the widget is being grabbed.
-     */
-    grabbed?: string;
-
-    /**
-     * The class name that is added when the widget is a shadow widget.
-     */
-    shadow?: string;
-} | FlexiWidgetClassFunction;
+export type FlexiWidgetClassFunction = (widget: FlexiWidget) => SvelteClassValue;
+export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
 
 export type FlexiWidgetDefaults = {
     draggable?: boolean;
-    resizable?: boolean;
+    resizability?: WidgetResizability;
     width?: number;
     height?: number;
     snippet?: FlexiWidgetChildrenSnippet;
@@ -35,12 +19,13 @@ export type FlexiWidgetDefaults = {
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+    name?: string;
     x?: number;
     y?: number;
 };
 
 type FlexiWidgetState = {
-    grabbed: GrabbedWidget | null;
+    currentAction: WidgetAction | null;
     width: number;
     height: number;
     x: number;
@@ -48,6 +33,10 @@ type FlexiWidgetState = {
 }
 
 type FlexiWidgetDerivedConfiguration = {
+    /**
+     * The name of the widget, which can be used to identify it in exported layouts.
+     */
+    name?: string;
 
     /**
      * The component that is rendered by this item. This is optional if a snippet is provided.
@@ -60,9 +49,9 @@ type FlexiWidgetDerivedConfiguration = {
     snippet?: FlexiWidgetChildrenSnippet;
 
     /**
-     * Whether the item is resizable.
+     * The resizability of the widget.
      */
-    resizable: boolean;
+    resizability: WidgetResizability;
 
     /**
      * Whether the item is draggable.
@@ -79,11 +68,13 @@ export class FlexiWidget {
     /**
      * The target that this widget belongs to.
      */
-    target?: FlexiTarget = $state(undefined);
+    target: FlexiTarget = $state() as FlexiTarget;
 
     #providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.providerWidgetDefaults);
     #targetWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.config.widgetDefaults);
-    #rawConfig: FlexiWidgetConfiguration = $state({});
+    #rawConfig: FlexiWidgetConfiguration = $state() as FlexiWidgetConfiguration;
+
+    ref?: HTMLElement = $state(undefined);
 
     /**
      * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
@@ -92,7 +83,7 @@ export class FlexiWidget {
     #config: FlexiWidgetDerivedConfiguration = $derived({
         component: this.#rawConfig.component ?? this.#targetWidgetDefaults?.component ?? this.#providerWidgetDefaults?.component,
         snippet: this.#rawConfig.snippet ?? this.#targetWidgetDefaults?.snippet ?? this.#providerWidgetDefaults?.snippet,
-        resizable: this.#rawConfig.resizable ?? this.#targetWidgetDefaults?.resizable ?? this.#providerWidgetDefaults?.resizable ?? false,
+        resizability: this.#rawConfig.resizability ?? this.#targetWidgetDefaults?.resizability ?? this.#providerWidgetDefaults?.resizability ?? "none",
         draggable: this.#rawConfig.draggable ?? this.#targetWidgetDefaults?.draggable ?? this.#providerWidgetDefaults?.draggable ?? true,
         className: this.#rawConfig.className ?? this.#targetWidgetDefaults?.className ?? this.#providerWidgetDefaults?.className
     });
@@ -102,7 +93,7 @@ export class FlexiWidget {
      * are only written to once when the widget is created. Properties stored in here do not react to changes in the config.
      */
     #state: FlexiWidgetState = $state({
-        grabbed: null,
+        currentAction: null,
         width: 1,
         height: 1,
         x: 0,
@@ -110,25 +101,40 @@ export class FlexiWidget {
     });
 
     isShadow: boolean = $state(false);
+    isGrabbed: boolean = $derived(this.currentAction?.action == "grab");
+    isResizing: boolean = $derived(this.currentAction?.action == "resize");
 
     grabbers: number = $state(0);
+    resizers: number = $state(0);
 
     style: string = $derived.by(() => {
-        if(!this.grabbed) {
+        const currentAction = this.currentAction;
+
+        if(!currentAction) {
             return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};` +
                 this.#getCursorStyle();
         }
 
-        return `pointer-events: none; user-select: none; cursor: grabbing; position: absolute; top: ${this.grabbed.positionWatcher.position.y - this.grabbed.offsetY}px; left: ${this.grabbed.positionWatcher.position.x - this.grabbed.offsetX}px; height: ${this.grabbed.capturedHeight}px; width: ${this.grabbed.capturedWidth}px;`;
-    })
+        // Grab action
+        if(currentAction.action == "grab") {
+            return this.#getGrabbedWidgetStyle(currentAction);
+        }
+
+        // Resize action
+        return this.#getResizingWidgetStyle(currentAction);
+    });
 
     #getCursorStyle() {
         if(!this.draggable) {
             return '';
         }
 
-        if(this.grabbed) {
+        if(this.isGrabbed) {
             return 'pointer-events: none; user-select: none; cursor: grabbing;';
+        }
+
+        if(this.isResizing) {
+            return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
         }
 
         if(this.grabbers == 0) {
@@ -136,6 +142,45 @@ export class FlexiWidget {
         }
 
         return 'user-select: none;';
+    }
+
+    #getGrabbedWidgetStyle(action: WidgetGrabAction) {
+        const locationOffsetX = action.positionWatcher.position.x - action.offsetX;
+        const locationOffsetY = action.positionWatcher.position.y - action.offsetY;
+
+        // Fixed when it's a grabbed widget.
+        const height = action.capturedHeightPx;
+        const width = action.capturedWidthPx;
+
+        return `pointer-events: none; user-select: none; cursor: grabbing; position: absolute; top: ${locationOffsetY}px; left: ${locationOffsetX}px; height: ${height}px; width: ${width}px;`;
+    }
+
+    #getResizingWidgetStyle(action: WidgetResizeAction) {
+        const unitSizeY = action.heightPx / action.initialHeightUnits;
+        const unitSizeX = action.widthPx / action.initialWidthUnits;
+
+        // TODO: need to compute the new top and left relative to the provider.
+        const top = action.top;
+        const left = action.left;
+
+        // Calculate new dimensions based on resizability
+        let height = action.heightPx;
+        let width = action.widthPx;
+
+        switch (this.resizability) {
+            case 'horizontal':
+                width = Math.max(action.widthPx + (action.positionWatcher.position.x - action.offsetX), unitSizeX);
+                break;
+            case 'vertical': 
+                height = Math.max(action.heightPx + (action.positionWatcher.position.y - action.offsetY), unitSizeY);
+                break;
+            case 'both':
+                height = Math.max(action.heightPx + (action.positionWatcher.position.y - action.offsetY), unitSizeY);
+                width = Math.max(action.widthPx + (action.positionWatcher.position.x - action.offsetX), unitSizeX);
+                break;
+        }
+
+        return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
     }
 
     constructor(target: FlexiTarget, config: FlexiWidgetConfiguration, isShadow: boolean = false) {
@@ -152,35 +197,55 @@ export class FlexiWidget {
         // Allows the event handlers to be called without binding to the widget instance.
         this.onpointerdown = this.onpointerdown.bind(this);
         this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
+        this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
     }
 
     onpointerdown(event: PointerEvent) {
-        if(!this.draggable || !event.target || this.grabbers) return;
+        if(!this.draggable || !event.target || this.grabbers) {
+            return;
+        };
 
-        this.grabWidget(event.target as HTMLElement, event.clientX, event.clientY);
+        this.grabWidget(event.clientX, event.clientY);
         // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
         (event.target as HTMLElement).releasePointerCapture(event.pointerId);
         event.preventDefault();
     }
 
     ongrabberpointerdown(event: PointerEvent) {
-        if(!this.draggable || !event.target) return;
+        if(!this.draggable || !event.target) {
+            return;
+        };
 
-        this.grabWidget(event.target as HTMLElement, event.clientX, event.clientY);
+        this.grabWidget(event.clientX, event.clientY);
         // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
         (event.target as HTMLElement).releasePointerCapture(event.pointerId);
         event.preventDefault();
     }
 
-    grabWidget(element: HTMLElement, clientX: number, clientY: number) {
-        const rect = element.getBoundingClientRect();
+    onresizerpointerdown(event: PointerEvent) {
+        if(this.resizability == "none" || !event.target) {
+            return;
+        };
+
+        this.startResizeWidget(event.clientX, event.clientY);
+        // Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
+        (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+        event.preventDefault();
+    }
+
+    grabWidget(clientX: number, clientY: number) {
+        if(!this.ref) {
+            throw new Error("A FlexiWidget was instantiated without a bound reference element.");
+        }
+
+        const rect = this.ref.getBoundingClientRect();
 
         // Get the offset of the cursor relative to the widget's bounds.
         const xOffset = clientX - rect.left;
         const yOffset = clientY - rect.top;
 
         // Propagate an event up to the parent target, indicating that the widget has been grabbed.
-        this.grabbed = this.target.onwidgetgrabbed({
+        this.currentAction = this.target.onwidgetgrabbed({
             widget: this,
             target: this.target,
             xOffset,
@@ -189,6 +254,28 @@ export class FlexiWidget {
             capturedHeight: rect.height,
             capturedWidth: rect.width
         });
+    }
+    
+    startResizeWidget(clientX: number, clientY: number) {
+		console.log("go for wefwefewfwe")
+        if(!this.ref) {
+            throw new Error("A FlexiWidget was instantiated without a bound reference element.");
+        }
+
+        const rect = this.ref.getBoundingClientRect();
+
+        // Propagate an event up to the parent target, indicating that the widget has started resizing.
+        this.currentAction = this.target.onwidgetstartresize({
+            widget: this,
+            target: this.target,
+            xOffset: clientX,
+            yOffset: clientY,
+            left: rect.left,
+            top: rect.top,
+            heightPx: rect.height,
+            widthPx: rect.width
+        });
+        console.log("currentAction", this.currentAction);
     }
 
     setBounds(x: number, y: number, width: number, height: number) {
@@ -210,18 +297,30 @@ export class FlexiWidget {
         this.grabbers--;
     }
 
+    addResizer() {
+        this.resizers++;
+
+        return {
+            onpointerdown: this.onresizerpointerdown
+        }
+    }
+
+    removeResizer() {
+        this.resizers--;
+    }
+
     // Getters and setters
 
     /**
      * When the widget is being grabbed, this contains information that includes its position, size and offset.
      * When this is null, the widget is not being grabbed.
      */
-    get grabbed() {
-        return this.#state.grabbed;
+    get currentAction() {
+        return this.#state.currentAction;
     }
 
-    set grabbed(value: GrabbedWidget | null) {
-        this.#state.grabbed = value;
+    set currentAction(value: WidgetAction | null) {
+        this.#state.currentAction = value;
     }
 
     /**
@@ -236,14 +335,21 @@ export class FlexiWidget {
     }
 
     /**
+     * The resizability of the widget.
+     */
+    get resizability() {
+        return this.#config.resizability;
+    }
+
+    set resizability(value: WidgetResizability) {
+        this.#rawConfig.resizability = value;
+    }
+
+    /**
      * Whether the widget is resizable.
      */
     get resizable() {
-        return this.#config.resizable;
-    }
-
-    set resizable(value: boolean) {
-        this.#rawConfig.resizable = value;
+        return this.resizability !== 'none';
     }
 
     /**
@@ -353,6 +459,21 @@ export function flexigrab() {
 
     onDestroy(() => {
         widget.removeGrabber();
+    });
+
+    return { widget, onpointerdown };
+}
+
+export function flexiresize() {
+    const widget = getFlexiwidgetCtx();
+    if(!widget) {
+        throw new Error("A FlexiResize was instantiated outside of a FlexiWidget context. Ensure that flexiresize() (or <FlexiResize>) is called within a <FlexiWidget> component.");
+    }
+
+    const { onpointerdown } = widget.addResizer();
+
+    onDestroy(() => {
+        widget.removeResizer();
     });
 
     return { widget, onpointerdown };

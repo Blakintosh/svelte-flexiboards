@@ -3,6 +3,7 @@ import FlexiBoard, { type FlexiBoardProps } from "./components/flexi-board.svelt
 import FlexiTarget, { type FlexiTargetProps } from "./components/flexi-target.svelte";
 import FlexiWidget, { type FlexiWidgetProps } from "./components/flexi-widget.svelte";
 import FlexiGrab from "./components/flexi-grab.svelte";
+import FlexiResize from "./components/flexi-resize.svelte";
 import type { FlexiBoardConfiguration } from "./system/provider.svelte.js";
 import type { FlexiTargetConfiguration } from "./system/target.svelte.js";
 import type { FlexiWidgetConfiguration } from "./system/widget.svelte.js";
@@ -19,5 +20,6 @@ export {
 	FlexiWidget,
 	type FlexiWidgetConfiguration,
 	type FlexiWidgetProps,
-	FlexiGrab
+	FlexiGrab,
+	FlexiResize
 };

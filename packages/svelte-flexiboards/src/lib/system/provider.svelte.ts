@@ -1,5 +1,5 @@
 import { getContext, setContext } from "svelte";
-import type { GrabbedWidget, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import type { WidgetAction, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedEvent, WidgetStartResizeEvent, WidgetGrabAction, WidgetResizeAction } from "./types.js";
 import type { FlexiTarget, FlexiTargetDefaults } from "./target.svelte.js";
 import type { FlexiWidget, FlexiWidgetDefaults } from "./widget.svelte.js";
 import { PointerPositionWatcher } from "./utils.svelte.js";
@@ -11,12 +11,12 @@ export type FlexiBoardConfiguration = {
 };
 
 export class FlexiBoard {
-	grabbed: GrabbedWidget | null = $state(null);
+	currentWidgetAction: WidgetAction | null = $state(null);
 
 	#targets: FlexiTarget[] = $state([]);
 	#hoveredTarget: FlexiTarget | null = $state(null);
 
-	#ref: { ref: HTMLElement | null } = $state({ ref: null});
+	#ref: { ref: HTMLElement | null } = $state({ ref: null });
 
 	#positionWatcher: PointerPositionWatcher = new PointerPositionWatcher(this.#ref);
 
@@ -24,7 +24,7 @@ export class FlexiBoard {
 	config?: FlexiBoardConfiguration = $derived(this.#rawProps?.config);
 
 	style: string = $derived.by(() => {
-		if(!this.grabbed) {
+		if(!this.currentWidgetAction) {
 			return 'position: relative;';
 		}
 
@@ -59,9 +59,10 @@ export class FlexiBoard {
 		this.#hoveredTarget = event.target;
 
 		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
-		if(this.grabbed) {
+		const currentAction = this.currentWidgetAction;
+		if(currentAction?.action === 'grab') {
 			event.target.ongrabbedwidgetover({
-				widget: this.grabbed.widget
+				widget: currentAction.widget
 			});
 		}
 	}
@@ -72,21 +73,31 @@ export class FlexiBoard {
 			this.#hoveredTarget = null;
 		}
 
-		if(this.grabbed) {
+		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
+		const currentAction = this.currentWidgetAction;
+		if(currentAction?.action === 'grab') {
 			event.target.ongrabbedwidgetleave();
 		}
+
+		// If it's resize, then we don't care that the pointer has left the target.
 	}
 
 	onwidgetgrabbed(event: WidgetGrabbedEvent) {
-		this.grabbed = {
+		if(this.currentWidgetAction) {
+			return null;
+		}
+
+		const action: WidgetGrabAction = {
+			action: 'grab',
 			target: event.target,
 			widget: event.widget,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
-			capturedHeight: event.capturedHeight,
-			capturedWidth: event.capturedWidth,
+			capturedHeightPx: event.capturedHeight,
+			capturedWidthPx: event.capturedWidth,
 			positionWatcher: this.#positionWatcher
 		};
+		this.currentWidgetAction = action;
 
 		this.#lockViewport();
 
@@ -94,7 +105,42 @@ export class FlexiBoard {
 			widget: event.widget
 		});
 
-		return this.grabbed;
+		return action;
+	}
+
+	onwidgetstartresize(event: WidgetStartResizeEvent) {
+		if(this.currentWidgetAction) {
+			return null;
+		}
+
+		const providerRef = this.ref;
+		if(!providerRef) {
+			throw new Error("Provider ref is not set");
+		}
+
+		const providerRect = providerRef.getBoundingClientRect();
+		
+		const action: WidgetResizeAction = {
+			action: 'resize',
+			target: event.target,
+			widget: event.widget,
+			offsetX: event.xOffset - providerRect.left,
+			offsetY: event.yOffset - providerRect.top,
+			left: event.left - providerRect.left,
+			top: event.top - providerRect.top,
+			heightPx: event.heightPx,
+			widthPx: event.widthPx,
+			initialHeightUnits: event.widget.height,
+			initialWidthUnits: event.widget.width,
+			positionWatcher: this.#positionWatcher
+		};
+
+		console.log("go for resize")
+		this.currentWidgetAction = action;
+
+		this.#lockViewport();
+
+		return action;
 	}
 
 	#lockViewport() {
@@ -128,7 +174,7 @@ export class FlexiBoard {
 	}
 
 	onPointerUp(event: PointerEvent) {
-		if(!this.grabbed) {
+		if(!this.currentWidgetAction) {
 			return;
 		}
 
@@ -138,34 +184,72 @@ export class FlexiBoard {
 	handleWidgetRelease() {
 		this.#unlockViewport();
 
-		// Move the widget to the hovered target if it exists.
-		if(this.#hoveredTarget) {
-			let defaultPrevented = false;
+		const currentAction = this.currentWidgetAction!;
 
-			const event: WidgetDroppedEvent = {
-				widget: this.grabbed.widget,
-				// The target can call preventDefault to prevent the widget from being dropped, e.g. if it doesn't fit.
-				preventDefault: () => {
-					defaultPrevented = true;
-				}
-			};
-			
-			this.#hoveredTarget.onwidgetdropped(event);
-
-			if(defaultPrevented) {
-				this.grabbed.widget.grabbed = null;
-				this.grabbed = null;
-				return;
-			}
-			this.moveWidget(this.grabbed.widget, this.grabbed.target, this.#hoveredTarget);
+		switch(currentAction.action) {
+			case 'grab':
+				this.#handleGrabbedWidgetRelease(currentAction);
+				break;
+			case 'resize':
+				this.#handleResizingWidgetRelease(currentAction);
+				break;
 		}
+
+	}
+
+	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
+		// If no target is hovered, then just release the widget.
+		if(!this.#hoveredTarget) {
+			this.#releaseCurrentWidgetAction();
+			return;
+		}
+
+		let defaultPrevented = false;
+
+		const event: WidgetDroppedEvent = {
+			widget: action.widget,
+			// The target can call preventDefault to prevent the widget from being dropped, e.g. if it doesn't fit.
+			preventDefault: () => {
+				defaultPrevented = true;
+			}
+		};
+		
+		this.#hoveredTarget.onwidgetdropped(event);
+
+		if(defaultPrevented) {
+			this.#releaseCurrentWidgetAction();
+			return;
+		}
+
+		this.moveWidget(action.widget, action.target, this.#hoveredTarget);
+
+		this.#releaseCurrentWidgetAction();
+	}
+
+	#handleResizingWidgetRelease(action: WidgetResizeAction) {
+		action.target.onwidgetdropped({
+			widget: action.widget,
+			preventDefault: () => {}
+		});
+		this.#releaseCurrentWidgetAction();
+	}
+
+	#releaseCurrentWidgetAction() {
+		if(!this.currentWidgetAction) {
+			return;
+		}
+
+		// TODO: this doesn't currently handle reinstating the widget to its original target if it's not being moved.
+		// won't be guaranteed to be released inside the original target.
+
+		const widget = this.currentWidgetAction.widget;
 
 		// If the widget is still being grabbed, we'll need to release it.
-		if(this.grabbed?.widget?.grabbed) {
-			this.grabbed.widget.grabbed = null;
+		if(widget.currentAction) {
+			widget.currentAction = null;
 		}
 
-		this.grabbed = null;
+		this.currentWidgetAction = null;
 	}
 
 	/**
@@ -179,6 +263,10 @@ export class FlexiBoard {
 
 		widget.target = to;
 		to.widgets.add(widget);
+	}
+
+	get ref() {
+		return this.#ref.ref;
 	}
 
 	set ref(ref: HTMLElement | null) {

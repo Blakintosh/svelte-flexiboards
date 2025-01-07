@@ -12,7 +12,7 @@
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
 			draggable: true,
-			resizable: true
+			resizability: 'horizontal'
 		}
 	});
 </script>
@@ -33,7 +33,7 @@
 					onCheckedChange={() => {
 						boardConfig.widgetDefaults = {
 							draggable: editMode,
-							resizable: editMode
+							resizability: editMode ? 'horizontal' : 'none'
 						};
 					}}
 				/>
@@ -55,7 +55,7 @@
 					}
 				}}
 			>
-				<DashboardTile title="Overall Score" x={0} y={0} draggable={false}>
+				<DashboardTile title="Overall Score" x={0} y={0} draggable={false} resizability={'none'}>
 					<div class="text-2xl font-bold">87</div>
 					<p class="text-xs text-muted-foreground">+8 from last month</p>
 				</DashboardTile>

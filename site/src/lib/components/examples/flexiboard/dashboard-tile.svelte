@@ -13,28 +13,43 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { FlexiGrab, FlexiWidget } from 'svelte-flexiboards';
 	import Grabber from '../common/grabber.svelte';
+	import Resizer from '../common/resizer.svelte';
 
 	let { title, component, children: childrenSnippet, ...props }: DashboardTileProps = $props();
 </script>
 
-<FlexiWidget {component} {...props}>
+<FlexiWidget
+	{component}
+	{...props}
+	class={(widget) => [
+		widget.isGrabbed && 'animate-pulse opacity-50',
+		widget.isShadow && 'opacity-50'
+	]}
+>
 	{#snippet children({ widget, Component })}
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="flex items-center gap-2 text-xl font-semibold">
-					{#if widget.draggable}
-						<Grabber size={20} class="text-muted-foreground" />
+		<Card.Root class="flex h-full w-full flex-col justify-between">
+			<div>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-xl font-semibold">
+						{#if widget.draggable}
+							<Grabber size={20} class="text-muted-foreground" />
+						{/if}
+						{title}
+					</Card.Title>
+				</Card.Header>
+				<Card.Content>
+					{#if childrenSnippet}
+						{@render childrenSnippet?.({ widget, Component })}
+					{:else if Component}
+						<Component />
 					{/if}
-					{title}
-				</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				{#if childrenSnippet}
-					{@render childrenSnippet?.({ widget, Component })}
-				{:else if Component}
-					<Component />
+				</Card.Content>
+			</div>
+			<Card.Footer class="flex justify-end">
+				{#if widget.resizable}
+					<Resizer size={20} class="cursor-col-resize text-muted-foreground" />
 				{/if}
-			</Card.Content>
+			</Card.Footer>
 		</Card.Root>
 	{/snippet}
 </FlexiWidget>

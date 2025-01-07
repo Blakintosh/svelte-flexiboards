@@ -1,7 +1,7 @@
 import { getContext, setContext } from "svelte";
 import { getFlexiboardCtx, type FlexiBoard } from "./provider.svelte.js";
 import { FlexiWidget, type FlexiWidgetConfiguration, type FlexiWidgetDefaults } from "./widget.svelte.js";
-import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetDroppedEvent, WidgetGrabbedEvent } from "./types.js";
+import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetAction, WidgetDroppedEvent, WidgetGrabAction, WidgetGrabbedEvent, WidgetStartResizeEvent } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
 import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid, type FlowTargetLayout, type FreeFormTargetLayout } from "./grid.svelte.js";
 import type { FlexiTargetProps } from "$lib/components/flexi-target.svelte";
@@ -29,7 +29,7 @@ export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 class FlexiTarget {
     widgets: SvelteSet<FlexiWidget> = $state(new SvelteSet());
 
-    provider?: FlexiBoard = $state(undefined);
+    provider: FlexiBoard = $state() as FlexiBoard;
 
     #providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
     providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
@@ -39,7 +39,7 @@ class FlexiTarget {
      */
     #state: FlexiTargetState = $state({ 
         hovered: false,
-        widgetOver: null,
+        actionWidget: null,
         rendered: false
     });
 
@@ -73,7 +73,7 @@ class FlexiTarget {
         widgetDefaults: this.#targetConfig?.widgetDefaults ?? null
     });
     
-    constructor(provider: FlexiBoard, config: FlexiTargetConfiguration) {
+    constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration) {
         this.provider = provider;
 
         this.#targetConfig = config;
@@ -87,8 +87,8 @@ class FlexiTarget {
         });
     }
 
-    tryAddWidget(widget: FlexiWidget, x?: number, y?: number): boolean {
-        const added = this.grid.tryPlaceWidget(widget, x, y);
+    tryAddWidget(widget: FlexiWidget, x?: number, y?: number, width?: number, height?: number): boolean {
+        const added = this.grid.tryPlaceWidget(widget, x, y, width, height);
         
         if(added) {
             this.widgets.add(widget);
@@ -114,10 +114,10 @@ class FlexiTarget {
     }
 
     createWidget(config: FlexiWidgetConfiguration) {
-        const [x, y] = [config.x, config.y];
+        const [x, y, width, height] = [config.x, config.y, config.width, config.height];
         const widget = new FlexiWidget(this, config);
         
-        if(!this.tryAddWidget(widget, x, y)) {
+        if(!this.tryAddWidget(widget, x, y, width, height)) {
             throw new Error("Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision.");
         }
 
@@ -130,7 +130,7 @@ class FlexiTarget {
             height: of.height,
             component: of.component,
             draggable: of.draggable,
-            resizable: of.resizable,
+            resizability: of.resizability,
             snippet: of.snippet,
             className: of.className
         }, true);
@@ -163,17 +163,42 @@ class FlexiTarget {
         return this.provider.onwidgetgrabbed(event);
     }
 
+    onwidgetstartresize(event: WidgetStartResizeEvent) {
+        // Remove the widget as it's now in a pseudo-floating state.
+        this.grid.removeWidget(event.widget);
+
+        const result = this.provider.onwidgetstartresize(event);
+
+        if(result) {
+            this.actionWidget = {
+                action: "resize",
+                widget: event.widget
+            };
+
+            this.#createDropzoneWidget();
+        }
+
+        return result;
+    }
+
     onwidgetdropped(event: WidgetDroppedEvent) {
         console.log("widget dropped", event.widget);
-        this.widgetOver = null;
+
+        const actionWidget = this.actionWidget;
+        if(!actionWidget) {
+            return;
+        }
+
+        const [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
+        this.actionWidget = null;
         this.#removeDropzoneWidget();
 
         // Try to formally place the widget in the grid, which will also serve as a final check that
         // the drop is possible.
         const grid = this.grid;
 
-        const position = grid.mouseCellPosition;
-        const canPlace = grid.tryPlaceWidget(event.widget, position.x, position.y);
+
+        const canPlace = grid.tryPlaceWidget(event.widget, x, y, width, height);
 
         // Don't go ahead with the drop, the placement is not possible.
         if(!canPlace) {
@@ -189,14 +214,17 @@ class FlexiTarget {
     }
 
     ongrabbedwidgetover(event: GrabbedWidgetMouseEvent) {
-        this.widgetOver = event.widget;
+        this.actionWidget = {
+            action: "grab",
+            widget: event.widget
+        };
 
         this.#createDropzoneWidget();
     }
 
     ongrabbedwidgetleave() {
-        console.log("grabbed widget leave", this.widgetOver);
-        this.widgetOver = null;
+        console.log("grabbed widget leave", this.actionWidget);
+        this.actionWidget = null;
         this.#removeDropzoneWidget();
     }
 
@@ -206,7 +234,7 @@ class FlexiTarget {
     }
 
     #createDropzoneWidget() {
-        if(this.dropzoneWidget || !this.widgetOver) {
+        if(this.dropzoneWidget || !this.actionWidget) {
             return;
         }
         const grid = this.grid;
@@ -214,28 +242,83 @@ class FlexiTarget {
         // Take a snapshot of the grid so we can restore its state if the hover stops.
         this.#gridSnapshot = grid.takeSnapshot();
 
-        console.log("create dropzone widget", this.widgetOver);
-        this.dropzoneWidget = this.#createShadow(this.widgetOver);
+        console.log("create dropzone widget", this.actionWidget);
+
+        const dropzoneWidget = this.#createShadow(this.actionWidget.widget);
+        this.dropzoneWidget = dropzoneWidget;
 
         console.log("DROPonz widget will be placed at", this.#mouseCellPosition.x, this.#mouseCellPosition.y);
         console.log("dropzone widget", this.dropzoneWidget);
 
-        grid.tryPlaceWidget(this.dropzoneWidget, this.#mouseCellPosition.x, this.#mouseCellPosition.y);
+        let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
+
+        grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height);
     }
 
     #updateDropzoneWidget() {
+        const dropzoneWidget = this.dropzoneWidget;
+        const actionWidget = this.actionWidget;
 
-        if(!this.dropzoneWidget || (this.dropzoneWidget.x === this.#mouseCellPosition.x && this.dropzoneWidget.y === this.#mouseCellPosition.y)) {
+        if(!dropzoneWidget || !actionWidget) {
             return;
         }
 
-        // The dropzone position has changed, so we need to reposition it in the grid.
+        let [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
+
+        console.log("dropzone widget will be placed at", x, y, width, height);
+
+        // No change, no need to update.
+        if(x === dropzoneWidget.x && y === dropzoneWidget.y && width === dropzoneWidget.width && height === dropzoneWidget.height) {
+            return;
+        }
+
         const grid = this.grid;
 
-        grid.removeWidget(this.dropzoneWidget);
+        grid.removeWidget(dropzoneWidget);
         grid.restoreFromSnapshot(this.#gridSnapshot!);
 
-        grid.tryPlaceWidget(this.dropzoneWidget, this.#mouseCellPosition.x, this.#mouseCellPosition.y);
+        grid.tryPlaceWidget(dropzoneWidget, x, y, width, height);
+    }
+
+    #getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
+        const mouseCellPosition = this.#mouseCellPosition;
+
+        switch(actionWidget.action) {
+            case "grab":
+                return this.#getGrabbedDropzoneLocation(actionWidget.widget, mouseCellPosition);
+            case "resize":
+                return this.#getResizingDropzoneLocation(actionWidget.widget, mouseCellPosition);
+        }
+    }
+
+    #getGrabbedDropzoneLocation(grabbedWidget: FlexiWidget, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
+        return [mouseCellPosition.x, mouseCellPosition.y, grabbedWidget.width, grabbedWidget.height];
+    }
+
+    #getResizingDropzoneLocation(resizingWidget: FlexiWidget, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
+        const { width, height } = this.#getNewWidgetHeightAndWidth(resizingWidget, mouseCellPosition);
+        
+        console.log("want: ", width, height, "x, y", mouseCellPosition.x, mouseCellPosition.y);
+        return [resizingWidget.x, resizingWidget.y, width, height];
+    }
+
+    #getNewWidgetHeightAndWidth(widget: FlexiWidget, mouseCellPosition: Position) {
+        const grid = this.grid;
+
+        // TODO: do not allow flow axis resizing in flow layouts.
+        const newWidth = mouseCellPosition.x - widget.x + 1;
+        const newHeight = mouseCellPosition.y - widget.y + 1;
+
+        switch(widget.resizability) {
+            case "horizontal":
+                return { width: newWidth, height: widget.height };
+            case "vertical":
+                return { width: widget.width, height: newHeight };
+            case "both":
+                return { width: newWidth, height: newHeight };
+        }
+
+        return { width: widget.width, height: widget.height };
     }
 
     #removeDropzoneWidget() {
@@ -271,12 +354,12 @@ class FlexiTarget {
     /**
      * When set, this indicates that a widget is currently being hovered over this target.
      */
-    get widgetOver() {
-        return this.#state.widgetOver;
+    get actionWidget() {
+        return this.#state.actionWidget;
     }
 
-    set widgetOver(value: FlexiWidget | null) {
-        this.#state.widgetOver = value;
+    set actionWidget(value: FlexiTargetActionWidget | null) {
+        this.#state.actionWidget = value;
     }
 
     /**
@@ -306,14 +389,6 @@ class FlexiTarget {
         return this.#grid?.rows;
     }
 
-    // get debug_gridLayout() {
-    //     return this.grid.layout;
-    // }
-
-    // get debug_gridBitmaps() {
-    //     return this.grid.bitmaps;
-    // }
-
     get grid() {
         const grid = this.#grid;
         if(!grid) {
@@ -331,6 +406,11 @@ class FlexiTarget {
     }
 }
 
+type FlexiTargetActionWidget = {
+    action: WidgetAction["action"];
+    widget: FlexiWidget;
+}
+
 type FlexiTargetState = {
     /**
      * Whether the target is currently being hovered over by the mouse.
@@ -338,9 +418,9 @@ type FlexiTargetState = {
     hovered: boolean;
 
     /**
-     * When set, this indicates that a grabbed widget is currently hovering over this target.
+     * When set, this indicates a widget action that is currently being performed (or is focused) on this target.
      */
-    widgetOver: FlexiWidget | null;
+    actionWidget: FlexiTargetActionWidget | null;
 
     /**
      * Whether the target is mounted and ready to render widgets.
@@ -354,9 +434,9 @@ const contextKey = Symbol('flexitarget');
  * Creates a new FlexiTarget instance in the context of the current FlexiBoard.
  * @returns A FlexiTarget class instance.
  */
-function flexitarget(props: FlexiTargetProps) {
+function flexitarget(config?: FlexiTargetConfiguration) {
     const provider = getFlexiboardCtx();
-    const target = new FlexiTarget(provider, props);
+    const target = new FlexiTarget(provider, config);
 
     setContext(contextKey, target);
 

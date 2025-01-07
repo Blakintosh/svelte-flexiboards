@@ -54,7 +54,6 @@
 	<FlexiTarget
 		class="h-full w-96 rounded-lg border px-4 py-2 transition-transform duration-500"
 		name="center"
-		debug
 	>
 		{#snippet header()}
 			<h2 class="text-lg font-bold">In Progress</h2>

@@ -14,15 +14,35 @@ export type Position = {
     y: number;
 }
 
-export type GrabbedWidget = {
+export type WidgetResizability = "none" | "horizontal" | "vertical" | "both";
+
+export type WidgetGrabAction = {
+    action: 'grab';
     widget: FlexiWidget;
     target: FlexiTarget;
     offsetX: number;
     offsetY: number;
     positionWatcher: PointerPositionWatcher;
-    capturedHeight: number;
-    capturedWidth: number;
+    capturedHeightPx: number;
+    capturedWidthPx: number;
+}
+
+export type WidgetResizeAction = {
+    action: 'resize';
+    widget: FlexiWidget;
+    target: FlexiTarget;
+    offsetX: number;
+    offsetY: number;
+    left: number;
+    top: number;
+    heightPx: number;
+    widthPx: number;
+    initialHeightUnits: number;
+    initialWidthUnits: number;
+    positionWatcher: PointerPositionWatcher;
 }   
+
+export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
 // Event objects
 
@@ -38,9 +58,19 @@ export type WidgetGrabbedEvent = {
     capturedWidth: number;
 }
 
+export type WidgetStartResizeEvent = {
+    widget: FlexiWidget;
+    target: FlexiTarget;
+    xOffset: number;
+    yOffset: number;
+    left: number;
+    top: number;
+    heightPx: number;
+    widthPx: number;
+}
+
 export type WidgetDroppedEvent = {
     widget: FlexiWidget;
-    position: Position;
     preventDefault: () => void;
 }
 

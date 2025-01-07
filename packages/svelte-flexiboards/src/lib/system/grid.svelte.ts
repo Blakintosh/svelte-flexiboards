@@ -89,7 +89,7 @@ type WidgetSnapshot = {
 const MAX_COLUMNS = 32;
 
 export abstract class FlexiGrid {
-    abstract tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean;
+    abstract tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean;
     abstract removeWidget(widget: FlexiWidget): boolean;
     abstract takeSnapshot(): unknown;
     abstract restoreFromSnapshot(snapshot: unknown): void;
@@ -208,11 +208,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         this.#layout = new Array(this.#rows).fill(new Array(this.#columns).fill(null));
     }
 
-    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean {
+    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
         // Need both coordinates to place a widget.
         if(cellX === undefined || cellY === undefined) {
             throw new Error("Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.");
         }
+
+        // If no width or height is specified, default to 1.
+        width ??= 1;
+        height ??= 1;
 
         // When placing a widget, we should constrain it so that it can only make so many more columns/rows more than the current grid size.
         if(cellX >= this.#columns) {
@@ -222,10 +226,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
             cellY = this.#rows - 1;
         }
 
-        const widgetXBitmap = this.#createWidgetBitmap(widget, cellX, widget.width);
+        const widgetXBitmap = this.#createWidgetBitmap(widget, cellX, width);
 
-        const endCellX = cellX + widget.width;
-        const endCellY = cellY + widget.height;
+        const endCellX = cellX + width;
+        const endCellY = cellY + height;
 
         // We need to try expand the grid if the widget is moving beyond the current bounds,
         // but if this is not possible then the operation fails.
@@ -243,7 +247,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         const operations: Map<FlexiWidget, MoveOperation> = new Map();
 
         // Looking row-by-row, we can identify collisions using the bitmaps.
-        for(let i = cellY; i < cellY + widget.height; i++) {
+        for(let i = cellY; i < cellY + height; i++) {
             // Expand rows as necessary if this operation is supported.
             // TODO: If we guarantee that insertion position can only be one higher than the current row,
             // we can avoid this.
@@ -260,13 +264,13 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
             // Find the first widget of this row that's intersecting, then push it out of the way
             // which in turn will push any other widgets out of the way on this row.
-            for(let j = cellX; j < cellX + widget.width; j++) { 
+            for(let j = cellX; j < cellX + width; j++) { 
                 const collidingWidget = this.#layout[i][j];
 
                 if(!collidingWidget) {
                     continue;
                 }
-                const moveBy = (cellX + widget.width) - collidingWidget.x;
+                const moveBy = (cellX + width) - collidingWidget.x;
 
                 if(!this.#prepareMoveWidgetX(collidingWidget, moveBy, operations)) {
                     // TODO: If moving along the x-axis is not possible, we then want to try via the y-axis.
@@ -286,8 +290,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         }
 
         // Place the widget now that all other widgets have been moved out of the way.
-        for(let i = cellX; i < cellX + widget.width; i++) {
-            for(let j = cellY; j < cellY + widget.height; j++) {
+        for(let i = cellX; i < cellX + width; i++) {
+            for(let j = cellY; j < cellY + height; j++) {
                 this.#layout[j][i] = widget;
             }
         }
@@ -296,11 +300,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         // this._dimensionTracker.trackWidget(widget, widget.ref);
 
         // Update the row bitmaps to reflect the widget's placement.
-        for(let i = cellY; i < cellY + widget.height; i++) {
+        for(let i = cellY; i < cellY + height; i++) {
             this.#bitmaps[i] |= widgetXBitmap;
         }
 
-        widget.setBounds(cellX, cellY, widget.width, widget.height);
+        widget.setBounds(cellX, cellY, width, height);
         return true;
     }
 
@@ -630,8 +634,11 @@ export class FlowFlexiGrid extends FlexiGrid {
         this.#columns = this._targetConfig.minColumns ?? 1;
     }
 
-    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number): boolean {
+    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
         const isRowFlow = this.#isRowFlow;
+
+        width ??= 1;
+        height ??= 1;
 
         // If the coordinate for the non-extending axis is greater than the axis's length, then this operation fails.
         if(isRowFlow && cellX !== undefined && cellX > this.columns) {
@@ -649,10 +656,10 @@ export class FlowFlexiGrid extends FlexiGrid {
         cellPosition ??= this.#resolveNextPlacementPosition();
 
         // If the width/height of the widget is greater than the flow axis' length, then constrain it to the flow axis' length.
-        if(isRowFlow && widget.width > this.columns) {
-            widget.width = this.columns;
-        } else if(!isRowFlow && widget.height > this.rows) {
-            widget.height = this.rows;
+        if(isRowFlow && width > this.columns) {
+            width = this.columns;
+        } else if(!isRowFlow && height > this.rows) {
+            height = this.rows;
         }
 
         // Find the nearest widget to the proposed position, and determine the precise location based on it. 
@@ -661,7 +668,7 @@ export class FlowFlexiGrid extends FlexiGrid {
         // Easy - no widgets to search and none to shift. Just add ours at the start.
         if(!nearestWidget) {
             this.#widgets.push(widget);
-            widget.setBounds(0, 0, widget.width, widget.height);
+            widget.setBounds(0, 0, width, height);
             return true;
         }
 
@@ -713,7 +720,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 
         // Finally, add the widget to the grid.
         const [newX, newY] = this.#convert1DPositionTo2D(cellPosition);
-        widget.setBounds(newX, newY, isRowFlow ? 1 : widget.width, isRowFlow ? widget.height : 1);
+        widget.setBounds(newX, newY, isRowFlow ? 1 : width, isRowFlow ? height : 1);
 
         return true;
     }

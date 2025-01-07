@@ -37,12 +37,6 @@
 	let derivedClassName = $derived.by(() => {
 		if (typeof widget.className === 'function') {
 			return widget.className(widget);
-		} else if (typeof widget.className === 'object') {
-			return [
-				widget.className.default,
-				widget.grabbed && widget.className.grabbed,
-				widget.isShadow && widget.className.shadow
-			];
 		}
 
 		return widget.className;
@@ -53,12 +47,13 @@
 	class={derivedClassName}
 	style={widget.style}
 	{onpointerdown}
-	aria-grabbed={!!widget.grabbed}
+	aria-grabbed={widget.isGrabbed}
 	aria-label="Flexi Widget"
 	aria-roledescription="Flexi Widget"
 	aria-dropeffect="move"
 	role="gridcell"
 	tabindex={0}
+	bind:this={widget.ref}
 >
 	{#if childrenSnippet}
 		{@render childrenSnippet({ widget, Component })}
