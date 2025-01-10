@@ -79,8 +79,8 @@
 <div
 	class="grid aspect-video w-full place-items-center rounded-lg border py-4 text-center text-sm text-muted-foreground lg:hidden"
 >
-	<div class="flex flex-col items-center gap-2">
+	<div class="flex flex-col items-center gap-2 px-8">
 		<LayoutPanelLeft class="size-12" />
-		Mobile-friendly examples are coming soon.
+		Mobile-friendly demos are coming soon. Please check back on a large screen, if able.
 	</div>
 </div>
