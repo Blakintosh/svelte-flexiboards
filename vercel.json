@@ -1,5 +1,4 @@
 {
     "buildCommand": "cd packages/svelte-flexiboards && pnpm run build && cd ../../site && pnpm run build",
-    "outputDirectory": "site/.svelte-kit/output/client",
     "installCommand": "pnpm install"
 }
