@@ -29,7 +29,7 @@
 			{#each api as item}
 				<tr>
 					<td>{item.name}</td>
-					<td>{item.type}</td>
+					<td class="break-all">{item.type}</td>
 					<td>{item.description}</td>
 				</tr>
 			{/each}

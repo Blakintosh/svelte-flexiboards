@@ -52,6 +52,14 @@
 				{
 					title: 'FlexiWidget',
 					href: '/docs/components/widget'
+				},
+				{
+					title: 'FlexiAdd',
+					href: '/docs/components/adder'
+				},
+				{
+					title: 'FlexiDelete',
+					href: '/docs/components/deleter'
 				}
 			]
 		}
