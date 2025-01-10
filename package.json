@@ -3,7 +3,7 @@
 	"licence": "MIT",
 	"version": "0.0.1",
 	"scripts": {
-		"build": "pnpm -r build",
+		"build": "pnpm -r build --output public",
 		"build:packages": "pnpm -F \"./packages/**\" --parallel build",
 		"check": "pnpm build:packages && pnpm -r check",
 		"ci:publish": "pnpm build:packages && changeset publish",
