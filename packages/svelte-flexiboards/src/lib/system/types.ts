@@ -1,8 +1,8 @@
-import type { FlexiWidget, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration } from "./widget.svelte.js";
-import type { FlexiTarget } from "./target.svelte.js";
+import type { FlexiWidgetController, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration } from "./widget.svelte.js";
+import type { FlexiTargetController, InternalFlexiTargetController } from "./target.svelte.js";
 import type { PointerPositionWatcher } from "./utils.svelte.js";
 import type { Component } from "svelte";
-import type { FlexiAdd } from "./manage.svelte.js";
+import type { FlexiAddController } from "./manage.svelte.js";
 
 export type ProxiedValue<T> = {
     value: T;
@@ -24,9 +24,9 @@ export type WidgetResizability = "none" | "horizontal" | "vertical" | "both";
 
 export type WidgetGrabAction = {
     action: 'grab';
-    widget: FlexiWidget;
-    target?: FlexiTarget;
-    adder?: FlexiAdd;
+    widget: FlexiWidgetController;
+    target?: FlexiTargetController;
+    adder?: FlexiAddController;
     offsetX: number;
     offsetY: number;
     positionWatcher: PointerPositionWatcher;
@@ -36,8 +36,8 @@ export type WidgetGrabAction = {
 
 export type WidgetResizeAction = {
     action: 'resize';
-    widget: FlexiWidget;
-    target: FlexiTarget;
+    widget: FlexiWidgetController;
+    target: FlexiTargetController;
     offsetX: number;
     offsetY: number;
     left: number;
@@ -51,24 +51,16 @@ export type WidgetResizeAction = {
 
 export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
-// Event objects
-
-/**
- * Event object that captures widget grabbed event data.
- */
-export type WidgetGrabbedEvent = {
-    widget: FlexiWidget;
-    target?: FlexiTarget;
-    adder?: FlexiAdd;
+export type WidgetGrabbedParams = {
+    widget: FlexiWidgetController;
     xOffset: number;
     yOffset: number;
     capturedHeight: number;
     capturedWidth: number;
 }
 
-export type WidgetStartResizeEvent = {
-    widget: FlexiWidget;
-    target: FlexiTarget;
+export type WidgetStartResizeParams = {
+    widget: FlexiWidgetController;
     xOffset: number;
     yOffset: number;
     left: number;
@@ -77,18 +69,31 @@ export type WidgetStartResizeEvent = {
     widthPx: number;
 }
 
+// Event objects
+export type WidgetGrabbedEvent = WidgetGrabbedParams & {
+    target?: InternalFlexiTargetController;
+    adder?: FlexiAddController;
+};
+
+export type WidgetStartResizeEvent = WidgetStartResizeParams & {
+    target: InternalFlexiTargetController;
+};
+
+/**
+ * Event object that captures widget grabbed event data.
+ */
 export type WidgetDroppedEvent = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
     preventDefault: () => void;
 }
 
 export type WidgetOverEvent = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
     mousePosition: Position;
 }
 
 export type WidgetOutEvent = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
 }
 
 export type MouseGridCellMoveEvent = {
@@ -97,11 +102,11 @@ export type MouseGridCellMoveEvent = {
 }
 
 export type GrabbedWidgetMouseEvent = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
 }
 
 export type HoveredTargetEvent = {
-    target: FlexiTarget;
+    target: InternalFlexiTargetController;
 }
 
 export type FlexiSavedLayout = Record<string, FlexiWidgetConfiguration[]>;

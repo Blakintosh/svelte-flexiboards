@@ -3,17 +3,6 @@
 		component: Component;
 		componentProps: Record<string, unknown>;
 	};
-
-	const dashboardRegistry: Record<string, DashboardRegistryItem> = {
-		overallScore: {
-			component: DashboardTile,
-			componentProps: {
-				title: 'Overall Score',
-				content: '87',
-				trend: '+8 from last month'
-			}
-		}
-	};
 </script>
 
 <script lang="ts">
@@ -35,11 +24,7 @@
 		}
 	});
 
-	let onBoardReady = (board: FlexiBoardController) => {
-		//console.log('The board has landed!', board);
-		// board.importLayout();
-		// board.exportLayout();
-	};
+	let onBoardReady = (board: FlexiBoardController) => {};
 </script>
 
 <svelte:head>
@@ -66,13 +51,13 @@
 			</div>
 		</h1>
 
-		<FlexiBoard class={'grow'} config={boardConfig} onfirstcreate={onBoardReady}>
+		<FlexiBoard class={'grow overflow-y-auto'} config={boardConfig} onfirstcreate={onBoardReady}>
 			<FlexiTarget
-				name="left"
+				key="left"
 				class={'h-full gap-4'}
 				config={{
-					minRows: 4,
-					minColumns: 3,
+					baseRows: 4,
+					baseColumns: 3,
 					layout: {
 						type: 'free',
 						expandColumns: false,

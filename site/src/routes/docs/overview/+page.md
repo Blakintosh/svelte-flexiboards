@@ -14,10 +14,10 @@ Flexiboards are constructed from a series of components, namely `FlexiBoard`, `F
 Below is a diagram showing the anatomy of a Flexiboard that would be used for a todos board.
 <FlexiBoardAnatomy />
 
-Here's that board in action:
+Here's that board in action (with added styling):
 
 <div class="not-prose">
-    <FlexiBoard class="flex h-[40vh] flex-col justify-center gap-8 lg:flex-row"
+    <FlexiBoard class="flex lg:h-[25vh] flex-col justify-center gap-8 lg:flex-row"
         config={{
             targetDefaults: {
                 layout: {
@@ -27,32 +27,39 @@ Here's that board in action:
                 }
             },
             widgetDefaults: {
-                draggable: true
+                draggable: true,
+                className: (widget: FlexiWidget) => {
+                    return [
+                        "bg-muted px-4 py-2 rounded-lg w-64",
+                        widget.isShadow && "opacity-50",
+                        widget.isGrabbed && "animate-pulse opacity-50"
+                    ];
+                }
             }
         }}>
     
         <div class="bg-background border rounded-xl px-4 py-2">
-            <h5>Incomplete</h5>
-            <FlexiTarget name="todo">
-                <FlexiWidget class="bg-muted px-4 py-2 rounded-lg w-64" draggable>
+            <h5 class="font-semibold text-lg mb-4">Incomplete</h5>
+            <FlexiTarget name="todo" class="gap-2">
+                <FlexiWidget>
                     Study for exam
                 </FlexiWidget>
-                <FlexiWidget class="bg-muted px-4 py-2 rounded-lg w-64" draggable>
+                <FlexiWidget>
                     Research for project
                 </FlexiWidget>
             </FlexiTarget>
         </div>
     
         <div class="bg-background border rounded-xl px-4 py-2">
-            <h5>Done</h5>
-            <FlexiTarget name="done">
-                <FlexiWidget class="bg-muted px-4 py-2 rounded-lg w-64" draggable>
+            <h5 class="font-semibold text-lg mb-4">Done</h5>
+            <FlexiTarget name="done" class="gap-2">
+                <FlexiWidget>
                     Purchase eggs
                 </FlexiWidget>
-                <FlexiWidget class="bg-muted px-4 py-2 rounded-lg w-64" draggable>
+                <FlexiWidget>
                     Recharge car
                 </FlexiWidget>
-                <FlexiWidget class="bg-muted px-4 py-2 rounded-lg w-64" draggable>
+                <FlexiWidget>
                     Feed the cat
                 </FlexiWidget>
             </FlexiTarget>

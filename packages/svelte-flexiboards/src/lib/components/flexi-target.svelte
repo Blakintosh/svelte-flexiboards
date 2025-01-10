@@ -3,18 +3,47 @@
 	import {
 		flexitarget,
 		type FlexiTargetConfiguration,
-		type FlexiTarget as FlexiTargetController
+		type FlexiTargetController,
+		type FlexiTargetPartialConfiguration
 	} from '$lib/system/target.svelte.js';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 
 	export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
+		/**
+		 * The header content of the target, above the grid.
+		 */
 		header?: Snippet<[{ target: FlexiTargetController }]>;
+
+		/**
+		 * The child content of the target, which should contain inner FlexiWidget
+		 * definitions.
+		 */
 		children?: Snippet;
+
+		/**
+		 * The footer content of the target, below the grid.
+		 */
 		footer?: Snippet<[{ target: FlexiTargetController }]>;
+
+		/**
+		 * The class names to apply to the target's container element.
+		 */
 		containerClass?: string;
+
+		/**
+		 * The class names to apply to the target's grid element.
+		 */
 		class?: string;
-		name?: string;
-		config?: FlexiTargetConfiguration;
+
+		/**
+		 * The configuration object for the target.
+		 */
+		config?: FlexiTargetPartialConfiguration;
+
+		/**
+		 * The unique identifier for the target.
+		 * Used to identify the target when layouts are imported or exported.
+		 */
 		key?: string;
 	};
 </script>

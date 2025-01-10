@@ -1,13 +1,12 @@
-<script lang="ts">
-	import { goto } from '$app/navigation';
-	import * as Alert from '$lib/components/ui/alert/index.js';
-	import * as Tabs from '$lib/components/ui/tabs/index.js';
-	import LayoutPanelLeft from 'lucide-svelte/icons/layout-panel-left';
-	import { Button } from '$lib/components/ui/button/index.js';
+<script module lang="ts">
+	type ExamplePage = {
+		title: string;
+		slug: string;
+		description: string;
+		href: string;
+	};
 
-	let { data, children } = $props();
-
-	const pages = {
+	const pages: Record<string, ExamplePage> = {
 		dashboard: {
 			title: 'Dashboard',
 			slug: 'dashboard',
@@ -19,8 +18,22 @@
 			slug: 'notes',
 			description: 'A popular note-taking app.',
 			href: '/examples/notes'
+		},
+		numbers: {
+			title: 'Numbers',
+			slug: 'numbers',
+			description: 'Random numbers on a grid. You can add and remove widgets.',
+			href: '/examples/numbers'
 		}
 	};
+</script>
+
+<script lang="ts">
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import LayoutPanelLeft from 'lucide-svelte/icons/layout-panel-left';
+	import { Button } from '$lib/components/ui/button/index.js';
+
+	let { data, children } = $props();
 
 	$effect(() => {
 		document.title = `${pages[data.slug].title} ⋅ Examples ⋅ Flexiboards`;
@@ -32,8 +45,7 @@
 	See Flexiboards in action. Examples built with shadcn-svelte and Tailwind CSS.
 </h2>
 
-<div class="mb-4 flex items-center justify-between gap-16">
-	<!-- TODO: figure out how to stop this changing on click -->
+<div class="mb-4 hidden flex-col items-center justify-between gap-4 lg:flex lg:flex-row lg:gap-16">
 	<Tabs.Root value={data.slug}>
 		<Tabs.List>
 			{#each Object.values(pages) as page}
@@ -54,7 +66,7 @@
 	>
 </div>
 
-<div class="w-[1440px] divide-y overflow-clip rounded-lg border">
+<div class="hidden w-[1440px] divide-y overflow-clip rounded-lg border lg:block">
 	<div class="relative hidden aspect-video min-h-0 w-full items-stretch overflow-clip lg:flex">
 		{@render children?.()}
 	</div>

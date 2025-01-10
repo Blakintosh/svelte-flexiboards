@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import {
-		FlexiWidget as FlexiWidgetController,
+		type FlexiWidgetController,
 		flexiwidget,
 		type FlexiWidgetConfiguration,
 		type FlexiWidgetChildrenSnippet,

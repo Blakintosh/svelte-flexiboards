@@ -1,11 +1,10 @@
 <script module lang="ts">
-	import { flexigrab, FlexiWidget } from '$lib/system/widget.svelte.js';
+	import { flexigrab, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
 	import type { Snippet } from 'svelte';
-	import { type ClassValue } from 'clsx';
 	import type { SvelteClassValue } from '$lib/system/types.js';
 
 	type FlexiGrabProps = {
-		children?: Snippet<[{ widget: FlexiWidget }]>;
+		children?: Snippet<[{ widget: FlexiWidgetController }]>;
 		class?: SvelteClassValue;
 	};
 </script>

@@ -1,21 +1,36 @@
-import { getContext, setContext } from "svelte";
-import { getFlexiboardCtx, type FlexiBoard } from "./provider.svelte.js";
-import { FlexiWidget, type FlexiWidgetConfiguration, type FlexiWidgetDefaults } from "./widget.svelte.js";
-import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetAction, WidgetDroppedEvent, WidgetGrabAction, WidgetGrabbedEvent, WidgetStartResizeEvent } from "./types.js";
+import { getContext, setContext, untrack } from "svelte";
+import { getFlexiboardCtx, getInternalFlexiboardCtx, InternalFlexiBoardController } from "./provider.svelte.js";
+import { type FlexiWidgetConfiguration, type FlexiWidgetDefaults, FlexiWidgetController } from "./widget.svelte.js";
+import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetAction, WidgetDroppedEvent, WidgetGrabAction, WidgetGrabbedParams, WidgetStartResizeParams } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
 import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid, type FlowTargetLayout, type FreeFormTargetLayout } from "./grid.svelte.js";
 import type { FlexiTargetProps } from "$lib/components/flexi-target.svelte";
 
-type TargetSizingFn = ({ target, grid }: { target: FlexiTarget, grid: FlexiGrid }) => string;
+type TargetSizingFn = ({ target, grid }: { target: FlexiTargetController, grid: FlexiGrid }) => string;
 export type TargetSizing = TargetSizingFn | string;
 
 export type FlexiTargetDefaults = {
-    capacity?: number | null;
-    minColumns?: number | null;
-    minRows?: number | null;
+    /**
+     * The base number of columns for the target's grid. Defaults to 1.
+     */
+    baseColumns?: number | null;
+
+    /**
+     * The base number of rows for the target's grid. Defaults to 1.
+     */
+    baseRows?: number | null;
+    /**
+     * Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target.
+     */
     rowSizing?: TargetSizing;
+    /**
+     * Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target.
+     */
     columnSizing?: TargetSizing;
 
+    /**
+     * The layout algorithm and parameters to use for the target grid.
+     */
     layout?: TargetLayout;
 };
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
@@ -28,10 +43,91 @@ export type FlexiTargetConfiguration = Required<FlexiTargetDefaults> & {
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 
-class FlexiTarget {
-    widgets: SvelteSet<FlexiWidget> = $state(new SvelteSet());
+export interface FlexiTargetController {
+    /**
+     * The widgets currently in this target.
+     */
+    widgets: SvelteSet<FlexiWidgetController>;
 
-    provider: FlexiBoard = $state() as FlexiBoard;
+    /**
+     * The reactive configuration of the target.
+     */
+    config: FlexiTargetConfiguration;
+
+    /**
+     * The reactive default widget configuration passed through from the provider, if it exists.
+     */
+    providerWidgetDefaults?: FlexiWidgetDefaults;
+
+    /**
+     * Whether the target is prepared and ready to render widgets.
+     */
+    get prepared(): boolean;
+
+    /**
+     * Creates a new widget under this target.
+     * @param config The configuration of the widget to create.
+     * @returns The newly created widget if it could be placed, or undefined if not.
+     */
+    createWidget(config: FlexiWidgetConfiguration): FlexiWidgetController | undefined;
+
+    /**
+     * Deletes the given widget from this target, if it exists.
+     * @returns Whether the widget was deleted.
+     */
+    deleteWidget(widget: FlexiWidgetController): boolean;
+
+    // NEXT: Add import/export layout.
+    // /**
+    //  * Imports a layout of widgets into this target, replacing any existing widgets.
+    //  * @param layout The layout to import.
+    //  */
+    // importLayout(layout: FlexiWidgetConfiguration[]): void;
+
+    // /**
+    //  * Exports the current layout of widgets from this target.
+    //  * @returns The layout of widgets.
+    //  */
+    // exportLayout(): FlexiWidgetConfiguration[];
+
+    /**
+     * Restores the target to its pre-grab state.
+     * @remarks This is not intended for external use.
+     */
+    restorePreGrabSnapshot(): void;
+
+    /**
+     * Forgets the pre-grab state of the target.
+     * @remarks This is not intended for external use.
+     */
+    forgetPreGrabSnapshot(): void;
+
+    /**
+     * Attempts to drop a widget into this target.
+     * @param widget The widget to drop.
+     * @returns Whether the widget was dropped.
+     */
+    tryDropWidget(widget: FlexiWidgetController): boolean;
+
+    /**
+     * Grabs a widget.
+     * @param params The parameters for the grab action.
+     * @returns The action that was started, or null if the action couldn't be started.
+     */
+    grabWidget(params: WidgetGrabbedParams): WidgetAction | null;
+
+    /**
+     * Starts resizing a widget.
+     * @param params The parameters for the resize action.
+     * @returns The action that was started, or null if the action couldn't be started.
+     */
+    startResizeWidget(params: WidgetStartResizeParams): WidgetAction | null;
+}
+
+export class InternalFlexiTargetController implements FlexiTargetController {
+    widgets: SvelteSet<FlexiWidgetController> = $state(new SvelteSet());
+
+    provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
     #providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
     providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
@@ -45,7 +141,7 @@ class FlexiTarget {
         prepared: false
     });
 
-    #dropzoneWidget: ProxiedValue<FlexiWidget | null> = $state({
+    #dropzoneWidget: ProxiedValue<FlexiWidgetController | null> = $state({
         value: null
     });
 
@@ -65,9 +161,8 @@ class FlexiTarget {
     #targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
     config: FlexiTargetConfiguration = $derived({
-        capacity: this.#targetConfig?.capacity ?? this.#providerTargetDefaults?.capacity ?? null,
-        minColumns: this.#targetConfig?.minColumns ?? this.#providerTargetDefaults?.minColumns ?? null,
-        minRows: this.#targetConfig?.minRows ?? this.#providerTargetDefaults?.minRows ?? null,
+        baseColumns: untrack(() => this.#targetConfig?.baseColumns ?? this.#providerTargetDefaults?.baseColumns ?? null),
+        baseRows: untrack(() => this.#targetConfig?.baseRows ?? this.#providerTargetDefaults?.baseRows ?? null),
         layout: this.#targetConfig?.layout ?? this.#providerTargetDefaults?.layout ?? {
             type: "flow",
             flowAxis: "row",
@@ -78,7 +173,7 @@ class FlexiTarget {
         widgetDefaults: this.#targetConfig?.widgetDefaults
     });
     
-    constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration, key?: string) {
+    constructor(provider: InternalFlexiBoardController, config?: FlexiTargetPartialConfiguration, key?: string) {
         this.provider = provider;
         // If we weren't provided a key, the provider will generate one for us.
         this.key = provider.addTarget(this, key);
@@ -86,11 +181,12 @@ class FlexiTarget {
         this.#targetConfig = config;
     }
 
-    #tryAddWidget(widget: FlexiWidget, x?: number, y?: number, width?: number, height?: number): boolean {
+    #tryAddWidget(widget: FlexiWidgetController, x?: number, y?: number, width?: number, height?: number): boolean {
         const added = this.grid.tryPlaceWidget(widget, x, y, width, height);
         
         if(added) {
             this.widgets.add(widget);
+            widget.target = this;
         }
         return added;
     }
@@ -103,31 +199,27 @@ class FlexiTarget {
         const layout = this.config.layout;
         switch(layout.type) {
             case "free":
-                this.#grid = new FreeFormFlexiGrid(this, this.config, layout);
+                this.#grid = new FreeFormFlexiGrid(this, this.config);
                 break;
             case "flow":
-                this.#grid = new FlowFlexiGrid(this, this.config, layout);
+                this.#grid = new FlowFlexiGrid(this, this.config);
                 break;
         }
         return this.#grid;
     }
 
-    /**
-     * Creates a new widget under this target.
-     * @param config The configuration of the widget to create.
-     * @returns The newly created widget.
-     */
     createWidget(config: FlexiWidgetConfiguration) {
         const [x, y, width, height] = [config.x, config.y, config.width, config.height];
-        const widget = new FlexiWidget({
+        const widget = new FlexiWidgetController({
             type: "target",
             target: this,
             config
         });
         
-        // TODO: It's not appropriate to throw a big error at runtime
+        // If the widget can't be added, it's probably a collision.
         if(!this.#tryAddWidget(widget, x, y, width, height)) {
-            throw new Error("Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision.");
+            console.warn("Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision.");
+            return undefined;
         }
 
         return widget;
@@ -137,7 +229,7 @@ class FlexiTarget {
      * Deletes the given widget from this target, if it exists.
      * @returns Whether the widget was deleted.
      */
-    deleteWidget(widget: FlexiWidget): boolean {
+    deleteWidget(widget: FlexiWidgetController): boolean {
         const deleted = this.widgets.delete(widget);
         this.grid.removeWidget(widget);
 
@@ -184,8 +276,8 @@ class FlexiTarget {
         return result;
     }
 
-    #createShadow(of: FlexiWidget) {
-        const shadow = new FlexiWidget({
+    #createShadow(of: FlexiWidgetController) {
+        const shadow = new FlexiWidgetController({
             type: "target",
             target: this, 
             config: {
@@ -222,15 +314,18 @@ class FlexiTarget {
         });
     }
 
-    onwidgetgrabbed(event: WidgetGrabbedEvent) {
+    grabWidget(params: WidgetGrabbedParams) {
         // Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
         // we can restore the grid to its original state.
         this.#preGrabSnapshot = this.grid.takeSnapshot();
 
         // Remove the widget from the grid as it's now in a floating state.
-        this.grid.removeWidget(event.widget);
+        this.grid.removeWidget(params.widget);
 
-        return this.provider.onwidgetgrabbed(event);
+        return this.provider.onwidgetgrabbed({
+            ...params,
+            target: this
+        });
     }
 
     restorePreGrabSnapshot() {
@@ -246,16 +341,19 @@ class FlexiTarget {
         this.#preGrabSnapshot = null;
     }
 
-    onwidgetstartresize(event: WidgetStartResizeEvent) {
+    startResizeWidget(params: WidgetStartResizeParams) {
         // Remove the widget as it's now in a pseudo-floating state.
-        this.grid.removeWidget(event.widget);
+        this.grid.removeWidget(params.widget);
 
-        const result = this.provider.onwidgetstartresize(event);
+        const result = this.provider.onwidgetstartresize({
+            ...params,
+            target: this
+        });
 
         if(result) {
             this.actionWidget = {
                 action: "resize",
-                widget: event.widget
+                widget: params.widget
             };
 
             this.#createDropzoneWidget();
@@ -264,11 +362,10 @@ class FlexiTarget {
         return result;
     }
 
-    onwidgetdropped(event: WidgetDroppedEvent) {
-
+    tryDropWidget(widget: FlexiWidgetController): boolean {
         const actionWidget = this.actionWidget;
         if(!actionWidget) {
-            return;
+            return false;
         }
 
         const [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
@@ -277,20 +374,10 @@ class FlexiTarget {
 
         // Try to formally place the widget in the grid, which will also serve as a final check that
         // the drop is possible.
-        const grid = this.grid;
-
-
-        const canPlace = grid.tryPlaceWidget(event.widget, x, y, width, height);
-
-        // Don't go ahead with the drop, the placement is not possible.
-        if(!canPlace) {
-            event.preventDefault();
-        }
+        return this.#tryAddWidget(widget, x, y, width, height);
     }
 
     onmousegridcellmove(event: MouseGridCellMoveEvent) {
-        // TODO: it would be helpful if we could establish when the position has not changed AND the dropzone widget is there, in which case we wouldn't
-        // need to update it in the grid (which is expensive).
         this.#updateMouseCellPosition(event.cellX, event.cellY);
         this.#updateDropzoneWidget();
     }
@@ -310,7 +397,7 @@ class FlexiTarget {
     }
 
     oninitialloadcomplete() {
-        this.prepared = true;
+        this.#state.prepared = true;
     }
 
     #updateMouseCellPosition(x: number, y: number) {
@@ -369,22 +456,29 @@ class FlexiTarget {
         }
     }
 
-    #getGrabbedDropzoneLocation(grabbedWidget: FlexiWidget, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
+    #getGrabbedDropzoneLocation(grabbedWidget: FlexiWidgetController, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
         return [mouseCellPosition.x, mouseCellPosition.y, grabbedWidget.width, grabbedWidget.height];
     }
 
-    #getResizingDropzoneLocation(resizingWidget: FlexiWidget, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
+    #getResizingDropzoneLocation(resizingWidget: FlexiWidgetController, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
         const { width, height } = this.#getNewWidgetHeightAndWidth(resizingWidget, mouseCellPosition);
         
         return [resizingWidget.x, resizingWidget.y, width, height];
     }
 
-    #getNewWidgetHeightAndWidth(widget: FlexiWidget, mouseCellPosition: Position) {
+    #getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
         const grid = this.grid;
 
-        // TODO: do not allow flow axis resizing in flow layouts.
-        const newWidth = mouseCellPosition.x - widget.x;
-        const newHeight = mouseCellPosition.y - widget.y;
+        let newWidth = mouseCellPosition.x - widget.x;
+        let newHeight = mouseCellPosition.y - widget.y;
+
+        // If the widget is in a flow layout, then they can't change their flow axis dimensions.
+        // NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.
+        if(this.config.layout.type == "flow" && this.config.layout.flowAxis == "row") {
+            newHeight = widget.height;
+        } else if(this.config.layout.type == "flow" && this.config.layout.flowAxis == "column") {
+            newWidth = widget.width;
+        }
 
         switch(widget.resizability) {
             case "horizontal":
@@ -445,10 +539,6 @@ class FlexiTarget {
         return this.#state.prepared;
     }
 
-    set prepared(value: boolean) {
-        this.#state.prepared = value;
-    }
-
     /**
      * The number of columns currently being used in the target grid.
      * This value is readonly.
@@ -477,14 +567,14 @@ class FlexiTarget {
         return this.#dropzoneWidget.value;
     }
 
-    set dropzoneWidget(value: FlexiWidget | null) {
+    set dropzoneWidget(value: FlexiWidgetController | null) {
         this.#dropzoneWidget.value = value;
     }
 }
 
 type FlexiTargetActionWidget = {
     action: WidgetAction["action"];
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
 }
 
 type FlexiTargetState = {
@@ -507,25 +597,29 @@ type FlexiTargetState = {
 const contextKey = Symbol('flexitarget');
 
 /**
- * Creates a new FlexiTarget instance in the context of the current FlexiBoard.
- * @returns A FlexiTarget class instance.
+ * Creates a new {@link FlexiTargetController} instance in the context of the current FlexiBoard.
+ * @returns A {@link FlexiTargetController} instance.
  */
-function flexitarget(config?: FlexiTargetConfiguration, key?: string) {
-    const provider = getFlexiboardCtx();
-    const target = new FlexiTarget(provider, config, key);
+export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: string) {
+    const provider = getInternalFlexiboardCtx();
+    const target = new InternalFlexiTargetController(provider, config, key);
 
     setContext(contextKey, target);
 
     return {
         onpointerenter: () => target.onpointerenter(),
         onpointerleave: () => target.onpointerleave(),
-        onwidgetgrabbed: (event: WidgetGrabbedEvent) => target.onwidgetgrabbed(event),
-        target
+        target: target as FlexiTargetController
     };
 }
 
-function getFlexitargetCtx() {
-    const target = getContext<FlexiTarget | undefined>(contextKey);
+/**
+ * Gets the current {@link InternalFlexiTargetController} instance, if any. Throws an error if no target is found.
+ * @internal
+ * @returns An {@link InternalFlexiTargetController} instance.
+ */
+export function getInternalFlexitargetCtx() {
+    const target = getContext<InternalFlexiTargetController | undefined>(contextKey);
 
     // No provider to attach to.
     if(!target) {
@@ -535,8 +629,10 @@ function getFlexitargetCtx() {
     return target;
 }
 
-export {
-    type FlexiTarget,
-    flexitarget,
-    getFlexitargetCtx
+/**
+ * Gets the current {@link FlexiTargetController} instance, if any. Throws an error if no target is found.
+ * @returns A {@link FlexiTargetController} instance.
+ */
+export function getFlexitargetCtx() {
+    return getInternalFlexitargetCtx() as FlexiTargetController;
 }

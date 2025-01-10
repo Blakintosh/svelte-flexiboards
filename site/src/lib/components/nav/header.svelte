@@ -1,6 +1,10 @@
 <script>
 	import ThemeSelector from './theme-selector.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as Drawer from '$lib/components/ui/drawer';
+	import * as Popover from '$lib/components/ui/popover';
+	import Menu from 'lucide-svelte/icons/menu';
+	import DocumentationSidebar from '../docs/documentation-sidebar.svelte';
 </script>
 
 <header class="flex items-center justify-between border-b px-8 py-2">
@@ -14,7 +18,7 @@
 			<h1 class="font-display text-2xl font-medium">Flexiboards</h1>
 		</a>
 
-		<ul class="flex items-center gap-2">
+		<ul class="hidden items-center gap-2 lg:flex">
 			<li>
 				<Button href="/docs" variant={'ghost'}>Docs</Button>
 			</li>
@@ -24,7 +28,7 @@
 		</ul>
 	</div>
 
-	<div class="flex w-[20%] items-center justify-end gap-1">
+	<div class="hidden w-[20%] items-center justify-end gap-1 lg:flex">
 		<Button
 			href="https://github.com/blakintosh/svelte-flexiboards"
 			variant="ghost"
@@ -40,5 +44,41 @@
 			<span class="sr-only">GitHub</span>
 		</Button>
 		<ThemeSelector />
+	</div>
+	<div class="flex w-[20%] items-center justify-end gap-1 lg:hidden">
+		<Drawer.Root>
+			<Drawer.Trigger class={buttonVariants({ variant: 'outline' })}>HELLO?</Drawer.Trigger>
+			<Drawer.Content>
+				<div class="mx-auto w-full max-w-sm">
+					<Drawer.Header>
+						<Drawer.Title>Move Goal</Drawer.Title>
+						<Drawer.Description>Set your daily activity goal.</Drawer.Description>
+					</Drawer.Header>
+					<div class="p-4 pb-0">
+						<div class="flex items-center justify-center space-x-2"></div>
+					</div>
+					<Drawer.Footer>
+						<Button>Submit</Button>
+						<Drawer.Close class={buttonVariants({ variant: 'outline' })}>Cancel</Drawer.Close>
+					</Drawer.Footer>
+				</div>
+			</Drawer.Content>
+		</Drawer.Root>
+		<Popover.Root>
+			<Popover.Trigger class={buttonVariants({ variant: 'ghost', size: 'icon' })}>
+				<Menu />
+			</Popover.Trigger>
+			<Popover.Content class="w-64">
+				<ul class="flex min-h-0 w-full flex-col items-stretch gap-2">
+					<li>
+						<Button href="/" variant={'ghost'} class="w-full justify-start">Home</Button>
+					</li>
+				</ul>
+
+				<div class="flex flex-col gap-2 px-4 py-2">
+					<DocumentationSidebar />
+				</div>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 </header>

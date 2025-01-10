@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import {
-		FlexiAdd as FlexiAddController,
+		FlexiAddController,
 		flexiadd,
 		type FlexiAddWidgetFn
 	} from '$lib/system/manage.svelte.js';

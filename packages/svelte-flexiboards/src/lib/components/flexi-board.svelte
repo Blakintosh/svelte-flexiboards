@@ -1,17 +1,17 @@
 <script module lang="ts">
 	import {
-		FlexiBoard as FlexiBoardController,
 		flexiboard,
-		type FlexiBoardConfiguration
+		type FlexiBoardConfiguration,
+		type FlexiBoardController
 	} from '$lib/system/provider.svelte.js';
 	import type { Snippet } from 'svelte';
-	import type { FlexiCommonProps } from '$lib/system/types.js';
+	import type { FlexiCommonProps, SvelteClassValue } from '$lib/system/types.js';
 	import FlexiLayoutLoader from './flexi-layout-loader.svelte';
 
 	export type FlexiBoardProps = FlexiCommonProps<FlexiBoardController> & {
 		children: Snippet;
 		config?: FlexiBoardConfiguration;
-		class?: string;
+		class?: SvelteClassValue;
 	};
 </script>
 

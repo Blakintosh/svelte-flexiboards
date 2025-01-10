@@ -1,11 +1,12 @@
-import type { FlexiWidget } from "./widget.svelte.js";
-import { setContext } from "svelte";
+import type { FlexiWidgetController } from "./widget.svelte.js";
+import { setContext, untrack } from "svelte";
 import { getContext } from "svelte";
-import type { FlexiTarget, FlexiTargetConfiguration, TargetSizing } from "./target.svelte.js";
-import { getFlexitargetCtx } from "./target.svelte.js";
+import type { InternalFlexiTargetController, FlexiTargetConfiguration, TargetSizing } from "./target.svelte.js";
+import { getInternalFlexitargetCtx } from "./target.svelte.js";
 import { GridDimensionTracker } from "./utils.svelte.js";
+import type { FlexiTarget } from "../../../dist/index.js";
 
-type FlexiGridLayout = (FlexiWidget | null)[][];
+type FlexiGridLayout = (FlexiWidgetController | null)[][];
 
 export type FlowTargetLayout = {
     type: "flow";
@@ -54,10 +55,12 @@ export type FreeFormTargetLayout = {
     type: "free";
     expandColumns?: boolean;
     expandRows?: boolean;
+    minRows?: number;
+    minColumns?: number;
 }
 
 export type MoveOperation = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
     newX: number;
     newY: number;
     oldX: number;
@@ -79,7 +82,7 @@ type FlowGridSnapshot = {
 }
 
 type WidgetSnapshot = {
-    widget: FlexiWidget;
+    widget: FlexiWidgetController;
     x: number;
     y: number;
     width: number;
@@ -89,13 +92,13 @@ type WidgetSnapshot = {
 const MAX_COLUMNS = 32;
 
 export abstract class FlexiGrid {
-    abstract tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean;
-    abstract removeWidget(widget: FlexiWidget): boolean;
+    abstract tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number): boolean;
+    abstract removeWidget(widget: FlexiWidgetController): boolean;
     abstract takeSnapshot(): unknown;
     abstract restoreFromSnapshot(snapshot: unknown): void;
     abstract mapRawCellToFinalCell(x: number, y: number): [number, number];
 
-    _target: FlexiTarget;
+    _target: InternalFlexiTargetController;
     _targetConfig: FlexiTargetConfiguration;
 
     mouseCellPosition: { x: number, y: number } = $state({
@@ -108,7 +111,7 @@ export abstract class FlexiGrid {
 
     _dimensionTracker: GridDimensionTracker;
 
-    constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration) {
+    constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
         this._target = target;
         this._targetConfig = targetConfig;
 
@@ -197,7 +200,7 @@ export abstract class FlexiGrid {
  * A free grid can grow and shrink if required when enabled.
  */
 export class FreeFormFlexiGrid extends FlexiGrid {
-    #widgets: Set<FlexiWidget> = new Set();
+    #widgets: Set<FlexiWidgetController> = new Set();
 
     #state: FlexiFreeFormGridState = $state({
         rows: 0,
@@ -206,24 +209,31 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         bitmaps: []
     });
 
-    #targetConfig: FlexiTargetConfiguration;
-    #layoutConfig: FreeFormTargetLayout;
+    #targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
+    #rawLayoutConfig: FreeFormTargetLayout = $derived(this.#targetConfig?.layout) as FreeFormTargetLayout;
 
-    constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration, layoutConfig: FreeFormTargetLayout) {
+    #layoutConfig: FreeFormTargetLayout = $derived({
+        type: "free",
+        expandColumns: this.#rawLayoutConfig?.expandColumns ?? false,
+        expandRows: this.#rawLayoutConfig?.expandRows ?? false,
+        minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
+        minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1
+    });
+
+    constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
         super(target, targetConfig);
 
         this.#targetConfig = targetConfig;
-        this.#layoutConfig = layoutConfig;
 
-        this.#rows = targetConfig.minRows ?? 1;
-        this.#columns = targetConfig.minColumns ?? 1;
+        this.#rows = targetConfig.baseRows ?? 1;
+        this.#columns = targetConfig.baseColumns ?? 1;
 
         this.#bitmaps = new Array(this.#rows).fill(0);
 
         this.#layout = new Array(this.#rows).fill(new Array(this.#columns).fill(null));
     }
 
-    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
+    tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
         // Need both coordinates to place a widget.
         if(cellX === undefined || cellY === undefined) {
             throw new Error("Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.");
@@ -259,13 +269,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         // successfully, in an all-or-nothing manner.
         // Where a widget gets moved multiple times - ie it collides with multiple rows - we'll only
         // carry out the operation once, for the maximal move.
-        const operations: Map<FlexiWidget, MoveOperation> = new Map();
+        const operations: Map<FlexiWidgetController, MoveOperation> = new Map();
 
         // Looking row-by-row, we can identify collisions using the bitmaps.
         for(let i = cellY; i < cellY + height; i++) {
             // Expand rows as necessary if this operation is supported.
-            // TODO: If we guarantee that insertion position can only be one higher than the current row,
-            // we can avoid this.
             while(this.#bitmaps.length <= i) {
                 this.#bitmaps.push(0);
                 this.#layout.push(new Array(this.#columns).fill(null));
@@ -285,11 +293,12 @@ export class FreeFormFlexiGrid extends FlexiGrid {
                 if(!collidingWidget) {
                     continue;
                 }
-                const moveBy = (cellX + width) - collidingWidget.x;
+                const xMoveBy = (cellX + width) - collidingWidget.x;
+                const yMoveBy = (cellY + height) - collidingWidget.y;
 
-                if(!this.#prepareMoveWidgetX(collidingWidget, moveBy, operations)) {
-                    // TODO: If moving along the x-axis is not possible, we then want to try via the y-axis.
-                    // If that's not possible either, then the overall operation is not possible.
+                // PATCH: y-move seems to go weird, sometimes.
+                if(!this.#prepareMoveWidgetX(collidingWidget, xMoveBy, operations) && !this.#prepareMoveWidgetY(collidingWidget, yMoveBy, operations)) {
+                    // If moving along either axis is not possible, then the overall operation is not possible.
                     return false;
                 }
                 // Don't need to do this again for this row.
@@ -323,7 +332,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         return true;
     }
 
-    #prepareMoveWidgetX(widget: FlexiWidget, delta: number, operationMap: Map<FlexiWidget, MoveOperation>): boolean {
+    #prepareMoveWidgetX(widget: FlexiWidgetController, delta: number, operationMap: Map<FlexiWidgetController, MoveOperation>): boolean {
         // If the widget is not draggable then we definitely can't push it.
         if(!widget.draggable) {
             return false;
@@ -362,11 +371,12 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
                 // A widget lies between this widget's current position and its new end position.
                 // Recurse to push it out of the way, and if that fails then the whole operation fails.
-                const gapSize = j - (widget.x + widget.width);
+                const xGapSize = j - (widget.x + widget.width);
+                const yGapSize = i - (widget.y + widget.height);
 
-                // TODO: Heuristic to immediately cancel move if delta - gapSize > available space.
+                // NEXT: Heuristic to immediately cancel move if delta - gapSize > available space. Use #countSetBits for this
 
-                if(!this.#prepareMoveWidgetX(cell, delta - gapSize, operationMap)) {
+                if(!this.#prepareMoveWidgetX(cell, delta - xGapSize, operationMap)) {
                     return false;
                 }
                 // We can move the colliding widget, we don't need to check this row any further as the move
@@ -389,7 +399,73 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         return true;
     }
 
-    removeWidget(widget: FlexiWidget): boolean {
+    #prepareMoveWidgetY(widget: FlexiWidgetController, delta: number, operationMap: Map<FlexiWidgetController, MoveOperation>): boolean {
+        // If the widget is not draggable then we definitely can't push it.
+        if(!widget.draggable) {
+            return false;
+        }
+
+        const finalStartY = widget.y + delta;
+        const finalEndY = finalStartY + widget.height;
+
+        // Shortcut: if the widget is already being moved and this is further than the proposed move,
+        // then we can forgo remaining checks as the maximal move is the one that gets applied.
+        if(operationMap.has(widget)) {
+            const existingOperation = operationMap.get(widget)!;
+
+            if(existingOperation.newY >= finalStartY) {
+                return true;
+            }
+        }
+
+        // We need to try expand the grid if the widget is moving beyond the current bounds,
+        // but if this is not possible then the operation fails.
+        if(finalEndY > this.#rows && !this.#tryExpandRows(finalEndY)) {
+            return false;
+        }
+
+        // If a widget lies between this widget's current position and its new end position then it's,
+        // by definition, colliding with it. We need to check if we can move the widget and collapse
+        // any gaps along the way.
+        for(let i = widget.y; i < widget.y + widget.height; i++) {
+            for(let j = widget.x + widget.width; j < finalEndY; j++) {
+                const cell = this.#layout[i][j];
+
+                // Empty cell
+                if(!cell) {
+                    continue;
+                }
+
+                // A widget lies between this widget's current position and its new end position.
+                // Recurse to push it out of the way, and if that fails then the whole operation fails.
+                const gapSize = j - (widget.x + widget.width);
+
+                // NEXT: Heuristic to immediately cancel move if delta - gapSize > available space. Use #countSetBits for this
+
+                if(!this.#prepareMoveWidgetX(cell, delta - gapSize, operationMap)) {
+                    return false;
+                }
+                // We can move the colliding widget, we don't need to check this row any further as the move
+                // handles any subsequent collisions.
+                break;
+            }
+        }
+
+        // The move is possible. Add the operation to the accumulator so we can carry them out if all are OK.
+        const operation = {
+            widget,
+            oldX: widget.x,
+            newX: widget.x,
+            oldY: widget.y,
+            newY: finalStartY
+        };
+
+        operationMap.set(widget, operation);
+
+        return true;
+    }
+
+    removeWidget(widget: FlexiWidgetController): boolean {
         // Refer to the widget's state to find where it is in the grid.
         const [cellX, cellY] = [widget.x, widget.y];
 
@@ -440,8 +516,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
     clear() {
         this.#widgets.clear();
 
-        this.#rows = this.#targetConfig.minRows ?? 1;
-        this.#columns = this.#targetConfig.minColumns ?? 1;
+        this.#rows = this.#targetConfig.baseRows ?? 1;
+        this.#columns = this.#targetConfig.baseColumns ?? 1;
 
         this.#bitmaps = new Array(this.#rows).fill(0);
 
@@ -462,10 +538,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
     }
 
     mapRawCellToFinalCell(x: number, y: number): [number, number] {
-        return [Math.round(x), Math.round(y)];
+        return [Math.floor(x), Math.floor(y)];
     }
 
-    #doMoveOperation(widget: FlexiWidget, operation: MoveOperation) {
+    #doMoveOperation(widget: FlexiWidgetController, operation: MoveOperation) {
         const removedBitmaps = Array(widget.height).fill(0);
 
         // Remove the widget from the layout, if it's there.
@@ -513,7 +589,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         return count;
     }
 
-    #createWidgetBitmap(widget: FlexiWidget, start: number, length: number): number {
+    #createWidgetBitmap(widget: FlexiWidgetController, start: number, length: number): number {
         // Create a bitmap with 1s for the width of the widget starting at the given position
         let bitmap = 0;
         
@@ -547,7 +623,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
     }
 
     #removeTrailingEmptyRows() {
-        const minRows = this._targetConfig.minRows ?? 1;
+        const minRows = this.#layoutConfig.minRows ?? 1;
 
         for(let i = this.#rows - 1; i >= minRows; i--) {
             if(this.#bitmaps[i]) {
@@ -561,7 +637,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
     }
 
     #removeTrailingEmptyColumns() {
-        const minColumns = this._targetConfig.minColumns ?? 1;
+        const minColumns = this.#layoutConfig.minColumns ?? 1;
 
         for(let i = this.#columns - 1; i >= minColumns; i--) {
             // If the ith bit is set on this column in any row, then it can't be removed.
@@ -641,30 +717,34 @@ export class FreeFormFlexiGrid extends FlexiGrid {
  * and the cross axis can be configured to expand when the flow axis is full.
  */
 export class FlowFlexiGrid extends FlexiGrid {
-    #layoutConfig: FlowTargetLayout;
-    #maxFlowAxis: number;
-    #flowAxis: "row" | "column";
-    #isRowFlow: boolean;
+    #targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
+    #rawLayoutConfig: FlowTargetLayout = $derived(this.#targetConfig?.layout) as FlowTargetLayout;
 
     #state: FlexiFlowGridState = $state({
         rows: 0,
         columns: 0,
-        widgets: []
+        widgets: [],
     });
 
-    constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration, layoutConfig: FlowTargetLayout) {
+    #layoutConfig: FlowTargetLayout = $derived({
+        type: "flow",
+        maxFlowAxis: this.#rawLayoutConfig.maxFlowAxis ?? Infinity,
+        flowAxis: untrack(() => this.#rawLayoutConfig.flowAxis) ?? "row",
+        placementStrategy: this.#rawLayoutConfig.placementStrategy ?? "append",
+        disallowInsert: this.#rawLayoutConfig.disallowInsert ?? false,
+        disallowExpansion: this.#rawLayoutConfig.disallowExpansion ?? false
+    });
+
+    constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
         super(target, targetConfig);
 
-        this.#layoutConfig = layoutConfig;
-        // TODO: not reactive - don't see why it should be
-        this.#maxFlowAxis = layoutConfig.maxFlowAxis ?? Infinity;
-        this.#flowAxis = layoutConfig.flowAxis ?? "row";
-        this.#isRowFlow = this.#flowAxis === "row";
-        this.#rows = this._targetConfig.minRows ?? 1;
-        this.#columns = this._targetConfig.minColumns ?? 1;
+        this.#targetConfig = targetConfig;
+
+        this.#rows = this._targetConfig.baseRows ?? 1;
+        this.#columns = this._targetConfig.baseColumns ?? 1;
     }
 
-    tryPlaceWidget(widget: FlexiWidget, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
+    tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number): boolean {
         const isRowFlow = this.#isRowFlow;
 
         width ??= 1;
@@ -779,7 +859,7 @@ export class FlowFlexiGrid extends FlexiGrid {
         }
     }
 
-    removeWidget(widget: FlexiWidget): boolean {
+    removeWidget(widget: FlexiWidgetController): boolean {
         const widgetPosition = this.#convert2DPositionTo1D(widget.x, widget.y);
 
         // Find the widget in the grid.
@@ -861,10 +941,6 @@ export class FlowFlexiGrid extends FlexiGrid {
     mapRawCellToFinalCell(x: number, y: number): [number, number] {
         const position = [Math.round(x), Math.round(y)];
 
-        // if(x % 1 > 0.5 || y % 1 > 0.5) {
-        //     return [position[0], position[1]];
-        // }
-
         const position1D = this.#convert2DPositionTo1D(position[0], position[1]);
 
         const [index, nearest] = this.#findNearestWidget(position1D, 0, this.#widgets.length - 1);
@@ -886,7 +962,7 @@ export class FlowFlexiGrid extends FlexiGrid {
         return [position[0], position[1]];
     }
 
-    #findNearestWidget(position: number, searchStart: number, searchEnd: number): [number, FlexiWidget | null] {
+    #findNearestWidget(position: number, searchStart: number, searchEnd: number): [number, FlexiWidgetController | null] {
         if(this.#widgets.length === 0) {
             return [0, null];
         }
@@ -924,6 +1000,9 @@ export class FlowFlexiGrid extends FlexiGrid {
             if(newY >= this.rows && !this.#tryExpandRows(newY + 1)) {
                 return false;
             }
+            if(newX >= this.columns && !this.#tryExpandColumns(newX + 1)) {
+                return false;
+            }
 
             operations.push({
                 widget,
@@ -955,7 +1034,7 @@ export class FlowFlexiGrid extends FlexiGrid {
         return [Math.floor(index / this.rows), index % this.rows];
     }
 
-    #getNonFlowLength(widget: FlexiWidget): number {
+    #getNonFlowLength(widget: FlexiWidgetController): number {
         if(this.#isRowFlow) {
             return widget.width;
         }
@@ -964,7 +1043,7 @@ export class FlowFlexiGrid extends FlexiGrid {
     }
 
     #tryExpandColumns(newCount: number): boolean {
-        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis) {
+        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis || this.#isRowFlow) {
             return false;
         }
 
@@ -973,7 +1052,7 @@ export class FlowFlexiGrid extends FlexiGrid {
     }
 
     #tryExpandRows(newCount: number): boolean {
-        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis) {
+        if(this.#layoutConfig.disallowExpansion || newCount > this.#maxFlowAxis || !this.#isRowFlow) {
             return false;
         }
 
@@ -1001,14 +1080,22 @@ export class FlowFlexiGrid extends FlexiGrid {
         this.#state.columns = value;
     }
 
-    get widgets(): FlexiWidget[] {
+    get widgets(): FlexiWidgetController[] {
         return this.#state.widgets;
     }
-    get #widgets(): FlexiWidget[] {
+    get #widgets(): FlexiWidgetController[] {
         return this.#state.widgets;
     }
-    set #widgets(value: FlexiWidget[]) {
+    set #widgets(value: FlexiWidgetController[]) {
         this.#state.widgets = value;
+    }
+
+    get #isRowFlow(): boolean {
+        return this.#layoutConfig.flowAxis === "row";
+    }
+
+    get #maxFlowAxis(): number {
+        return this.#layoutConfig.maxFlowAxis!;
     }
 }
 
@@ -1022,13 +1109,13 @@ type FlexiFreeFormGridState = {
 type FlexiFlowGridState = {
     rows: number;
     columns: number;
-    widgets: FlexiWidget[];
+    widgets: FlexiWidgetController[];
 }
 
 const contextKey = Symbol('flexigrid');
 
 export function flexigrid() {
-    const target = getFlexitargetCtx();
+    const target = getInternalFlexitargetCtx();
 
     if(!target) {
         throw new Error("A FlexiGrid was instantiated outside of a FlexiTarget context. Ensure that flexigrid() is called within a FlexiTarget component.");

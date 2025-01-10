@@ -31,6 +31,15 @@
 	let newItem = $state('');
 	let target: FlexiTargetController | undefined = $state();
 
+	let addInput: HTMLInputElement | undefined = $state();
+
+	// Auto focus the add input when it's being added
+	$effect(() => {
+		if (addInput && adding) {
+			addInput.focus();
+		}
+	});
+
 	function onClickAdd() {
 		adding = true;
 	}
@@ -93,12 +102,32 @@
 				Add
 			</Button>
 		{:else}
-			<!-- TODO: Make this not look awful -->
-			<Button onclick={cancelAddItem} variant={'ghost'} size={'icon'}>
-				<X />
-			</Button>
-			<input type="text" bind:value={newItem} />
-			<Button onclick={onClickAddItem}>Add</Button>
+			<div class="mt-1 flex w-64 items-center gap-2 rounded-lg bg-muted px-4 py-1">
+				<Button onclick={cancelAddItem} variant={'ghost'} size={'icon'} class="size-4 shrink-0">
+					<X />
+				</Button>
+				<input
+					type="text"
+					bind:this={addInput}
+					bind:value={newItem}
+					class="min-w-0 grow rounded-sm bg-transparent"
+				/>
+				<Button onclick={onClickAddItem} variant="link" size={'sm'} class="shrink-0">Add</Button>
+			</div>
 		{/if}
 	{/snippet}
 </FlexiTarget>
+
+<svelte:window
+	onkeydown={(event) => {
+		if (!adding) {
+			return;
+		}
+
+		if (event.key === 'Enter' && newItem.length) {
+			onClickAddItem();
+		} else if (event.key == 'Escape') {
+			cancelAddItem();
+		}
+	}}
+/>

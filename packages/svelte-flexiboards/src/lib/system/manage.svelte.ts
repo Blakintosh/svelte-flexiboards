@@ -1,16 +1,22 @@
-import { getFlexiboardCtx, type FlexiBoard } from "./provider.svelte.js";
-import type { WidgetGrabbedEvent } from "./types.js";
-import { FlexiWidget, type FlexiWidgetConfiguration } from "./widget.svelte.js";
+import { getFlexiboardCtx, getInternalFlexiboardCtx, type InternalFlexiBoardController } from "./provider.svelte.js";
+import type { WidgetGrabbedParams } from "./types.js";
+import { FlexiWidgetController, type FlexiWidgetConfiguration } from "./widget.svelte.js";
 
-export type FlexiAddWidgetFn = () => FlexiWidgetConfiguration | null;
+export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
-export class FlexiAdd {
-    #provider: FlexiBoard;
+export type AdderWidgetConfiguration = {
+    widget: FlexiWidgetConfiguration;
+    widthPx?: number;
+    heightPx?: number;
+}
+
+export class FlexiAddController {
+    #provider: InternalFlexiBoardController;
     #addWidget: FlexiAddWidgetFn;
 
-    newWidget?: FlexiWidget = $state(undefined);
+    newWidget?: FlexiWidgetController = $state(undefined);
 
-    constructor(provider: FlexiBoard, addWidgetFn: FlexiAddWidgetFn) {
+    constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
         this.#provider = provider;
         this.#addWidget = addWidgetFn;
 
@@ -18,18 +24,19 @@ export class FlexiAdd {
     }
 
     onpointerdown(event: PointerEvent) {
-        const widgetConfiguration = this.#addWidget();
+        const config = this.#addWidget();
 
-        if(!widgetConfiguration) {
+        if(!config || !config.widget) {
             return;
         }
     
         // Create a widget under this FlexiAdd, which will automatically place it into a grabbed state.
-        // TODO: pass some width and height into this
-        this.newWidget = new FlexiWidget({
+        this.newWidget = new FlexiWidgetController({
             type: "adder",
             adder: this,
-            config: widgetConfiguration
+            config: config.widget,
+            widthPx: config.widthPx ?? 100,
+            heightPx: config.heightPx ?? 100
         });
 
         // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
@@ -37,8 +44,11 @@ export class FlexiAdd {
         event.preventDefault();
     }
 
-    onstartwidgetdragin(event: WidgetGrabbedEvent) {
-        return this.#provider.onwidgetgrabbed(event);
+    onstartwidgetdragin(event: WidgetGrabbedParams) {
+        return this.#provider.onwidgetgrabbed({
+            ...event,
+            adder: this
+        });
     }
 
     onstopwidgetdragin() {
@@ -48,9 +58,9 @@ export class FlexiAdd {
 }
 
 export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
-    const provider = getFlexiboardCtx();
+    const provider = getInternalFlexiboardCtx();
 
-    const adder = new FlexiAdd(provider, addWidgetFn);
+    const adder = new FlexiAddController(provider, addWidgetFn);
 
     return {
         adder,
@@ -59,7 +69,7 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
 }
 
 export function flexidelete() {
-    const provider = getFlexiboardCtx();
+    const provider = getInternalFlexiboardCtx();
 
     return {
         onpointerenter: () => provider.onenterdeleter(),

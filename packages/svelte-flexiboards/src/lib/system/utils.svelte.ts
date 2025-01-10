@@ -4,30 +4,26 @@
     'Creating Reactive Browser APIs In Svelte' video, found at https://youtu.be/BKyENJQ6KdQ.
 */
 
-import { getContext, setContext } from "svelte";
-import type { Position } from "./types.js";
-import type { FlexiWidget } from "./widget.svelte.js";
+import type { Position, ProxiedValue } from "./types.js";
 import type { FlexiGrid } from "./grid.svelte.js";
-import type { FlexiTargetConfiguration, TargetSizing } from "./target.svelte.js";
+import type { FlexiTargetConfiguration } from "./target.svelte.js";
 
 export class PointerPositionWatcher {
     #position: Position = $state({
         x: 0,
         y: 0
     });
-    #ref: { ref: HTMLElement | null } = $state({
-        ref: null
-    });
+    #ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
 
-    constructor(ref: { ref: HTMLElement | null }) {
+    constructor(ref: ProxiedValue<HTMLElement | null>) {
         this.#ref = ref;
 
         const onPointerMove = (event: PointerEvent) => {    
-            if(!this.#ref.ref) {
+            if(!this.ref) {
                 return;
             }
 
-            const rect = this.#ref.ref.getBoundingClientRect();
+            const rect = this.ref.getBoundingClientRect();
 
             this.#position.x = event.clientX - rect.left;
             this.#position.y = event.clientY - rect.top;
@@ -47,18 +43,15 @@ export class PointerPositionWatcher {
     get position() {
         return this.#position;
     }
+
+    get ref() {
+        return this.#ref.value;
+    }
 }
 
 type CellPosition = {
     row: number;
     column: number;
-}
-
-type GridCurrentCell = CellPosition & {
-    startX: number;
-    startY: number;
-    sizeX: number;
-    sizeY: number;
 }
 
 type GridDimensions = {
@@ -100,8 +93,6 @@ export class GridDimensionTracker {
     });
 
     #targetConfig: FlexiTargetConfiguration = $state({} as FlexiTargetConfiguration);
-
-    #currentCell: GridCurrentCell | null = null;
 
     constructor(grid: FlexiGrid, targetConfig: FlexiTargetConfiguration) {
         this.#grid = grid;
@@ -173,9 +164,6 @@ export class GridDimensionTracker {
             return;
         }
 
-        // Reset the current cell because it relies on stale information.
-        this.#currentCell = null;
-
         const columns = templateColumns.split(' ').map(column => parseFloat(column.match(/(\d+\.?\d*)px/)?.[1] ?? '0'));
         const rows = templateRows.split(' ').map(row => parseFloat(row.match(/(\d+\.?\d*)px/)?.[1] ?? '0'));
 
@@ -191,14 +179,6 @@ export class GridDimensionTracker {
     }
 
     getCellFromPointerPosition(clientX: number, clientY: number): CellPosition | null {
-        // TODO: Either try reinstate this or delete it
-        // If the current cell still matches the pointer position, return it without having to search for it again
-        // if(this.#currentCell && this.#isInsideCell(clientX, this.#currentCell.startX, this.#currentCell.sizeX) && this.#isInsideCell(clientY, this.#currentCell.startY, this.#currentCell.sizeY)) {
-        //     return this.#currentCell;
-        // }
-        // this.#currentCell = null;
-
-
         if(!this.#grid?.ref) {
             return null;
         }
@@ -216,7 +196,6 @@ export class GridDimensionTracker {
     }
 
     #findCell(pointerLocation: number, start: number, size: number, gap: number, axisCoordinates: number[]) {
-        // TODO: there might be ways to optimise this.
         // If outside the axis, then return the ends.
         if(pointerLocation < start) {
             return 0;
@@ -233,16 +212,8 @@ export class GridDimensionTracker {
             const proportionAlong = (pointerLocation - base) / (subtotal - base);
             if(pointerLocation < subtotal) {
                 return i + proportionAlong;
-                // if(proportionAlong > 0.5) {
-                //     return i + 1;
-                // }
-                return i;
             }
         }
         return axisCoordinates.length;
-    }
-
-    #isInsideCell(pointerLocation: number, start: number, size: number) {
-        return pointerLocation >= start && pointerLocation < start + size;
     }
 }

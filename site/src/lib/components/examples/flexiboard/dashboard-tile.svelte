@@ -26,7 +26,7 @@
 		widget.isShadow && 'opacity-50'
 	]}
 >
-	{#snippet children({ widget, Component })}
+	{#snippet children({ widget, component: Component })}
 		<Card.Root class="flex h-full w-full flex-col justify-between">
 			<div>
 				<Card.Header>

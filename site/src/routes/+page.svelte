@@ -1,5 +1,9 @@
 <script>
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { Button } from '$lib/components/ui/button';
+	$effect(() => {
+		document.title = 'Flexiboards';
+	});
 </script>
 
 <div class="flex min-h-0 flex-col items-center gap-16 py-8 lg:py-16">
@@ -10,8 +14,8 @@
 					layout: {
 						type: 'free'
 					},
-					minRows: 3,
-					minColumns: 3
+					baseRows: 3,
+					baseColumns: 3
 				}}
 				class="size-24 gap-[0.175rem] lg:size-32 lg:gap-1"
 			>
@@ -28,51 +32,9 @@
 	<h2 class="text-center text-xl lg:text-2xl">
 		Headless, reactive drag and drop components for Svelte 5.
 	</h2>
+
+	<div class="flex flex-col gap-4 lg:flex-row">
+		<Button class="h-12 px-12 py-4 text-2xl" href="/docs">Docs</Button>
+		<Button class="hidden h-12 px-12 py-4 text-2xl lg:flex" href="/examples">Examples</Button>
+	</div>
 </div>
-
-<FlexiBoard
-	class="flex h-[40vh] flex-col justify-between lg:flex-row"
-	config={{
-		targetDefaults: {
-			layout: {
-				type: 'flow',
-				flowAxis: 'row',
-				placementStrategy: 'append'
-			}
-		}
-	}}
->
-	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="left">
-		{#snippet header()}
-			<h2 class="text-lg font-bold">Backlog</h2>
-		{/snippet}
-		<div>
-			<button>Add</button>
-		</div>
-	</FlexiTarget>
-
-	<FlexiTarget
-		class="h-full w-96 rounded-lg border px-4 py-2 transition-transform duration-500"
-		name="center"
-	>
-		{#snippet header()}
-			<h2 class="text-lg font-bold">In Progress</h2>
-		{/snippet}
-		<FlexiWidget class="w-full rounded-lg bg-muted px-8 py-4" draggable>
-			{#snippet children({ widget })}
-				I'm at {widget.x}, {widget.y}, with width {widget.width} and height {widget.height}
-			{/snippet}
-		</FlexiWidget>
-	</FlexiTarget>
-
-	<FlexiTarget class="h-full w-96 rounded-lg border px-4 py-2" name="right">
-		{#snippet header()}
-			<h2 class="text-lg font-bold">Done</h2>
-		{/snippet}
-		<FlexiWidget class="w-full rounded-lg bg-muted px-8 py-4" draggable>
-			{#snippet children({ widget })}
-				I'm also at {widget.x}, {widget.y}, with width {widget.width} and height {widget.height}
-			{/snippet}
-		</FlexiWidget>
-	</FlexiTarget>
-</FlexiBoard>

@@ -1,14 +1,5 @@
 <script module lang="ts">
-	import { untrack, type Component, type Snippet } from 'svelte';
-	import {
-		FlexiWidget as FlexiWidgetController,
-		flexiwidget,
-		type FlexiWidgetConfiguration,
-		type FlexiWidgetChildrenSnippet,
-		type FlexiWidgetClasses,
-		renderedflexiwidget
-	} from '$lib/system/widget.svelte.js';
-	import type { FlexiCommonProps } from '$lib/system/types.js';
+	import { renderedflexiwidget, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
 
 	export type RenderedFlexiWidgetProps = {
 		widget: FlexiWidgetController;
@@ -44,7 +35,7 @@
 	{#if widget.snippet}
 		{@render widget.snippet({
 			widget,
-			Component: widget.component,
+			component: widget.component,
 			componentProps: widget.componentProps
 		})}
 	{:else if widget.component}

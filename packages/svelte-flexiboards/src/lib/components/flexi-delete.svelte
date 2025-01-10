@@ -3,18 +3,20 @@
 	import type { FlexiCommonProps, SvelteClassValue } from '$lib/system/types.js';
 	import { flexidelete } from '$lib/system/manage.svelte.js';
 
+	type FlexiDeleteChildrenProps = {
+		onpointerenter: (event: PointerEvent) => void;
+		onpointerleave: (event: PointerEvent) => void;
+	};
+
 	export type FlexiDeleteProps = {
-		children?: Snippet;
-		class?: SvelteClassValue;
+		children?: Snippet<[{ props: FlexiDeleteChildrenProps }]>;
 	};
 </script>
 
 <script lang="ts">
-	let { children, class: className }: FlexiDeleteProps = $props();
+	let { children }: FlexiDeleteProps = $props();
 
 	const { onpointerenter, onpointerleave } = flexidelete();
 </script>
 
-<div class={className} {onpointerenter} {onpointerleave}>
-	{@render children?.()}
-</div>
+{@render children?.({ props: { onpointerenter, onpointerleave } })}
