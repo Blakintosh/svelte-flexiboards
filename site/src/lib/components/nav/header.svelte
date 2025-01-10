@@ -80,6 +80,14 @@
 							class="w-full justify-start text-base font-normal text-muted-foreground">Home</Button
 						>
 					</li>
+					<li>
+						<Button
+							href="/examples"
+							variant={'ghost'}
+							class="w-full justify-start text-base font-normal text-muted-foreground"
+							>Examples</Button
+						>
+					</li>
 				</ul>
 
 				<div class="flex flex-col gap-2 px-4 py-2">
