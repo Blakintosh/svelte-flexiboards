@@ -1,8 +1,5 @@
 {
-    "rewrites": [
-      { "source": "/(.*)", "destination": "/site/$1" }
-    ],
-    "buildCommand": "cd site && pnpm install && pnpm run build",
+    "buildCommand": "cd packages/svelte-flexiboards && pnpm run build && cd ../../site && pnpm run build",
     "outputDirectory": "site/.svelte-kit/output/client",
     "installCommand": "pnpm install"
 }
