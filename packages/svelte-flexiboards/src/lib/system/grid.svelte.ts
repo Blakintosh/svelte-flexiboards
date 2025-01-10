@@ -93,6 +93,7 @@ export abstract class FlexiGrid {
     abstract removeWidget(widget: FlexiWidget): boolean;
     abstract takeSnapshot(): unknown;
     abstract restoreFromSnapshot(snapshot: unknown): void;
+    abstract mapRawCellToFinalCell(x: number, y: number): [number, number];
 
     _target: FlexiTarget;
     _targetConfig: FlexiTargetConfiguration;
@@ -140,9 +141,16 @@ export abstract class FlexiGrid {
             return;
         }
 
-        const cell = this._dimensionTracker.getCellFromPointerPosition(clientX, clientY);
+        const rawCell = this._dimensionTracker.getCellFromPointerPosition(clientX, clientY);
 
-        // console.log("At: ", cell);
+        let cell = rawCell;
+        if(rawCell) {
+            const [x, y] = this.mapRawCellToFinalCell(rawCell.column, rawCell.row);
+            cell = {
+                row: y,
+                column: x
+            };
+        }
 
         this.mouseCellPosition.x = cell?.column ?? 0;
         this.mouseCellPosition.y = cell?.row ?? 0;
@@ -160,6 +168,11 @@ export abstract class FlexiGrid {
 
         this._dimensionTracker.watchGrid();
     }
+
+    /**
+     * Clears the grid layout.
+     */
+    abstract clear(): void;
 
     onpointermove(event: PointerEvent) {
         this.#updatePointerPosition(event.clientX, event.clientY);
@@ -193,11 +206,13 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         bitmaps: []
     });
 
+    #targetConfig: FlexiTargetConfiguration;
     #layoutConfig: FreeFormTargetLayout;
 
     constructor(target: FlexiTarget, targetConfig: FlexiTargetConfiguration, layoutConfig: FreeFormTargetLayout) {
         super(target, targetConfig);
 
+        this.#targetConfig = targetConfig;
         this.#layoutConfig = layoutConfig;
 
         this.#rows = targetConfig.minRows ?? 1;
@@ -422,6 +437,17 @@ export class FreeFormFlexiGrid extends FlexiGrid {
         };
     }
 
+    clear() {
+        this.#widgets.clear();
+
+        this.#rows = this.#targetConfig.minRows ?? 1;
+        this.#columns = this.#targetConfig.minColumns ?? 1;
+
+        this.#bitmaps = new Array(this.#rows).fill(0);
+
+        this.#layout = new Array(this.#rows).fill(new Array(this.#columns).fill(null));
+    }
+
     restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
         this.#layout = snapshot.layout;
         this.#bitmaps = snapshot.bitmaps;
@@ -433,6 +459,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
             this.#widgets.add(widget.widget);
             widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
         }
+    }
+
+    mapRawCellToFinalCell(x: number, y: number): [number, number] {
+        return [Math.round(x), Math.round(y)];
     }
 
     #doMoveOperation(widget: FlexiWidget, operation: MoveOperation) {
@@ -650,6 +680,10 @@ export class FlowFlexiGrid extends FlexiGrid {
         let cellPosition: number | null = null;
         
         if(cellX !== undefined && cellY !== undefined && !this.#layoutConfig.disallowInsert) {
+            // Ensures that it doesn't try to place a widget too far along or down.
+            cellX = Math.min(cellX, this.columns);
+            cellY = Math.min(cellY, this.rows);
+
             cellPosition = this.#convert2DPositionTo1D(cellX, cellY);
         }
         // If it's null then coordinate is missing, or we can't allow insertion. Replace coordinates based on the placement strategy.
@@ -788,6 +822,11 @@ export class FlowFlexiGrid extends FlexiGrid {
         return true;
     }
 
+    clear() {
+        // Clear the grid without replacing it outright so reactivity proxies are preserved.
+        this.#widgets.length = 0;
+    }
+
     takeSnapshot(): FlowGridSnapshot {
         // Copy the widget positions and sizes.
         const widgets = this.#widgets.map(widget => {
@@ -808,8 +847,7 @@ export class FlowFlexiGrid extends FlexiGrid {
     }
 
     restoreFromSnapshot(snapshot: FlowGridSnapshot): void {
-        // Clear the grid without replacing it outright so reactivity proxies are preserved.
-        this.#widgets.length = 0;
+        this.clear();
 
         for(const widget of snapshot.widgets) {
             widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
@@ -818,6 +856,34 @@ export class FlowFlexiGrid extends FlexiGrid {
 
         this.#rows = snapshot.rows;
         this.#columns = snapshot.columns;
+    }
+
+    mapRawCellToFinalCell(x: number, y: number): [number, number] {
+        const position = [Math.round(x), Math.round(y)];
+
+        // if(x % 1 > 0.5 || y % 1 > 0.5) {
+        //     return [position[0], position[1]];
+        // }
+
+        const position1D = this.#convert2DPositionTo1D(position[0], position[1]);
+
+        const [index, nearest] = this.#findNearestWidget(position1D, 0, this.#widgets.length - 1);
+
+        if(nearest?.isShadow) {
+            return [nearest.x, nearest.y];
+        }
+
+        if(index == 0) {
+            return [position[0], position[1]];
+        }
+
+        const predecessor = this.#widgets[index - 1];
+
+        if(predecessor.isShadow) {
+            return [predecessor.x, predecessor.y];
+        }
+
+        return [position[0], position[1]];
     }
 
     #findNearestWidget(position: number, searchStart: number, searchEnd: number): [number, FlexiWidget | null] {

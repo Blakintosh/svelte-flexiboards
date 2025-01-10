@@ -49,20 +49,12 @@ export class PointerPositionWatcher {
     }
 }
 
-// TODO: we should separate widget entirely into a placeholder / actual system which would make this wrapper system obsolete
-const contextKey = Symbol('flexiwidgetwrapper');
-
-export function flexiwidgetwrapper(widget: FlexiWidget) {
-    setContext(contextKey, widget);
-}
-
-export function getFlexiwidgetwrapperCtx() {
-    return getContext<FlexiWidget | undefined>(contextKey);
-}
-
-type GridCurrentCell = {
+type CellPosition = {
     row: number;
     column: number;
+}
+
+type GridCurrentCell = CellPosition & {
     startX: number;
     startY: number;
     sizeX: number;
@@ -102,6 +94,11 @@ export class GridDimensionTracker {
     #rows: number = $derived(this.#grid?.rows ?? 0);
     #columns: number = $derived(this.#grid?.columns ?? 0);
 
+    #pointerPosition = $state({
+        x: 0,
+        y: 0
+    });
+
     #targetConfig: FlexiTargetConfiguration = $state({} as FlexiTargetConfiguration);
 
     #currentCell: GridCurrentCell | null = null;
@@ -118,7 +115,6 @@ export class GridDimensionTracker {
 
             const columns = grid.columns ?? 0;
             const rows = grid.rows ?? 0;
-            const widgets = grid.widgets;
 
             this.updateGridDimensions();
         });
@@ -165,11 +161,6 @@ export class GridDimensionTracker {
         const gapX = style.getPropertyValue('grid-column-gap');
         const gapY = style.getPropertyValue('grid-row-gap');
 
-        console.log("Template columns: ", templateColumns);
-        console.log("Template rows: ", templateRows);
-        console.log("Gap X: ", gapX);
-        console.log("Gap Y: ", gapY);
-
         // If the dimensions are unchanged, we don't need to update them.
         if(templateColumns == this.#dimensions.columnString 
             && templateRows == this.#dimensions.rowString 
@@ -197,11 +188,9 @@ export class GridDimensionTracker {
         this.#dimensions.rows = rows;
         this.#dimensions.columnGap = parseFloat(gapX.match(/(\d+\.?\d*)px/)?.[1] ?? '0');
         this.#dimensions.rowGap = parseFloat(gapY.match(/(\d+\.?\d*)px/)?.[1] ?? '0');
-
-        console.log("Dimensions: ", this.#dimensions);
     }
 
-    getCellFromPointerPosition(clientX: number, clientY: number) {
+    getCellFromPointerPosition(clientX: number, clientY: number): CellPosition | null {
         // TODO: Either try reinstate this or delete it
         // If the current cell still matches the pointer position, return it without having to search for it again
         // if(this.#currentCell && this.#isInsideCell(clientX, this.#currentCell.startX, this.#currentCell.sizeX) && this.#isInsideCell(clientY, this.#currentCell.startY, this.#currentCell.sizeY)) {
@@ -214,7 +203,8 @@ export class GridDimensionTracker {
             return null;
         }
 
-        const rect = this.#grid.ref.getBoundingClientRect();
+        this.#pointerPosition.x = clientX;
+        this.#pointerPosition.y = clientY;
 
         let xCell = this.#findCell(clientX, this.#dimensions.left, this.#dimensions.width, this.#dimensions.columnGap, this.#dimensions.columns);
         let yCell = this.#findCell(clientY, this.#dimensions.top, this.#dimensions.height, this.#dimensions.rowGap, this.#dimensions.rows);
@@ -237,8 +227,15 @@ export class GridDimensionTracker {
 
         let subtotal = start;
         for(let i = 0; i < axisCoordinates.length; i++) {
+            const base = subtotal;
             subtotal += axisCoordinates[i] + gap;
+
+            const proportionAlong = (pointerLocation - base) / (subtotal - base);
             if(pointerLocation < subtotal) {
+                return i + proportionAlong;
+                // if(proportionAlong > 0.5) {
+                //     return i + 1;
+                // }
                 return i;
             }
         }

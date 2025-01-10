@@ -1,7 +1,8 @@
-import type { FlexiWidget, FlexiWidgetChildrenSnippet, FlexiWidgetClasses } from "./widget.svelte.js";
+import type { FlexiWidget, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration } from "./widget.svelte.js";
 import type { FlexiTarget } from "./target.svelte.js";
 import type { PointerPositionWatcher } from "./utils.svelte.js";
 import type { Component } from "svelte";
+import type { FlexiAdd } from "./manage.svelte.js";
 
 export type ProxiedValue<T> = {
     value: T;
@@ -15,7 +16,7 @@ export type Position = {
 }
 
 export type FlexiCommonProps<T> = {
-    this?: T;
+    controller?: T;
     onfirstcreate?: (instance: T) => void;
 }
 
@@ -24,7 +25,8 @@ export type WidgetResizability = "none" | "horizontal" | "vertical" | "both";
 export type WidgetGrabAction = {
     action: 'grab';
     widget: FlexiWidget;
-    target: FlexiTarget;
+    target?: FlexiTarget;
+    adder?: FlexiAdd;
     offsetX: number;
     offsetY: number;
     positionWatcher: PointerPositionWatcher;
@@ -56,7 +58,8 @@ export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
  */
 export type WidgetGrabbedEvent = {
     widget: FlexiWidget;
-    target: FlexiTarget;
+    target?: FlexiTarget;
+    adder?: FlexiAdd;
     xOffset: number;
     yOffset: number;
     capturedHeight: number;
@@ -101,4 +104,4 @@ export type HoveredTargetEvent = {
     target: FlexiTarget;
 }
 
-export type FlexiSavedLayout = Record<string, FlexiWidget[]>;
+export type FlexiSavedLayout = Record<string, FlexiWidgetConfiguration[]>;

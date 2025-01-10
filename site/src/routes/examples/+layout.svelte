@@ -46,9 +46,8 @@
 		</Tabs.List>
 	</Tabs.Root>
 
-	<!-- TODO: Point this to the correct URL. -->
 	<Button
-		href="https://github.com/flexiboards/flexiboards/tree/main/examples"
+		href={`https://github.com/Blakintosh/svelte-flexiboards/tree/main/site/src/routes/examples/${data.slug}`}
 		target="_blank"
 		rel="noopener noreferrer"
 		variant={'secondary'}>View source code</Button

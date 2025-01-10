@@ -4,14 +4,25 @@
 </script>
 
 <header class="flex items-center justify-between border-b px-8 py-2">
-	<a class="flex w-[80%] items-center justify-start gap-4" href="/">
-		<div class="flex flex-col items-start gap-[0.075rem]">
-			<div class="h-1 w-[1rem] rounded-[1px] bg-orange-500"></div>
-			<div class="h-1 w-[0.67rem] rounded-[1px] bg-orange-500"></div>
-			<div class="h-1 w-[0.33rem] rounded-[1px] bg-orange-500"></div>
-		</div>
-		<h1 class="font-display text-2xl font-medium">Flexiboards</h1>
-	</a>
+	<div class="flex w-[80%] items-center gap-16">
+		<a class="flex items-center justify-start gap-4" href="/">
+			<div class="flex flex-col items-start gap-[0.075rem]">
+				<div class="h-1 w-[1rem] rounded-[1px] bg-orange-500"></div>
+				<div class="h-1 w-[0.67rem] rounded-[1px] bg-orange-500"></div>
+				<div class="h-1 w-[0.33rem] rounded-[1px] bg-orange-500"></div>
+			</div>
+			<h1 class="font-display text-2xl font-medium">Flexiboards</h1>
+		</a>
+
+		<ul class="flex items-center gap-2">
+			<li>
+				<Button href="/docs" variant={'ghost'}>Docs</Button>
+			</li>
+			<li>
+				<Button href="/examples" variant={'ghost'}>Examples</Button>
+			</li>
+		</ul>
+	</div>
 
 	<div class="flex w-[20%] items-center justify-end gap-1">
 		<Button

@@ -1,3 +1,21 @@
+<script module lang="ts">
+	type DashboardRegistryItem = {
+		component: Component;
+		componentProps: Record<string, unknown>;
+	};
+
+	const dashboardRegistry: Record<string, DashboardRegistryItem> = {
+		overallScore: {
+			component: DashboardTile,
+			componentProps: {
+				title: 'Overall Score',
+				content: '87',
+				trend: '+8 from last month'
+			}
+		}
+	};
+</script>
+
 <script lang="ts">
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -6,6 +24,7 @@
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
 	import type { FlexiBoardConfiguration, FlexiBoardController } from 'svelte-flexiboards';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
+	import type { Component } from 'svelte';
 
 	let editMode = $state(true);
 
@@ -17,8 +36,7 @@
 	});
 
 	let onBoardReady = (board: FlexiBoardController) => {
-		console.log('The board has landed!', board);
-
+		//console.log('The board has landed!', board);
 		// board.importLayout();
 		// board.exportLayout();
 	};
@@ -57,7 +75,7 @@
 					minColumns: 3,
 					layout: {
 						type: 'free',
-						expandColumns: true,
+						expandColumns: false,
 						expandRows: true
 					}
 				}}

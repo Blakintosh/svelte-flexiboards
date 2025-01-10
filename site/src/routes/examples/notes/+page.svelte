@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import {
+		FlexiBoard,
+		FlexiTarget,
+		FlexiWidget,
+		type FlexiBoardController
+	} from 'svelte-flexiboards';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
@@ -8,11 +13,13 @@
 	import FlexionHeadingBlock from '$lib/components/examples/flexion/flexion-heading-block.svelte';
 	import FlexionKanbanBlock from '$lib/components/examples/flexion/flexion-kanban-block.svelte';
 	import FlexionBlockContainer from '$lib/components/examples/flexion/flexion-block-container.svelte';
+
+	let board: FlexiBoardController | undefined = $state();
 </script>
 
-<Sidebar.Provider>
+<Sidebar.Provider class="h-full min-h-0">
 	<AppSidebar />
-	<main class="flex min-h-0 grow flex-col px-4 py-4 lg:px-8">
+	<main class="flex h-full min-h-0 grow flex-col px-4 py-4 lg:px-8">
 		<header class="mb-8 flex items-center justify-between">
 			<div class="flex items-center gap-4">
 				<Button variant={'ghost'} size={'icon'} class={'lg:hidden [&_svg]:size-5'}>
@@ -115,6 +122,7 @@
 						draggable: true
 					}
 				}}
+				bind:controller={board}
 			>
 				<FlexiTarget name="page" class="gap-8">
 					<FlexionBlockContainer component={FlexionTextBlock} />

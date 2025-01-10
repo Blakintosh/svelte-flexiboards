@@ -1,8 +1,15 @@
 <script lang="ts">
-	import { FlexiBoard, FlexiWidget, FlexiTarget } from 'svelte-flexiboards';
+	import {
+		FlexiBoard,
+		FlexiWidget,
+		FlexiTarget,
+		type FlexiBoardController
+	} from 'svelte-flexiboards';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import FlexionKanbanList from './flexion-kanban-list.svelte';
+
+	let board: FlexiBoardController | undefined = $state();
 </script>
 
 <nav class="flex w-full min-w-0 justify-between border-b">
@@ -102,6 +109,7 @@
 		}
 	}}
 	class="flex w-full min-w-0 items-start justify-center gap-12 px-4 py-4"
+	bind:controller={board}
 >
 	<FlexionKanbanList
 		category="today"

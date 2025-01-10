@@ -1,9 +1,10 @@
 import { getContext, onDestroy, setContext, type Component, type Snippet } from "svelte";
 import { getFlexitargetCtx, type FlexiTarget, type FlexiTargetConfiguration } from "./target.svelte.js";
 import type { WidgetAction, SvelteClassValue, WidgetGrabAction, WidgetResizeAction, WidgetResizability } from "./types.js";
-import { getFlexiwidgetwrapperCtx } from "./utils.svelte.js";
+import type { FlexiAdd } from "./manage.svelte.js";
 
-export type FlexiWidgetChildrenSnippet = Snippet<[{ widget: FlexiWidget, Component?: Component }]>;
+export type FlexiWidgetChildrenSnippetParameters = { widget: FlexiWidget, Component?: Component, componentProps?: Record<string, any> };
+export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
 
 export type FlexiWidgetClassFunction = (widget: FlexiWidget) => SvelteClassValue;
 export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
@@ -20,7 +21,6 @@ export type FlexiWidgetDefaults<T extends Record<string, any> = {}> = {
 };
 
 export type FlexiWidgetConfiguration<T extends Record<string, any> = {}> = FlexiWidgetDefaults<T> & {
-    name?: string;
     x?: number;
     y?: number;
     metadata?: Record<string, any>;
@@ -69,13 +69,40 @@ type FlexiWidgetDerivedConfiguration = {
      * The class name that is applied to this widget.
      */
     className?: FlexiWidgetClasses;
+
+    /**
+     * The metadata associated with this widget, if any.
+     */
+    metadata?: Record<string, any>;
+};
+
+type FlexiWidgetUnderAdderConstructor = {
+    type: "adder";
+    adder: FlexiAdd;
 }
+
+type FlexiWidgetUnderTargetConstructor = {
+    type: "target";
+    target: FlexiTarget;
+    isShadow?: boolean;
+};
+
+type FlexiWidgetConstructor = (FlexiWidgetUnderAdderConstructor | FlexiWidgetUnderTargetConstructor) & {
+    config: FlexiWidgetConfiguration;
+};
 
 export class FlexiWidget {
     /**
      * The target that this widget belongs to.
+     * This is undefined when the widget is new and has not yet been assigned to a target.
      */
-    target: FlexiTarget = $state() as FlexiTarget;
+    target?: FlexiTarget = $state(undefined);
+
+    /**
+     * The adder that this widget has been created from.
+     * This is undefined if the widget has been assigned to a target at least once.
+     */
+    adder?: FlexiAdd = $state(undefined);
 
     #providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.providerWidgetDefaults);
     #targetWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.config.widgetDefaults);
@@ -94,6 +121,7 @@ export class FlexiWidget {
         resizability: this.#rawConfig.resizability ?? this.#targetWidgetDefaults?.resizability ?? this.#providerWidgetDefaults?.resizability ?? "none",
         draggable: this.#rawConfig.draggable ?? this.#targetWidgetDefaults?.draggable ?? this.#providerWidgetDefaults?.draggable ?? true,
         className: this.#rawConfig.className ?? this.#targetWidgetDefaults?.className ?? this.#providerWidgetDefaults?.className,
+        metadata: this.#rawConfig.metadata
     });
 
     /**
@@ -146,10 +174,10 @@ export class FlexiWidget {
         }
 
         if(this.grabbers == 0) {
-            return 'user-select: none; cursor: grab;';
+            return 'user-select: none; cursor: grab; touch-action: none;';
         }
 
-        return 'user-select: none;';
+        return '';
     }
 
     #getGrabbedWidgetStyle(action: WidgetGrabAction) {
@@ -167,7 +195,6 @@ export class FlexiWidget {
         const unitSizeY = action.heightPx / action.initialHeightUnits;
         const unitSizeX = action.widthPx / action.initialWidthUnits;
 
-        // TODO: need to compute the new top and left relative to the provider.
         const top = action.top;
         const left = action.left;
 
@@ -191,16 +218,31 @@ export class FlexiWidget {
         return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
     }
 
-    constructor(target: FlexiTarget, config: FlexiWidgetConfiguration, isShadow: boolean = false) {
-        this.target = target;
-
-        this.#rawConfig = config;
+    // Constructor for widget creation directly under a FlexiTarget
+    constructor(ctor: FlexiWidgetConstructor) {
+        this.#rawConfig = ctor.config;
 
         // Populate the state proxy with the configuration values.
-        this.width = config.width ?? 1;
-        this.height = config.height ?? 1;
+        this.width = ctor.config.width ?? 1;
+        this.height = ctor.config.height ?? 1;
 
-        this.isShadow = isShadow;
+        if(ctor.type == "target") {
+            this.target = ctor.target;
+            this.isShadow = ctor.isShadow ?? false;
+        } else if(ctor.type == "adder") {
+            this.adder = ctor.adder;
+
+            // TODO: let the user decide offsets and dimensions if they wish
+            // Propagate an event up to the parent target, indicating that the widget has been grabbed.
+            this.currentAction = this.adder.onstartwidgetdragin({
+                widget: this,
+                xOffset: 0,
+                yOffset: 0,
+                // Capture the current size of the widget so that we can fix this once it's moving.
+                capturedHeight: 100,
+                capturedWidth: 100
+            });
+        }
 
         // Allows the event handlers to be called without binding to the widget instance.
         this.onpointerdown = this.onpointerdown.bind(this);
@@ -246,6 +288,11 @@ export class FlexiWidget {
             throw new Error("A FlexiWidget was instantiated without a bound reference element.");
         }
 
+        // If the widget is new, then this event shouldn't fire yet.
+        if(!this.target) {
+            return;
+        }
+
         const rect = this.ref.getBoundingClientRect();
 
         // Get the offset of the cursor relative to the widget's bounds.
@@ -265,9 +312,13 @@ export class FlexiWidget {
     }
     
     startResizeWidget(clientX: number, clientY: number) {
-		console.log("go for wefwefewfwe")
         if(!this.ref) {
             throw new Error("A FlexiWidget was instantiated without a bound reference element.");
+        }
+
+        // If the widget is new, then this event shouldn't fire yet.
+        if(!this.target) {
+            return;
         }
 
         const rect = this.ref.getBoundingClientRect();
@@ -283,7 +334,6 @@ export class FlexiWidget {
             heightPx: rect.height,
             widthPx: rect.width
         });
-        console.log("currentAction", this.currentAction);
     }
 
     setBounds(x: number, y: number, width: number, height: number) {
@@ -315,6 +365,18 @@ export class FlexiWidget {
 
     removeResizer() {
         this.resizers--;
+    }
+
+    /**
+     * Deletes this widget from its target and board.
+     */
+    delete() {
+        if(!this.target) {
+            throw new Error("A FlexiWidget was deleted without a bound target. This is likely a Flexiboards bug.");
+        }
+        // TODO: handle the case that it's under an adder
+
+        this.target.deleteWidget(this);
     }
 
     // Getters and setters
@@ -440,6 +502,17 @@ export class FlexiWidget {
     set componentProps(value: Record<string, any> | undefined) {
         this.#rawConfig.componentProps = value;
     }
+
+    /**
+     * The metadata associated with this widget, if any.
+     */
+    get metadata() {
+        return this.#config.metadata;
+    }
+
+    set metadata(value: Record<string, any> | undefined) {
+        this.#rawConfig.metadata = value;
+    }
 }
 
 const contextKey = Symbol('flexiwidget');
@@ -451,16 +524,15 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
         throw new Error("A FlexiWidget was instantiated outside of a FlexiTarget context. Ensure that flexiwidget() (or <FlexiWidget>) is called within a <FlexiTarget> component.");
     }
 
-    let widget: FlexiWidget | undefined;
-    if(!target.rendered) {
-        widget = target.createWidget(config);
-    } else {
-        widget = getFlexiwidgetwrapperCtx();
-        if(!widget) {
-            throw new Error("A FlexiWidget was instantiated in a rendered target without a FlexiWidgetWrapper context. This is likely a Flexiboards bug.");
-        }
-    }
+    let widget: FlexiWidget = target.createWidget(config);
 
+    setContext(contextKey, widget);
+    return {
+        widget
+    };
+}
+
+export function renderedflexiwidget(widget: FlexiWidget) {
     setContext(contextKey, widget);
     return {
         widget,

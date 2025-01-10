@@ -13,8 +13,10 @@ export type FlexiBoardConfiguration = {
 export class FlexiBoard {
 	currentWidgetAction: WidgetAction | null = $state(null);
 
-	#targets: FlexiTarget[] = $state([]);
+	#targets: Map<string, FlexiTarget> = new Map();
 	#hoveredTarget: FlexiTarget | null = $state(null);
+
+	#hoveredOverDeleter: boolean = $state(false);
 
 	#ref: { ref: HTMLElement | null } = $state({ ref: null });
 
@@ -37,11 +39,8 @@ export class FlexiBoard {
 	#ready: boolean = false;
 	
 	constructor(props: FlexiBoardProps) {
-		this.#targets = [];
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
-
-		$inspect("draggable?", this.config?.widgetDefaults?.draggable);
 
 		this.onPointerUp = this.onPointerUp.bind(this);
 
@@ -53,12 +52,20 @@ export class FlexiBoard {
 			};
         });
 
-		// $inspect(this.#locator.position);
+		// //$inspect(this.#locator.position);
 	}
 
-	addTarget(target: FlexiTarget) {
-		target.id ??= this.#nextTargetId();
-		this.#targets.push(target);
+	addTarget(target: FlexiTarget, key?: string) {
+		// If they didn't bring their own key, assign one.
+		key ??= this.#nextTargetKey();
+
+		if(this.#targets.has(key)) {
+			throw new Error(`A duplicate key, '${target.key}' was used during the instantiation of a FlexiTarget. Ensure that all FlexiTarget keys are unique.`);
+		}
+
+		this.#targets.set(key, target);
+
+		return key;
 	}
 
 	onpointerentertarget(event: HoveredTargetEvent) {
@@ -88,6 +95,14 @@ export class FlexiBoard {
 		// If it's resize, then we don't care that the pointer has left the target.
 	}
 
+	onenterdeleter() {
+		this.#hoveredOverDeleter = true;
+	}
+
+	onleavedeleter() {
+		this.#hoveredOverDeleter = false;
+	}
+
 	onwidgetgrabbed(event: WidgetGrabbedEvent) {
 		if(this.currentWidgetAction) {
 			return null;
@@ -97,6 +112,7 @@ export class FlexiBoard {
 			action: 'grab',
 			target: event.target,
 			widget: event.widget,
+			adder: event.adder,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
 			capturedHeightPx: event.capturedHeight,
@@ -107,9 +123,13 @@ export class FlexiBoard {
 
 		this.#lockViewport();
 
-		event.target.ongrabbedwidgetover({
-			widget: event.widget
-		});
+		// Only matters if the event source is a target, which isn't the case when the widget is being dragged into the board.
+		if(event.target) {
+			event.target.ongrabbedwidgetover({
+				widget: event.widget
+			});
+		}
+
 
 		return action;
 	}
@@ -141,7 +161,6 @@ export class FlexiBoard {
 			positionWatcher: this.#positionWatcher
 		};
 
-		console.log("go for resize")
 		this.currentWidgetAction = action;
 
 		this.#lockViewport();
@@ -160,8 +179,6 @@ export class FlexiBoard {
 	}
 
 	#unlockViewport() {
-		console.log("Unlocking viewport");
-
         document.documentElement.style.overscrollBehaviorY = 'auto';
         document.documentElement.style.overflow = 'auto';
 		document.documentElement.style.touchAction = 'auto';
@@ -205,16 +222,10 @@ export class FlexiBoard {
 
 	oninitialloadcomplete() {
 		this.#ready = true;
-		console.log("Houston, we're cleared for launch!");
-
-		console.log(this.#targets);
 
 		if(this.#storedLoadLayout) {
 			this.importLayout(this.#storedLoadLayout);
 		}
-		// this.#targets.forEach(target => {
-		// 	target.loadLayout();
-		// });
 	}
 
 	importLayout(layout: FlexiSavedLayout) {
@@ -226,11 +237,29 @@ export class FlexiBoard {
 
 		// Good to go - import the widgets into their respective targets.
 		this.#targets.forEach(target => {
-			target.importLayout(layout[target.id]);
+			target.importLayout(layout[target.key]);
 		});
 	}
 
+	exportLayout(): FlexiSavedLayout {
+		const result: FlexiSavedLayout = {};
+
+		// Grab the current layout of each target.
+		this.#targets.forEach(target => {
+			result[target.key] = target.exportLayout();
+		});
+
+		return result;
+	}
+
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
+		// If a deleter is hovered, then we'll delete the widget.
+		if(this.#hoveredOverDeleter) {
+			// TODO: until this handles adder, it won't play nice
+			action.widget.delete();
+			return;
+		}
+
 		// If no target is hovered, then just release the widget.
 		if(!this.#hoveredTarget) {
 			this.#releaseCurrentWidgetAction();
@@ -254,9 +283,12 @@ export class FlexiBoard {
 			return;
 		}
 
+		if(action.adder) {
+			action.adder.onstopwidgetdragin();
+		}
 		this.moveWidget(action.widget, action.target, this.#hoveredTarget);
 
-		this.#releaseCurrentWidgetAction();
+		this.#releaseCurrentWidgetAction(true);
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
@@ -267,19 +299,31 @@ export class FlexiBoard {
 		this.#releaseCurrentWidgetAction();
 	}
 
-	#releaseCurrentWidgetAction() {
-		if(!this.currentWidgetAction) {
+	#releaseCurrentWidgetAction(actionSucceeded: boolean = false) {
+		const currentWidgetAction = this.currentWidgetAction;
+
+		if(!currentWidgetAction) {
 			return;
 		}
 
 		// TODO: this doesn't currently handle reinstating the widget to its original target if it's not being moved.
 		// won't be guaranteed to be released inside the original target.
 
-		const widget = this.currentWidgetAction.widget;
+		const widget = currentWidgetAction.widget;
 
 		// If the widget is still being grabbed, we'll need to release it.
 		if(widget.currentAction) {
 			widget.currentAction = null;
+		}
+
+		// TODO: capture current Action and tell its target to replace it in the original spot (or adder)
+		if(currentWidgetAction.action == "grab" && currentWidgetAction.adder) {
+			currentWidgetAction.adder.onstopwidgetdragin();
+		}
+
+		// The widget wasn't placed successfully, so go back to the pre-grab state.
+		if(!actionSucceeded && currentWidgetAction.target) {
+			currentWidgetAction.target.restorePreGrabSnapshot();
 		}
 
 		this.currentWidgetAction = null;
@@ -291,14 +335,19 @@ export class FlexiBoard {
 	 * @param from The target to move the widget from.
 	 * @param to The target to move the widget to.
 	 */
-	moveWidget(widget: FlexiWidget, from: FlexiTarget, to: FlexiTarget) {
-		from.widgets.delete(widget);
+	moveWidget(widget: FlexiWidget, from: FlexiTarget | undefined, to: FlexiTarget) {
+		// If the widget is new, it has no from
+		// TODO: Not entirely true, because we need to remove it from the adder that made it
+		if(from) {
+			from.widgets.delete(widget);
+			from.forgetPreGrabSnapshot();
+		}
 
 		widget.target = to;
 		to.widgets.add(widget);
 	}
 
-	#nextTargetId() {
+	#nextTargetKey() {
 		return `target-${this.#nextTargetIndex++}`;
 	}
 

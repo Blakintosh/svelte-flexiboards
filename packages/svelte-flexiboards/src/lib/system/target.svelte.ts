@@ -42,7 +42,7 @@ class FlexiTarget {
     #state: FlexiTargetState = $state({ 
         hovered: false,
         actionWidget: null,
-        rendered: false
+        prepared: false
     });
 
     #dropzoneWidget: ProxiedValue<FlexiWidget | null> = $state({
@@ -54,11 +54,12 @@ class FlexiTarget {
         y: 0
     });
 
-    id?: string;
+    key: string;
 
 
     #grid: FlexiGrid | null = null;
 
+    #preGrabSnapshot: unknown | null = null;
     #gridSnapshot: unknown | null = null;
 
     #targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
@@ -77,23 +78,15 @@ class FlexiTarget {
         widgetDefaults: this.#targetConfig?.widgetDefaults
     });
     
-    constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration) {
+    constructor(provider: FlexiBoard, config?: FlexiTargetConfiguration, key?: string) {
         this.provider = provider;
-        // TODO: this needs to come from the props, doesn't need to be reactive (if anything, shouldn't be).
-        this.id = config?.id;
+        // If we weren't provided a key, the provider will generate one for us.
+        this.key = provider.addTarget(this, key);
 
         this.#targetConfig = config;
-
-        // $inspect(this.config);
-        provider.addTarget(this);
-
-        // Once mounted, switch from our pre-rendered widgets to the actual interactive widgets.
-        $effect(() => {
-            this.rendered = true;
-        });
     }
 
-    tryAddWidget(widget: FlexiWidget, x?: number, y?: number, width?: number, height?: number): boolean {
+    #tryAddWidget(widget: FlexiWidget, x?: number, y?: number, width?: number, height?: number): boolean {
         const added = this.grid.tryPlaceWidget(widget, x, y, width, height);
         
         if(added) {
@@ -119,33 +112,94 @@ class FlexiTarget {
         return this.#grid;
     }
 
+    /**
+     * Creates a new widget under this target.
+     * @param config The configuration of the widget to create.
+     * @returns The newly created widget.
+     */
     createWidget(config: FlexiWidgetConfiguration) {
         const [x, y, width, height] = [config.x, config.y, config.width, config.height];
-        const widget = new FlexiWidget(this, config);
+        const widget = new FlexiWidget({
+            type: "target",
+            target: this,
+            config
+        });
         
-        if(!this.tryAddWidget(widget, x, y, width, height)) {
+        // TODO: It's not appropriate to throw a big error at runtime
+        if(!this.#tryAddWidget(widget, x, y, width, height)) {
             throw new Error("Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision.");
         }
 
         return widget;
     }
 
+    /**
+     * Deletes the given widget from this target, if it exists.
+     * @returns Whether the widget was deleted.
+     */
+    deleteWidget(widget: FlexiWidget): boolean {
+        const deleted = this.widgets.delete(widget);
+        this.grid.removeWidget(widget);
+
+        return deleted;
+    }
+
+    /**
+     * Imports a layout of widgets into this target, replacing any existing widgets.
+     * @param layout The layout to import.
+     */
     importLayout(layout: FlexiWidgetConfiguration[]) {
+        this.widgets.clear();
+        this.grid.clear();
+
         for(const config of layout) {
             this.createWidget(config);
         }
     }
 
+    /**
+     * Exports the current layout of widgets from this target.
+     * @returns The layout of widgets.
+     */
+    exportLayout(): FlexiWidgetConfiguration[] {
+        const result: FlexiWidgetConfiguration[] = [];
+
+        // Likely much more information than needed, but we've got it.
+        for(const widget of this.widgets) {
+            result.push({
+                component: widget.component,
+                componentProps: widget.componentProps,
+                snippet: widget.snippet,
+                width: widget.width,
+                height: widget.height,
+                x: widget.x,
+                y: widget.y,
+                draggable: widget.draggable,
+                resizability: widget.resizability,
+                className: widget.className,
+                metadata: widget.metadata
+            });
+        }
+
+        return result;
+    }
+
     #createShadow(of: FlexiWidget) {
-        const shadow = new FlexiWidget(this, {
-            width: of.width,
-            height: of.height,
-            component: of.component,
-            draggable: of.draggable,
-            resizability: of.resizability,
-            snippet: of.snippet,
-            className: of.className
-        }, true);
+        const shadow = new FlexiWidget({
+            type: "target",
+            target: this, 
+            config: {
+                width: of.width,
+                height: of.height,
+                component: of.component,
+                draggable: of.draggable,
+                resizability: of.resizability,
+                snippet: of.snippet,
+                className: of.className,
+                componentProps: of.componentProps
+            },
+            isShadow: true
+        });
         this.widgets.add(shadow);
 
         return shadow;
@@ -169,10 +223,27 @@ class FlexiTarget {
     }
 
     onwidgetgrabbed(event: WidgetGrabbedEvent) {
+        // Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
+        // we can restore the grid to its original state.
+        this.#preGrabSnapshot = this.grid.takeSnapshot();
+
         // Remove the widget from the grid as it's now in a floating state.
         this.grid.removeWidget(event.widget);
 
         return this.provider.onwidgetgrabbed(event);
+    }
+
+    restorePreGrabSnapshot() {
+        if(!this.#preGrabSnapshot) {
+            return;
+        }
+
+        this.grid.restoreFromSnapshot(this.#preGrabSnapshot!);
+        this.forgetPreGrabSnapshot();
+    }
+
+    forgetPreGrabSnapshot() {
+        this.#preGrabSnapshot = null;
     }
 
     onwidgetstartresize(event: WidgetStartResizeEvent) {
@@ -194,7 +265,6 @@ class FlexiTarget {
     }
 
     onwidgetdropped(event: WidgetDroppedEvent) {
-        console.log("widget dropped", event.widget);
 
         const actionWidget = this.actionWidget;
         if(!actionWidget) {
@@ -235,9 +305,12 @@ class FlexiTarget {
     }
 
     ongrabbedwidgetleave() {
-        console.log("grabbed widget leave", this.actionWidget);
         this.actionWidget = null;
         this.#removeDropzoneWidget();
+    }
+
+    oninitialloadcomplete() {
+        this.prepared = true;
     }
 
     #updateMouseCellPosition(x: number, y: number) {
@@ -254,13 +327,8 @@ class FlexiTarget {
         // Take a snapshot of the grid so we can restore its state if the hover stops.
         this.#gridSnapshot = grid.takeSnapshot();
 
-        console.log("create dropzone widget", this.actionWidget);
-
         const dropzoneWidget = this.#createShadow(this.actionWidget.widget);
         this.dropzoneWidget = dropzoneWidget;
-
-        console.log("DROPonz widget will be placed at", this.#mouseCellPosition.x, this.#mouseCellPosition.y);
-        console.log("dropzone widget", this.dropzoneWidget);
 
         let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
@@ -277,14 +345,12 @@ class FlexiTarget {
 
         let [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
 
-        console.log("dropzone widget will be placed at", x, y, width, height);
+        const grid = this.grid;
 
         // No change, no need to update.
         if(x === dropzoneWidget.x && y === dropzoneWidget.y && width === dropzoneWidget.width && height === dropzoneWidget.height) {
             return;
         }
-
-        const grid = this.grid;
 
         grid.removeWidget(dropzoneWidget);
         grid.restoreFromSnapshot(this.#gridSnapshot!);
@@ -310,7 +376,6 @@ class FlexiTarget {
     #getResizingDropzoneLocation(resizingWidget: FlexiWidget, mouseCellPosition: Position): [x: number, y: number, width: number, height: number] {
         const { width, height } = this.#getNewWidgetHeightAndWidth(resizingWidget, mouseCellPosition);
         
-        console.log("want: ", width, height, "x, y", mouseCellPosition.x, mouseCellPosition.y);
         return [resizingWidget.x, resizingWidget.y, width, height];
     }
 
@@ -318,8 +383,8 @@ class FlexiTarget {
         const grid = this.grid;
 
         // TODO: do not allow flow axis resizing in flow layouts.
-        const newWidth = mouseCellPosition.x - widget.x + 1;
-        const newHeight = mouseCellPosition.y - widget.y + 1;
+        const newWidth = mouseCellPosition.x - widget.x;
+        const newHeight = mouseCellPosition.y - widget.y;
 
         switch(widget.resizability) {
             case "horizontal":
@@ -334,7 +399,6 @@ class FlexiTarget {
     }
 
     #removeDropzoneWidget() {
-        console.log("remove dropzone widget", this.dropzoneWidget);
         if(!this.dropzoneWidget) {
             return;
         }
@@ -375,14 +439,14 @@ class FlexiTarget {
     }
 
     /**
-     * Whether the target is mounted and ready to render widgets.
+     * Whether the target is prepared and ready to render widgets.
      */
-    get rendered() {
-        return this.#state.rendered;
+    get prepared() {
+        return this.#state.prepared;
     }
 
-    set rendered(value: boolean) {
-        this.#state.rendered = value;
+    set prepared(value: boolean) {
+        this.#state.prepared = value;
     }
 
     /**
@@ -437,7 +501,7 @@ type FlexiTargetState = {
     /**
      * Whether the target is mounted and ready to render widgets.
      */
-    rendered: boolean;
+    prepared: boolean;
 }
 
 const contextKey = Symbol('flexitarget');
@@ -446,9 +510,9 @@ const contextKey = Symbol('flexitarget');
  * Creates a new FlexiTarget instance in the context of the current FlexiBoard.
  * @returns A FlexiTarget class instance.
  */
-function flexitarget(config?: FlexiTargetConfiguration) {
+function flexitarget(config?: FlexiTargetConfiguration, key?: string) {
     const provider = getFlexiboardCtx();
-    const target = new FlexiTarget(provider, config);
+    const target = new FlexiTarget(provider, config, key);
 
     setContext(contextKey, target);
 

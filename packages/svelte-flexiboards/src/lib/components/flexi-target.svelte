@@ -10,18 +10,19 @@
 	export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
 		header?: Snippet<[{ target: FlexiTargetController }]>;
 		children?: Snippet;
-		footer?: Snippet;
+		footer?: Snippet<[{ target: FlexiTargetController }]>;
 		containerClass?: string;
 		class?: string;
 		name?: string;
 		config?: FlexiTargetConfiguration;
+		key?: string;
 	};
 </script>
 
 <script lang="ts">
-	import FlexiWidget from './flexi-widget.svelte';
-	import FlexiWidgetWrapper from './flexi-widget-wrapper.svelte';
 	import FlexiGrid from './flexi-grid.svelte';
+	import FlexiTargetLoader from './flexi-target-loader.svelte';
+	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
 
 	let {
 		children,
@@ -30,36 +31,34 @@
 		footer,
 		config,
 		containerClass,
-		this: _thisTarget = $bindable(),
+		controller = $bindable(),
+		key,
 		onfirstcreate
 	}: FlexiTargetProps = $props();
 
-	const { onpointerenter, onpointerleave, target } = flexitarget(config);
+	const { onpointerenter, onpointerleave, target } = flexitarget(config, key);
 
 	// Target created, allow the caller to access it.
-	_thisTarget = target;
+	controller = target;
 	onfirstcreate?.(target);
-
-	let rendered = $derived(false);
 </script>
 
 <div>
 	<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
 		{@render header?.({ target })}
 
-		<!-- Allow user to specify components directly, then mount them to the actual target list dynamically -->
-		<!-- TODO: We still need to handle the SSR case where we've received widgets up front. -->
+		<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
 		<FlexiGrid class={className}>
-			{#if !target.rendered && children}
+			{#if !target.prepared && children}
 				{@render children()}
-			{:else if target.rendered}
+			{:else if target.prepared}
 				{#each target.widgets as widget (widget)}
-					<FlexiWidgetWrapper {widget}>
-						<FlexiWidget />
-					</FlexiWidgetWrapper>
+					<RenderedFlexiWidget {widget} />
 				{/each}
 			{/if}
 		</FlexiGrid>
-		{@render footer?.()}
+		{@render footer?.({ target })}
 	</div>
 </div>
+
+<FlexiTargetLoader />
