@@ -1,5 +1,9 @@
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
+
+    $effect(() => {
+        document.title = 'FlexiWidget ⋅ Component Docs ⋅ Flexiboards';
+    });
 </script>
 
 # FlexiWidget

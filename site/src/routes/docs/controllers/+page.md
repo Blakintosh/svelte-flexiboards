@@ -1,6 +1,10 @@
 <script lang="ts">
 	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+
+    $effect(() => {
+        document.title = 'Controllers ⋅ Docs ⋅ Flexiboards';
+    });
 </script>
 
 # Controllers

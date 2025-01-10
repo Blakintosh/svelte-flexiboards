@@ -34,6 +34,11 @@
 	</h2>
 
 	<div class="flex flex-col gap-4 lg:flex-row">
+		<Button
+			class="h-12 px-12 py-4 text-2xl"
+			href="https://www.npmjs.com/package/svelte-flexiboards"
+			target="_blank">Install</Button
+		>
 		<Button class="h-12 px-12 py-4 text-2xl" href="/docs">Docs</Button>
 		<Button class="hidden h-12 px-12 py-4 text-2xl lg:flex" href="/examples">Examples</Button>
 	</div>
