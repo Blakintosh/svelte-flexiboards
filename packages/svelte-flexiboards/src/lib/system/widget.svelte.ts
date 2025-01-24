@@ -1,7 +1,8 @@
 import { getContext, onDestroy, setContext, type Component, type Snippet } from "svelte";
 import { getInternalFlexitargetCtx, type InternalFlexiTargetController, type FlexiTargetConfiguration, type FlexiTargetController } from "./target.svelte.js";
-import type { WidgetAction, SvelteClassValue, WidgetGrabAction, WidgetResizeAction, WidgetResizability } from "./types.js";
+import type { WidgetAction, SvelteClassValue, WidgetGrabAction, WidgetResizeAction, WidgetResizability, Position } from "./types.js";
 import type { FlexiAddController } from "./manage.svelte.js";
+import type { InternalFlexiBoardController } from "./provider.svelte.js";
 
 export type FlexiWidgetChildrenSnippetParameters = { widget: FlexiWidgetController, component?: Component, componentProps?: Record<string, any> };
 export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
@@ -171,6 +172,11 @@ export class FlexiWidgetController implements FlexiWidgetController {
     });
 
     /**
+     * Manages transitions between widget positions and dimensions.
+     */
+    #interpolator: WidgetMoveInterpolator;
+
+    /**
      * Whether this widget is a shadow dropzone widget.
      */
     isShadow: boolean = $state(false);
@@ -195,8 +201,7 @@ export class FlexiWidgetController implements FlexiWidgetController {
         const currentAction = this.currentAction;
 
         if(!currentAction) {
-            return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};` +
-                this.#getCursorStyle();
+            return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
         }
 
         // Grab action
@@ -226,6 +231,14 @@ export class FlexiWidgetController implements FlexiWidgetController {
         }
 
         return '';
+    }
+
+    #getPlacedWidgetStyle() {
+        if(!this.interpolator.active) {
+            return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
+        }
+
+        return this.interpolator.widgetStyle;
     }
 
     #getGrabbedWidgetStyle(action: WidgetGrabAction) {
@@ -277,6 +290,8 @@ export class FlexiWidgetController implements FlexiWidgetController {
         if(ctor.type == "target") {
             this.target = ctor.target;
             this.isShadow = ctor.isShadow ?? false;
+
+            this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider);
         } else if(ctor.type == "adder") {
             this.adder = ctor.adder;
 
@@ -396,16 +411,44 @@ export class FlexiWidgetController implements FlexiWidgetController {
     /**
      * Sets the bounds of the widget.
      * @remarks This is not intended for use externally.
+     * @internal
      * @param x The x-coordinate of the widget.
      * @param y The y-coordinate of the widget.
      * @param width The width of the widget.
      * @param height The height of the widget.
      */
-    setBounds(x: number, y: number, width: number, height: number) {
+    setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
+        if(this.#state.x == x && this.#state.y == y && this.#state.width == width && this.#state.height == height) {
+            return;
+        }
+
         this.#state.x = x;
         this.#state.y = y;
         this.#state.width = width;
         this.#state.height = height;
+
+        if(interpolate) {
+            this.#interpolateMove(x, y, width, height);
+        }
+    }
+
+    #interpolateMove(x: number, y: number, width: number, height: number) {
+        const rect = this.ref?.getBoundingClientRect();
+        if(!rect) {
+            return;
+        }
+
+        this.#interpolator.interpolateMove({
+            x,
+            y,
+            width,
+            height
+        }, {
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+        });
     }
 
     /**
@@ -591,6 +634,125 @@ export class FlexiWidgetController implements FlexiWidgetController {
     set metadata(value: Record<string, any> | undefined) {
         this.#rawConfig.metadata = value;
     }
+
+    /**
+     * Whether the widget should draw a placeholder widget in the DOM.
+     */
+    get shouldDrawPlaceholder() {
+        return this.#interpolator.active;
+    }
+
+    /**
+     * If a placeholder widget is being drawn, this contains the style to apply to it.
+     */
+    get interpolator() {
+        return this.#interpolator;
+    }
+}
+
+type Dimensions = Position & {
+    width: number;
+    height: number;
+}
+
+type InterpolatedWidgetPosition = {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
+
+class WidgetMoveInterpolator {
+    active: boolean = $state(false);
+
+    #timeout?: number;
+
+    #provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
+
+    #containerRef?: HTMLElement | null = $derived(this.#provider?.ref);
+    ref?: HTMLElement;
+
+    #placeholderPosition: Dimensions = $state({
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1
+    });
+
+    #interpolatedWidgetPosition: InterpolatedWidgetPosition = $state({
+        left: 0,
+        top: 0,
+        width: 1,
+        height: 1
+    });
+
+    widgetStyle: string = $derived.by(() => {
+        return `transition: all 100ms ease-in-out; position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
+    });
+
+    placeholderStyle: string = $derived.by(() => {
+        return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; visibility: hidden;`;
+    })
+
+    constructor(provider: InternalFlexiBoardController) {
+        this.#provider = provider;
+        this.onPlaceholderMount = this.onPlaceholderMount.bind(this);
+        this.onPlaceholderUnmount = this.onPlaceholderUnmount.bind(this);
+    }
+
+    // TODO: better name than this InterpolatedWidgetPosition
+    interpolateMove(newDimensions: Dimensions, oldPosition: InterpolatedWidgetPosition) {
+        const containerRect = this.#containerRef?.getBoundingClientRect();
+        if(!containerRect) {
+            return;
+        }
+
+        // TODO: just need to now add a system to wait for the DOM update to occur if the placeholder is already mounted,
+        // then apply the new positions once we get them.
+
+        if(this.active) {
+            clearTimeout(this.#timeout);
+        }
+
+        this.active = true;
+
+        // TODO: verify that this works without breaking the reactivity
+        this.#placeholderPosition = newDimensions;
+
+        // console.log("Starting with: top ", oldPosition.top - containerRect.top, "left ", oldPosition.left - containerRect.left, "width ", oldPosition.width, "height ", oldPosition.height);
+        this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
+        this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left;
+        this.#interpolatedWidgetPosition.width = oldPosition.width;
+        this.#interpolatedWidgetPosition.height = oldPosition.height;
+
+        this.#timeout = setTimeout(() => {
+            this.active = false;
+        }, 100);
+    }
+
+    onPlaceholderMount(ref: HTMLElement) {
+        this.ref = ref;
+
+        // Now that we're mounted, capture the placeholder's position and use it to move our actual widget.
+        const rect = this.ref.getBoundingClientRect();
+
+        const containerRect = this.#containerRef?.getBoundingClientRect();
+        if(!containerRect) {
+            return;
+        }
+
+        // console.log("Mounted, now interpolating to ", rect.top - containerRect.top, rect.left - containerRect.left, rect.width, rect.height);
+        this.#interpolatedWidgetPosition.top = rect.top - containerRect.top;
+        this.#interpolatedWidgetPosition.left = rect.left - containerRect.left;
+        this.#interpolatedWidgetPosition.width = rect.width;
+        this.#interpolatedWidgetPosition.height = rect.height;
+
+        return this.onPlaceholderUnmount;
+    }
+
+    onPlaceholderUnmount() {
+        this.ref = undefined;
+    }
 }
 
 const contextKey = Symbol('flexiwidget');
@@ -660,4 +822,10 @@ export function getFlexiwidgetCtx() {
     }
 
     return widget;
+}
+
+export function getFlexiwidgetInterpolatorCtx() {
+    const widget = getFlexiwidgetCtx();
+
+    return widget.interpolator;
 }

@@ -1,5 +1,6 @@
 <script module lang="ts">
 	import { renderedflexiwidget, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
+	import WidgetTransitionPlaceholder from './widget-transition-placeholder.svelte';
 
 	export type RenderedFlexiWidgetProps = {
 		widget: FlexiWidgetController;
@@ -42,3 +43,7 @@
 		<widget.component {...widget.componentProps ?? {}} />
 	{/if}
 </div>
+
+{#if widget.shouldDrawPlaceholder}
+	<WidgetTransitionPlaceholder />
+{/if}
