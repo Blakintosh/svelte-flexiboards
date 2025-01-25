@@ -234,11 +234,12 @@ export class FlexiWidgetController implements FlexiWidgetController {
     }
 
     #getPlacedWidgetStyle() {
-        if(!this.interpolator.active) {
+        // TODO: need a provision to handle when interpolator is initialised from a dragged in widget, as it doesn't seem to exist
+        if(!this.#interpolator?.active) {
             return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
         }
 
-        return this.interpolator.widgetStyle;
+        return this.#interpolator.widgetStyle;
     }
 
     #getGrabbedWidgetStyle(action: WidgetGrabAction) {
@@ -434,7 +435,7 @@ export class FlexiWidgetController implements FlexiWidgetController {
 
     #interpolateMove(x: number, y: number, width: number, height: number) {
         const rect = this.ref?.getBoundingClientRect();
-        if(!rect) {
+        if(!rect || !this.#interpolator) {
             return;
         }
 
@@ -639,7 +640,7 @@ export class FlexiWidgetController implements FlexiWidgetController {
      * Whether the widget should draw a placeholder widget in the DOM.
      */
     get shouldDrawPlaceholder() {
-        return this.#interpolator.active;
+        return this.#interpolator?.active ?? false;
     }
 
     /**
@@ -662,6 +663,17 @@ type InterpolatedWidgetPosition = {
     height: number;
 }
 
+type PlaceholderPosition = {
+    x: number;
+    y: number;
+    // The width and height of the placeholder in units.
+    width: number;
+    height: number;
+    // The width and height of the placeholder in pixels.
+    heightPx: number;
+    widthPx: number;
+}
+
 class WidgetMoveInterpolator {
     active: boolean = $state(false);
 
@@ -672,11 +684,15 @@ class WidgetMoveInterpolator {
     #containerRef?: HTMLElement | null = $derived(this.#provider?.ref);
     ref?: HTMLElement;
 
-    #placeholderPosition: Dimensions = $state({
+    #observer?: MutationObserver;
+
+    #placeholderPosition: PlaceholderPosition = $state({
         x: 0,
         y: 0,
         width: 1,
-        height: 1
+        height: 1,
+        heightPx: 0,
+        widthPx: 0
     });
 
     #interpolatedWidgetPosition: InterpolatedWidgetPosition = $state({
@@ -691,7 +707,7 @@ class WidgetMoveInterpolator {
     });
 
     placeholderStyle: string = $derived.by(() => {
-        return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; visibility: hidden;`;
+        return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; width: ${this.#placeholderPosition.widthPx}px; height: ${this.#placeholderPosition.heightPx}px; visibility: hidden;`;
     })
 
     constructor(provider: InternalFlexiBoardController) {
@@ -707,9 +723,6 @@ class WidgetMoveInterpolator {
             return;
         }
 
-        // TODO: just need to now add a system to wait for the DOM update to occur if the placeholder is already mounted,
-        // then apply the new positions once we get them.
-
         if(this.active) {
             clearTimeout(this.#timeout);
         }
@@ -717,7 +730,14 @@ class WidgetMoveInterpolator {
         this.active = true;
 
         // TODO: verify that this works without breaking the reactivity
-        this.#placeholderPosition = newDimensions;
+        this.#placeholderPosition = {
+            x: newDimensions.x,
+            y: newDimensions.y,
+            width: newDimensions.width,
+            height: newDimensions.height,
+            heightPx: oldPosition.height,
+            widthPx: oldPosition.width
+        };
 
         // console.log("Starting with: top ", oldPosition.top - containerRect.top, "left ", oldPosition.left - containerRect.left, "width ", oldPosition.width, "height ", oldPosition.height);
         this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
@@ -730,28 +750,47 @@ class WidgetMoveInterpolator {
         }, 100);
     }
 
-    onPlaceholderMount(ref: HTMLElement) {
-        this.ref = ref;
-
-        // Now that we're mounted, capture the placeholder's position and use it to move our actual widget.
-        const rect = this.ref.getBoundingClientRect();
-
+    onPlaceholderMove(rect: DOMRect) {
         const containerRect = this.#containerRef?.getBoundingClientRect();
         if(!containerRect) {
             return;
         }
 
-        // console.log("Mounted, now interpolating to ", rect.top - containerRect.top, rect.left - containerRect.left, rect.width, rect.height);
         this.#interpolatedWidgetPosition.top = rect.top - containerRect.top;
         this.#interpolatedWidgetPosition.left = rect.left - containerRect.left;
         this.#interpolatedWidgetPosition.width = rect.width;
         this.#interpolatedWidgetPosition.height = rect.height;
+    }
+
+    onPlaceholderMount(ref: HTMLElement) {
+        this.ref = ref;
+
+        // Now that we're mounted, start moving our widget.
+        this.onPlaceholderMove(this.ref.getBoundingClientRect());
+
+        // However, if the widget moves again before timeout, we need to track and update the position.
+        this.#observer = new MutationObserver((mutations) => {
+            if(!this.ref) {
+                return;
+            }
+
+            for(const mutation of mutations) {
+                if(mutation.type == "attributes" && mutation.attributeName == "style") {
+                    this.onPlaceholderMove(this.ref.getBoundingClientRect());
+                }
+            }
+        });
+
+        this.#observer.observe(this.ref, { attributes: true });
 
         return this.onPlaceholderUnmount;
     }
 
     onPlaceholderUnmount() {
         this.ref = undefined;
+
+        this.#observer?.disconnect();
+        this.#observer = undefined;
     }
 }
 
