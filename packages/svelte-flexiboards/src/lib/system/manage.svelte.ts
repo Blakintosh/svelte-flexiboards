@@ -11,13 +11,13 @@ export type AdderWidgetConfiguration = {
 }
 
 export class FlexiAddController {
-    #provider: InternalFlexiBoardController;
+    provider: InternalFlexiBoardController;
     #addWidget: FlexiAddWidgetFn;
 
     newWidget?: FlexiWidgetController = $state(undefined);
 
     constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
-        this.#provider = provider;
+        this.provider = provider;
         this.#addWidget = addWidgetFn;
 
         this.onpointerdown = this.onpointerdown.bind(this);
@@ -45,7 +45,7 @@ export class FlexiAddController {
     }
 
     onstartwidgetdragin(event: WidgetGrabbedParams) {
-        return this.#provider.onwidgetgrabbed({
+        return this.provider.onwidgetgrabbed({
             ...event,
             adder: this
         });

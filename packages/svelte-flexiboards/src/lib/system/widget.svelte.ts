@@ -295,6 +295,7 @@ export class FlexiWidgetController implements FlexiWidgetController {
             this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider);
         } else if(ctor.type == "adder") {
             this.adder = ctor.adder;
+            this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider);
 
             // Start the widget drag in event
             this.currentAction = this.adder.onstartwidgetdragin({

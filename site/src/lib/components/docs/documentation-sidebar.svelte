@@ -17,27 +17,31 @@
 				}
 			]
 		},
-		// {
-		// 	section: 'Guides',
-		// 	pages: [
-		// 		{
-		// 			title: 'Export & Import Boards',
-		// 			href: '/docs/guides/exporting-importing-boards'
-		// 		},
-		// 		{
-		// 			title: 'Widget Rendering',
-		// 			href: '/docs/guides/widget-rendering'
-		// 		},
-		// 		{
-		// 			title: 'Managing Widgets',
-		// 			href: '/docs/guides/managing-widgets'
-		// 		},
-		// 		{
-		// 			title: 'Grid Layouts',
-		// 			href: '/docs/guides/grid-layouts'
-		// 		}
-		// 	]
-		// },
+		{
+			section: 'Guides',
+			pages: [
+				// {
+				// 	title: 'Export & Import Boards',
+				// 	href: '/docs/guides/exporting-importing-boards'
+				// },
+				{
+					title: 'Transitions',
+					href: '/docs/guides/transitions'
+				},
+				{
+					title: 'Widget Rendering',
+					href: '/docs/guides/widget-rendering'
+				},
+				{
+					title: 'Managing Widgets',
+					href: '/docs/guides/managing-widgets'
+				},
+				{
+					title: 'Grid Layouts',
+					href: '/docs/guides/grid-layouts'
+				}
+			]
+		},
 		{
 			section: 'API',
 			pages: [
