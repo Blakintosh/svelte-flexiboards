@@ -24,13 +24,18 @@
 			slug: 'numbers',
 			description: 'Random numbers on a grid. You can add and remove widgets.',
 			href: '/examples/numbers'
+		},
+		flow: {
+			title: 'Flow',
+			slug: 'flow',
+			description: 'A 2D flow layout.',
+			href: '/examples/flow'
 		}
 	};
 </script>
 
 <script lang="ts">
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
-	import LayoutPanelLeft from 'lucide-svelte/icons/layout-panel-left';
 	import { Button } from '$lib/components/ui/button/index.js';
 
 	let { data, children } = $props();
@@ -45,7 +50,7 @@
 	See Flexiboards in action. Examples built with shadcn-svelte and Tailwind CSS.
 </h2>
 
-<div class="mb-4 hidden flex-col items-center justify-between gap-4 lg:flex lg:flex-row lg:gap-16">
+<div class="mb-4 flex flex-col items-center justify-between gap-4 lg:flex-row lg:gap-16">
 	<Tabs.Root value={data.slug}>
 		<Tabs.List>
 			{#each Object.values(pages) as page}
@@ -66,21 +71,14 @@
 	>
 </div>
 
-<div class="hidden w-[1440px] divide-y overflow-clip rounded-lg border lg:block">
-	<div class="relative hidden aspect-video min-h-0 w-full items-stretch overflow-clip lg:flex">
+<div class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[1440px]">
+	<div
+		class="relative flex aspect-[9/18] min-h-0 w-full items-stretch overflow-clip lg:aspect-video"
+	>
 		{@render children?.()}
 	</div>
 	<div class="bg-muted px-4 py-2 text-center text-sm [&_a]:underline">
 		<span class="font-semibold">{pages[data.slug].title}:</span>
 		{@html pages[data.slug].description}
-	</div>
-</div>
-<!-- Temporary placeholder for mobile -->
-<div
-	class="grid aspect-video w-full place-items-center rounded-lg border py-4 text-center text-sm text-muted-foreground lg:hidden"
->
-	<div class="flex flex-col items-center gap-2 px-8">
-		<LayoutPanelLeft class="size-12" />
-		Mobile-friendly demos are coming soon. Please check back on a large screen, if able.
 	</div>
 </div>

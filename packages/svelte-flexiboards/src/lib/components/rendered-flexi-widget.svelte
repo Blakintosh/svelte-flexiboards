@@ -44,6 +44,7 @@
 	{/if}
 </div>
 
+<!-- When it exists, this temporarily occupies the widget's destination space, allowing the widget to be absolutely positioned to interpolate to its final destination. -->
 {#if widget.shouldDrawPlaceholder}
 	<WidgetTransitionPlaceholder />
 {/if}

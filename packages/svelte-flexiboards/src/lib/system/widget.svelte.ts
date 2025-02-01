@@ -50,6 +50,11 @@ export type FlexiWidgetDefaults = {
      * The class names to apply to this widget.
      */
     className?: FlexiWidgetClasses;
+    
+    /**
+     * The transition configuration for this widget.
+     */
+    transition?: FlexiWidgetTransitionConfiguration;
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
@@ -174,7 +179,7 @@ export class FlexiWidgetController implements FlexiWidgetController {
     /**
      * Manages transitions between widget positions and dimensions.
      */
-    #interpolator: WidgetMoveInterpolator;
+    #interpolator?: WidgetMoveInterpolator;
 
     /**
      * Whether this widget is a shadow dropzone widget.
@@ -866,6 +871,10 @@ export function getFlexiwidgetCtx() {
 
 export function getFlexiwidgetInterpolatorCtx() {
     const widget = getFlexiwidgetCtx();
+
+    if(!widget.interpolator) {
+        throw new Error("Attempt to get a FlexiWidget's interpolator when it is not defined. Ensure that the widget's transitions are enabled and the transition placeholder is only created when the interpolator is defined.");
+    }
 
     return widget.interpolator;
 }

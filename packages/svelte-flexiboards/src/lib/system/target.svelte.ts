@@ -3,7 +3,8 @@ import { getFlexiboardCtx, getInternalFlexiboardCtx, InternalFlexiBoardControlle
 import { type FlexiWidgetConfiguration, type FlexiWidgetDefaults, FlexiWidgetController } from "./widget.svelte.js";
 import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetAction, WidgetDroppedEvent, WidgetGrabAction, WidgetGrabbedParams, WidgetStartResizeParams } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
-import { FlowFlexiGrid, FlexiGrid, FreeFormFlexiGrid, type FlowTargetLayout, type FreeFormTargetLayout } from "./grid.svelte.js";
+import { FlowFlexiGrid, type FlowTargetLayout } from "./grid/index.js";
+import { type FlexiGrid, FreeFormFlexiGrid, type FreeFormTargetLayout } from "./grid/index.js";
 import type { FlexiTargetProps } from "$lib/components/flexi-target.svelte";
 
 type TargetSizingFn = ({ target, grid }: { target: FlexiTargetController, grid: FlexiGrid }) => string;
