@@ -141,6 +141,7 @@ export class FlowFlexiGrid extends FlexiGrid {
     #placeWidgetAt(widget: FlexiWidgetController, position: number, index: number) {
         const operations: FlowMoveOperation[] = [];
 
+        console.log("Placing widget at", position, "with index", index);
         this.#widgets.splice(index, 0, widget);
         if(!this.#shiftWidget(index, position, operations)) {
             // Undo the insertion.
@@ -156,8 +157,12 @@ export class FlowFlexiGrid extends FlexiGrid {
         const widget = this.#widgets[index];
         const finalPosition = this.#coordinateSystem.findPositionToFitWidget(widget, position);
 
+        console.log("Shifting widget at", index, "to", finalPosition);
+        console.log("which in 2D is", this.#coordinateSystem.to2D(finalPosition));
+
         // Expand the grid if the widget is being added past the current flow axis end.
         if(!this.#coordinateSystem.expandIfNeededToFit(finalPosition)) {
+            console.log("Failed to expand grid");
             return false;
         }
 
@@ -167,9 +172,11 @@ export class FlowFlexiGrid extends FlexiGrid {
         });
 
         if(index + 1 >= this.#widgets.length) {
+            console.log("Job done");
             return true;
         }
 
+        console.log("Intention to shift widget at", index + 1, "to", finalPosition + this.#coordinateSystem.getWidgetLength(widget));
         // Prepare to shift the remaining widgets along relative to this one.
         return this.#shiftWidget(
             index + 1, 
@@ -248,6 +255,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 
         const operations: FlowMoveOperation[] = [];
         const widgetPosition = this.#coordinateSystem.to1D(widget.x, widget.y);
+        console.log("Removing widget at", index, "with position", widgetPosition);
 
         // Shift the remaining widgets back if possible.
         if(index < this.#widgets.length && !this.#shiftWidget(index, widgetPosition, operations)) {
@@ -458,6 +466,7 @@ class FlowGridCoordinateSystem {
             return basePosition;
         }
 
+
         // If it doesn't fit on the current row/column, then move to the next one.
         const flowIndex = this.getFlowAxisCoordinate(basePosition);
         return (flowIndex + 1) * crossAxisLength;
@@ -492,18 +501,18 @@ class FlowGridCoordinateSystem {
 
     getFlowAxisLength(): number {
         if(this.#isRowFlow) {
-            return this.#grid.columns;
-        }
-
-        return this.#grid.rows;
-    }
-
-    getCrossAxisLength(): number {
-        if(this.#isRowFlow) {
             return this.#grid.rows;
         }
 
         return this.#grid.columns;
+    }
+
+    getCrossAxisLength(): number {
+        if(this.#isRowFlow) {
+            return this.#grid.columns;
+        }
+
+        return this.#grid.rows;
     }
 }
 

@@ -112,7 +112,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		key ??= this.#nextTargetKey();
 
 		if(this.#targets.has(key)) {
-			throw new Error(`A duplicate key, '${target.key}' was used during the instantiation of a FlexiTarget. Ensure that all FlexiTarget keys are unique.`);
+			throw new Error(`A duplicate key, '${key}' was used during the instantiation of a FlexiTarget. Ensure that all FlexiTarget keys are unique.`);
 		}
 
 		this.#targets.set(key, target);
