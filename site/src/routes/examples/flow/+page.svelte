@@ -50,7 +50,7 @@
 			config={{
 				baseRows: 3,
 				baseColumns: 3,
-				rowSizing: 'minmax(0, 1fr)',
+				rowSizing: 'minmax(0, 6rem)',
 				layout: {
 					type: 'flow',
 					flowAxis: 'row',

@@ -1,6 +1,6 @@
 import { getContext, setContext } from "svelte";
 import type { WidgetAction, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedParams, WidgetStartResizeParams, WidgetGrabAction, WidgetResizeAction, FlexiSavedLayout, ProxiedValue, WidgetGrabbedEvent, WidgetStartResizeEvent } from "./types.js";
-import type { InternalFlexiTargetController, FlexiTargetDefaults, FlexiTargetController } from "./target.svelte.js";
+import { InternalFlexiTargetController, type FlexiTargetDefaults, type FlexiTargetController, type FlexiTargetPartialConfiguration } from "./target.svelte.js";
 import type { FlexiWidgetController, FlexiWidgetDefaults } from "./widget.svelte.js";
 import { PointerPositionWatcher } from "./utils.svelte.js";
 import type { FlexiBoardProps } from "$lib/components/flexi-board.svelte";
@@ -107,17 +107,18 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#ref.value = ref;
 	}
 
-	addTarget(target: InternalFlexiTargetController, key?: string) {
+	createTarget(config?: FlexiTargetPartialConfiguration, key?: string) {
 		// If they didn't bring their own key, assign one.
 		key ??= this.#nextTargetKey();
 
+		// Use the existing target if it exists.
 		if(this.#targets.has(key)) {
-			throw new Error(`A duplicate key, '${key}' was used during the instantiation of a FlexiTarget. Ensure that all FlexiTarget keys are unique.`);
+			return this.#targets.get(key)!;
 		}
 
+		const target = new InternalFlexiTargetController(this, key, config);
 		this.#targets.set(key, target);
-
-		return key;
+		return target;
 	}
 
 	onpointerentertarget(event: HoveredTargetEvent) {

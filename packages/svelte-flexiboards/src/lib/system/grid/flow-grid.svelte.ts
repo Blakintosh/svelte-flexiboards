@@ -124,7 +124,13 @@ export class FlowFlexiGrid extends FlexiGrid {
             return this.#placeWidgetAt(widget, nearestWidgetPosition + this.#coordinateSystem.getWidgetLength(nearestWidget), index + 1);
         }
 
-        // Otherwise, it'll assume its position and shift it (and other widgets) along.
+        // Otherwise, it'll look at the predecessor of the nearest widget and place it after it.
+        // This prevents gaps from being persisted if widgets can fit adjacent to the predecessor.
+        if(index > 0) {
+            const predecessor = this.#widgets[index - 1];
+            return this.#placeWidgetAt(widget, this.#coordinateSystem.to1D(predecessor.x, predecessor.y) + this.#coordinateSystem.getWidgetLength(predecessor), index);
+        }
+
         return this.#placeWidgetAt(widget, nearestWidgetPosition, index);
     }
 
@@ -141,7 +147,6 @@ export class FlowFlexiGrid extends FlexiGrid {
     #placeWidgetAt(widget: FlexiWidgetController, position: number, index: number) {
         const operations: FlowMoveOperation[] = [];
 
-        console.log("Placing widget at", position, "with index", index);
         this.#widgets.splice(index, 0, widget);
         if(!this.#shiftWidget(index, position, operations)) {
             // Undo the insertion.
@@ -157,12 +162,8 @@ export class FlowFlexiGrid extends FlexiGrid {
         const widget = this.#widgets[index];
         const finalPosition = this.#coordinateSystem.findPositionToFitWidget(widget, position);
 
-        console.log("Shifting widget at", index, "to", finalPosition);
-        console.log("which in 2D is", this.#coordinateSystem.to2D(finalPosition));
-
         // Expand the grid if the widget is being added past the current flow axis end.
         if(!this.#coordinateSystem.expandIfNeededToFit(finalPosition)) {
-            console.log("Failed to expand grid");
             return false;
         }
 
@@ -172,11 +173,9 @@ export class FlowFlexiGrid extends FlexiGrid {
         });
 
         if(index + 1 >= this.#widgets.length) {
-            console.log("Job done");
             return true;
         }
 
-        console.log("Intention to shift widget at", index + 1, "to", finalPosition + this.#coordinateSystem.getWidgetLength(widget));
         // Prepare to shift the remaining widgets along relative to this one.
         return this.#shiftWidget(
             index + 1, 
@@ -255,7 +254,6 @@ export class FlowFlexiGrid extends FlexiGrid {
 
         const operations: FlowMoveOperation[] = [];
         const widgetPosition = this.#coordinateSystem.to1D(widget.x, widget.y);
-        console.log("Removing widget at", index, "with position", widgetPosition);
 
         // Shift the remaining widgets back if possible.
         if(index < this.#widgets.length && !this.#shiftWidget(index, widgetPosition, operations)) {
@@ -302,7 +300,7 @@ export class FlowFlexiGrid extends FlexiGrid {
     }
 
     mapRawCellToFinalCell(x: number, y: number): [number, number] {
-        const position = [Math.round(x), Math.round(y)];
+        const position = [Math.floor(x), Math.floor(y)];
         const [index, nearest] = this.#coordinateSystem.findNearestWidgetFrom2D(position[0], position[1]);
 
         if(nearest?.isShadow) {
@@ -315,11 +313,17 @@ export class FlowFlexiGrid extends FlexiGrid {
 
         const predecessor = this.#widgets[index - 1];
 
-        if(predecessor.isShadow) {
-            return [predecessor.x, predecessor.y];
+        // if(predecessor.isShadow) {
+        //     console.log("snapping due to predecessor shadow");
+        //     return [predecessor.x, predecessor.y];
+        // }
+
+        if(!nearest) {
+            return [position[0], position[1]];
         }
 
         return [position[0], position[1]];
+        // return [nearest.x, nearest.y];
     }
 
     get rows(): number {

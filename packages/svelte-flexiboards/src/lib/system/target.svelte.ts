@@ -174,12 +174,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
         widgetDefaults: this.#targetConfig?.widgetDefaults
     });
     
-    constructor(provider: InternalFlexiBoardController, config?: FlexiTargetPartialConfiguration, key?: string) {
+    constructor(provider: InternalFlexiBoardController, key: string, config?: FlexiTargetPartialConfiguration) {
         this.provider = provider;
-        // If we weren't provided a key, the provider will generate one for us.
-        this.key = provider.addTarget(this, key);
-
         this.#targetConfig = config;
+        this.key = key;
     }
 
     #tryAddWidget(widget: FlexiWidgetController, x?: number, y?: number, width?: number, height?: number): boolean {
@@ -603,7 +601,7 @@ const contextKey = Symbol('flexitarget');
  */
 export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: string) {
     const provider = getInternalFlexiboardCtx();
-    const target = new InternalFlexiTargetController(provider, config, key);
+    const target = provider.createTarget(config, key);
 
     setContext(contextKey, target);
 
