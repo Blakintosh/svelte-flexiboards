@@ -204,7 +204,7 @@ export class GridDimensionTracker {
             return axisCoordinates.length;
         }
 
-        let subtotal = start;
+        let subtotal = start - (gap / 2);
         for(let i = 0; i < axisCoordinates.length; i++) {
             const base = subtotal;
             subtotal += axisCoordinates[i] + gap;

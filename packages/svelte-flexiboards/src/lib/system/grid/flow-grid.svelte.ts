@@ -300,30 +300,30 @@ export class FlowFlexiGrid extends FlexiGrid {
     }
 
     mapRawCellToFinalCell(x: number, y: number): [number, number] {
-        const position = [Math.floor(x), Math.floor(y)];
-        const [index, nearest] = this.#coordinateSystem.findNearestWidgetFrom2D(position[0], position[1]);
+        // This gets us most of the way there, but we need to account for the cases where different flow axis indexes may have different pixel sizes.
+        const position = this.#coordinateSystem.getNormalisedHoverPosition(x, y);
 
-        if(nearest?.isShadow) {
-            return [nearest.x, nearest.y];
+        // This is somewhat hacky, but we're basically saying that if the shadow widget is anywhere before the current index,
+        // then we need to adjust the drop position to offset the shadow widget's length.
+        // This is pre-emptive as when the final placement happens, the shadow won't be present.
+        // We do this to factor for different pixel sizes, as if we do not factor this then variable pixel sizes will cause flickering.
+
+        // NEXT: This doesn't play very nice with 2D flow logic, because it's weird to displace widgets when the one we're moving doesn't fit anyway.
+
+        const [index, _] = this.#coordinateSystem.findNearestWidgetFrom2D(position[0], position[1]);
+
+        let position1D = this.#coordinateSystem.to1D(position[0], position[1]);
+
+        // Hack: find if there's a shadow widget anywhere before the current index
+        for (let i = 0; i < index; i++) {
+            const widget = this.#widgets[i];
+            if (widget.isShadow) {
+                position1D -= this.#coordinateSystem.getWidgetLength(widget);
+                break;
+            }
         }
 
-        if(index == 0) {
-            return [position[0], position[1]];
-        }
-
-        const predecessor = this.#widgets[index - 1];
-
-        // if(predecessor.isShadow) {
-        //     console.log("snapping due to predecessor shadow");
-        //     return [predecessor.x, predecessor.y];
-        // }
-
-        if(!nearest) {
-            return [position[0], position[1]];
-        }
-
-        return [position[0], position[1]];
-        // return [nearest.x, nearest.y];
+        return this.#coordinateSystem.to2D(position1D);
     }
 
     get rows(): number {
@@ -428,7 +428,7 @@ class FlowGridCoordinateSystem {
             return [0, null];
         }
     
-        // Search was exhausted, return the nearest widget.
+        // Search was exhausted, return the exhausted widget.
         if(searchStart === searchEnd) {
             return [searchStart, this.#widgets[searchStart]];
         }
@@ -517,6 +517,20 @@ class FlowGridCoordinateSystem {
         }
 
         return this.#grid.rows;
+    }
+
+    getNormalisedHoverPosition(x: number, y: number): [number, number] {
+        if(this.#isRowFlow) {
+            if(Math.ceil(x) == this.#grid.columns && y % 1 > 0.5) {
+                return [0, Math.round(y)];
+            }
+            return [Math.round(x), Math.floor(y)];
+        }
+
+        if(Math.ceil(y) == this.#grid.rows && x % 1 > 0.5) {
+            return [Math.round(x), 0];
+        }
+        return [Math.floor(x), Math.round(y)];
     }
 }
 
