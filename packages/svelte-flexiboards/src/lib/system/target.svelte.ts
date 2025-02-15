@@ -4,7 +4,8 @@ import { type FlexiWidgetConfiguration, type FlexiWidgetDefaults, FlexiWidgetCon
 import type { GrabbedWidgetMouseEvent, MouseGridCellMoveEvent, Position, ProxiedValue, WidgetAction, WidgetDroppedEvent, WidgetGrabAction, WidgetGrabbedParams, WidgetStartResizeParams } from "./types.js";
 import { SvelteSet } from "svelte/reactivity";
 import { FlowFlexiGrid, type FlowTargetLayout } from "./grid/index.js";
-import { type FlexiGrid, FreeFormFlexiGrid, type FreeFormTargetLayout } from "./grid/index.js";
+import { FreeFormFlexiGrid, type FreeFormTargetLayout } from "./grid/free-grid.svelte.js";
+import { type FlexiGrid } from "./grid/index.js";
 import type { FlexiTargetProps } from "$lib/components/flexi-target.svelte";
 
 type TargetSizingFn = ({ target, grid }: { target: FlexiTargetController, grid: FlexiGrid }) => string;

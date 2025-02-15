@@ -1,15 +1,14 @@
+---
+title: Overview
+description: Learn what a Flexiboard is and how to use one.
+category: Introduction
+published: true
+---
+
 <script lang="ts">
 	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
-
-    $effect(() => {
-        document.title = 'Overview ⋅ Docs ⋅ Flexiboards';
-    });
 </script>
-
-# Overview
-
-Hello, World!
 
 ## Anatomy of a Flexiboard
 

@@ -1,9 +1,12 @@
+---
+title: FlexiWidget
+description: A widget is a component (such as a tile) that is stored within a target (dropzone). Widgets can be moved around within a target or between targets.
+category: Components
+published: true
+---
+
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-
-    $effect(() => {
-        document.title = 'FlexiWidget ⋅ Component Docs ⋅ Flexiboards';
-    });
 </script>
 
 # FlexiWidget

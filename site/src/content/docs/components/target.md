@@ -1,10 +1,12 @@
+---
+title: FlexiTarget
+description: A 'target' for widgets, or a dropzone. Stores a series of widget instances in a managed grid layout.
+category: Components
+published: true
+---
+
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-
-
-    $effect(() => {
-        document.title = 'FlexiTarget ⋅ Component Docs ⋅ Flexiboards';
-    });
 </script>
 
 # FlexiTarget

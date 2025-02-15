@@ -124,7 +124,7 @@
 				}}
 				bind:controller={board}
 			>
-				<FlexiTarget name="page" class="gap-8">
+				<FlexiTarget key="page" class="gap-8">
 					<FlexionBlockContainer component={FlexionTextBlock} />
 					<FlexionBlockContainer component={FlexionKanbanBlock} />
 					<FlexionBlockContainer component={FlexionHeadingBlock} />

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Construction } from 'lucide-svelte';
+
 	let directory = [
 		{
 			section: 'Introduction',
@@ -26,19 +28,19 @@
 				// },
 				{
 					title: 'Transitions',
-					href: '/docs/guides/transitions'
+					href: '/docs/transitions'
 				},
 				{
 					title: 'Widget Rendering',
-					href: '/docs/guides/widget-rendering'
+					href: '/docs/widget-rendering'
 				},
 				{
 					title: 'Managing Widgets',
-					href: '/docs/guides/managing-widgets'
+					href: '/docs/managing-widgets'
 				},
 				{
 					title: 'Grid Layouts',
-					href: '/docs/guides/grid-layouts'
+					href: '/docs/grid-layouts'
 				}
 			]
 		},
@@ -87,3 +89,7 @@
 		{/each}
 	</div>
 {/each}
+
+<h2 class="flex items-center gap-4 rounded-md border px-4 py-2 text-left text-xs lg:text-sm">
+	<Construction /> These docs are still a work in progress.
+</h2>

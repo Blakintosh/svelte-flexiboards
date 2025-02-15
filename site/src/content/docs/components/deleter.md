@@ -1,9 +1,12 @@
+---
+title: FlexiDelete
+description: A component that allows you to delete widgets from a board when they are dropped over its child element.
+category: Components
+published: true
+---
+
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-
-    $effect(() => {
-        document.title = 'FlexiAdd ⋅ Component Docs ⋅ Flexiboards';
-    });
 </script>
 
 # FlexiDelete

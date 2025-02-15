@@ -1,9 +1,12 @@
+---
+title: FlexiBoard
+description: The main container component of a board, managing the targets and widgets within it.
+category: Components
+published: true
+---
+
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-
-    $effect(() => {
-        document.title = 'FlexiBoard ⋅ Component Docs ⋅ Flexiboards';
-    });
 </script>
 
 # FlexiBoard

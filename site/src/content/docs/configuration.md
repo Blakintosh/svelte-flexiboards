@@ -1,13 +1,11 @@
-<script lang="ts">
-	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+---
+title: Configuration
+description: Learn how to configure Flexiboards components.
+category: Introduction
+published: true
+---
 
-    $effect(() => {
-        document.title = 'Configuration ⋅ Docs ⋅ Flexiboards';
-    });
-</script>
-
-# Configuration
+## Introduction
 
 Flexiboards allows you to customise your board's targets and widgets, as well as the board itself.
 

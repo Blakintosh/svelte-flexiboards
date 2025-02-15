@@ -5,7 +5,7 @@
 */
 
 import type { Position, ProxiedValue } from "./types.js";
-import type { FlexiGrid } from "./grid.svelte.js";
+import type { FlexiGrid } from "./grid/base.svelte.js";
 import type { FlexiTargetConfiguration } from "./target.svelte.js";
 
 export class PointerPositionWatcher {

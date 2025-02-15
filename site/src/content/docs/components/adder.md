@@ -1,9 +1,12 @@
+---
+title: FlexiAdd
+description: A component that allows you to drag in new widgets into a board.
+category: Components
+published: true
+---
+
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-
-    $effect(() => {
-        document.title = 'FlexiAdd ⋅ Component Docs ⋅ Flexiboards';
-    });
 </script>
 
 # FlexiAdd

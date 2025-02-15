@@ -1,13 +1,11 @@
-<script lang="ts">
-	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+---
+title: Controllers
+description: Learn how to manipulate Flexiboard components via their controllers.
+category: Introduction
+published: true
+---
 
-    $effect(() => {
-        document.title = 'Controllers ⋅ Docs ⋅ Flexiboards';
-    });
-</script>
-
-# Controllers
+## Introduction
 
 At the heart of the `FlexiBoard`, `FlexiTarget`, and `FlexiWidget` components are their controllers. These controllers contain the logic for the components and manage the state of the board.
 
