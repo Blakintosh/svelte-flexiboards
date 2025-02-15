@@ -6,8 +6,6 @@ This monorepo contains the source code for the Flexiboards library as well as th
 
 This version of Flexiboards (and its documentation) is currently in an early preview stage, with development ongoing. If you encounter any issues, please report them on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
 
-Please note that while Flexiboards is in the judging stage for SvelteHack 2024, there will not be any updates to the library in `main`.
-
 ## Installation
 
 ```
