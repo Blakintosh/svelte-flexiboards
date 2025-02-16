@@ -4,6 +4,12 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const PageComponent = $derived(data.doc.content);
+
+	$effect(() => {
+		document.title = `${data.doc.meta.title} ⋅ Docs ⋅ Flexiboards`;
+	});
 </script>
 
 <div class="flex h-full items-stretch gap-16">
@@ -19,7 +25,7 @@
 			<h1 class="mb-4 text-5xl font-bold text-foreground">{data.doc.meta.title}</h1>
 			<p class="text-muted-foreground">{data.doc.meta.description}</p>
 		</div>
-		<data.doc.content />
+		<PageComponent />
 	</article>
 	<aside class="hidden h-full flex-1 lg:block">
 		<div class="sticky top-0 flex flex-col gap-8 py-24 text-base">

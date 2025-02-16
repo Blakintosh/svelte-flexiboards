@@ -253,7 +253,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
                 // NEXT: Heuristic to immediately cancel move if delta - gapSize > available space. Use #countSetBits for this
 
-                if(!this.#prepareMoveWidgetX(cell, delta - gapSize, operationMap)) {
+                if(!this.#prepareMoveWidgetY(cell, delta - gapSize, operationMap)) {
                     return false;
                 }
                 // We can move the colliding widget, we don't need to check this row any further as the move

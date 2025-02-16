@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
+import type { Component } from 'svelte';
 
 export type DocsPage = {
-    content: string;
+    content: Component;
     meta: {
         title: string;
         description: string;

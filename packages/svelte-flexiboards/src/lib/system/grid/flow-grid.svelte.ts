@@ -211,7 +211,6 @@ export class FlowFlexiGrid extends FlexiGrid {
         }
 
         // Otherwise, just ensure that the coordinates are within the grid's bounds.
-        // TODO: this might be where we need to add the "wrap" logic.
         return this.#coordinateSystem.to1D(
             Math.min(cellX, this.columns), 
             Math.min(cellY, this.rows)

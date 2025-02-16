@@ -10,6 +10,11 @@ export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetPara
 export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => SvelteClassValue;
 export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
 
+export type FlexiWidgetTransitionConfiguration = {
+    duration?: number;
+    easing?: string;
+};
+
 export type FlexiWidgetDefaults = {
     /**
      * Whether the widget is draggable.
@@ -130,7 +135,7 @@ type FlexiWidgetConstructor = (FlexiWidgetUnderAdderConstructor | FlexiWidgetUnd
     config: FlexiWidgetConfiguration;
 };
 
-export class FlexiWidgetController implements FlexiWidgetController {
+export class FlexiWidgetController {
     /**
      * The target this widget is under, if any.
      */
@@ -161,7 +166,8 @@ export class FlexiWidgetController implements FlexiWidgetController {
         resizability: this.#rawConfig.resizability ?? this.#targetWidgetDefaults?.resizability ?? this.#providerWidgetDefaults?.resizability ?? "none",
         draggable: this.#rawConfig.draggable ?? this.#targetWidgetDefaults?.draggable ?? this.#providerWidgetDefaults?.draggable ?? true,
         className: this.#rawConfig.className ?? this.#targetWidgetDefaults?.className ?? this.#providerWidgetDefaults?.className,
-        metadata: this.#rawConfig.metadata
+        metadata: this.#rawConfig.metadata,
+        transition: this.#rawConfig.transition ?? this.#targetWidgetDefaults?.transition ?? this.#providerWidgetDefaults?.transition
     });
 
     /**

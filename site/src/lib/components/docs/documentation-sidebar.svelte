@@ -89,7 +89,3 @@
 		{/each}
 	</div>
 {/each}
-
-<h2 class="flex items-center gap-4 rounded-md border px-4 py-2 text-left text-xs lg:text-sm">
-	<Construction /> These docs are still a work in progress.
-</h2>
