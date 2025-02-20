@@ -313,6 +313,8 @@ export class FlexiWidgetController {
                 widget: this,
                 xOffset: 0,
                 yOffset: 0,
+                clientX: 0,
+                clientY: 0,
                 // Pass through the base size of the widget.
                 capturedHeight: ctor.heightPx,
                 capturedWidth: ctor.widthPx
@@ -391,6 +393,8 @@ export class FlexiWidgetController {
             widget: this,
             xOffset,
             yOffset,
+            clientX,
+            clientY,
             // Capture the current size of the widget so that we can fix this once it's moving.
             capturedHeight: rect.height,
             capturedWidth: rect.width

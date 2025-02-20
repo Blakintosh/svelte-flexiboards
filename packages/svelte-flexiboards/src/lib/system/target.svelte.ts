@@ -321,6 +321,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
         // Remove the widget from the grid as it's now in a floating state.
         this.grid.removeWidget(params.widget);
+        this.grid.forceUpdatePointerPosition(params.clientX, params.clientY);
 
         return this.provider.onwidgetgrabbed({
             ...params,

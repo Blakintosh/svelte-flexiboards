@@ -8,6 +8,8 @@
 	let { content }: FlowTileProps = $props();
 </script>
 
-<div class="flex h-full items-center justify-center rounded-md bg-muted p-4 text-2xl font-bold">
+<div
+	class="flex h-full items-center justify-center rounded-md bg-muted p-4 text-base font-bold lg:text-2xl"
+>
 	{content}
 </div>

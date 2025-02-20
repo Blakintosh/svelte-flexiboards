@@ -161,6 +161,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return null;
 		}
 
+		if(event.clientX !== undefined && event.clientY !== undefined) {
+			this.#positionWatcher.updatePosition(event.clientX, event.clientY);
+		}
+
 		const action: WidgetGrabAction = {
 			action: 'grab',
 			target: event.target,

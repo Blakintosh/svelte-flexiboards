@@ -17,6 +17,8 @@
 						},
 						baseRows: 3,
 						baseColumns: 3
+						// rowSizing: '2.4rem',
+						// columnSizing: '2.4rem'
 					}}
 					class="size-24 gap-[0.175rem] lg:size-32 lg:gap-1"
 				>

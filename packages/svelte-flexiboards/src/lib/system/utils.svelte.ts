@@ -40,6 +40,17 @@ export class PointerPositionWatcher {
         });
     }
 
+    updatePosition(clientX: number, clientY: number) {
+        if(!this.ref) {
+            return;
+        }
+
+        const rect = this.ref.getBoundingClientRect();
+
+        this.#position.x = clientX - rect.left;
+        this.#position.y = clientY - rect.top;
+    }
+
     get position() {
         return this.#position;
     }

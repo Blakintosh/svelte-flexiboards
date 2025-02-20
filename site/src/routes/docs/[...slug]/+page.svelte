@@ -19,10 +19,12 @@
 		</div>
 	</nav>
 	<article
-		class="prose prose-sm mx-auto h-full min-h-0 w-full shrink-0 py-24 dark:prose-invert lg:prose-xl"
+		class="prose prose-sm mx-auto h-full min-h-0 w-full shrink-0 py-8 dark:prose-invert lg:prose-xl lg:py-24"
 	>
 		<div class="not-prose">
-			<h1 class="mb-4 text-5xl font-bold text-foreground">{data.doc.meta.title}</h1>
+			<h1 class="mb-2 text-3xl font-bold text-foreground lg:mb-4 lg:text-5xl">
+				{data.doc.meta.title}
+			</h1>
 			<p class="text-muted-foreground">{data.doc.meta.description}</p>
 		</div>
 		<PageComponent />

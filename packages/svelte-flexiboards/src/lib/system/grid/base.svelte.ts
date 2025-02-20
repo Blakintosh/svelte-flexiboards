@@ -112,6 +112,10 @@ export abstract class FlexiGrid {
         this.#updatePointerPosition(event.clientX, event.clientY);
     }
 
+    forceUpdatePointerPosition(clientX: number, clientY: number) {
+        this.#updatePointerPosition(clientX, clientY);
+    }
+
     // Getters
     abstract get rows(): number;
     abstract get columns(): number;
