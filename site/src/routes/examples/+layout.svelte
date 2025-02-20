@@ -46,9 +46,9 @@
 </script>
 
 <div class="grid h-full w-full place-items-center">
-	<div>
-		<h1 class="mb-2 text-2xl font-semibold lg:mb-4 lg:text-5xl">Examples</h1>
-		<h2 class="mb-8 text-base text-muted-foreground lg:text-2xl">
+	<div class="py-8">
+		<h1 class="mb-2 text-2xl font-semibold lg:text-4xl 2xl:mb-4 2xl:text-5xl">Examples</h1>
+		<h2 class="mb-8 text-base text-muted-foreground lg:text-xl 2xl:text-2xl">
 			See Flexiboards in action. Examples built with shadcn-svelte and Tailwind CSS.
 		</h2>
 
@@ -73,7 +73,9 @@
 			>
 		</div>
 
-		<div class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[1440px]">
+		<div
+			class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[calc(75vw)] 2xl:w-[1440px]"
+		>
 			<div
 				class="relative flex aspect-[9/18] min-h-0 w-full items-stretch overflow-clip lg:aspect-video"
 			>
