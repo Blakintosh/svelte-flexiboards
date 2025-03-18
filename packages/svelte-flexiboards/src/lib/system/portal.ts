@@ -6,7 +6,7 @@ import type { FlexiWidgetController } from './widget.svelte.js';
  * widgets can be rendered on top of the application.
  */
 export class FlexiPortalController {
-	#containerElement: HTMLElement;
+	#containerElement: HTMLElement | null = null;
 	#widgetRefs = new Map<
 		FlexiWidgetController,
 		{
@@ -17,7 +17,7 @@ export class FlexiPortalController {
 
 	#dependencyCount = 0;
 
-	constructor() {
+	createPortal() {
 		// Create container element
 		this.#containerElement = document.createElement('div');
 		this.#containerElement.id = 'flexi-portal';
@@ -51,7 +51,7 @@ export class FlexiPortalController {
 		});
 
 		// Move to portal
-		this.#containerElement.appendChild(widget.ref);
+		this.#containerElement!.appendChild(widget.ref);
 	}
 
 	/**
@@ -82,10 +82,16 @@ export class FlexiPortalController {
 		if (this.#containerElement && this.#containerElement.parentNode) {
 			this.#containerElement.parentNode.removeChild(this.#containerElement);
 		}
+
+		this.#containerElement = null;
 	}
 
 	addDependency() {
 		this.#dependencyCount++;
+
+		if (!this.#containerElement) {
+			this.createPortal();
+		}
 	}
 
 	removeDependency() {
