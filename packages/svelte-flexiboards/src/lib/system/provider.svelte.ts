@@ -1,14 +1,32 @@
-import { getContext, setContext } from "svelte";
-import type { WidgetAction, HoveredTargetEvent, WidgetDroppedEvent, WidgetGrabbedParams, WidgetStartResizeParams, WidgetGrabAction, WidgetResizeAction, FlexiSavedLayout, ProxiedValue, WidgetGrabbedEvent, WidgetStartResizeEvent } from "./types.js";
-import { InternalFlexiTargetController, type FlexiTargetDefaults, type FlexiTargetController, type FlexiTargetPartialConfiguration } from "./target.svelte.js";
-import type { FlexiWidgetController, FlexiWidgetDefaults } from "./widget.svelte.js";
-import { PointerPositionWatcher } from "./utils.svelte.js";
-import type { FlexiBoardProps } from "$lib/components/flexi-board.svelte";
-import type { FlexiTarget } from "$lib/index.js";
+import { getContext, setContext } from 'svelte';
+import type {
+	WidgetAction,
+	HoveredTargetEvent,
+	WidgetDroppedEvent,
+	WidgetGrabbedParams,
+	WidgetStartResizeParams,
+	WidgetGrabAction,
+	WidgetResizeAction,
+	FlexiSavedLayout,
+	ProxiedValue,
+	WidgetGrabbedEvent,
+	WidgetStartResizeEvent
+} from './types.js';
+import {
+	InternalFlexiTargetController,
+	type FlexiTargetDefaults,
+	type FlexiTargetController,
+	type FlexiTargetPartialConfiguration
+} from './target.svelte.js';
+import type { FlexiWidgetController, FlexiWidgetDefaults } from './widget.svelte.js';
+import { PointerPositionWatcher } from './utils.svelte.js';
+import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
+import type { FlexiTarget } from '$lib/index.js';
+import type { FlexiPortalController } from './portal.js';
 
 export type FlexiBoardConfiguration = {
-    widgetDefaults?: FlexiWidgetDefaults;
-    targetDefaults?: FlexiTargetDefaults;
+	widgetDefaults?: FlexiWidgetDefaults;
+	targetDefaults?: FlexiTargetDefaults;
 };
 
 export interface FlexiBoardController {
@@ -28,7 +46,11 @@ export interface FlexiBoardController {
 	 * @param from The target to move the widget from.
 	 * @param to The target to move the widget to.
 	 */
-	moveWidget(widget: FlexiWidgetController, from: FlexiTargetController | undefined, to: FlexiTargetController): void;
+	moveWidget(
+		widget: FlexiWidgetController,
+		from: FlexiTargetController | undefined,
+		to: FlexiTargetController
+	): void;
 
 	// NEXT: Add import/export layout.
 	/**
@@ -63,23 +85,25 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#storedLoadLayout: FlexiSavedLayout | null = null;
 	#ready: boolean = false;
-	
+
+	portal: FlexiPortalController | null = null;
+
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
 
 		const onpointerup = this.#onpointerup.bind(this);
-        $effect(() => {
-            window.addEventListener('pointerup', onpointerup);
+		$effect(() => {
+			window.addEventListener('pointerup', onpointerup);
 
-            return () => {
+			return () => {
 				window.removeEventListener('pointerup', onpointerup);
 			};
-        });
+		});
 	}
 
 	style: string = $derived.by(() => {
-		if(!this.#currentWidgetAction) {
+		if (!this.#currentWidgetAction) {
 			return 'position: relative;';
 		}
 
@@ -87,11 +111,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	});
 
 	#getStyleForCurrentWidgetAction() {
-		if(!this.#currentWidgetAction) {
+		if (!this.#currentWidgetAction) {
 			return '';
 		}
 
-		switch(this.#currentWidgetAction.action) {
+		switch (this.#currentWidgetAction.action) {
 			case 'grab':
 				return `cursor: grabbing;`;
 			case 'resize':
@@ -112,7 +136,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		key ??= this.#nextTargetKey();
 
 		// Use the existing target if it exists.
-		if(this.#targets.has(key)) {
+		if (this.#targets.has(key)) {
 			return this.#targets.get(key)!;
 		}
 
@@ -126,7 +150,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
 		const currentAction = this.#currentWidgetAction;
-		if(currentAction?.action === 'grab') {
+		if (currentAction?.action === 'grab') {
 			event.target.ongrabbedwidgetover({
 				widget: currentAction.widget
 			});
@@ -135,13 +159,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	onpointerleavetarget(event: HoveredTargetEvent) {
 		// Failsafe in case another target is already registered as hovered.
-		if(this.#hoveredTarget === event.target) {
+		if (this.#hoveredTarget === event.target) {
 			this.#hoveredTarget = null;
 		}
 
 		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
 		const currentAction = this.#currentWidgetAction;
-		if(currentAction?.action === 'grab') {
+		if (currentAction?.action === 'grab') {
 			event.target.ongrabbedwidgetleave();
 		}
 
@@ -157,11 +181,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	onwidgetgrabbed(event: WidgetGrabbedEvent) {
-		if(this.#currentWidgetAction) {
+		if (this.#currentWidgetAction) {
 			return null;
 		}
 
-		if(event.clientX !== undefined && event.clientY !== undefined) {
+		if (event.clientX !== undefined && event.clientY !== undefined) {
 			this.#positionWatcher.updatePosition(event.clientX, event.clientY);
 		}
 
@@ -179,30 +203,30 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#currentWidgetAction = action;
 
 		this.#lockViewport();
+		this.#positionWatcher.autoScroll = true;
 
 		// Only matters if the event source is a target, which isn't the case when the widget is being dragged into the board.
-		if(event.target) {
+		if (event.target) {
 			event.target.ongrabbedwidgetover({
 				widget: event.widget
 			});
 		}
 
-
 		return action;
 	}
 
 	onwidgetstartresize(event: WidgetStartResizeEvent) {
-		if(this.#currentWidgetAction) {
+		if (this.#currentWidgetAction) {
 			return null;
 		}
 
 		const providerRef = this.ref;
-		if(!providerRef) {
-			throw new Error("Provider ref is not set");
+		if (!providerRef) {
+			throw new Error('Provider ref is not set');
 		}
 
 		const providerRect = providerRef.getBoundingClientRect();
-		
+
 		const action: WidgetResizeAction = {
 			action: 'resize',
 			target: event.target,
@@ -226,8 +250,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#lockViewport() {
-        document.documentElement.style.overscrollBehaviorY = 'contain';
-        document.documentElement.style.overflow = 'hidden';
+		document.documentElement.style.overscrollBehaviorY = 'contain';
+		document.documentElement.style.overflow = 'hidden';
 		document.documentElement.style.touchAction = 'none';
 
 		this.stopScroll = this.stopScroll.bind(this);
@@ -236,16 +260,16 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#unlockViewport() {
-        document.documentElement.style.overscrollBehaviorY = 'auto';
-        document.documentElement.style.overflow = 'auto';
+		document.documentElement.style.overscrollBehaviorY = 'auto';
+		document.documentElement.style.overflow = 'auto';
 		document.documentElement.style.touchAction = 'auto';
-		
+
 		document.removeEventListener('touchmove', this.stopScroll);
 	}
 
 	stopScroll(event: TouchEvent) {
 		// If a scroll is in progress, there's nothing we can do to stop it and so we'll just release the widget.
-		if(!event.cancelable) {
+		if (!event.cancelable) {
 			this.handleWidgetRelease();
 			return;
 		}
@@ -254,7 +278,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#onpointerup(event: PointerEvent) {
-		if(!this.#currentWidgetAction) {
+		if (!this.#currentWidgetAction) {
 			return;
 		}
 
@@ -266,7 +290,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		const currentAction = this.#currentWidgetAction!;
 
-		switch(currentAction.action) {
+		switch (currentAction.action) {
 			case 'grab':
 				this.#handleGrabbedWidgetRelease(currentAction);
 				break;
@@ -274,7 +298,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				this.#handleResizingWidgetRelease(currentAction);
 				break;
 		}
-
 	}
 
 	oninitialloadcomplete() {
@@ -312,29 +335,30 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
 		// If a deleter is hovered, then we'll delete the widget.
-		if(this.#hoveredOverDeleter) {
+		if (this.#hoveredOverDeleter) {
 			action.widget.delete();
 			this.#currentWidgetAction = null;
 			return;
 		}
 
 		// If no target is hovered, then just release the widget.
-		if(!this.#hoveredTarget) {
+		if (!this.#hoveredTarget) {
 			this.#releaseCurrentWidgetAction();
 			return;
 		}
 
-		if(action.adder) {
+		if (action.adder) {
 			action.adder.onstopwidgetdragin();
 		}
 		const shouldDrop = this.moveWidget(action.widget, action.target, this.#hoveredTarget);
 
-		if(!shouldDrop) {
+		if (!shouldDrop) {
 			this.#releaseCurrentWidgetAction();
 			return;
 		}
 
 		this.#releaseCurrentWidgetAction(true);
+		this.#positionWatcher.autoScroll = false;
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
@@ -345,25 +369,25 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#releaseCurrentWidgetAction(actionSucceeded: boolean = false) {
 		const currentWidgetAction = this.#currentWidgetAction;
 
-		if(!currentWidgetAction) {
+		if (!currentWidgetAction) {
 			return;
 		}
 
 		const widget = currentWidgetAction.widget;
 
 		// If the widget is still being grabbed, we'll need to release it.
-		if(widget.currentAction) {
+		if (widget.currentAction) {
 			widget.currentAction = null;
 		}
 
 		// If this widget is new from an adder, then it needs to remove it regardless of the outcome.
-		if(currentWidgetAction.action == "grab" && currentWidgetAction.adder) {
+		if (currentWidgetAction.action == 'grab' && currentWidgetAction.adder) {
 			currentWidgetAction.widget.adder = undefined;
 			currentWidgetAction.adder.onstopwidgetdragin();
 		}
 
 		// The widget wasn't placed successfully, so go back to the pre-grab state on the target.
-		if(!actionSucceeded && currentWidgetAction.target) {
+		if (!actionSucceeded && currentWidgetAction.target) {
 			currentWidgetAction.target.restorePreGrabSnapshot();
 		}
 
@@ -376,17 +400,21 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * @param from The target to move the widget from.
 	 * @param to The target to move the widget to.
 	 */
-	moveWidget(widget: FlexiWidgetController, from: FlexiTargetController | undefined, to: FlexiTargetController): boolean {
+	moveWidget(
+		widget: FlexiWidgetController,
+		from: FlexiTargetController | undefined,
+		to: FlexiTargetController
+	): boolean {
 		let defaultPrevented = false;
-		
+
 		const dropSuccessful = to.tryDropWidget(widget);
 
-		if(defaultPrevented) {
+		if (defaultPrevented) {
 			return false;
 		}
 
 		// If the widget is new, it has no from target.
-		if(from) {
+		if (from) {
 			from.widgets.delete(widget);
 			from.forgetPreGrabSnapshot();
 		}
@@ -404,10 +432,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 const contextKey = Symbol('flexiboard');
 
 export function flexiboard(props: FlexiBoardProps) {
-    const board = new InternalFlexiBoardController(props);
-    
-    setContext(contextKey, board);
-    return board as FlexiBoardController;
+	const board = new InternalFlexiBoardController(props);
+
+	setContext(contextKey, board);
+	return board as FlexiBoardController;
 }
 
 /**
@@ -416,14 +444,16 @@ export function flexiboard(props: FlexiBoardProps) {
  * @returns An {@link InternalFlexiBoardController} instance.
  */
 export function getInternalFlexiboardCtx() {
-    const board = getContext<InternalFlexiBoardController | undefined>(contextKey);
+	const board = getContext<InternalFlexiBoardController | undefined>(contextKey);
 
-    // No provider to attach to.
-    if(!board) {
-        throw new Error("Cannot get FlexiBoard context outside of a registered board. Ensure that flexiboard() (or <FlexiProvider>) is called.");
-    }
+	// No provider to attach to.
+	if (!board) {
+		throw new Error(
+			'Cannot get FlexiBoard context outside of a registered board. Ensure that flexiboard() (or <FlexiProvider>) is called.'
+		);
+	}
 
-    return board;
+	return board;
 }
 
 /**

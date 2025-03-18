@@ -1,5 +1,5 @@
 import { untrack } from "svelte";
-import { FlexiGrid, type MoveOperation, type WidgetSnapshot } from "./base.svelte.js";
+import { FlexiGrid, type WidgetSnapshot } from "./base.svelte.js";
 import type { FlexiWidgetController } from "../widget.svelte.js";
 import type { FlexiTargetConfiguration, InternalFlexiTargetController } from "../target.svelte.js";
 

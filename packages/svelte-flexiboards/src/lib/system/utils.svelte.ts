@@ -14,6 +14,7 @@ export class PointerPositionWatcher {
         y: 0
     });
     #ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
+    autoScroll: boolean = false;
 
     constructor(ref: ProxiedValue<HTMLElement | null>) {
         this.#ref = ref;
@@ -22,6 +23,8 @@ export class PointerPositionWatcher {
             if(!this.ref) {
                 return;
             }
+
+            this.updateScroll(event.clientX, event.clientY);
 
             const rect = this.ref.getBoundingClientRect();
 
@@ -45,11 +48,53 @@ export class PointerPositionWatcher {
             return;
         }
 
+        this.updateScroll(clientX, clientY);
+
         const rect = this.ref.getBoundingClientRect();
 
         this.#position.x = clientX - rect.left;
         this.#position.y = clientY - rect.top;
     }
+
+    updateScroll(clientX: number, clientY: number) {
+        if(!this.autoScroll) {
+            return;
+        }
+
+        if(!this.ref) {
+            return;
+        }
+
+        const rect = this.ref.getBoundingClientRect();
+        const scrollThreshold = 48; // pixels from edge to start scrolling
+        const scrollSpeed = 15; // pixels per frame
+
+        console.log("autoscroll check, ")
+
+        // Check if near bottom edge
+        if (clientY > rect.bottom - scrollThreshold) {
+            console.log("scrolling down");
+            this.ref.scrollBy(0, scrollSpeed);
+        }
+        // Check if near top edge
+        else if (clientY < rect.top + scrollThreshold) {
+            console.log("scrolling up");
+            this.ref.scrollBy(0, -scrollSpeed);
+        }
+
+        // Check if near right edge
+        if (clientX > rect.right - scrollThreshold) {
+            console.log("scrolling right");
+            this.ref.scrollBy(scrollSpeed, 0);
+        }
+        // Check if near left edge
+        else if (clientX < rect.left + scrollThreshold) {
+            console.log("scrolling left");
+            this.ref.scrollBy(-scrollSpeed, 0);
+        }
+    }
+        
+        
 
     get position() {
         return this.#position;

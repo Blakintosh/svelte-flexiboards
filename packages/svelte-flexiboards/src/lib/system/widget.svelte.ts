@@ -693,7 +693,7 @@ type PlaceholderPosition = {
 class WidgetMoveInterpolator {
     active: boolean = $state(false);
 
-    #timeout?: number;
+    #timeout?: ReturnType<typeof setTimeout>;
 
     #provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 

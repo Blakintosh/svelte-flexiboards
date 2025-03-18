@@ -1,5 +1,5 @@
 
-import { setContext, untrack } from "svelte";
+import { setContext } from "svelte";
 import { getContext } from "svelte";
 import type { InternalFlexiTargetController, FlexiTargetConfiguration, TargetSizing } from "../target.svelte.js";
 import { getInternalFlexitargetCtx } from "../target.svelte.js";
