@@ -202,6 +202,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		};
 		this.#currentWidgetAction = action;
 
+		if (this.portal) {
+			this.portal.moveWidgetToPortal(event.widget);
+		}
+
 		this.#lockViewport();
 		this.#positionWatcher.autoScroll = true;
 
@@ -334,6 +338,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	// }
 
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
+		if (this.portal) {
+			this.portal.returnWidgetFromPortal(action.widget);
+		}
+
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
 			action.widget.delete();
