@@ -1,486 +1,587 @@
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from "../target.svelte.js";
-import type { FlexiWidgetController } from "../widget.svelte.js";
-import { FlexiGrid, type MoveOperation, type WidgetSnapshot } from "./base.svelte.js";
+import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte.js';
+import type { FlexiWidgetController } from '../widget.svelte.js';
+import { FlexiGrid, type MoveOperation, type WidgetSnapshot } from './base.svelte.js';
 
 const MAX_COLUMNS = 32;
 
 /**
  * Free-form Flexigrid Layout
- * 
+ *
  * A grid layout where widgets are explicitly placed in particular cells, and the grid allows for gaps between widgets.
  * A free grid can grow and shrink if required when enabled.
  */
 export class FreeFormFlexiGrid extends FlexiGrid {
-    #widgets: Set<FlexiWidgetController> = new Set();
+	#widgets: Set<FlexiWidgetController> = new Set();
 
-    #targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
-    #rawLayoutConfig: FreeFormTargetLayout = $derived(this.#targetConfig?.layout) as FreeFormTargetLayout;
+	#targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
+	#rawLayoutConfig: FreeFormTargetLayout = $derived(
+		this.#targetConfig?.layout
+	) as FreeFormTargetLayout;
 
-    #layoutConfig: FreeFormTargetLayout = $derived({
-        type: "free",
-        expandColumns: this.#rawLayoutConfig?.expandColumns ?? false,
-        expandRows: this.#rawLayoutConfig?.expandRows ?? false,
-        minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
-        minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1
-    });
+	#layoutConfig: FreeFormTargetLayout = $derived({
+		type: 'free',
+		expandColumns: this.#rawLayoutConfig?.expandColumns ?? false,
+		expandRows: this.#rawLayoutConfig?.expandRows ?? false,
+		minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
+		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1
+	});
 
-    #rows: number;
-    #columns: number;
+	#rows: number;
+	#columns: number;
 
-    #coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
+	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
 
-    constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
-        super(target, targetConfig);
+	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
+		super(target, targetConfig);
 
-        this.#targetConfig = targetConfig;
-        
-        this.#rows = targetConfig.baseRows ?? 1;
-        this.#columns = targetConfig.baseColumns ?? 1;
+		this.#targetConfig = targetConfig;
 
-        this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
-    }
+		this.#rows = targetConfig.baseRows ?? 1;
+		this.#columns = targetConfig.baseColumns ?? 1;
 
-    tryPlaceWidget(widget: FlexiWidgetController, inputX?: number, inputY?: number, inputWidth?: number, inputHeight?: number): boolean {
-        let [x, y, width, height] = this.#normalisePlacementDimensions(inputX, inputY, inputWidth, inputHeight);
+		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
+	}
 
-        // We need to try expand the grid if the widget is moving beyond the current bounds,
-        // but if this is not possible then the operation fails.
-        if(!this.expandIfNeededToFit(x, y, width, height)) {
-            return false;
-        }
+	tryPlaceWidget(
+		widget: FlexiWidgetController,
+		inputX?: number,
+		inputY?: number,
+		inputWidth?: number,
+		inputHeight?: number
+	): boolean {
+		let [x, y, width, height] = this.#normalisePlacementDimensions(
+			inputX,
+			inputY,
+			inputWidth,
+			inputHeight
+		);
 
-        // Get proposed operations up-front, so we can cancel if needed.
-        const operations: Map<FlexiWidgetController, MoveOperation> = new Map();
+		// We need to try expand the grid if the widget is moving beyond the current bounds,
+		// but if this is not possible then the operation fails.
+		if (!this.expandIfNeededToFit(x, y, width, height)) {
+			return false;
+		}
 
-        // Try to resolve any collisions, if not possible then the operation fails.
-        if(!this.#resolveCollisions({ widget, x, y }, operations)) {
-            return false;
-        }
+		// Get proposed operations up-front, so we can cancel if needed.
+		const operations: Map<FlexiWidgetController, MoveOperation> = new Map();
 
-        // Apply the moves.
-        for(const operation of operations.values()) {
-            this.#doMoveOperation(operation.widget, operation);
-        }
+		// Try to resolve any collisions, if not possible then the operation fails.
+		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
+			return false;
+		}
 
-        // Place the widget now that all other widgets have been moved out of the way.
-        this.#coordinateSystem.addWidget(widget, x, y, width, height);
-        widget.setBounds(x, y, width, height);
-        this.#widgets.add(widget);
-        return true;
-    }
+		// Apply the moves.
+		for (const operation of operations.values()) {
+			this.#doMoveOperation(operation.widget, operation);
+		}
 
-    #resolveCollisions(
-        move: CollisionCheck, 
-        operations: Map<FlexiWidgetController, MoveOperation>, 
-        displaceX: boolean = true, 
-        displaceY: boolean = true
-    ): boolean {
-        const { widget, x: newX, y: newY } = move;
-        const { width, height } = widget;
+		// Place the widget now that all other widgets have been moved out of the way.
+		this.#coordinateSystem.addWidget(widget, x, y, width, height);
+		widget.setBounds(x, y, width, height);
+		this.#widgets.add(widget);
+		return true;
+	}
 
-        // We need to try expand the grid if the widget is moving beyond the current bounds,
-        // but if this is not possible then the operation fails.
-        if(!this.expandIfNeededToFit(newX, newY, width, height)) {
-            return false;
-        }
+	#resolveCollisions(
+		move: CollisionCheck,
+		operations: Map<FlexiWidgetController, MoveOperation>,
+		displaceX: boolean = true,
+		displaceY: boolean = true
+	): boolean {
+		const { x: newX, y: newY, width, height } = move;
 
-        // We can either resolve collisions horizontally or vertically, but not both.
-        // However, if we start to resolve collisions in a particular direction, we need to look in the opposite direction to resolve any further collisions.
-        let i = newX;
-        let j = newY;
+		// We need to try expand the grid if the widget is moving beyond the current bounds,
+		// but if this is not possible then the operation fails.
+		if (!this.expandIfNeededToFit(newX, newY, width, height)) {
+			return false;
+		}
 
-        // Looking row-by-row, we can identify collisions using the bitmaps.
-        for(let i = newY; i < newY + height; i++) {
-            for(let j = newX; j < newX + width; j++) {
-                // Find the first column that a collision occurs on this row, if any.
-                const collidingWidget = this.#coordinateSystem.getCollidingWidgetIfAny(j, i);
+		// We can either resolve collisions horizontally or vertically, but not both.
+		// However, if we start to resolve collisions in a particular direction, we need to look in the opposite direction to resolve any further collisions.
+		let i = newX;
+		let j = newY;
 
-                // No collision, all good.
-                if(!collidingWidget) {
-                    continue;
-                }
+		// Looking row-by-row, we can identify collisions using the bitmaps.
+		for (let i = newY; i < newY + height; i++) {
+			for (let j = newX; j < newX + width; j++) {
+				// Find the first column that a collision occurs on this row, if any.
+				const collidingWidget = this.#coordinateSystem.getCollidingWidgetIfAny(j, i);
 
-                if(!collidingWidget.draggable) {
-                    return false;
-                }
-                
-                // Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
-                this.#coordinateSystem.removeWidget(collidingWidget);
+				// No collision, all good.
+				if (!collidingWidget) {
+					continue;
+				}
 
-                // Try move the colliding widget along the x-axis if this is allowed and possible.
-                const xMove = displaceX && this.#resolveCollisions({
-                    widget: collidingWidget,
-                    x: newX + width,
-                    y: collidingWidget.y
-                }, operations, displaceX, false);
+				if (!collidingWidget.draggable) {
+					return false;
+				}
 
-                if(xMove) {
-                    operations.set(collidingWidget, {
-                        widget: collidingWidget,
-                        newX: newX + width,
-                        newY: collidingWidget.y,
-                        oldX: collidingWidget.x,
-                        oldY: collidingWidget.y
-                    });
-                    continue;
-                }
-                
-                // If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
-                const yMove = displaceY && this.#resolveCollisions({
-                    widget: collidingWidget,
-                    x: collidingWidget.x,
-                    y: newY + height
-                }, operations, false, displaceY);
+				// Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
+				this.#coordinateSystem.removeWidget(collidingWidget);
 
-                if(yMove) {
-                    operations.set(collidingWidget, {
-                        widget: collidingWidget,
-                        newX: collidingWidget.x,
-                        newY: newY + height,
-                        oldX: collidingWidget.x,
-                        oldY: collidingWidget.y
-                    });
-                    continue;
-                }
+				// Try move the colliding widget along the x-axis if this is allowed and possible.
+				const xMove =
+					displaceX &&
+					this.#resolveCollisions(
+						{
+							widget: collidingWidget,
+							x: newX + width,
+							y: collidingWidget.y,
+							width: collidingWidget.width,
+							height: collidingWidget.height
+						},
+						operations,
+						displaceX,
+						false
+					);
 
-                // Neither worked, we can't move the widget.
-                return false;
-            }
-        }
-        return true;
-    }
+				if (xMove) {
+					operations.set(collidingWidget, {
+						widget: collidingWidget,
+						newX: newX + width,
+						newY: collidingWidget.y,
+						oldX: collidingWidget.x,
+						oldY: collidingWidget.y
+					});
+					// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
+					this.#coordinateSystem.addWidget(
+						collidingWidget,
+						collidingWidget.x,
+						collidingWidget.y,
+						collidingWidget.width,
+						collidingWidget.height
+					);
+					continue;
+				}
 
-    #prepareCollisionResolutionOnWidget(widget: FlexiWidgetController, newX: number, newY: number, collidingWidget: FlexiWidgetController, operations: Map<FlexiWidgetController, MoveOperation>, displaceX: boolean = true, displaceY: boolean = true) {
-        // Try move the colliding widget along the x-axis if this is allowed and possible.
-        if(displaceX && this.#resolveCollisions({
-            widget: collidingWidget,
-            x: newX,
-            y: collidingWidget.y
-        }, operations, displaceX, false)) {
-            operations.set(collidingWidget, {
-                widget: collidingWidget,
-                newX: newX,
-                newY: collidingWidget.y,
-                oldX: collidingWidget.x,
-                oldY: collidingWidget.y
-            });
-            return true;
-        }
+				// If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
+				const yMove =
+					displaceY &&
+					this.#resolveCollisions(
+						{
+							widget: collidingWidget,
+							x: collidingWidget.x,
+							y: newY + height,
+							width: collidingWidget.width,
+							height: collidingWidget.height
+						},
+						operations,
+						false,
+						displaceY
+					);
 
-        // Otherwise, try over y
-        if(!displaceY || !this.#resolveCollisions({
-            widget: collidingWidget,
-            x: collidingWidget.x,
-            y: newY
-        }, operations, false, displaceY)) {
-            return false;
-        }
+				if (yMove) {
+					operations.set(collidingWidget, {
+						widget: collidingWidget,
+						newX: collidingWidget.x,
+						newY: newY + height,
+						oldX: collidingWidget.x,
+						oldY: collidingWidget.y
+					});
+					// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
+					this.#coordinateSystem.addWidget(
+						collidingWidget,
+						collidingWidget.x,
+						collidingWidget.y,
+						collidingWidget.width,
+						collidingWidget.height
+					);
+					continue;
+				}
 
-        operations.set(widget, {
-            widget,
-            newX,
-            newY,
-            oldX: widget.x,
-            oldY: widget.y
-        });
-        return true;
-    }
+				// Neither worked, we can't move the widget.
+				// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
+				this.#coordinateSystem.addWidget(
+					collidingWidget,
+					collidingWidget.x,
+					collidingWidget.y,
+					collidingWidget.width,
+					collidingWidget.height
+				);
+				return false;
+			}
+		}
+		return true;
+	}
 
-    removeWidget(widget: FlexiWidgetController): boolean {
-        // Delete it from the grid, incl the coordinate system.
-        this.#widgets.delete(widget);
-        this.#coordinateSystem.removeWidget(widget);
+	#prepareCollisionResolutionOnWidget(
+		widget: FlexiWidgetController,
+		newX: number,
+		newY: number,
+		collidingWidget: FlexiWidgetController,
+		operations: Map<FlexiWidgetController, MoveOperation>,
+		displaceX: boolean = true,
+		displaceY: boolean = true
+	) {
+		// Try move the colliding widget along the x-axis if this is allowed and possible.
+		if (
+			displaceX &&
+			this.#resolveCollisions(
+				{
+					widget: collidingWidget,
+					x: newX,
+					y: collidingWidget.y,
+					width: collidingWidget.width,
+					height: collidingWidget.height
+				},
+				operations,
+				displaceX,
+				false
+			)
+		) {
+			operations.set(collidingWidget, {
+				widget: collidingWidget,
+				newX: newX,
+				newY: collidingWidget.y,
+				oldX: collidingWidget.x,
+				oldY: collidingWidget.y
+			});
+			return true;
+		}
 
-        // If we now have empty rows or columns at the ends, remove them.
-        // this.#removeTrailingEmptyRows();
-        // this.#removeTrailingEmptyColumns();
+		// Otherwise, try over y
+		if (
+			!displaceY ||
+			!this.#resolveCollisions(
+				{
+					widget: collidingWidget,
+					x: collidingWidget.x,
+					y: newY,
+					width: collidingWidget.width,
+					height: collidingWidget.height
+				},
+				operations,
+				false,
+				displaceY
+			)
+		) {
+			return false;
+		}
 
-        return true;
-    }
+		operations.set(widget, {
+			widget,
+			newX,
+			newY,
+			oldX: widget.x,
+			oldY: widget.y
+		});
+		return true;
+	}
 
-    takeSnapshot(): FreeFormGridSnapshot {
-        return {
-            layout: this.#coordinateSystem.layout.map(row => [...row]),
-            bitmaps: [...this.#coordinateSystem.bitmaps],
-            rows: this.#rows,
-            columns: this.#columns,
-            widgets: Array.from(this.#widgets).map(widget => ({
-                widget,
-                x: widget.x,
-                y: widget.y,
-                width: widget.width,
-                height: widget.height
-            }))
-        };
-    }
+	removeWidget(widget: FlexiWidgetController): boolean {
+		// Delete it from the grid, incl the coordinate system.
+		this.#widgets.delete(widget);
+		this.#coordinateSystem.removeWidget(widget);
 
-    clear() {
-        this.#widgets.clear();
+		// If we now have empty rows or columns at the ends, remove them.
+		// this.#removeTrailingEmptyRows();
+		// this.#removeTrailingEmptyColumns();
 
-        this.#coordinateSystem.updateForRows(this.#rows, this.#targetConfig.baseRows ?? 1);
-        this.#coordinateSystem.updateForColumns(this.#columns, this.#targetConfig.baseColumns ?? 1);
+		return true;
+	}
 
-        this.#rows = this.#targetConfig.baseRows ?? 1;
-        this.#columns = this.#targetConfig.baseColumns ?? 1;
+	takeSnapshot(): FreeFormGridSnapshot {
+		return {
+			layout: this.#coordinateSystem.layout.map((row) => [...row]),
+			bitmaps: [...this.#coordinateSystem.bitmaps],
+			rows: this.#rows,
+			columns: this.#columns,
+			widgets: Array.from(this.#widgets).map((widget) => ({
+				widget,
+				x: widget.x,
+				y: widget.y,
+				width: widget.width,
+				height: widget.height
+			}))
+		};
+	}
 
-        this.#coordinateSystem.clear();
-    }
+	clear() {
+		this.#widgets.clear();
 
-    restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
-        // Must deep copy these again, as the snapshot may be re-used.
-        this.#coordinateSystem.bitmaps = [...snapshot.bitmaps];
-        this.#coordinateSystem.layout = snapshot.layout.map(row => [...row]);
+		this.#coordinateSystem.updateForRows(this.#rows, this.#targetConfig.baseRows ?? 1);
+		this.#coordinateSystem.updateForColumns(this.#columns, this.#targetConfig.baseColumns ?? 1);
 
-        this.#coordinateSystem.updateForRows(this.#rows, snapshot.rows);
-        this.#coordinateSystem.updateForColumns(this.#columns, snapshot.columns);
+		this.#rows = this.#targetConfig.baseRows ?? 1;
+		this.#columns = this.#targetConfig.baseColumns ?? 1;
 
-        this.#rows = snapshot.rows;
-        this.#columns = snapshot.columns;
+		this.#coordinateSystem.clear();
+	}
 
-        this.#widgets.clear();
-        for(const widget of snapshot.widgets) {
-            this.#widgets.add(widget.widget);
-            widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
-        }
-    }
+	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
+		// Must deep copy these again, as the snapshot may be re-used.
+		this.#coordinateSystem.bitmaps = [...snapshot.bitmaps];
+		this.#coordinateSystem.layout = snapshot.layout.map((row) => [...row]);
 
-    mapRawCellToFinalCell(x: number, y: number): [number, number] {
-        return [Math.floor(x), Math.floor(y)];
-    }
+		this.#coordinateSystem.updateForRows(this.#rows, snapshot.rows);
+		this.#coordinateSystem.updateForColumns(this.#columns, snapshot.columns);
 
-    #normalisePlacementDimensions(x?: number, y?: number, width?: number, height?: number) {
-        if(x === undefined || y === undefined) {
-            throw new Error("Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.");
-        }
+		this.#rows = snapshot.rows;
+		this.#columns = snapshot.columns;
 
-        // Make sure the widget can only expand the grid relative from its current dimensions.
-        if(x >= this.#columns) {
-            x = this.#columns - 1;
-        }
-        if(y >= this.#rows) {
-            y = this.#rows - 1;
-        }
+		this.#widgets.clear();
+		for (const widget of snapshot.widgets) {
+			this.#widgets.add(widget.widget);
+			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
+		}
+	}
 
-        return [x, y, width ?? 1, height ?? 1];
-    }
+	mapRawCellToFinalCell(x: number, y: number): [number, number] {
+		return [Math.floor(x), Math.floor(y)];
+	}
 
-    #doMoveOperation(widget: FlexiWidgetController, operation: MoveOperation) {
-        // TODO: Not sure yet whether we should be cleaning up a moved widget, we'll see.
-        // Pretty sure the thing that'll occupy its space always comes after, so this operation
-        // should be safe.
-        this.#coordinateSystem.removeWidget(widget);
+	#normalisePlacementDimensions(x?: number, y?: number, width?: number, height?: number) {
+		if (x === undefined || y === undefined) {
+			throw new Error(
+				'Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.'
+			);
+		}
 
-        // Place the widget in the new position.
-        this.#coordinateSystem.addWidget(widget, operation.newX, operation.newY, widget.width, widget.height);
-        widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
-    }
+		// Make sure the widget can only expand the grid relative from its current dimensions.
+		if (x >= this.#columns) {
+			x = this.#columns - 1;
+		}
+		if (y >= this.#rows) {
+			y = this.#rows - 1;
+		}
 
-    expandIfNeededToFit(x: number, y: number, width: number, height: number) {
-        if(x + width > this.#columns && !this.#tryExpandColumns(x + width)) {
-            return false;
-        }
-        if(y + height > this.#rows && !this.#tryExpandRows(y + height)) {
-            return false;
-        }
-        return true;
-    }
+		return [x, y, width ?? 1, height ?? 1];
+	}
 
-    #tryExpandColumns(count: number) {
-        if(!this.#layoutConfig.expandColumns || count > MAX_COLUMNS) {
-            return false;
-        }
+	#doMoveOperation(widget: FlexiWidgetController, operation: MoveOperation) {
+		// TODO: Not sure yet whether we should be cleaning up a moved widget, we'll see.
+		// Pretty sure the thing that'll occupy its space always comes after, so this operation
+		// should be safe.
+		this.#coordinateSystem.removeWidget(widget);
 
-        this.#setColumns(count);
+		// Place the widget in the new position.
+		this.#coordinateSystem.addWidget(
+			widget,
+			operation.newX,
+			operation.newY,
+			widget.width,
+			widget.height
+		);
+		widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
+	}
 
-        return true;
-    }
+	expandIfNeededToFit(x: number, y: number, width: number, height: number) {
+		if (x + width > this.#columns && !this.#tryExpandColumns(x + width)) {
+			return false;
+		}
+		if (y + height > this.#rows && !this.#tryExpandRows(y + height)) {
+			return false;
+		}
+		return true;
+	}
 
-    #tryExpandRows(count: number) {
-        if(!this.#layoutConfig.expandRows) {
-            return false;
-        }
+	#tryExpandColumns(count: number) {
+		if (!this.#layoutConfig.expandColumns || count > MAX_COLUMNS) {
+			return false;
+		}
 
-        this.#setRows(count);
+		this.#setColumns(count);
 
-        return true;
-    }
+		return true;
+	}
 
-    #setRows(value: number) {
-        this.#coordinateSystem.updateForRows(this.#rows, value);
-        this.#rows = value;
-    }
+	#tryExpandRows(count: number) {
+		if (!this.#layoutConfig.expandRows) {
+			return false;
+		}
 
-    #setColumns(value: number) {
-        this.#coordinateSystem.updateForColumns(this.#columns, value);
-        this.#columns = value;
-    }
+		this.#setRows(count);
 
-    // Getters and setters
+		return true;
+	}
 
-    get rows() {
-        return this.#rows;
-    }
+	#setRows(value: number) {
+		this.#coordinateSystem.updateForRows(this.#rows, value);
+		this.#rows = value;
+	}
 
-    get columns() {
-        return this.#columns;
-    }
+	#setColumns(value: number) {
+		this.#coordinateSystem.updateForColumns(this.#columns, value);
+		this.#columns = value;
+	}
+
+	// Getters and setters
+
+	get rows() {
+		return this.#rows;
+	}
+
+	get columns() {
+		return this.#columns;
+	}
 }
 
 class FreeFormGridCoordinateSystem {
-    #grid: FreeFormFlexiGrid = $state() as FreeFormFlexiGrid;
+	#grid: FreeFormFlexiGrid = $state() as FreeFormFlexiGrid;
 
-    bitmaps: number[] = [];
-    layout: FreeGridLayout = [];
+	bitmaps: number[] = [];
+	layout: FreeGridLayout = [];
 
-    #rows: number = $derived(this.#grid.rows);
-    #columns: number = $derived(this.#grid.columns);
+	#rows: number = $derived(this.#grid.rows);
+	#columns: number = $derived(this.#grid.columns);
 
-    constructor(grid: FreeFormFlexiGrid) {
-        this.#grid = grid;
+	constructor(grid: FreeFormFlexiGrid) {
+		this.#grid = grid;
 
-        this.updateForColumns(0, this.#grid.columns);
-        this.updateForRows(0, this.#grid.rows);
+		this.updateForColumns(0, this.#grid.columns);
+		this.updateForRows(0, this.#grid.rows);
 
-        this.bitmaps = new Array(this.#grid.rows).fill(0);
-        this.layout = Array.from({ length: this.#grid.rows }, () => new Array(this.#grid.columns).fill(null));
-    }
+		this.bitmaps = new Array(this.#grid.rows).fill(0);
+		this.layout = Array.from({ length: this.#grid.rows }, () =>
+			new Array(this.#grid.columns).fill(null)
+		);
+	}
 
-    addWidget(widget: FlexiWidgetController, x: number, y: number, width: number, height: number) {
-        const widgetXBitmap = this.getBitmap(x, width);
+	addWidget(widget: FlexiWidgetController, x: number, y: number, width: number, height: number) {
+		const widgetXBitmap = this.getBitmap(x, width);
 
-        for(let i = y; i < y + height; i++) {
-            this.bitmaps[i] |= widgetXBitmap;
-        }
-        this.setGridRegion(x, y, width, height, widget);
-    }
+		for (let i = y; i < y + height; i++) {
+			this.bitmaps[i] |= widgetXBitmap;
+		}
+		this.setGridRegion(x, y, width, height, widget);
+	}
 
-    clear() {
-        this.bitmaps = new Array(this.#rows).fill(0);
-        this.layout = Array.from({ length: this.#rows }, () => new Array(this.#columns).fill(null));
-    }
+	clear() {
+		this.bitmaps = new Array(this.#rows).fill(0);
+		this.layout = Array.from({ length: this.#rows }, () => new Array(this.#columns).fill(null));
+	}
 
-    removeWidget(widget: FlexiWidgetController) {
-        const { x, y, width, height } = widget;
+	removeWidget(widget: FlexiWidgetController) {
+		const { x, y, width, height } = widget;
 
-        const widgetXBitmap = this.getBitmap(x, width);
+		const widgetXBitmap = this.getBitmap(x, width);
 
-        for(let i = y; i < y + height; i++) {
-            this.bitmaps[i] &= ~widgetXBitmap;
-        }
-        this.setGridRegion(x, y, width, height, null);
-    }
+		for (let i = y; i < y + height; i++) {
+			this.bitmaps[i] &= ~widgetXBitmap;
+		}
+		this.setGridRegion(x, y, width, height, null);
+	}
 
-    setGridRegion(x: number, y: number, width: number, height: number, value: FlexiWidgetController | null) {
-        for(let i = x; i < x + width; i++) {
-            for(let j = y; j < y + height; j++) {
-                this.layout[j][i] = value;
-            }
-        }
-    }
+	setGridRegion(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		value: FlexiWidgetController | null
+	) {
+		for (let i = x; i < x + width; i++) {
+			for (let j = y; j < y + height; j++) {
+				this.layout[j][i] = value;
+			}
+		}
+	}
 
-    getBitmap(start: number, length: number): number {
-        // Create a bitmap with 1s for the width of the widget starting at the given position
-        let bitmap = 0;
-        
-        // Set bits from start to start + length
-        for (let i = start; i < start + length; i++) {
-            bitmap |= (1 << i);
-        }
-        
-        return bitmap;
-    }
+	getBitmap(start: number, length: number): number {
+		// Create a bitmap with 1s for the width of the widget starting at the given position
+		let bitmap = 0;
 
-    getCollidingWidgetIfAny(start: number, row: number): FlexiWidgetController | null {
-        const occupancy = this.bitmaps[row] & this.getBitmap(start, 1);
+		// Set bits from start to start + length
+		for (let i = start; i < start + length; i++) {
+			bitmap |= 1 << i;
+		}
 
-        // No collision, good to go.
-        if (occupancy === 0) {
-            return null;
-        }
+		return bitmap;
+	}
 
-        const column = this.getFirstCollisionColumn(occupancy);
-        return this.layout[row][column];
-    }
+	getCollidingWidgetIfAny(start: number, row: number): FlexiWidgetController | null {
+		const occupancy = this.bitmaps[row] & this.getBitmap(start, 1);
 
-    getFirstCollisionColumn(occupancy: number): number {
-        return Math.floor(Math.log2(occupancy & -occupancy));
-    }
+		// No collision, good to go.
+		if (occupancy === 0) {
+			return null;
+		}
 
-    #adjustBitmaps(oldRows: number, newRows: number) {
-        if(oldRows === newRows) {
-            return;
-        }
+		const column = this.getFirstCollisionColumn(occupancy);
+		return this.layout[row][column];
+	}
 
-        if(newRows > oldRows) {
-            this.bitmaps.push(...new Array(newRows - oldRows).fill(0));
-            return;
-        }
+	getFirstCollisionColumn(occupancy: number): number {
+		return Math.floor(Math.log2(occupancy & -occupancy));
+	}
 
-        this.bitmaps.splice(newRows);
-    }
+	#adjustBitmaps(oldRows: number, newRows: number) {
+		if (oldRows === newRows) {
+			return;
+		}
 
-    #adjustLayoutRows(oldRows: number, newRows: number) {
-        if(oldRows === newRows) {
-            return;
-        }
+		if (newRows > oldRows) {
+			this.bitmaps.push(...new Array(newRows - oldRows).fill(0));
+			return;
+		}
 
-        if(newRows > oldRows) {
-            this.layout.push(...Array.from({ length: newRows - oldRows }, () => new Array(this.#columns).fill(null)));
-            return;
-        }
-        
-        this.layout.splice(newRows);
-    }
+		this.bitmaps.splice(newRows);
+	}
 
-    #adjustLayoutColumns(oldColumns: number, newColumns: number) {
-        if(oldColumns === newColumns) {
-            return;
-        }
+	#adjustLayoutRows(oldRows: number, newRows: number) {
+		if (oldRows === newRows) {
+			return;
+		}
 
-        if(newColumns > oldColumns) {
-            this.layout.forEach(row => row.push(...new Array(newColumns - oldColumns).fill(null)));
-            return;
-        }
-        
-        this.layout.forEach(row => row.splice(newColumns));
-    }
+		if (newRows > oldRows) {
+			this.layout.push(
+				...Array.from({ length: newRows - oldRows }, () => new Array(this.#columns).fill(null))
+			);
+			return;
+		}
 
-    updateForRows(oldRows: number, newRows: number) {
-        this.#adjustBitmaps(oldRows, newRows);
-        this.#adjustLayoutRows(oldRows, newRows);
-    }
+		this.layout.splice(newRows);
+	}
 
-    updateForColumns(oldColumns: number, newColumns: number) {
-        this.#adjustLayoutColumns(oldColumns, newColumns);
-    }
+	#adjustLayoutColumns(oldColumns: number, newColumns: number) {
+		if (oldColumns === newColumns) {
+			return;
+		}
+
+		if (newColumns > oldColumns) {
+			this.layout.forEach((row) => row.push(...new Array(newColumns - oldColumns).fill(null)));
+			return;
+		}
+
+		this.layout.forEach((row) => row.splice(newColumns));
+	}
+
+	updateForRows(oldRows: number, newRows: number) {
+		this.#adjustBitmaps(oldRows, newRows);
+		this.#adjustLayoutRows(oldRows, newRows);
+	}
+
+	updateForColumns(oldColumns: number, newColumns: number) {
+		this.#adjustLayoutColumns(oldColumns, newColumns);
+	}
 }
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
 
 type FlexiFreeFormGridState = {
-    rows: number;
-    columns: number;
-}
-
+	rows: number;
+	columns: number;
+};
 
 export type FreeFormTargetLayout = {
-    type: "free";
-    expandColumns?: boolean;
-    expandRows?: boolean;
-    minRows?: number;
-    minColumns?: number;
-}
+	type: 'free';
+	expandColumns?: boolean;
+	expandRows?: boolean;
+	minRows?: number;
+	minColumns?: number;
+};
 
 type FreeFormGridSnapshot = {
-    layout: FreeGridLayout;
-    bitmaps: number[];
-    rows: number;
-    columns: number;
-    widgets: WidgetSnapshot[];
-}
+	layout: FreeGridLayout;
+	bitmaps: number[];
+	rows: number;
+	columns: number;
+	widgets: WidgetSnapshot[];
+};
 
 type CollisionCheck = {
-    widget: FlexiWidgetController;
-    x: number;
-    y: number;
-}
+	widget: FlexiWidgetController;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
