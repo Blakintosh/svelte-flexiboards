@@ -2,7 +2,7 @@
 title: Transitions
 description: Animate your Flexiboard components with CSS transitions.
 category: Guides
-published: true
+published: false
 ---
 
 ## Introduction

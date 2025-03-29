@@ -204,70 +204,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return true;
 	}
 
-	#prepareCollisionResolutionOnWidget(
-		widget: FlexiWidgetController,
-		newX: number,
-		newY: number,
-		collidingWidget: FlexiWidgetController,
-		operations: Map<FlexiWidgetController, MoveOperation>,
-		displaceX: boolean = true,
-		displaceY: boolean = true
-	) {
-		// Try move the colliding widget along the x-axis if this is allowed and possible.
-		if (
-			displaceX &&
-			this.#resolveCollisions(
-				{
-					widget: collidingWidget,
-					x: newX,
-					y: collidingWidget.y,
-					width: collidingWidget.width,
-					height: collidingWidget.height
-				},
-				operations,
-				displaceX,
-				false
-			)
-		) {
-			operations.set(collidingWidget, {
-				widget: collidingWidget,
-				newX: newX,
-				newY: collidingWidget.y,
-				oldX: collidingWidget.x,
-				oldY: collidingWidget.y
-			});
-			return true;
-		}
-
-		// Otherwise, try over y
-		if (
-			!displaceY ||
-			!this.#resolveCollisions(
-				{
-					widget: collidingWidget,
-					x: collidingWidget.x,
-					y: newY,
-					width: collidingWidget.width,
-					height: collidingWidget.height
-				},
-				operations,
-				false,
-				displaceY
-			)
-		) {
-			return false;
-		}
-
-		operations.set(widget, {
-			widget,
-			newX,
-			newY,
-			oldX: widget.x,
-			oldY: widget.y
-		});
-		return true;
-	}
-
 	removeWidget(widget: FlexiWidgetController): boolean {
 		// Delete it from the grid, incl the coordinate system.
 		this.#widgets.delete(widget);
@@ -556,11 +492,6 @@ class FreeFormGridCoordinateSystem {
 }
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
-
-type FlexiFreeFormGridState = {
-	rows: number;
-	columns: number;
-};
 
 export type FreeFormTargetLayout = {
 	type: 'free';

@@ -107,15 +107,23 @@ describe('FreeFormFlexiGrid', () => {
 			const widget1 = createMockWidget();
 			const widget2 = createMockWidget();
 
-			const widget1Width = 2;
-			const widget1Height = 2;
+			grid.tryPlaceWidget(widget1, 1, 1, 2, 2);
 
-			grid.tryPlaceWidget(widget1, 1, 1, widget1Width, widget1Height);
+			// State:
+			// ---
+			// -aa
+			// -aa
+
 			const result = grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
+
+			// Expected state:
+			// ----
+			// -baa
+			// --aa
 
 			expect(result).toBe(true);
 			// To resolve collision - should have been pushed 1 unit to the right
-			expect(widget1.setBounds).toHaveBeenCalledWith(2, 1, widget1Width, widget1Height);
+			expect(widget1.setBounds).toHaveBeenCalledWith(2, 1, widget1.width, widget1.height);
 		});
 
 		it('should resolve collisions by moving widgets in Y direction when X fails', () => {
@@ -155,26 +163,24 @@ describe('FreeFormFlexiGrid', () => {
 			expect(widget1.setBounds).toHaveBeenCalledWith(0, 1, widget1.width, widget1.height);
 		});
 
-		it('should fail when collision cannot be resolved', () => {
-			// Create a non-draggable widget at (1,1)
-			const widget1 = createMockWidget(1, 1, 2, 2, false);
-			grid.tryPlaceWidget(widget1, 1, 1, 2, 2);
-
-			// Try to place another widget at the same position
-			const widget2 = createMockWidget();
-			const result = grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
-
-			expect(result).toBe(false);
-		});
-
 		it('should fail when colliding with a non-draggable widget', () => {
 			// Create a non-draggable widget at (1,1)
 			const widget1 = createMockWidget(0, 0, 0, 0, false);
 			grid.tryPlaceWidget(widget1, 1, 1, 2, 2);
 
+			// State:
+			// ---
+			// -AA
+			// -AA
+
 			// Try to place another widget at the same position
 			const widget2 = createMockWidget();
 			const result = grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
+
+			// Expected state:
+			// ---
+			// -AA
+			// -AA
 
 			expect(result).toBe(false);
 		});
@@ -223,13 +229,28 @@ describe('FreeFormFlexiGrid', () => {
 			const widget = createMockWidget();
 			grid.tryPlaceWidget(widget, 1, 1, 2, 2);
 
+			// State:
+			// ---
+			// -aa
+			// -aa
+
 			const result = grid.removeWidget(widget);
 
 			expect(result).toBe(true);
 
+			// Expected state:
+			// ---
+			// ---
+			// ---
+
 			// Now we should be able to place another widget in the same location
 			const widget2 = createMockWidget();
 			const placeResult = grid.tryPlaceWidget(widget2, 1, 1, 2, 2);
+
+			// State:
+			// ---
+			// -bb
+			// -bb
 
 			expect(placeResult).toBe(true);
 		});
@@ -287,6 +308,11 @@ describe('FreeFormFlexiGrid', () => {
 
 			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 
+			// Expected state:
+			// a--
+			// ---
+			// ---
+
 			expect(result).toBe(true);
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
 		});
@@ -322,7 +348,7 @@ describe('FreeFormFlexiGrid', () => {
 			expect(widget3.setBounds).toHaveBeenCalledWith(3, 2, widget3.width, widget3.height);
 		});
 
-		it('should maintain correct bitmaps when a full row is manipulated (regression #9)', () => {
+		it('should maintain correct bitmaps when a full row is manipulated (issue #9)', () => {
 			const widget1 = createMockWidget();
 			const widget2 = createMockWidget();
 			const widget3 = createMockWidget();
@@ -334,11 +360,26 @@ describe('FreeFormFlexiGrid', () => {
 			nonExpandingGrid.tryPlaceWidget(widget2, 1, 1, 1, 1);
 			nonExpandingGrid.tryPlaceWidget(widget3, 2, 1, 1, 1);
 
+			// State:
+			// abc
+			// ---
+			// ---
+
 			// Now taking widget2's place should move widget2 down
 			nonExpandingGrid.tryPlaceWidget(widget4, 1, 1, 1, 1);
 
+			// Expected state:
+			// adc
+			// -b-
+			// ---
+
 			// Finally, placing widget5 where widget3 is should move widget3 down
 			nonExpandingGrid.tryPlaceWidget(widget5, 2, 1, 1, 1);
+
+			// Expected state:
+			// ade
+			// -bc
+			// ---
 
 			// Check that widget2 was moved down
 			expect(widget2.setBounds).toHaveBeenCalledWith(1, 2, 1, 1);

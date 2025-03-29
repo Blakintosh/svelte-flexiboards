@@ -21,5 +21,5 @@
 </main>
 
 <footer class="w-full py-4 text-center text-sm text-muted-foreground">
-	Work in progress. Expect bugs!
+	Preview version - work in progress. Expect bugs!
 </footer>
