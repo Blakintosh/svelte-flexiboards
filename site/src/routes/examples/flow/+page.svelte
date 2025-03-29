@@ -48,13 +48,13 @@
 			key="target"
 			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-8'}
 			config={{
-				baseRows: 3,
-				baseColumns: 3,
 				rowSizing: 'minmax(0, 6rem)',
 				layout: {
 					type: 'flow',
 					flowAxis: 'row',
-					placementStrategy: 'append'
+					placementStrategy: 'append',
+					rows: 3,
+					columns: 3
 				}
 			}}
 		>

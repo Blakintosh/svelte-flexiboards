@@ -3,7 +3,7 @@
 </script>
 
 <div class="flex flex-col gap-1">
-	<h2 class="mb-1 text-lg font-semibold">On this page</h2>
+	<!-- <h2 class="mb-1 text-lg font-semibold">On this page</h2> -->
 	<!-- {#each section.pages as page}
 		<a href={page.href} class="text-muted-foreground hover:text-primary">{page.title}</a>
 	{/each} -->

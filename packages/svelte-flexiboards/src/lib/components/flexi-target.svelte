@@ -72,22 +72,20 @@
 	onfirstcreate?.(target);
 </script>
 
-<div>
-	<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
-		{@render header?.({ target })}
+<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
+	{@render header?.({ target })}
 
-		<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
-		<FlexiGrid class={className}>
-			{#if !target.prepared && children}
-				{@render children()}
-			{:else if target.prepared}
-				{#each target.widgets as widget (widget)}
-					<RenderedFlexiWidget {widget} />
-				{/each}
-			{/if}
-		</FlexiGrid>
-		{@render footer?.({ target })}
-	</div>
+	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
+	<FlexiGrid class={className}>
+		{#if !target.prepared && children}
+			{@render children()}
+		{:else if target.prepared}
+			{#each target.widgets as widget (widget)}
+				<RenderedFlexiWidget {widget} />
+			{/each}
+		{/if}
+	</FlexiGrid>
+	{@render footer?.({ target })}
 </div>
 
 <FlexiTargetLoader />

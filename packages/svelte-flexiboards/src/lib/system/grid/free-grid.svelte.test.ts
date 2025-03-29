@@ -51,12 +51,10 @@ describe('FreeFormFlexiGrid', () => {
 	beforeEach(() => {
 		mockTarget = {} as InternalFlexiTargetController;
 		targetConfig = {
-			baseRows: 3,
-			baseColumns: 3,
 			layout: {
 				type: 'free',
-				expandColumns: true,
-				expandRows: true
+				minRows: 3,
+				minColumns: 3
 			},
 			rowSizing: 'auto',
 			columnSizing: 'auto'
@@ -67,8 +65,10 @@ describe('FreeFormFlexiGrid', () => {
 			...targetConfig,
 			layout: {
 				type: 'free',
-				expandColumns: false,
-				expandRows: false
+				minRows: 3,
+				minColumns: 3,
+				maxRows: 3,
+				maxColumns: 3
 			}
 		});
 	});
@@ -127,23 +127,13 @@ describe('FreeFormFlexiGrid', () => {
 		});
 
 		it('should resolve collisions by moving widgets in Y direction when X fails', () => {
-			// To test this scenario, we need to disable expansion, otherwise the x-axis will just expand.
-			const noExpandingGrid = new FreeFormFlexiGrid(mockTarget, {
-				...targetConfig,
-				layout: {
-					type: 'free',
-					expandColumns: false,
-					expandRows: false
-				}
-			});
-
 			// First place a widget at (0,1) with width 2, height 2
 			const widget1 = createMockWidget();
-			noExpandingGrid.tryPlaceWidget(widget1, 0, 0, 2, 2);
+			nonExpandingGrid.tryPlaceWidget(widget1, 0, 0, 2, 2);
 
 			// Place another widget at (2,1) to block X-movement for widget1
 			const widget2 = createMockWidget();
-			noExpandingGrid.tryPlaceWidget(widget2, 2, 0, 1, 1);
+			nonExpandingGrid.tryPlaceWidget(widget2, 2, 0, 1, 1);
 
 			// State:
 			// aab
@@ -152,7 +142,7 @@ describe('FreeFormFlexiGrid', () => {
 
 			// Now try to place a widget at (0,1) which should force widget1 down
 			const widget3 = createMockWidget();
-			const result = noExpandingGrid.tryPlaceWidget(widget3, 0, 0, 2, 1);
+			const result = nonExpandingGrid.tryPlaceWidget(widget3, 0, 0, 2, 1);
 
 			// Expected state:
 			// ccb

@@ -457,7 +457,7 @@ export function getInternalFlexiboardCtx() {
 	// No provider to attach to.
 	if (!board) {
 		throw new Error(
-			'Cannot get FlexiBoard context outside of a registered board. Ensure that flexiboard() (or <FlexiProvider>) is called.'
+			'Cannot get FlexiBoard context outside of a registered board. Ensure that flexiboard() (or <FlexiBoard>) is called.'
 		);
 	}
 

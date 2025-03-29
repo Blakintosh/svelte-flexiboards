@@ -39,8 +39,8 @@
 					href: '/docs/managing-widgets'
 				},
 				{
-					title: 'Grid Layouts',
-					href: '/docs/grid-layouts'
+					title: 'Free-Form Grids',
+					href: '/docs/free-form-grids'
 				}
 			]
 		},

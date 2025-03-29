@@ -15,15 +15,19 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	#targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
 	#rawLayoutConfig: FreeFormTargetLayout = $derived(
-		this.#targetConfig?.layout
+		this.#targetConfig.layout
 	) as FreeFormTargetLayout;
 
-	#layoutConfig: FreeFormTargetLayout = $derived({
+	#layoutConfig: DerivedFreeFormTargetLayout = $derived({
 		type: 'free',
-		expandColumns: this.#rawLayoutConfig?.expandColumns ?? false,
-		expandRows: this.#rawLayoutConfig?.expandRows ?? false,
-		minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
-		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1
+		minColumns: this.#rawLayoutConfig?.minColumns ?? 1,
+		minRows: this.#rawLayoutConfig?.minRows ?? 1,
+		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
+		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
+
+		// Deprecated, remove in v0.3
+		expandColumns: this.#rawLayoutConfig?.expandColumns ?? true,
+		expandRows: this.#rawLayoutConfig?.expandRows ?? true
 	});
 
 	#rows: number;
@@ -36,8 +40,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		this.#targetConfig = targetConfig;
 
-		this.#rows = targetConfig.baseRows ?? 1;
-		this.#columns = targetConfig.baseColumns ?? 1;
+		// $deriveds haven't run by this point, so we need to access the config directly.
+		const layout = targetConfig.layout as FreeFormTargetLayout;
+
+		this.#rows = layout.minRows ?? 1;
+		this.#columns = layout.minColumns ?? 1;
 
 		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
 	}
@@ -230,11 +237,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	clear() {
 		this.#widgets.clear();
 
-		this.#coordinateSystem.updateForRows(this.#rows, this.#targetConfig.baseRows ?? 1);
-		this.#coordinateSystem.updateForColumns(this.#columns, this.#targetConfig.baseColumns ?? 1);
+		this.#coordinateSystem.updateForRows(this.#rows, this.#layoutConfig.minRows);
+		this.#coordinateSystem.updateForColumns(this.#columns, this.#layoutConfig.minColumns);
 
-		this.#rows = this.#targetConfig.baseRows ?? 1;
-		this.#columns = this.#targetConfig.baseColumns ?? 1;
+		this.#rows = this.#layoutConfig.minRows;
+		this.#columns = this.#layoutConfig.minColumns;
 
 		this.#coordinateSystem.clear();
 	}
@@ -307,7 +314,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	#tryExpandColumns(count: number) {
-		if (!this.#layoutConfig.expandColumns || count > MAX_COLUMNS) {
+		if (count > Math.min(this.#layoutConfig.maxColumns, MAX_COLUMNS)) {
 			return false;
 		}
 
@@ -317,7 +324,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	#tryExpandRows(count: number) {
-		if (!this.#layoutConfig.expandRows) {
+		if (count > this.#layoutConfig.maxRows) {
 			return false;
 		}
 
@@ -490,11 +497,22 @@ type FreeGridLayout = (FlexiWidgetController | null)[][];
 
 export type FreeFormTargetLayout = {
 	type: 'free';
-	expandColumns?: boolean;
-	expandRows?: boolean;
 	minRows?: number;
 	minColumns?: number;
+	maxRows?: number;
+	maxColumns?: number;
+
+	/**
+	 * @deprecated Use `maxColumns` instead.
+	 */
+	expandColumns?: boolean;
+
+	/**
+	 * @deprecated Use `maxRows` instead.
+	 */
+	expandRows?: boolean;
 };
+type DerivedFreeFormTargetLayout = Required<FreeFormTargetLayout>;
 
 type FreeFormGridSnapshot = {
 	layout: FreeGridLayout;

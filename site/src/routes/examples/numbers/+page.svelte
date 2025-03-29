@@ -81,13 +81,13 @@
 			key="target"
 			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-8'}
 			config={{
-				baseRows: 3,
-				baseColumns: 3,
 				rowSizing: 'minmax(0, 1fr)',
 				layout: {
 					type: 'free',
-					expandColumns: false,
-					expandRows: false
+					minRows: 3,
+					minColumns: 3,
+					maxRows: 3,
+					maxColumns: 3
 				}
 			}}
 		>

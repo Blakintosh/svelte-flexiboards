@@ -47,7 +47,19 @@ export type FlowTargetLayout = {
 	 * - When flowAxis is set to "column", the grid will not allow more columns than this value.
 	 */
 	maxFlowAxis?: number;
+
+	/**
+	 * The number of rows that the grid should have.
+	 */
+	rows?: number;
+
+	/**
+	 * The number of columns that the grid should have.
+	 */
+	columns?: number;
 };
+
+type DerivedFlowTargetLayout = Required<FlowTargetLayout>;
 
 type FlowMoveOperation = {
 	widget: FlexiWidgetController;
@@ -71,11 +83,13 @@ export class FlowFlexiGrid extends FlexiGrid {
 		widgets: []
 	});
 
-	#layoutConfig: FlowTargetLayout = $derived({
+	#layoutConfig: DerivedFlowTargetLayout = $derived({
 		type: 'flow',
 		maxFlowAxis: this.#rawLayoutConfig.maxFlowAxis ?? Infinity,
 		flowAxis: untrack(() => this.#rawLayoutConfig.flowAxis) ?? 'row',
 		placementStrategy: this.#rawLayoutConfig.placementStrategy ?? 'append',
+		rows: this.#rawLayoutConfig.rows ?? 1,
+		columns: this.#rawLayoutConfig.columns ?? 1,
 		disallowInsert: this.#rawLayoutConfig.disallowInsert ?? false,
 		disallowExpansion: this.#rawLayoutConfig.disallowExpansion ?? false
 	});
@@ -87,8 +101,9 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 		this.#targetConfig = targetConfig;
 
-		this.rows = this.#targetConfig.baseRows ?? 1;
-		this.columns = this.#targetConfig.baseColumns ?? 1;
+		const layout = targetConfig.layout as FlowTargetLayout;
+		this.rows = layout.rows ?? 1;
+		this.columns = layout.columns ?? 1;
 	}
 
 	tryPlaceWidget(

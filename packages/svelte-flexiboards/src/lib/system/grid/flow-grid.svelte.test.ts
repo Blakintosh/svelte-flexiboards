@@ -86,12 +86,12 @@ describe('FlowFlexiGrid', () => {
 	beforeEach(() => {
 		mockTarget = {} as InternalFlexiTargetController;
 		targetConfig = {
-			baseRows: 3,
-			baseColumns: 3,
 			layout: {
 				type: 'flow',
 				placementStrategy: 'append',
-				flowAxis: 'row'
+				flowAxis: 'row',
+				rows: 3,
+				columns: 3
 			},
 			rowSizing: 'auto',
 			columnSizing: 'auto'

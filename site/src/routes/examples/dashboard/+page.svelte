@@ -56,12 +56,13 @@
 				key="left"
 				class={'h-full gap-4'}
 				config={{
-					baseRows: 4,
-					baseColumns: 3,
+					rowSizing: 'minmax(0, 1fr)',
 					layout: {
 						type: 'free',
-						expandColumns: false,
-						expandRows: true
+						minColumns: 3,
+						maxColumns: 3,
+						minRows: 4,
+						maxRows: 4
 					}
 				}}
 			>
