@@ -96,11 +96,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			return false;
 		}
 
-		// We can either resolve collisions horizontally or vertically, but not both.
-		// However, if we start to resolve collisions in a particular direction, we need to look in the opposite direction to resolve any further collisions.
-		let i = newX;
-		let j = newY;
-
 		// Looking row-by-row, we can identify collisions using the bitmaps.
 		for (let i = newY; i < newY + height; i++) {
 			for (let j = newX; j < newX + width; j++) {
