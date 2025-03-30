@@ -13,10 +13,12 @@
 				<FlexiTarget
 					config={{
 						layout: {
-							type: 'free'
-						},
-						baseRows: 3,
-						baseColumns: 3
+							type: 'free',
+							minRows: 3,
+							minColumns: 3,
+							maxRows: 3,
+							maxColumns: 3
+						}
 						// rowSizing: '2.4rem',
 						// columnSizing: '2.4rem'
 					}}

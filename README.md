@@ -12,6 +12,8 @@ This version of Flexiboards (and its documentation) is currently in an early pre
 npm i svelte-flexiboards
 ```
 
+Please be warned that as Flexiboards is still in preview, breaking changes might occur between now and the first stable release.
+
 ## Licence
 
 Flexiboards is open-source software licenced under the MIT licence. Please see [LICENSE.md](https://github.com/Blakintosh/svelte-flexiboards/blob/main/LICENSE.md) for more information.

@@ -49,6 +49,18 @@ export type FlexiTargetDefaults = {
 	 * The layout algorithm and parameters to use for the target grid.
 	 */
 	layout?: TargetLayout;
+
+	/**
+	 * The number of rows to use for the target grid.
+	 * @deprecated This property will be removed in v0.3. Use `layout.minRows` instead.
+	 */
+	baseRows?: number;
+
+	/**
+	 * The number of columns to use for the target grid.
+	 * @deprecated This property will be removed in v0.3. Use `layout.minColumns` instead.
+	 */
+	baseColumns?: number;
 };
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
 	widgetDefaults?: FlexiWidgetDefaults;
@@ -191,7 +203,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#targetConfig?.columnSizing ??
 			this.#providerTargetDefaults?.columnSizing ??
 			'minmax(0, 1fr)',
-		widgetDefaults: this.#targetConfig?.widgetDefaults
+		widgetDefaults: this.#targetConfig?.widgetDefaults,
+		baseRows: this.#targetConfig?.baseRows ?? this.#providerTargetDefaults?.baseRows ?? 1,
+		baseColumns: this.#targetConfig?.baseColumns ?? this.#providerTargetDefaults?.baseColumns ?? 1
 	});
 
 	constructor(

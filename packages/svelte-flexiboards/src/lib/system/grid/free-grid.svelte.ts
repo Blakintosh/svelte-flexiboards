@@ -20,8 +20,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	#layoutConfig: DerivedFreeFormTargetLayout = $derived({
 		type: 'free',
-		minColumns: this.#rawLayoutConfig?.minColumns ?? 1,
-		minRows: this.#rawLayoutConfig?.minRows ?? 1,
+		// v0.3: Remove baseRows and baseColumns
+		minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
+		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
 
@@ -43,8 +44,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		// $deriveds haven't run by this point, so we need to access the config directly.
 		const layout = targetConfig.layout as FreeFormTargetLayout;
 
-		this.#rows = layout.minRows ?? 1;
-		this.#columns = layout.minColumns ?? 1;
+		// v0.3: Remove baseRows and baseColumns
+		this.#rows = layout.minRows ?? targetConfig.baseRows ?? 1;
+		this.#columns = layout.minColumns ?? targetConfig.baseColumns ?? 1;
 
 		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
 	}

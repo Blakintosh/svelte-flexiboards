@@ -57,7 +57,10 @@ describe('FreeFormFlexiGrid', () => {
 				minColumns: 3
 			},
 			rowSizing: 'auto',
-			columnSizing: 'auto'
+			columnSizing: 'auto',
+			// v0.3: Remove baseRows and baseColumns
+			baseRows: 3,
+			baseColumns: 3
 		};
 
 		grid = new FreeFormFlexiGrid(mockTarget, targetConfig);

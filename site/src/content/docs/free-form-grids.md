@@ -10,6 +10,12 @@ published: true
 	import FreeFormExample from '$lib/components/docs/free-form-grids/free-form-example.svelte';
 </script>
 
+_**NOTE:** In v0.1, there was ambiguity betwen the `base` (stored on the target's configuration) and `min` properties (stored within this layout object). A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated._
+
+_These will be removed in v0.3. Use `layout.minRows` and `layout.minColumns` instead to set the initial size of the grid._
+
+_Additionally, the `expandColumns` and `expandRows` properties on `layout` are now deprecated. These will be removed in v0.3. Use `maxColumns` and `maxRows` instead to control the expandability of the grid._
+
 ## Free-Form Grids
 
 Free-form grids are a _sparse_ grid layout, where widgets can be placed anywhere within the grid. They do not enforce a particular structure, making them ideal for things such as dashboards.
@@ -31,10 +37,6 @@ export type FreeFormTargetLayout = {
 - `minRows`: The minimum number of rows that the grid should have.
 - `maxColumns`: The maximum number of columns that the grid should have. When equal to `minColumns`, the grid will not expand in the column direction.
 - `maxRows`: The maximum number of rows that the grid should have. When equal to `minRows`, the grid will not expand in the row direction.
-
-_**NOTE:** In v0.1, there was ambiguity betwen the `base` (stored on the target's configuration) and `min` properties (stored within this layout object). A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now invalid._
-
-_Additionally, the `expandColumns` and `expandRows` properties are now deprecated._
 
 ### Example
 
