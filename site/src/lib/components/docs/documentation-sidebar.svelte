@@ -41,6 +41,10 @@
 				{
 					title: 'Free-Form Grids',
 					href: '/docs/free-form-grids'
+				},
+				{
+					title: 'Flow Grids',
+					href: '/docs/flow-grids'
 				}
 			]
 		},

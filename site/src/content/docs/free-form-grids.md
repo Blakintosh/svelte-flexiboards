@@ -10,7 +10,7 @@ published: true
 	import FreeFormExample from '$lib/components/docs/free-form-grids/free-form-example.svelte';
 </script>
 
-_**NOTE:** In v0.1, there was ambiguity betwen the `base` (stored on the target's configuration) and `min` properties (stored within this layout object). A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated._
+_**NOTE:** In v0.1, there was ambiguity between the `base` (stored on the target's configuration) and `min` properties (stored within this layout object). A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated._
 
 _These will be removed in v0.3. Use `layout.minRows` and `layout.minColumns` instead to set the initial size of the grid._
 
