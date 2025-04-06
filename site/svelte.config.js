@@ -4,6 +4,7 @@ import { mdsvex, escapeSvelte } from "mdsvex";
 import { createHighlighter } from 'shiki';
 import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
+import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
@@ -28,10 +29,11 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	extensions: ['.svelte', '.md'],
-	preprocess: [
+	preprocess: sequence([
 		vitePreprocess(),
-		mdsvex(mdsvexOptions)
-	],
+		mdsvex(mdsvexOptions),
+		preprocessMeltUI()
+	]),
 
 	kit: {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

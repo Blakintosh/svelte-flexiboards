@@ -1,5 +1,5 @@
 <script lang="ts">
-	import OnThisPage from '$lib/components/docs/on-this-page.svelte';
+	import Toc from '$lib/components/docs/toc.svelte';
 	import DocumentationSidebar from '$lib/components/docs/documentation-sidebar.svelte';
 	import type { PageData } from './$types';
 
@@ -20,6 +20,7 @@
 	</nav>
 	<article
 		class="prose prose-sm mx-auto h-full min-h-0 w-full shrink-0 py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-24"
+		id="docs-content"
 	>
 		<div class="not-prose">
 			<h1 class="mb-2 text-3xl font-bold text-foreground lg:mb-4 lg:text-4xl 2xl:text-5xl">
@@ -31,7 +32,7 @@
 	</article>
 	<aside class="hidden h-full flex-1 lg:block">
 		<div class="sticky top-0 flex flex-col gap-8 py-24 text-base">
-			<OnThisPage />
+			<Toc />
 		</div>
 	</aside>
 </div>

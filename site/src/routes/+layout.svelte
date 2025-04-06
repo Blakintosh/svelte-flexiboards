@@ -14,7 +14,7 @@
 
 <Header />
 
-<main class="grid h-full min-h-0 w-full grow place-items-center overflow-y-auto">
+<main class="grid h-full min-h-0 w-full grow place-items-center overflow-y-auto" id="main-content">
 	<div class="h-full w-full px-8 lg:max-w-[1440px]">
 		{@render children()}
 	</div>
