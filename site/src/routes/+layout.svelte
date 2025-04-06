@@ -20,6 +20,6 @@
 	</div>
 </main>
 
-<footer class="w-full py-4 text-center text-sm text-muted-foreground">
+<footer class="w-full py-4 text-center text-sm text-muted-foreground border-t border-dashed">
 	Work in progress. Expect bugs and/or breaking changes!
 </footer>

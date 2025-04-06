@@ -13,13 +13,13 @@
 </script>
 
 <div class="flex h-full items-stretch gap-16">
-	<nav class="hidden h-full flex-1 lg:block">
-		<div class="sticky top-0 flex flex-col gap-8 py-24 text-base">
+	<nav class="hidden h-full shrink-0 w-64 lg:block">
+		<div class="sticky top-0 flex flex-col gap-8 py-12 text-base border-r pr-8 border-dashed">
 			<DocumentationSidebar />
 		</div>
 	</nav>
 	<article
-		class="prose prose-sm mx-auto h-full min-h-0 w-full shrink-0 py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-24"
+		class="prose prose-sm mx-auto h-full min-h-0 w-full shrink-0 py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-12"
 		id="docs-content"
 	>
 		<div class="not-prose">
@@ -30,8 +30,8 @@
 		</div>
 		<PageComponent />
 	</article>
-	<aside class="hidden h-full flex-1 lg:block">
-		<div class="sticky top-0 flex flex-col gap-8 py-24 text-base">
+	<aside class="hidden h-full shrink-0 w-64 lg:block">
+		<div class="sticky top-0 flex flex-col gap-8 py-12 text-base">
 			<Toc />
 		</div>
 	</aside>
