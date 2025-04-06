@@ -16,7 +16,7 @@ _These will be removed in v0.3. Use `layout.minRows` and `layout.minColumns` ins
 
 _Additionally, the `expandColumns` and `expandRows` properties on `layout` are now deprecated. These will be removed in v0.3. Use `maxColumns` and `maxRows` instead to control the expandability of the grid._
 
-## Free-Form Grids
+## Introduction
 
 Free-form grids are a _sparse_ grid layout, where widgets can be placed anywhere within the grid. They do not enforce a particular structure, making them ideal for things such as dashboards.
 
@@ -38,7 +38,7 @@ export type FreeFormTargetLayout = {
 - `maxColumns`: The maximum number of columns that the grid should have. When equal to `minColumns`, the grid will not expand in the column direction.
 - `maxRows`: The maximum number of rows that the grid should have. When equal to `minRows`, the grid will not expand in the row direction.
 
-### Example
+## Example
 
 The following code creates us a basic free-form grid with a non-expandable 2x2 layout:
 
@@ -72,13 +72,13 @@ The following code creates us a basic free-form grid with a non-expandable 2x2 l
 This gives us:
 <FreeFormExample />
 
-### Considerations
+## Considerations
 
 Free-form grids have some main considerations:
 
 - When creating a FlexiWidget that is part of a free-form grid, you must explicitly specify an `x` and `y` prop (zero-indexed). Due to the sparse nature of the grid, Flexiboards is not designed to automatically infer a position to drop the widget at.
 - You can only have up to 32 columns in a free-form grid (any `maxColumns` value greater than 32 will be ignored). This is because under the hood, Flexiboards uses 32-bit bitmaps to track free-form layouts.
 
-### More Examples
+## More Examples
 
 If you would like to see any further examples of free-form grids in action, be sure to check out the open-source [Dashboard](/examples/dashboard) and [Numbers](/examples/numbers) examples, which are both built using free-form grids.
