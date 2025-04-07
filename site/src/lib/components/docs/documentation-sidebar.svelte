@@ -47,6 +47,10 @@
 				{
 					title: 'Flow Grids',
 					href: '/docs/flow-grids'
+				},
+				{
+					title: 'Multiple Targets',
+					href: '/docs/multiple-targets'
 				}
 			]
 		},
