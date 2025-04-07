@@ -62,11 +62,17 @@ export type FlexiTargetDefaults = {
 	 */
 	baseColumns?: number;
 };
+
+// Exclude deprecated properties
+type RequiredFlexiTargetProperties = Omit<Required<FlexiTargetDefaults>, 'baseRows' | 'baseColumns'>;
+
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 
-export type FlexiTargetConfiguration = Required<FlexiTargetDefaults> & {
+export type FlexiTargetConfiguration = RequiredFlexiTargetProperties & 
+	// Don't make these mandatory, as they're deprecatedß
+	Pick<FlexiTargetDefaults, 'baseRows' | 'baseColumns'> & {
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 
