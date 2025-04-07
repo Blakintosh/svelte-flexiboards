@@ -8,6 +8,7 @@ published: true
 <script lang="ts">
 	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
 	import FlowExample from '$lib/components/docs/flow-grids/flow-example.svelte';
+	import Flow2DExample from '$lib/components/docs/flow-grids/flow-2d-example.svelte';
 </script>
 
 _**NOTE:** In v0.1, there was ambiguity with the use of the `baseRows` and `baseColumns` properties (stored on the target's configuration) and use of values stored on the `layout` object. A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated._
@@ -90,6 +91,43 @@ Flow grids can also enforce an ordered layout that spans two dimensions. When th
 In this scenario, widgets will attempt to fill the cross dimension as much as possible, but they will also respect the order they've been put in. For example, in row flow, if a widget is unable to fit within its current row, it will leave a gap and span to the next row instead.
 
 The below example demonstrates this behaviour, where we have a row flow grid with widgets of varying widths. Notice how widget `B` of width `2` is always placed on its own row, because when placed after `A` or `C` of width `1`, it would not fit besides them on the grid.
+
+```svelte
+<script lang="ts">
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+</script>
+
+<FlexiBoard class="size-96 rounded-xl border p-8">
+	<FlexiTarget
+		class={'h-full w-full gap-8'}
+		containerClass={'w-full h-full'}
+		config={{
+			rowSizing: 'minmax(0, 1fr)',
+			layout: { 
+                type: 'flow', 
+                rows: 4,
+                columns: 2,
+                placementStrategy: 'append',
+                flowAxis: 'row'
+            }
+		}}
+	>
+		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+			A
+		</FlexiWidget>
+		<FlexiWidget class="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground" width={2}>
+			B
+		</FlexiWidget>
+		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+			C
+		</FlexiWidget>
+	</FlexiTarget>
+</FlexiBoard>
+```
+
+Giving us:
+
+<Flow2DExample />
 
 ## Considerations
 
