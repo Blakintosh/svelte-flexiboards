@@ -282,7 +282,45 @@ describe('FlowFlexiGrid', () => {
 		});
 	});
 
-	describe('Grid expansion', () => {});
+	describe('Grid expansion', () => {
+		it('should not shrink below the minimum rows or column flow when removing widgets', () => {
+			const initialRows = grid.rows;
+			const initialColumns = grid.columns;
+
+			const a = mockWidgetPlacement({ x: 0, y: 0, width: 1, height: 1 });
+
+			// State:
+			// a--
+			// ---
+			// ---
+
+			grid.removeWidget(a);
+
+			// Expected state:
+			// ---
+			// ---
+			// ---
+
+			expect(grid.rows).toBe(initialRows);
+			expect(grid.columns).toBe(initialColumns);
+		});
+
+		it('should not shrink below the minimum rows or column flow when adding widgets', () => {
+			const initialRows = grid.rows;
+			const initialColumns = grid.columns;
+
+			const a = mockWidgetPlacement({ width: 1, height: 1 });
+			const b = mockWidgetPlacement({ width: 1, height: 1 });
+
+			// Expected state:
+			// ab-
+			// ---
+			// ---
+
+			expect(grid.rows).toBe(initialRows);
+			expect(grid.columns).toBe(initialColumns);
+		})
+	});
 
 	describe('Widget removal', () => {
 		it('should remove a widget from the grid', () => {

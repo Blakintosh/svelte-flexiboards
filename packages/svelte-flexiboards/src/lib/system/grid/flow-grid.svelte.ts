@@ -267,21 +267,24 @@ export class FlowFlexiGrid extends FlexiGrid {
 			return false;
 		}
 
+		const minRows = this.#layoutConfig.rows;
+		const minColumns = this.#layoutConfig.columns;
+
 		// Shrink the grid if necessary.
 		const [_, lastWidget] = this.#coordinateSystem.findNearestWidgetFrom2D(Infinity, Infinity);
 
 		if (lastWidget) {
 			if (this.#layoutConfig.flowAxis === 'row' && this.rows > lastWidget.y + lastWidget.height) {
-				this.rows = lastWidget.y + lastWidget.height;
+				this.rows = Math.max(minRows, lastWidget.y + lastWidget.height);
 			} else if (
 				this.#layoutConfig.flowAxis === 'column' &&
 				this.columns > lastWidget.x + lastWidget.width
 			) {
-				this.columns = lastWidget.x + lastWidget.width;
+				this.columns = Math.max(minColumns, lastWidget.x + lastWidget.width);
 			}
 		} else {
-			this.rows = 1;
-			this.columns = 1;
+			this.rows = minRows;
+			this.columns = minColumns;
 		}
 
 		return true;
