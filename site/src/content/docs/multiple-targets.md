@@ -17,7 +17,7 @@ In many cases, your dashboard or Kanban board needs to be able to support droppi
 
 For example, let's suppose that we have a Kanban board. In its simplest form, we have one list of widgets for the Backlog, another list for the Work-in-Progress, and one more for the Done tasks. 
 
-![Kanban board with multiple targets](/static/img/multiple_targets_kanban.png)
+![Kanban board with multiple targets](/img/multiple_targets_kanban.png)
 
 Here, using just one FlexiTarget for our Kanban board wouldn't be enough, as we have three different [Flow layouts](/docs/flow-grids) to maintain. However, due to the board structure that Flexiboards supports (see [Overview](/docs/overview)), we can have multiple FlexiTargets within the same FlexiBoard.
 
