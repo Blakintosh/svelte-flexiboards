@@ -37,6 +37,7 @@ export type FlowTargetLayout = {
 	 * - When unset and the flow axis is set to "row", the grid will create new rows when the last row is full.
 	 * - When unset and the flow axis is set to "column", the grid will create new columns when the last column is full.
 	 * - When set to true, the grid will be at capacity when all cells are used.
+	 * @deprecated Use maxFlowAxis == rows or columns to control expandability.
 	 */
 	disallowExpansion?: boolean;
 
@@ -59,7 +60,7 @@ export type FlowTargetLayout = {
 	columns?: number;
 };
 
-type DerivedFlowTargetLayout = Required<FlowTargetLayout>;
+type DerivedFlowTargetLayout = Omit<Required<FlowTargetLayout>, 'disallowExpansion'> & Pick<FlowTargetLayout, 'disallowExpansion'>;
 
 type FlowMoveOperation = {
 	widget: FlexiWidgetController;

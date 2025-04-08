@@ -11,9 +11,9 @@ published: true
 	import Flow2DExample from '$lib/components/docs/flow-grids/flow-2d-example.svelte';
 </script>
 
-_**NOTE:** In v0.1, there was ambiguity with the use of the `baseRows` and `baseColumns` properties (stored on the target's configuration) and use of values stored on the `layout` object. A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated._
+_**NOTE:** In v0.1, there was ambiguity with the use of the `baseRows` and `baseColumns` properties (stored on the target's configuration) and use of values stored on the `layout` object. A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated. Additionally, the `disallowExpansion` property has been deprecated in favour of `maxFlowAxis`._
 
-_These properties will be removed in v0.3. Use `layout.rows` and `layout.columns` instead to set the initial size of the grid._
+_These properties will be removed in v0.3. Use `layout.rows` and `layout.columns` instead to set the initial size of the grid, and set `maxFlowAxis` to your row count to disable grid expansion._
 
 ## Introduction
 
@@ -40,7 +40,6 @@ export type FlowTargetLayout = {
   - When set to `prepend`, widgets will be added to the beginning of the grid.
 - `disallowInsert`: When set to `true`, widgets dropped in the grid will not be inserted based on the pointer position, and instead will use the `placementStrategy`.
 - `flowAxis`: The axis that widgets are placed along.
-- `disallowExpansion`: Whether to disallow the grid from expanding.
 - `maxFlowAxis`: The maximum number of widgets that can be placed along the flow axis.
 - `rows`: The number of rows that the grid should have.
 - `columns`: The number of columns that the grid should have.
