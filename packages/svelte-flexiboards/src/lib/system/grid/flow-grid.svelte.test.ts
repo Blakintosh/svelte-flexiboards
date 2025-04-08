@@ -53,12 +53,14 @@ describe('FlowFlexiGrid', () => {
 		width?: number;
 		height?: number;
 		grid?: FlowFlexiGrid;
+		expectedResult?: boolean;
 	};
 
 	const mockWidgetPlacement = (placement: Placement) => {
 		placement.height ??= 1;
 		placement.width ??= 1;
 		placement.grid ??= grid;
+		placement.expectedResult ??= true;
 
 		const widget = createMockWidget(placement.x, placement.y, placement.width, placement.height);
 		const result = placement.grid.tryPlaceWidget(
@@ -69,7 +71,7 @@ describe('FlowFlexiGrid', () => {
 			placement.height
 		);
 
-		expect(result).toBe(true);
+		expect(result).toBe(placement.expectedResult);
 
 		return widget;
 	};
@@ -354,9 +356,85 @@ describe('FlowFlexiGrid', () => {
 
 			expectPlacement(c, { x: 1, y: 0 });
 		});
+
+		it('should expand the flow axis when needed, if allowed', () => {
+			mockWidgetPlacement({ width: 3, height: 1 });
+			mockWidgetPlacement({ width: 3, height: 1 });
+			mockWidgetPlacement({ width: 3, height: 1 });
+
+			// State:
+			// aaa
+			// bbb
+			// ccc
+
+			const d = mockWidgetPlacement({ width: 3, height: 1 });
+
+			// Expected state:
+			// aaa
+			// bbb
+			// ccc
+			// ddd
+
+			expect(grid.rows).toBe(4);
+			expectPlacement(d, { x: 0, y: 3 });
+		});
+
+		it('should not expand the flow axis when needed, if expansion is disabled', () => {
+			const nonExpandingGrid = new FlowFlexiGrid(mockTarget, {
+				...targetConfig,
+				layout: {
+					...(targetConfig.layout as FlowTargetLayout),
+					maxFlowAxis: 3
+				}
+			});
+
+			mockWidgetPlacement({ width: 3, height: 1, grid: nonExpandingGrid });
+			mockWidgetPlacement({ width: 3, height: 1, grid: nonExpandingGrid });
+			mockWidgetPlacement({ width: 3, height: 1, grid: nonExpandingGrid });
+
+			// State:
+			// aaa
+			// bbb
+			// ccc
+
+			const d = mockWidgetPlacement({ width: 3, height: 1, grid: nonExpandingGrid, expectedResult: false });
+
+			// Expected state:
+			// aaa
+			// bbb
+			// ccc
+
+			expect(nonExpandingGrid.rows).toBe(3);
+		});
 	});
 
-	describe('Snapshot and restoration', () => {});
+	describe('Snapshot and restoration', () => {
+		it('should restore a grid from a snapshot', () => {
+			const a = mockWidgetPlacement({ x: 0, y: 0, width: 1, height: 1 });
+			const b = mockWidgetPlacement({ x: 1, y: 0, width: 1, height: 1 });
 
-	describe('Edge cases', () => {});
+			// State:
+			// ab-
+			// ---
+			// ---
+
+			const preSnapshotRows = grid.rows;
+			const preSnapshotColumns = grid.columns;
+
+			const snapshot = grid.takeSnapshot();
+			grid.clear();
+
+			grid.restoreFromSnapshot(snapshot);
+
+			// Expected state:
+			// ab-
+			// ---
+			// ---
+
+			expectPlacement(a, { x: 0, y: 0 });
+			expectPlacement(b, { x: 1, y: 0 });
+			expect(grid.rows).toBe(preSnapshotRows);
+			expect(grid.columns).toBe(preSnapshotColumns);
+		});
+	});
 });
