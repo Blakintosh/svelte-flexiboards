@@ -27,7 +27,6 @@ export type FlowTargetLayout = {
 	placementStrategy: 'append' | 'prepend';
 	disallowInsert?: boolean;
 	flowAxis: 'row' | 'column';
-	disallowExpansion?: boolean;
 	maxFlowAxis?: number;
 	rows?: number;
 	columns?: number;
