@@ -1,6 +1,6 @@
 # Flexiboards
 
-Headless, reactive drag-and-drop components for Svelte. [https://svelte-flexiboards.vercel.app](https://svelte-flexiboards.vercel.app/)
+Headless, reactive drag-and-drop components for Svelte. [https://www.flexiboards.dev/](https://www.flexiboards.dev/)
 
 This monorepo contains the source code for the Flexiboards library as well as the documentation site.
 
