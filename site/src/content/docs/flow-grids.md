@@ -45,7 +45,7 @@ export type FlowTargetLayout = {
 
 ## Example
 
-The following code creates us a basic free-form grid with a non-expandable 2x2 layout:
+The following code creates us a basic flow grid with a list layout:
 
 ```svelte
 <FlexiBoard class="size-96 rounded-xl border p-8">

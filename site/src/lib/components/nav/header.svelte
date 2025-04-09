@@ -6,7 +6,7 @@
 	import DocumentationSidebar from '../docs/documentation-sidebar.svelte';
 </script>
 
-<header class="flex items-center justify-between border-b px-8 py-2">
+<header class="flex items-center justify-between border-b h-14 px-8 py-2 sticky shrink-0 top-0 backdrop-blur bg-background/80 z-40">
 	<div class="flex w-[80%] items-center gap-16">
 		<a class="flex items-center justify-start gap-4" href="/">
 			<div class="flex flex-col items-start gap-[0.075rem]">

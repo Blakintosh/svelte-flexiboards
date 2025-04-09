@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Construction } from 'lucide-svelte';
 	import { Button } from "$lib/components/ui/button";
+	import { cn } from '$lib/utils';
 	
 
 	let directory = [
@@ -89,20 +90,25 @@
 		// 	]
 		// }
 	];
+
+	let { class: className = '' } = $props();
 </script>
 
-{#each directory as section}
-	<div class="flex flex-col gap-1">
-		<h2 class="mb-1 text-base font-semibold px-3">{section.section}</h2>
-		{#each section.pages as page}
-			<Button 
-				variant="ghost" 
-				size="sm"
-				class="text-muted-foreground hover:text-primary text-base inline-flex justify-start font-normal"
-				href={page.href}
-			>
-				{page.title}
-			</Button>
-		{/each}
-	</div>
-{/each}
+<div class={cn("flex flex-col gap-8 min-h-0", className)}>
+	{#each directory as section}
+		<div class="flex flex-col gap-1">
+			<h2 class="mb-1 text-base font-semibold px-3">{section.section}</h2>
+			{#each section.pages as page}
+				<Button 
+					variant="ghost" 
+					size="sm"
+					class="text-muted-foreground hover:text-primary text-base inline-flex justify-start font-normal"
+					href={page.href}
+				>
+					{page.title}
+				</Button>
+			{/each}
+		</div>
+	{/each}
+	
+</div>
