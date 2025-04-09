@@ -67,7 +67,7 @@
 	{componentProps?.content}
 {/snippet}
 
-<FlexiTarget name={category} class="w-64 gap-1" bind:controller={target}>
+<FlexiTarget key={category} class="w-48 2xl:w-64 gap-1" bind:controller={target}>
 	{#snippet header({ target })}
 		<div class="mb-4 flex items-center gap-4 text-muted-foreground">
 			<h3
@@ -102,7 +102,7 @@
 				Add
 			</Button>
 		{:else}
-			<div class="mt-1 flex w-64 items-center gap-2 rounded-lg bg-muted px-4 py-1">
+			<div class="mt-1 flex w-48 2xl:w-64 items-center gap-2 rounded-lg bg-muted px-4 py-1">
 				<Button onclick={cancelAddItem} variant={'ghost'} size={'icon'} class="size-4 shrink-0">
 					<X />
 				</Button>

@@ -65,6 +65,7 @@
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.24.0",
+		"vaul-svelte": "1.0.0-next.7",
 		"vite": "^5.4.14"
 	},
 	"dependencies": {
@@ -74,7 +75,6 @@
 		"rehype-slug": "^6.0.0",
 		"remark-toc": "^9.0.0",
 		"shiki": "^2.4.1",
-		"svelte-flexiboards": "workspace:^",
-		"vaul-svelte": "^0.3.2"
+		"svelte-flexiboards": "workspace:^"
 	}
 }

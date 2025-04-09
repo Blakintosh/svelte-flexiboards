@@ -103,9 +103,6 @@ importers:
       svelte-flexiboards:
         specifier: workspace:^
         version: link:../packages/svelte-flexiboards
-      vaul-svelte:
-        specifier: ^0.3.2
-        version: 0.3.2(svelte@5.20.1)
     devDependencies:
       '@melt-ui/pp':
         specifier: ^0.3.2
@@ -194,6 +191,9 @@ importers:
       typescript-eslint:
         specifier: ^8.24.0
         version: 8.24.0(eslint@9.20.1(jiti@1.21.7))(typescript@5.7.3)
+      vaul-svelte:
+        specifier: 1.0.0-next.7
+        version: 1.0.0-next.7(svelte@5.20.1)
       vite:
         specifier: ^5.4.14
         version: 5.4.14(@types/node@22.13.5)
@@ -651,11 +651,6 @@ packages:
     peerDependencies:
       '@melt-ui/svelte': '>= 0.29.0'
       svelte: ^3.55.0 || ^4.0.0 || ^5.0.0-next.1
-
-  '@melt-ui/svelte@0.76.2':
-    resolution: {integrity: sha512-7SbOa11tXUS95T3fReL+dwDs5FyJtCEqrqG3inRziDws346SYLsxOQ6HmX+4BkIsQh1R8U3XNa+EMmdMt38lMA==}
-    peerDependencies:
-      svelte: '>=3 <5'
 
   '@melt-ui/svelte@0.86.6':
     resolution: {integrity: sha512-Jer+M7DgIwT5IHfTayb4Iw/fkkxWNmC/mqn/nMh9JrbPbkxmyabfLQnhJ+JDn5HK77f84j34lubO3iqFtYAfMg==}
@@ -1238,11 +1233,6 @@ packages:
 
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
-
-  bits-ui@0.21.16:
-    resolution: {integrity: sha512-XFZ7/bK7j/K+5iktxX/ZpmoFHjYjpPzP5EOO/4bWiaFg5TG1iMcfjDhlBTQnJxD6BoVoHuqeZPHZvaTgF4Iv3Q==}
-    peerDependencies:
-      svelte: ^4.0.0 || ^5.0.0-next.118
 
   bits-ui@1.0.0-next.77:
     resolution: {integrity: sha512-IV0AyVEvsRkXv4s/fl4iea5E9W2b9EBf98s9mRMKMc1xHxM9MmtM2r6MZMqftHQ/c+gHTIt3A9EKuTlh7uay8w==}
@@ -2621,10 +2611,11 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  vaul-svelte@0.3.2:
-    resolution: {integrity: sha512-X4OGWttSTVUl417qGDsSFgOvIx24DoiMRY/jaP9z0v9FL8LQQJ0RQ1ZM0QpdyQPRlNd24ewjNQHh5EgYDtfNpw==}
+  vaul-svelte@1.0.0-next.7:
+    resolution: {integrity: sha512-7zN7Bi3dFQixvvbUJY9uGDe7Ws/dGZeBQR2pXdXmzQiakjrxBvWo0QrmsX3HK+VH+SZOltz378cmgmCS9f9rSg==}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
     peerDependencies:
-      svelte: ^4.0.0 || ^5.0.0-next.1
+      svelte: ^5.0.0
 
   vfile-message@2.0.4:
     resolution: {integrity: sha512-DjssxRGkMvifUOJre00juHoP9DPWuzjxKuMDrhNbk2TdaYYBNMStsNhEOt3idrtI12VQYM/1+iM0KOzXi4pxwQ==}
@@ -3113,16 +3104,6 @@ snapshots:
       '@melt-ui/svelte': 0.86.6(svelte@5.20.1)
       estree-walker: 3.0.3
       magic-string: 0.30.17
-      svelte: 5.20.1
-
-  '@melt-ui/svelte@0.76.2(svelte@5.20.1)':
-    dependencies:
-      '@floating-ui/core': 1.6.9
-      '@floating-ui/dom': 1.6.13
-      '@internationalized/date': 3.7.0
-      dequal: 2.0.3
-      focus-trap: 7.6.4
-      nanoid: 5.1.0
       svelte: 5.20.1
 
   '@melt-ui/svelte@0.86.6(svelte@5.20.1)':
@@ -3832,13 +3813,6 @@ snapshots:
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
-
-  bits-ui@0.21.16(svelte@5.20.1):
-    dependencies:
-      '@internationalized/date': 3.7.0
-      '@melt-ui/svelte': 0.76.2(svelte@5.20.1)
-      nanoid: 5.1.0
-      svelte: 5.20.1
 
   bits-ui@1.0.0-next.77(svelte@5.20.1):
     dependencies:
@@ -5351,10 +5325,11 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vaul-svelte@0.3.2(svelte@5.20.1):
+  vaul-svelte@1.0.0-next.7(svelte@5.20.1):
     dependencies:
-      bits-ui: 0.21.16(svelte@5.20.1)
+      runed: 0.23.4(svelte@5.20.1)
       svelte: 5.20.1
+      svelte-toolbelt: 0.7.1(svelte@5.20.1)
 
   vfile-message@2.0.4:
     dependencies:

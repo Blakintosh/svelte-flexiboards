@@ -122,9 +122,9 @@
 					}
 				}}
 				bind:controller={board}
-				class="overflow-y-auto py-8 lg:pl-8 lg:pr-16"
+				class="overflow-y-auto py-8 2xl:pl-8 2xl:pr-16"
 			>
-				<h1 class="mb-8 pl-8 text-4xl font-semibold">My First Page</h1>
+				<h1 class="mb-8 pl-8 text-3xl 2xl:text-4xl font-semibold">My First Page</h1>
 				<FlexiTarget key="page" class="gap-8">
 					<FlexionBlockContainer component={FlexionTextBlock} />
 					<FlexionBlockContainer component={FlexionKanbanBlock} />
