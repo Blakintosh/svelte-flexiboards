@@ -169,6 +169,8 @@ export class GridDimensionTracker {
 			this.updateGridDimensions();
 		});
 
+		$effect(() => this.setupScrollListener());
+
 		// Whenever the grid is resized, update the sizes.
 		$effect(() => {
 			const grid = this.#grid!.ref;
@@ -241,6 +243,38 @@ export class GridDimensionTracker {
 		this.#dimensions.rows = rows;
 		this.#dimensions.columnGap = parseFloat(gapX.match(/(\d+\.?\d*)px/)?.[1] ?? '0');
 		this.#dimensions.rowGap = parseFloat(gapY.match(/(\d+\.?\d*)px/)?.[1] ?? '0');
+		this.#dimensions.columnString = templateColumns;
+		this.#dimensions.rowString = templateRows;
+	}
+
+	setupScrollListener() {
+		const grid = this.#grid;
+		const gridElement = grid?.ref;
+
+		if (!gridElement || !window) {
+			return;
+		}
+
+		const updatePositionOnScroll = () => {
+			const rect = gridElement.getBoundingClientRect();
+			
+			// Update position values that change on scroll
+			this.#dimensions.left = rect.left;
+			this.#dimensions.top = rect.top;
+			this.#dimensions.width = rect.width;
+			this.#dimensions.height = rect.height;
+		};
+
+		// Set up scroll listener
+		window.addEventListener('scroll', updatePositionOnScroll, { passive: true });
+		
+		// Initial position update
+		updatePositionOnScroll();
+		
+		// Return cleanup function
+		return () => {
+			window.removeEventListener('scroll', updatePositionOnScroll);
+		};
 	}
 
 	getCellFromPointerPosition(clientX: number, clientY: number): CellPosition | null {
