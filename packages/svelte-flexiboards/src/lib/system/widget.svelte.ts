@@ -15,6 +15,7 @@ import type {
 } from './types.js';
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
+import { immediateTriggerConfig, longPressTriggerConfig, WidgetPointerEventWatcher, type PointerTriggerCondition } from './utils.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
@@ -30,6 +31,8 @@ export type FlexiWidgetTransitionConfiguration = {
 	duration?: number;
 	easing?: string;
 };
+
+export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondition>;
 
 export type FlexiWidgetDefaults = {
 	/**
@@ -76,6 +79,18 @@ export type FlexiWidgetDefaults = {
 	 * The transition configuration for this widget.
 	 */
 	transition?: FlexiWidgetTransitionConfiguration;
+
+	/**
+	 * The configuration for how pointer events should trigger a grab event
+	 * on the widget. E.g. a long press.
+	 */
+	grabTrigger?: FlexiWidgetTriggerConfiguration;
+
+	/**
+	 * The configuration for how pointer events should trigger a resize event
+	 * on the widget. E.g. a long press.
+	 */
+	resizeTrigger?: FlexiWidgetTriggerConfiguration;
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
@@ -132,6 +147,18 @@ type FlexiWidgetDerivedConfiguration = {
 	 * The metadata associated with this widget, if any.
 	 */
 	metadata?: Record<string, any>;
+
+	/**
+	 * The configuration for how pointer events should trigger a grab event
+	 * on the widget. E.g. a long press.
+	 */
+	grabTrigger: FlexiWidgetTriggerConfiguration;
+
+	/**
+	 * The configuration for how pointer events should trigger a resize event
+	 * on the widget. E.g. a long press.
+	 */
+	resizeTrigger: FlexiWidgetTriggerConfiguration;
 };
 
 type FlexiWidgetUnderAdderConstructor = {
@@ -152,6 +179,13 @@ type FlexiWidgetConstructor = (
 	| FlexiWidgetUnderTargetConstructor
 ) & {
 	config: FlexiWidgetConfiguration;
+};
+
+const defaultTriggerConfig: FlexiWidgetTriggerConfiguration = {
+	default: immediateTriggerConfig(),
+	mouse: immediateTriggerConfig(),
+	touch: longPressTriggerConfig(),
+	pen: longPressTriggerConfig()
 };
 
 export class FlexiWidgetController {
@@ -209,7 +243,17 @@ export class FlexiWidgetController {
 		transition:
 			this.#rawConfig.transition ??
 			this.#targetWidgetDefaults?.transition ??
-			this.#providerWidgetDefaults?.transition
+			this.#providerWidgetDefaults?.transition,
+		grabTrigger:
+			this.#rawConfig.grabTrigger ??
+			this.#targetWidgetDefaults?.grabTrigger ??
+			this.#providerWidgetDefaults?.grabTrigger ??
+			defaultTriggerConfig,
+		resizeTrigger:
+			this.#rawConfig.resizeTrigger ??
+			this.#targetWidgetDefaults?.resizeTrigger ??
+			this.#providerWidgetDefaults?.resizeTrigger ?? 
+			defaultTriggerConfig
 	});
 
 	/**
@@ -246,6 +290,9 @@ export class FlexiWidgetController {
 
 	#grabbers: number = $state(0);
 	#resizers: number = $state(0);
+
+	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'grab'));
+	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'resize'));
 
 	/**
 	 * The styling to apply to the widget.
@@ -390,10 +437,13 @@ export class FlexiWidgetController {
 			return;
 		}
 
+		this.#grabPointerEventWatcher.onstartpointerdown(event);
+	}
+
+	ongrab(event: PointerEvent) {
 		this.#grabWidget(event.clientX, event.clientY);
 		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
 		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
-		event.preventDefault();
 	}
 
 	/**
@@ -405,10 +455,13 @@ export class FlexiWidgetController {
 			return;
 		}
 
-		this.#grabWidget(event.clientX, event.clientY);
-		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
+		this.#grabPointerEventWatcher.onstartpointerdown(event);
+	}
+
+	onresize(event: PointerEvent) {
+		this.#startResizeWidget(event.clientX, event.clientY);
+		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
 		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
-		event.preventDefault();
 	}
 
 	/**
@@ -420,10 +473,7 @@ export class FlexiWidgetController {
 			return;
 		}
 
-		this.#startResizeWidget(event.clientX, event.clientY);
-		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
-		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
-		event.preventDefault();
+		this.#resizePointerEventWatcher.onstartpointerdown(event);
 	}
 
 	#grabWidget(clientX: number, clientY: number) {
@@ -724,7 +774,22 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * If a placeholder widget is being drawn, this contains the style to apply to it.
+	 * Gets the configuration for how pointer events should trigger widget grabs (either on the widget directly
+	 * or on a grabber).
+	 */
+	get grabTrigger() {
+		return this.#config.grabTrigger;
+	}
+
+	/**
+	 * Gets the configuration for how pointer events should trigger widget resizing on a resizer.
+	 */
+	get resizeTrigger() {
+		return this.#config.resizeTrigger;
+	}
+
+	/**
+	 * Gets the widget's interpolator for transitions.
 	 */
 	get interpolator() {
 		return this.#interpolator;
