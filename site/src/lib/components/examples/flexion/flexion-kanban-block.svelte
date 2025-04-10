@@ -108,7 +108,7 @@
 			}
 		}
 	}}
-	class="flex w-full min-w-0 items-start justify-center gap-12 px-4 py-4"
+	class="flex flex-col lg:flex-row w-full min-w-0 items-center lg:items-start justify-center gap-12 px-4 py-4"
 	bind:controller={board}
 >
 	<FlexionKanbanList
