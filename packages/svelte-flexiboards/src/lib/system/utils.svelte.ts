@@ -330,7 +330,7 @@ interface PointerLongPressTriggerCondition {
 }
 
 export const immediateTriggerConfig = (): PointerDownTriggerCondition => ({ type: "immediate" });
-export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({ type: "longPress", duration: duration ?? 500 });
+export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({ type: "longPress", duration: duration ?? 300 });
 
 export type PointerTriggerCondition = PointerDownTriggerCondition | PointerLongPressTriggerCondition;
 
@@ -396,6 +396,7 @@ export class WidgetPointerEventWatcher {
 		// Track pointer movement
 		const pointerMoveHandler = (e: PointerEvent) => {
 			if (e.pointerId === pointerId) {
+				e.preventDefault();
 				currentX = e.clientX;
 				currentY = e.clientY;
 			}
