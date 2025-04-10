@@ -48,9 +48,9 @@ export type FlowTargetLayout = {
 The following code creates us a basic flow grid with a list layout:
 
 ```svelte
-<FlexiBoard class="size-96 rounded-xl border p-8">
+<FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
 	<FlexiTarget
-		class={'h-full w-full gap-8'}
+		class={'h-full w-full gap-4 lg:gap-8'}
 		containerClass={'w-full h-full'}
 		config={{
 			rowSizing: 'minmax(0, 1fr)',
