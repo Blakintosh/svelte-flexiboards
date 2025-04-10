@@ -51,10 +51,6 @@ export class PointerPositionWatcher {
 
 		this.updateScroll(clientX, clientY);
 
-		const rect = this.ref.getBoundingClientRect();
-
-		// this.#position.x = clientX - rect.left;
-		// this.#position.y = clientY - rect.top;
 		this.#position.x = clientX;
 		this.#position.y = clientY;
 	}
@@ -68,33 +64,24 @@ export class PointerPositionWatcher {
 			return;
 		}
 
-		// Very experimental
-
 		const rect = this.ref.getBoundingClientRect();
-		const scrollThreshold = 48; // pixels from edge to start scrolling
-		const scrollSpeed = 15; // pixels per frame
 
-		// console.log('autoscroll check, ');
+		// NEXT: Provide a configuration option for the scroll threshold and speed.
+		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
+		const scrollThreshold = 48;
+		const scrollSpeed = 10; 
 
-		// Check if near bottom edge
+		// Scroll vertically if near top or bottom edges.
 		if (clientY > rect.bottom - scrollThreshold) {
-			// console.log('scrolling down');
 			this.ref.scrollBy(0, scrollSpeed);
-		}
-		// Check if near top edge
-		else if (clientY < rect.top + scrollThreshold) {
-			// console.log('scrolling up');
+		} else if (clientY < rect.top + scrollThreshold) {
 			this.ref.scrollBy(0, -scrollSpeed);
 		}
 
-		// Check if near right edge
+		// Scroll horizontally if near left or right edges.
 		if (clientX > rect.right - scrollThreshold) {
-			// console.log('scrolling right');
 			this.ref.scrollBy(scrollSpeed, 0);
-		}
-		// Check if near left edge
-		else if (clientX < rect.left + scrollThreshold) {
-			// console.log('scrolling left');
+		} else if (clientX < rect.left + scrollThreshold) {
 			this.ref.scrollBy(-scrollSpeed, 0);
 		}
 	}
@@ -258,20 +245,17 @@ export class GridDimensionTracker {
 		const updatePositionOnScroll = () => {
 			const rect = gridElement.getBoundingClientRect();
 			
-			// Update position values that change on scroll
+			// Update in-place for reactivity.
 			this.#dimensions.left = rect.left;
 			this.#dimensions.top = rect.top;
 			this.#dimensions.width = rect.width;
 			this.#dimensions.height = rect.height;
 		};
 
-		// Set up scroll listener
+		// Set up scroll listener, and initially update
 		window.addEventListener('scroll', updatePositionOnScroll, { passive: true });
-		
-		// Initial position update
 		updatePositionOnScroll();
 		
-		// Return cleanup function
 		return () => {
 			window.removeEventListener('scroll', updatePositionOnScroll);
 		};
