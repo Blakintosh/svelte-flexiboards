@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import type { Component, Snippet } from 'svelte';
-	import type { FlexiWidgetProps } from 'svelte-flexiboards';
+	import type { FlexiWidgetController, FlexiWidgetProps } from 'svelte-flexiboards';
 
 	type DashboardTileProps = FlexiWidgetProps & {
 		title: string;
@@ -21,7 +21,7 @@
 <FlexiWidget
 	{component}
 	{...props}
-	class={(widget) => [
+	class={(widget: FlexiWidgetController) => [
 		widget.isGrabbed && 'animate-pulse opacity-50',
 		widget.isShadow && 'opacity-50'
 	]}
@@ -30,7 +30,7 @@
 		<Card.Root class="flex h-full w-full flex-col justify-between">
 			<div>
 				<Card.Header>
-					<Card.Title class="flex items-center gap-2 text-xl font-semibold">
+					<Card.Title class="flex items-center gap-2 text-lg lg:text-xl font-semibold">
 						{#if widget.draggable}
 							<Grabber size={20} class="text-muted-foreground" />
 						{/if}

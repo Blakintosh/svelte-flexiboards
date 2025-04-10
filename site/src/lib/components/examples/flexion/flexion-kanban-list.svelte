@@ -67,7 +67,7 @@
 	{componentProps?.content}
 {/snippet}
 
-<FlexiTarget key={category} class="w-48 2xl:w-64 gap-1" bind:controller={target}>
+<FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>
 	{#snippet header({ target })}
 		<div class="mb-4 flex items-center gap-4 text-muted-foreground">
 			<h3
