@@ -33,7 +33,7 @@
 
 <Sidebar.Provider>
 	<AppSidebar />
-	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-16 py-8">
+	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-8 lg:px-16 py-8">
 		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
 			Dashboard
 			<div class="flex items-center gap-2">
@@ -54,7 +54,7 @@
 		<FlexiBoard class={'grow overflow-y-auto'} config={boardConfig} onfirstcreate={onBoardReady}>
 			<FlexiTarget
 				key="left"
-				class={'h-full gap-4'}
+				class={'h-full gap-2 lg:gap-4'}
 				config={{
 					rowSizing: 'minmax(0, 1fr)',
 					layout: {

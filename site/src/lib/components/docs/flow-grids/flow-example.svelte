@@ -2,7 +2,7 @@
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
 
-<FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
+<FlexiBoard class="size-72 lg:size-72 lg:size-96 rounded-xl border p-8">
 	<FlexiTarget
 		class={'h-full w-full gap-4 lg:gap-8'}
 		containerClass={'w-full h-full'}
