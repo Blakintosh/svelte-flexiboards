@@ -171,6 +171,16 @@ type: "number",
 description: "The row (y-coordinate) of the widget."
 },
 {
+    name: "grabTrigger",
+    type: FlexiWidgetTriggerConfiguration,
+    description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+},
+{
+    name: "resizeTrigger",
+    type: FlexiWidgetTriggerConfiguration,
+    description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+},
+{
 name: "metadata",
 type: "Record<string, any> | undefined",
 description: "The metadata associated with this widget, if any."

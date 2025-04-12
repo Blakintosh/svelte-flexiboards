@@ -8,11 +8,12 @@ import FlexiAdd from "./components/flexi-add.svelte";
 import FlexiDelete from "./components/flexi-delete.svelte";
 import type { FlexiBoardConfiguration } from "./system/provider.svelte.js";
 import type { FlexiTargetConfiguration } from "./system/target.svelte.js";
-import type { FlexiWidgetChildrenSnippet, FlexiWidgetChildrenSnippetParameters, FlexiWidgetConfiguration } from "./system/widget.svelte.js";
+import type { FlexiWidgetChildrenSnippet, FlexiWidgetChildrenSnippetParameters, FlexiWidgetConfiguration, FlexiWidgetTriggerConfiguration } from "./system/widget.svelte.js";
 import type { FlexiBoardController } from "./system/provider.svelte.js";
 import type { FlexiTargetController } from "./system/target.svelte.js";
 import type { FlexiWidgetController } from "./system/widget.svelte.js";
 import type { AdderWidgetConfiguration, FlexiAddController, FlexiAddWidgetFn } from "./system/manage.svelte.js";
+import { immediateTriggerConfig, longPressTriggerConfig, type PointerTriggerCondition } from "./system/utils.svelte.js";
 export * from "./system/types.js";
 
 export {
@@ -36,5 +37,9 @@ export {
 	type FlexiTargetController,
 	type FlexiAddController,
 	type FlexiWidgetChildrenSnippet,
-	type FlexiWidgetChildrenSnippetParameters
+	type FlexiWidgetChildrenSnippetParameters,
+	type PointerTriggerCondition,
+	type FlexiWidgetTriggerConfiguration,
+	immediateTriggerConfig,
+	longPressTriggerConfig
 };
