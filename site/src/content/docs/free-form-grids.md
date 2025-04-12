@@ -45,7 +45,7 @@ The following code creates us a basic free-form grid with a non-expandable 2x2 l
 ```svelte
 <FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
 	<FlexiTarget
-		class={'h-full w-full gap-4 lg:gap-8'}
+		class={'h-full w-full gap-4 lg:gap-6'}
 		containerClass={'w-full h-full'}
 		config={{
 			rowSizing: 'minmax(0, 1fr)',

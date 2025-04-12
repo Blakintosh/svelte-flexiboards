@@ -62,7 +62,7 @@
 	<h1 class="flex shrink-0 justify-between text-2xl font-semibold lg:text-3xl">Numbers.</h1>
 
 	<FlexiBoard
-		class="flex min-h-0 min-w-0 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-8"
+		class="flex min-h-0 min-w-0 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-6"
 		config={boardConfig}
 		bind:controller={boardController}
 	>
@@ -79,7 +79,7 @@
 		</FlexiAdd>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-8'}
+			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 1fr)',
 				layout: {
