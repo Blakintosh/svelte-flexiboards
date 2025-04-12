@@ -254,17 +254,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#originalOverscrollBehaviorY: string | null = null;
-	#originalOverflow: string | null = null;
 	#originalTouchAction: string | null = null;
-	#originalPointerEvents: string | null = null;
 
 	#lockViewport() {
 		this.#originalOverscrollBehaviorY = document.documentElement.style.overscrollBehaviorY;
-		// this.#originalOverflow = document.documentElement.style.overflow;
 		this.#originalTouchAction = document.documentElement.style.touchAction;
 
 		document.documentElement.style.overscrollBehaviorY = 'contain';
-		// document.documentElement.style.overflow = 'hidden';
 		document.documentElement.style.touchAction = 'none';
 
 		// this.stopScroll = this.stopScroll.bind(this);
@@ -274,7 +270,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#unlockViewport() {
 		document.documentElement.style.overscrollBehaviorY = this.#originalOverscrollBehaviorY ?? 'auto';
-		// document.documentElement.style.overflow = this.#originalOverflow ?? 'auto';
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
 
 		// document.removeEventListener('touchmove', this.stopScroll);
