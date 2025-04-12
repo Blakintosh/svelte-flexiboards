@@ -294,6 +294,9 @@ export class FlexiWidgetController {
 	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'grab'));
 	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'resize'));
 
+	#initialHeightPx: number | null = null;
+	#initialWidthPx: number | null = null;
+
 	/**
 	 * The styling to apply to the widget.
 	 */
@@ -409,17 +412,8 @@ export class FlexiWidgetController {
 			this.adder = ctor.adder;
 			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider);
 
-			// Start the widget drag in event
-			this.currentAction = this.adder.onstartwidgetdragin({
-				widget: this,
-				xOffset: 0,
-				yOffset: 0,
-				clientX: 0,
-				clientY: 0,
-				// Pass through the base size of the widget.
-				capturedHeight: ctor.heightPx,
-				capturedWidth: ctor.widthPx
-			});
+			this.#initialHeightPx = ctor.heightPx;
+			this.#initialWidthPx = ctor.widthPx;
 		}
 
 		// Allows the event handlers to be called without binding to the widget instance.
@@ -462,6 +456,24 @@ export class FlexiWidgetController {
 		this.#startResizeWidget(event.clientX, event.clientY);
 		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
 		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+	}
+
+	initiateFirstDragIn() {
+		if(!this.adder) {
+			return;
+		}
+
+		// Start the widget drag in event
+		this.currentAction = this.adder.onstartwidgetdragin({
+			widget: this,
+			xOffset: 0,
+			yOffset: 0,
+			clientX: 0,
+			clientY: 0,
+			// Pass through the base size of the widget.
+			capturedHeight: this.#initialHeightPx!,
+			capturedWidth: this.#initialWidthPx!
+		});
 	}
 
 	/**
@@ -874,7 +886,6 @@ class WidgetMoveInterpolator {
 
 		this.active = true;
 
-		// TODO: verify that this works without breaking the reactivity
 		this.#placeholderPosition = {
 			x: newDimensions.x,
 			y: newDimensions.y,
@@ -884,7 +895,6 @@ class WidgetMoveInterpolator {
 			widthPx: oldPosition.width
 		};
 
-		// console.log("Starting with: top ", oldPosition.top - containerRect.top, "left ", oldPosition.left - containerRect.left, "width ", oldPosition.width, "height ", oldPosition.height);
 		this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
 		this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left;
 		this.#interpolatedWidgetPosition.width = oldPosition.width;
@@ -965,7 +975,17 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 }
 
 export function renderedflexiwidget(widget: FlexiWidgetController) {
-	setContext(contextKey, widget);
+	// TODO: There's a weird edge case where this is causing a call stack size exceeded error, when a widget is being dragged in from an adder
+	// for the first time. I have no idea why, so this will just suppress the error and cause problems for anyone accessing the context.
+	// TODO: figure out why this is happening and fix it.
+	try {
+		setContext(contextKey, widget);
+	} catch (error) {}
+
+	if(widget.adder) {
+		widget.initiateFirstDragIn();
+	}
+
 	return {
 		widget,
 		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event)

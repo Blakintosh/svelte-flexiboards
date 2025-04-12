@@ -355,7 +355,6 @@ export class WidgetPointerEventWatcher {
 	onstartpointerdown(event: PointerEvent) {
 		const pointerType = event.pointerType;
 
-		console.log(pointerType)
 		const triggerForType = this.#triggerConfig[pointerType]
 			?? this.#triggerConfig.default;
 

@@ -30,7 +30,7 @@ export class FlexiAddController {
             return;
         }
     
-        // Create a widget under this FlexiAdd, which will automatically place it into a grabbed state.
+        // Create a widget under this FlexiAdd.
         this.newWidget = new FlexiWidgetController({
             type: "adder",
             adder: this,
@@ -38,6 +38,7 @@ export class FlexiAddController {
             widthPx: config.widthPx ?? 100,
             heightPx: config.heightPx ?? 100
         });
+        // When the widget mounts, it'll automatically trigger the drag in event.
 
         // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
         (event.target as HTMLElement).releasePointerCapture(event.pointerId);
