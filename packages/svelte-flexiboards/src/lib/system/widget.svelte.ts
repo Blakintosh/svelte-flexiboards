@@ -1,4 +1,4 @@
-import { getContext, onDestroy, setContext, type Component, type Snippet } from 'svelte';
+import { getContext, onDestroy, onMount, setContext, untrack, type Component, type Snippet } from 'svelte';
 import {
 	getInternalFlexitargetCtx,
 	type InternalFlexiTargetController,
@@ -166,6 +166,8 @@ type FlexiWidgetUnderAdderConstructor = {
 	adder: FlexiAddController;
 	widthPx: number;
 	heightPx: number;
+	clientX: number;
+	clientY: number;
 };
 
 type FlexiWidgetUnderTargetConstructor = {
@@ -294,6 +296,8 @@ export class FlexiWidgetController {
 	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'grab'));
 	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'resize'));
 
+	#initialX: number | null = null;
+	#initialY: number | null = null;
 	#initialHeightPx: number | null = null;
 	#initialWidthPx: number | null = null;
 
@@ -412,6 +416,8 @@ export class FlexiWidgetController {
 			this.adder = ctor.adder;
 			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider);
 
+			this.#initialX = ctor.clientX;
+			this.#initialY = ctor.clientY;
 			this.#initialHeightPx = ctor.heightPx;
 			this.#initialWidthPx = ctor.widthPx;
 		}
@@ -468,8 +474,8 @@ export class FlexiWidgetController {
 			widget: this,
 			xOffset: 0,
 			yOffset: 0,
-			clientX: 0,
-			clientY: 0,
+			clientX: this.#initialX!,
+			clientY: this.#initialY!,
 			// Pass through the base size of the widget.
 			capturedHeight: this.#initialHeightPx!,
 			capturedWidth: this.#initialWidthPx!
@@ -980,10 +986,14 @@ export function renderedflexiwidget(widget: FlexiWidgetController) {
 	// TODO: figure out why this is happening and fix it.
 	try {
 		setContext(contextKey, widget);
-	} catch (error) {}
+	} catch (error) {
+		// console.warn('Error setting context', error);
+	}
 
 	if(widget.adder) {
-		widget.initiateFirstDragIn();
+		onMount(() => {
+			widget.initiateFirstDragIn();
+		})
 	}
 
 	return {

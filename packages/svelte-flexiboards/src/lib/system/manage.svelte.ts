@@ -36,7 +36,9 @@ export class FlexiAddController {
             adder: this,
             config: config.widget,
             widthPx: config.widthPx ?? 100,
-            heightPx: config.heightPx ?? 100
+            heightPx: config.heightPx ?? 100,
+            clientX: event.clientX,
+            clientY: event.clientY
         });
         // When the widget mounts, it'll automatically trigger the drag in event.
 

@@ -12,6 +12,7 @@
 
 	type FlexiAddChildrenProps = {
 		onpointerdown: (event: PointerEvent) => void;
+		style: string;
 	};
 
 	export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
@@ -27,9 +28,14 @@
 	controller = adder;
 </script>
 
-{@render children?.({ adder, props: { onpointerdown } })}
+{@render children?.({ adder, props: {
+	onpointerdown,
+	style: 'touch-action: none;'
+} })}
 
-<!-- Mimics the behaviour of a FlexiTarget, as we need to render the widget so that we can "drag it in" from -->
-{#if adder.newWidget}
-	<RenderedFlexiWidget widget={adder.newWidget} />
-{/if}
+<div style="display: none;">
+	<!-- Mimics the behaviour of a FlexiTarget, as we need to render the widget so that we can "drag it in" from -->
+	{#if adder.newWidget}
+		<RenderedFlexiWidget widget={adder.newWidget} />
+	{/if}	
+</div>
