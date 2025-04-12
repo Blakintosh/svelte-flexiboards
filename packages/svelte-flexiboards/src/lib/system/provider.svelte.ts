@@ -262,27 +262,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		document.documentElement.style.overscrollBehaviorY = 'contain';
 		document.documentElement.style.touchAction = 'none';
-
-		// this.stopScroll = this.stopScroll.bind(this);
-
-		// document.addEventListener('touchmove', this.stopScroll, { passive: false });
 	}
 
 	#unlockViewport() {
 		document.documentElement.style.overscrollBehaviorY = this.#originalOverscrollBehaviorY ?? 'auto';
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
-
-		// document.removeEventListener('touchmove', this.stopScroll);
-	}
-
-	stopScroll(event: TouchEvent) {
-		// If a scroll is in progress, there's nothing we can do to stop it and so we'll just release the widget.
-		if (!event.cancelable) {
-			this.handleWidgetRelease();
-			return;
-		}
-
-		event.preventDefault();
 	}
 
 	#onpointerup(event: PointerEvent) {
