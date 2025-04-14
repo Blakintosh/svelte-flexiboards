@@ -19,5 +19,5 @@
 </main>
 
 <footer class="fixed bottom-0 shrink-0 h-14 w-full py-4 text-center text-sm text-muted-foreground border-t border-dashed bg-background/80 backdrop-blur">
-	Work in progress. Expect bugs and/or breaking changes!
+	Work in progress. Expect bugs!
 </footer>
