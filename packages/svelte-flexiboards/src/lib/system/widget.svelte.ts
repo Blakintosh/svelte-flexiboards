@@ -1,4 +1,12 @@
-import { getContext, onDestroy, onMount, setContext, untrack, type Component, type Snippet } from 'svelte';
+import {
+	getContext,
+	onDestroy,
+	onMount,
+	setContext,
+	untrack,
+	type Component,
+	type Snippet
+} from 'svelte';
 import {
 	getInternalFlexitargetCtx,
 	type InternalFlexiTargetController,
@@ -15,11 +23,22 @@ import type {
 } from './types.js';
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
-import { immediateTriggerConfig, longPressTriggerConfig, WidgetPointerEventWatcher, type PointerTriggerCondition } from './utils.svelte.js';
+import {
+	immediateTriggerConfig,
+	longPressTriggerConfig,
+	WidgetPointerEventWatcher,
+	type PointerTriggerCondition
+} from './utils.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
+	/**
+	 * @deprecated When using the snippets approach, instantiate the component directly in the snippet.
+	 */
 	component?: Component;
+	/**
+	 * @deprecated When using the snippets approach, instantiate the component directly in the snippet.
+	 */
 	componentProps?: Record<string, any>;
 };
 export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
@@ -254,7 +273,7 @@ export class FlexiWidgetController {
 		resizeTrigger:
 			this.#rawConfig.resizeTrigger ??
 			this.#targetWidgetDefaults?.resizeTrigger ??
-			this.#providerWidgetDefaults?.resizeTrigger ?? 
+			this.#providerWidgetDefaults?.resizeTrigger ??
 			defaultTriggerConfig
 	});
 
@@ -293,8 +312,12 @@ export class FlexiWidgetController {
 	#grabbers: number = $state(0);
 	#resizers: number = $state(0);
 
-	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'grab'));
-	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(new WidgetPointerEventWatcher(this, 'resize'));
+	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(
+		new WidgetPointerEventWatcher(this, 'grab')
+	);
+	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(
+		new WidgetPointerEventWatcher(this, 'resize')
+	);
 
 	#initialX: number | null = null;
 	#initialY: number | null = null;
@@ -465,7 +488,7 @@ export class FlexiWidgetController {
 	}
 
 	initiateFirstDragIn() {
-		if(!this.adder) {
+		if (!this.adder) {
 			return;
 		}
 
@@ -990,10 +1013,10 @@ export function renderedflexiwidget(widget: FlexiWidgetController) {
 		// console.warn('Error setting context', error);
 	}
 
-	if(widget.adder) {
+	if (widget.adder) {
 		onMount(() => {
 			widget.initiateFirstDragIn();
-		})
+		});
 	}
 
 	return {
