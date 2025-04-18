@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: Learn what a Flexiboard is and how to use one.
+description: Learn how to install Flexiboards and create your first Flexiboard.
 category: Introduction
 published: true
 ---
@@ -11,6 +11,24 @@ published: true
 
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
+
+## Installation
+
+Flexiboards is available from npm, and can be installed using your preferred package manager:
+
+```
+npm install svelte-flexiboards
+```
+
+```
+pnpm add svelte-flexiboards
+```
+
+```
+yarn add svelte-flexiboards
+```
+
+Flexiboards was built from the ground up to be a Svelte 5 library, so it is incompatible with Svelte 4 or earlier.
 
 ## Anatomy of a Flexiboard
 
