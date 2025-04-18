@@ -17,6 +17,12 @@ _Naturally, if you opt for the snippets approach, you can instantiate any Svelte
 
 ## Introduction
 
+In Flexiboards, the FlexiWidget component allows you to create a widget with drag-and-drop functionality within the scope of the FlexiBoard. Within it, though, you'll want to render some content.
+
+As Flexiboards is headless, it does not make any assumptions about the appearance of the widget (except grid positioning). The FlexiWidget acts as an invisible wrapper around your content, providing the drag-and-drop functionality and positioning itself within the board.
+
+In this article, we discuss how you can either use Svelte snippets or pass a component prop to render content inside a FlexiWidget.
+
 ## Snippet-based
 
 Using [snippets](https://svelte.dev/docs/svelte/snippet) (specifically, `children`) is the most intuitive approach to rendering a widget. Simply put, you can put any elements or components as the content markup of your widget, like any other container component.
@@ -64,6 +70,6 @@ Note that in this scenario, you cannot get the `widget` controller as simply as 
 </script>
 ```
 
-Note that this uses the [Svelte Context API](https://svelte.dev/docs/svelte/context) under the hood, so it must be called from the top-level of the component.
+Note that this uses the [Svelte Context API](https://svelte.dev/docs/svelte/context) under the hood, so it must be called from the top-level of the component (or some function that is called from the top-level).
 
 Additionally, any Svelte component rendered inside of the FlexiWidget, whether via a snippet or a descendant component, will have access to the `widget` controller through the same mechanism.
