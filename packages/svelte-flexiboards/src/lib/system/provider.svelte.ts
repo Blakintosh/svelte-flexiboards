@@ -237,8 +237,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			widget: event.widget,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
-			left: event.left - providerRect.left,
-			top: event.top - providerRect.top,
+			left: event.left,
+			top: event.top,
 			heightPx: event.heightPx,
 			widthPx: event.widthPx,
 			initialHeightUnits: event.widget.height,
@@ -247,6 +247,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		};
 
 		this.#currentWidgetAction = action;
+
+		if (this.portal) {
+			this.portal.moveWidgetToPortal(event.widget);
+		}
 
 		this.#lockViewport();
 
@@ -265,7 +269,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#unlockViewport() {
-		document.documentElement.style.overscrollBehaviorY = this.#originalOverscrollBehaviorY ?? 'auto';
+		document.documentElement.style.overscrollBehaviorY =
+			this.#originalOverscrollBehaviorY ?? 'auto';
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
 	}
 
@@ -358,6 +363,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
+		if (this.portal) {
+			this.portal.returnWidgetFromPortal(action.widget);
+		}
 		action.target.tryDropWidget(action.widget);
 		this.#releaseCurrentWidgetAction();
 	}

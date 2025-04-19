@@ -70,7 +70,7 @@ export class PointerPositionWatcher {
 		// NEXT: Provide a configuration option for the scroll threshold and speed.
 		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
 		const scrollThreshold = 48;
-		const scrollSpeed = 10; 
+		const scrollSpeed = 10;
 
 		// Scroll vertically if near top or bottom edges.
 		if (clientY > rect.bottom - scrollThreshold) {
@@ -245,7 +245,7 @@ export class GridDimensionTracker {
 
 		const updatePositionOnScroll = () => {
 			const rect = gridElement.getBoundingClientRect();
-			
+
 			// Update in-place for reactivity.
 			this.#dimensions.left = rect.left;
 			this.#dimensions.top = rect.top;
@@ -256,7 +256,7 @@ export class GridDimensionTracker {
 		// Set up scroll listener, and initially update
 		window.addEventListener('scroll', updatePositionOnScroll, { passive: true });
 		updatePositionOnScroll();
-		
+
 		return () => {
 			window.removeEventListener('scroll', updatePositionOnScroll);
 		};
@@ -321,19 +321,23 @@ export class GridDimensionTracker {
 }
 
 interface PointerDownTriggerCondition {
-	type: "immediate";
+	type: 'immediate';
 }
 
 interface PointerLongPressTriggerCondition {
-	type: "longPress";
+	type: 'longPress';
 	duration: number;
 }
 
-export const immediateTriggerConfig = (): PointerDownTriggerCondition => ({ type: "immediate" });
-export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({ type: "longPress", duration: duration ?? 300 });
+export const immediateTriggerConfig = (): PointerDownTriggerCondition => ({ type: 'immediate' });
+export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({
+	type: 'longPress',
+	duration: duration ?? 300
+});
 
-export type PointerTriggerCondition = PointerDownTriggerCondition | PointerLongPressTriggerCondition;
-
+export type PointerTriggerCondition =
+	| PointerDownTriggerCondition
+	| PointerLongPressTriggerCondition;
 
 /**
  * Watches pointer events on a widget, issuing a grab event to the widget if the event satisfies the configured behaviour.
@@ -343,9 +347,9 @@ export class WidgetPointerEventWatcher {
 	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
 	#type: 'grab' | 'resize' = $state('grab');
 
-	#triggerConfig: FlexiWidgetTriggerConfiguration = $derived(this.#type == "resize" ? 
-		this.#widget.resizeTrigger : 
-		this.#widget.grabTrigger);
+	#triggerConfig: FlexiWidgetTriggerConfiguration = $derived(
+		this.#type == 'resize' ? this.#widget.resizeTrigger : this.#widget.grabTrigger
+	);
 
 	constructor(widget: FlexiWidgetController, type: 'grab' | 'resize') {
 		this.#widget = widget;
@@ -355,12 +359,11 @@ export class WidgetPointerEventWatcher {
 	onstartpointerdown(event: PointerEvent) {
 		const pointerType = event.pointerType;
 
-		const triggerForType = this.#triggerConfig[pointerType]
-			?? this.#triggerConfig.default;
+		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
 
 		event.preventDefault();
 
-		if (triggerForType.type == "longPress") {
+		if (triggerForType.type == 'longPress') {
 			return this.#handleLongPress(event, triggerForType);
 		}
 		return this.#triggerWidgetEvent(event);
@@ -369,19 +372,19 @@ export class WidgetPointerEventWatcher {
 	#eventTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	#handleLongPress(event: PointerEvent, trigger: PointerLongPressTriggerCondition) {
-		if(this.#eventTimeout) {
+		if (this.#eventTimeout) {
 			clearTimeout(this.#eventTimeout);
 		}
 
 		const startX = event.clientX;
 		const startY = event.clientY;
 		const pointerId = event.pointerId;
-		
+
 		const moveThreshold = 16; // 16px movement threshold
 		let isPointerDown = true;
 		let currentX = startX;
 		let currentY = startY;
-		
+
 		// Track if pointer is still down and its position
 		const pointerUpHandler = (e: PointerEvent) => {
 			if (e.pointerId === pointerId) {
@@ -391,7 +394,7 @@ export class WidgetPointerEventWatcher {
 				document.removeEventListener('pointermove', pointerMoveHandler);
 			}
 		};
-		
+
 		// Track pointer movement
 		const pointerMoveHandler = (e: PointerEvent) => {
 			if (e.pointerId === pointerId) {
@@ -400,7 +403,7 @@ export class WidgetPointerEventWatcher {
 				currentY = e.clientY;
 			}
 		};
-		
+
 		document.addEventListener('pointerup', pointerUpHandler);
 		document.addEventListener('pointercancel', pointerUpHandler);
 		document.addEventListener('pointermove', pointerMoveHandler);
@@ -408,15 +411,13 @@ export class WidgetPointerEventWatcher {
 		this.#eventTimeout = setTimeout(() => {
 			// Only trigger if pointer is still down and hasn't moved too much
 			if (isPointerDown) {
-				const distance = Math.sqrt(
-					Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2)
-				);
-				
+				const distance = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
+
 				if (distance <= moveThreshold) {
 					this.#triggerWidgetEvent(event);
 				}
 			}
-			
+
 			document.removeEventListener('pointerup', pointerUpHandler);
 			document.removeEventListener('pointercancel', pointerUpHandler);
 			document.removeEventListener('pointermove', pointerMoveHandler);
@@ -424,8 +425,9 @@ export class WidgetPointerEventWatcher {
 	}
 
 	#triggerWidgetEvent(event: PointerEvent) {
-		if(this.#type == "resize") {
+		if (this.#type == 'resize') {
 			this.#widget.onresize(event);
+			return;
 		}
 		this.#widget.ongrab(event);
 	}

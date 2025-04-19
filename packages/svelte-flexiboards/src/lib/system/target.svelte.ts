@@ -64,17 +64,20 @@ export type FlexiTargetDefaults = {
 };
 
 // Exclude deprecated properties
-type RequiredFlexiTargetProperties = Omit<Required<FlexiTargetDefaults>, 'baseRows' | 'baseColumns'>;
+type RequiredFlexiTargetProperties = Omit<
+	Required<FlexiTargetDefaults>,
+	'baseRows' | 'baseColumns'
+>;
 
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 
-export type FlexiTargetConfiguration = RequiredFlexiTargetProperties & 
+export type FlexiTargetConfiguration = RequiredFlexiTargetProperties &
 	// Don't make these mandatory, as they're deprecatedß
 	Pick<FlexiTargetDefaults, 'baseRows' | 'baseColumns'> & {
-	widgetDefaults?: FlexiWidgetDefaults;
-};
+		widgetDefaults?: FlexiWidgetDefaults;
+	};
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
 
@@ -422,7 +425,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return false;
 		}
 
-		const [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
+		let [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
+
+		// Ensure width and height are at least 1 grid unit.
+		width = Math.max(1, width);
+		height = Math.max(1, height);
+
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 

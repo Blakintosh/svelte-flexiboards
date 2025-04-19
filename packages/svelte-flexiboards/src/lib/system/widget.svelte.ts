@@ -340,7 +340,11 @@ export class FlexiWidgetController {
 		}
 
 		// Resize action
-		return this.#getResizingWidgetStyle(currentAction);
+		if (currentAction.action == 'resize') {
+			return this.#getResizingWidgetStyle(currentAction);
+		}
+
+		return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
 	});
 
 	#getCursorStyle() {
@@ -384,9 +388,15 @@ export class FlexiWidgetController {
 	}
 
 	#getResizingWidgetStyle(action: WidgetResizeAction) {
+		// Calculate size of one grid unit in pixels
 		const unitSizeY = action.heightPx / action.initialHeightUnits;
-		const unitSizeX = action.widthPx / action.initialWidthUnits;
+		// Guard against division by zero if initial width is somehow 0
+		const unitSizeX = action.initialWidthUnits > 0 ? action.widthPx / action.initialWidthUnits : 1;
 
+		const deltaX = action.positionWatcher.position.x - action.offsetX;
+		const deltaY = action.positionWatcher.position.y - action.offsetY;
+
+		// For resizing, top and left should remain fixed at their initial positions.
 		const top = action.top;
 		const left = action.left;
 
@@ -396,29 +406,21 @@ export class FlexiWidgetController {
 
 		switch (this.resizability) {
 			case 'horizontal':
-				width = Math.max(
-					action.widthPx + (action.positionWatcher.position.x - action.offsetX),
-					unitSizeX
-				);
+				// NOTE: Use the pre-calculated deltaX here
+				width = Math.max(action.widthPx + deltaX, unitSizeX);
 				break;
 			case 'vertical':
-				height = Math.max(
-					action.heightPx + (action.positionWatcher.position.y - action.offsetY),
-					unitSizeY
-				);
+				// NOTE: Use the pre-calculated deltaY here
+				height = Math.max(action.heightPx + deltaY, unitSizeY);
 				break;
 			case 'both':
-				height = Math.max(
-					action.heightPx + (action.positionWatcher.position.y - action.offsetY),
-					unitSizeY
-				);
-				width = Math.max(
-					action.widthPx + (action.positionWatcher.position.x - action.offsetX),
-					unitSizeX
-				);
+				// NOTE: Use the pre-calculated deltaX and deltaY here
+				height = Math.max(action.heightPx + deltaY, unitSizeY);
+				width = Math.max(action.widthPx + deltaX, unitSizeX);
 				break;
 		}
 
+		// Return the style string for the absolutely positioned widget
 		return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
 	}
 
@@ -482,7 +484,9 @@ export class FlexiWidgetController {
 	}
 
 	onresize(event: PointerEvent) {
+		// Pass the pointer ID and target element to the internal method
 		this.#startResizeWidget(event.clientX, event.clientY);
+
 		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
 		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
 	}
