@@ -9,10 +9,6 @@ published: true
     import ApiReference from '$lib/components/docs/api-reference.svelte';
 </script>
 
-# FlexiBoard
-
-The main container component of a board, managing the targets and widgets within it.
-
 ## FlexiBoard (component)
 
 <ApiReference title="Props" api={[

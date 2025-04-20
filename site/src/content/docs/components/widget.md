@@ -9,10 +9,6 @@ published: true
     import ApiReference from '$lib/components/docs/api-reference.svelte';
 </script>
 
-# FlexiWidget
-
-A widget is a component (such as a tile) that is stored within a target (dropzone). Widgets can be moved around within a target or between targets.
-
 ## FlexiWidget (component)
 
 <ApiReference title="Props" api={[
@@ -171,14 +167,14 @@ type: "number",
 description: "The row (y-coordinate) of the widget."
 },
 {
-    name: "grabTrigger",
-    type: FlexiWidgetTriggerConfiguration,
-    description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+name: "grabTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
 },
 {
-    name: "resizeTrigger",
-    type: FlexiWidgetTriggerConfiguration,
-    description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+name: "resizeTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
 },
 {
 name: "metadata",
@@ -203,6 +199,7 @@ name: "onresizerpointerdown",
 type: "(event: PointerEvent) => void",
 description: "Event handler for when one of the widget's resizers receives a pointerdown event."
 },
+// TODO: these are internal methods, why are we listing them???
 {
 name: "setBounds",
 type: "(x: number, y: number, width: number, height: number) => void",

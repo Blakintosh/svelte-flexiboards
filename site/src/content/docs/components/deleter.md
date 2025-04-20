@@ -9,10 +9,6 @@ published: true
     import ApiReference from '$lib/components/docs/api-reference.svelte';
 </script>
 
-# FlexiDelete
-
-A component that allows you to delete widgets from a board when they are dropped over its child element.
-
 ## FlexiDelete (component)
 
 <ApiReference title="Props" api={[

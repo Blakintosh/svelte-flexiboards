@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Construction } from 'lucide-svelte';
-	import { Button } from "$lib/components/ui/button";
+	import { Button } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	
+	import { page } from '$app/state';
 
 	let directory = [
 		{
@@ -94,21 +94,23 @@
 	let { class: className = '' } = $props();
 </script>
 
-<div class={cn("flex flex-col gap-8 min-h-0", className)}>
+<div class={cn('flex min-h-0 flex-col gap-8', className)}>
 	{#each directory as section}
 		<div class="flex flex-col gap-1">
-			<h2 class="mb-1 text-base font-semibold px-3">{section.section}</h2>
-			{#each section.pages as page}
-				<Button 
-					variant="ghost" 
+			<h2 class="mb-1 px-3 text-base font-semibold">{section.section}</h2>
+			{#each section.pages as docPage}
+				<Button
+					variant="ghost"
 					size="sm"
-					class="text-muted-foreground hover:text-primary text-base inline-flex justify-start font-normal"
-					href={page.href}
+					class={[
+						'inline-flex justify-start text-base font-normal text-muted-foreground hover:text-primary',
+						docPage.href === page.url.pathname && 'text-primary'
+					]}
+					href={docPage.href}
 				>
-					{page.title}
+					{docPage.title}
 				</Button>
 			{/each}
 		</div>
 	{/each}
-	
 </div>

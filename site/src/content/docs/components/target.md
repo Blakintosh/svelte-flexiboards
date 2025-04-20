@@ -9,10 +9,6 @@ published: true
     import ApiReference from '$lib/components/docs/api-reference.svelte';
 </script>
 
-# FlexiTarget
-
-A 'target' for widgets, or a dropzone. Stores a series of widget instances in a managed grid layout.
-
 ## FlexiTarget (component)
 
 <ApiReference title="Props" api={[

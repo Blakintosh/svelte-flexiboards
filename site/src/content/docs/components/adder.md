@@ -9,10 +9,6 @@ published: true
     import ApiReference from '$lib/components/docs/api-reference.svelte';
 </script>
 
-# FlexiAdd
-
-A component that allows you to drag in new widgets into a board.
-
 ## FlexiAdd (component)
 
 <ApiReference title="Props" api={[
