@@ -47,20 +47,24 @@ export type FlowTargetLayout = {
 
 The following code creates us a basic flow grid with a list layout:
 
-```svelte
-<FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
+```svelte example title="1D Flow Grid"
+<script lang="ts">
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+</script>
+
+<FlexiBoard class="size-72 rounded-xl border p-8 lg:size-96">
 	<FlexiTarget
 		class={'h-full w-full gap-4 lg:gap-6'}
 		containerClass={'w-full h-full'}
 		config={{
 			rowSizing: 'minmax(0, 1fr)',
-			layout: { 
-                type: 'flow', 
-                rows: 4,
-                columns: 1,
-                placementStrategy: 'append',
-                flowAxis: 'row'
-            }
+			layout: {
+				type: 'flow',
+				rows: 4,
+				columns: 1,
+				placementStrategy: 'append',
+				flowAxis: 'row'
+			}
 		}}
 	>
 		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
@@ -70,17 +74,12 @@ The following code creates us a basic flow grid with a list layout:
 		</FlexiWidget>
 		<FlexiWidget class="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground">
 			{#snippet children({ widget, component, componentProps })}
-			    And I'm at ({widget.x}, {widget.y})
+				And I'm at ({widget.x}, {widget.y})
 			{/snippet}
 		</FlexiWidget>
 	</FlexiTarget>
 </FlexiBoard>
 ```
-
-(Styles added for clarity)
-
-This gives us:
-<FlowExample />
 
 ## Extension to 2D
 
@@ -90,42 +89,34 @@ In this scenario, widgets will attempt to fill the cross dimension as much as po
 
 The below example demonstrates this behaviour, where we have a row flow grid with widgets of varying widths. Notice how widget `B` of width `2` is always placed on its own row, because when placed after `A` or `C` of width `1`, it would not fit besides them on the grid.
 
-```svelte
+```svelte example title="2D Flow Grid"
 <script lang="ts">
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
 
-<FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
+<FlexiBoard class="size-72 rounded-xl border p-8 lg:size-96">
 	<FlexiTarget
 		class={'h-full w-full gap-4 lg:gap-6'}
 		containerClass={'w-full h-full'}
 		config={{
 			rowSizing: 'minmax(0, 1fr)',
-			layout: { 
-                type: 'flow', 
-                rows: 4,
-                columns: 2,
-                placementStrategy: 'append',
-                flowAxis: 'row'
-            }
+			layout: {
+				type: 'flow',
+				rows: 4,
+				columns: 2,
+				placementStrategy: 'append',
+				flowAxis: 'row'
+			}
 		}}
 	>
-		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
-			A
-		</FlexiWidget>
+		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">A</FlexiWidget>
 		<FlexiWidget class="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground" width={2}>
 			B
 		</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
-			C
-		</FlexiWidget>
+		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">C</FlexiWidget>
 	</FlexiTarget>
 </FlexiBoard>
 ```
-
-Giving us:
-
-<Flow2DExample />
 
 ## Considerations
 

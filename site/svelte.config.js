@@ -5,6 +5,7 @@ import { createHighlighter } from 'shiki';
 import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
 import { preprocessMeltUI, sequence } from '@melt-ui/pp';
+import examples from 'mdsvexamples';
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
@@ -20,7 +21,14 @@ const mdsvexOptions = {
 			return `{@html \`${html}\` }`
 		}
 	},
-	remarkPlugins: [[remarkToc, { tight: true }]],
+	remarkPlugins: [
+		[remarkToc, { tight: true }], 
+		[examples, {
+			defaults: {
+				Wrapper: '/src/lib/components/ui/code-example/code-example.svelte'
+			}
+		}]
+	],
 	rehypePlugins: [rehypeSlug]
 }
 
