@@ -2,7 +2,7 @@
 	import Toc from '$lib/components/docs/toc.svelte';
 	import DocumentationSidebar from '$lib/components/docs/documentation-sidebar.svelte';
 	import type { PageData } from './$types';
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
 
 	let { data }: { data: PageData } = $props();
 
@@ -13,16 +13,18 @@
 	});
 </script>
 
-<div class="flex h-full gap-16 relative px-8">
-	<nav class="hidden shrink-0 w-64 lg:block">
+<div class="relative flex h-full gap-16 px-8">
+	<nav class="hidden w-64 shrink-0 border-r border-dashed lg:block">
 		<div class="sticky top-14">
-			<div class="flex flex-col h-[calc(100%-6.5rem)] max-h-[calc(100%-6.5rem)] min-h-0 overflow-y-auto gap-8 text-base border-r pr-4 border-dashed py-12">
+			<div
+				class="flex h-[calc(100%-6.5rem)] max-h-[calc(100%-6.5rem)] min-h-0 flex-col gap-8 overflow-y-auto py-12 pr-4 text-base"
+			>
 				<DocumentationSidebar />
 			</div>
 		</div>
 	</nav>
 	<article
-		class="prose prose-sm mx-auto w-full shrink-0 py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-12 overflow-y-auto"
+		class="prose prose-sm mx-auto w-full shrink-0 overflow-y-auto py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-12"
 		id="docs-content"
 	>
 		<div class="not-prose">
@@ -34,7 +36,7 @@
 		<PageComponent />
 	</article>
 	<aside class="hidden w-64 lg:block">
-		<div class="flex flex-col gap-8 text-base sticky top-14 py-12">
+		<div class="sticky top-14 flex flex-col gap-8 py-12 text-base">
 			<Toc />
 		</div>
 	</aside>

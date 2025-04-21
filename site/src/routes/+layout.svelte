@@ -14,10 +14,12 @@
 
 <Header />
 
-<main class="flex-1 mb-14 px-4 lg:px-8" id="main-content">
+<main class="mb-14 flex-1 px-4 lg:px-8" id="main-content">
 	{@render children()}
 </main>
 
-<footer class="fixed bottom-0 shrink-0 h-14 w-full py-4 text-center text-sm text-muted-foreground border-t border-dashed bg-background/80 backdrop-blur">
-	Work in progress. Expect bugs!
+<footer
+	class="fixed bottom-0 h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur"
+>
+	Preview version. Expect bugs!
 </footer>

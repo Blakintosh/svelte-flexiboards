@@ -65,6 +65,12 @@
 				</Tabs.List>
 			</Tabs.Root>
 
+			<!-- <Button
+				href={`https://github.com/Blakintosh/svelte-flexiboards/issues/new?assignees=&labels=example&template=example-request.md&title=Example`}
+				target="_blank"
+				rel="noopener noreferrer"
+				variant={'outline'}>Request an example</Button
+			> -->
 			<Button
 				href={`https://github.com/Blakintosh/svelte-flexiboards/tree/main/site/src/routes/examples/${data.slug}`}
 				target="_blank"

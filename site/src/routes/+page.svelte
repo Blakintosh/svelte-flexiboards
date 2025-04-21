@@ -6,7 +6,7 @@
 	});
 </script>
 
-<div class="grid h-full w-full place-items-center">
+<div class="grid h-full w-full grow place-items-center">
 	<div class="flex min-h-0 flex-col items-center gap-16 py-8 lg:py-16">
 		<div class="flex flex-col items-center gap-4 lg:flex-row lg:items-end lg:gap-0">
 			<FlexiBoard>
