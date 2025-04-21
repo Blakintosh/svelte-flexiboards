@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import { cn } from '$lib/utils.js';
 
 	type CodeExampleProps = {
 		src: string;
@@ -12,26 +13,38 @@
 	let { src, meta, example, code }: CodeExampleProps = $props();
 </script>
 
-<Tabs.Root value={'preview'}>
-	<div class="flex items-center justify-between rounded-t-md bg-muted px-4 text-base font-semibold">
-		<span>
+<Tabs.Root value={'preview'} class="relative mt-4">
+	<!-- <div class="flex items-center justify-between rounded-t-md px-4 py-2">
+		<span class="text-base font-semibold">
 			{meta?.title ?? 'Example'}
 		</span>
-		<Tabs.List>
-			<Tabs.Trigger value="preview">Preview</Tabs.Trigger>
-			<Tabs.Trigger value="code">Code</Tabs.Trigger>
-		</Tabs.List>
-	</div>
-	<div class="grid place-items-center rounded-b-md border px-8 py-4">
-		<Tabs.Content value="preview">
-			<div class="preview">
-				{@render example()}
-			</div>
-		</Tabs.Content>
-		<Tabs.Content value="code">
-			<pre class="language-svelte">{@render code()}</pre>
-		</Tabs.Content>
-	</div>
+	</div> -->
+	<Tabs.List
+		class="mb-8 flex h-9 items-center justify-start rounded-none border-b border-b-border bg-transparent p-0"
+	>
+		<Tabs.Trigger
+			value="preview"
+			class="relative rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 font-semibold text-muted-foreground shadow-none transition-none focus-visible:ring-0 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+			>Preview</Tabs.Trigger
+		>
+		<Tabs.Trigger
+			value="code"
+			class="relative rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 font-semibold text-muted-foreground shadow-none transition-none focus-visible:ring-0 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+			>Code</Tabs.Trigger
+		>
+	</Tabs.List>
+	<Tabs.Content value="preview">
+		<div
+			class="preview mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+		>
+			{@render example()}
+		</div>
+	</Tabs.Content>
+	<Tabs.Content value="code">
+		<div class="relative rounded-md">
+			<pre class="max-h-[32rem]">{@render code()}</pre>
+		</div>
+	</Tabs.Content>
 </Tabs.Root>
 
 <!-- <div class="example">
