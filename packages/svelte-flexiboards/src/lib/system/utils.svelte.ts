@@ -7,6 +7,7 @@ import type { Position, ProxiedValue } from './types.js';
 import type { FlexiGrid } from './grid/base.svelte.js';
 import type { FlexiTargetConfiguration } from './target.svelte.js';
 import type { FlexiWidgetController, FlexiWidgetTriggerConfiguration } from './widget.svelte.js';
+import { onMount, untrack } from 'svelte';
 
 export class PointerPositionWatcher {
 	#position: Position = $state({
@@ -131,8 +132,6 @@ export class GridDimensionTracker {
 	});
 
 	#grid: FlexiGrid | null = $state(null);
-	#rows: number = $derived(this.#grid?.rows ?? 0);
-	#columns: number = $derived(this.#grid?.columns ?? 0);
 
 	#pointerPosition = $state({
 		x: 0,
@@ -149,18 +148,25 @@ export class GridDimensionTracker {
 	watchGrid() {
 		// Whenever a change occurs to the grid's dimensions or the underlying widgets, update the sizes.
 		$effect(() => {
+			// Which through reactivity will also look at the descendants (eg rows and columns)
 			const grid = this.#grid!;
 
-			const columns = grid.columns ?? 0;
-			const rows = grid.rows ?? 0;
+			untrack(() => {
+				console.log('it was me, sorry', grid.columns, grid.rows, grid);
+				console.trace();
+			});
 
-			this.updateGridDimensions();
+			// There's a weird edge case where adjusting dimensions causes an infinite effect when the grid is destroyed - but even without
+			// knowing the exact cause, it's sensible to untrack() this regardless.
+			untrack(() => {
+				this.updateGridDimensions();
+			});
 		});
 
-		$effect(() => this.setupScrollListener());
-
 		// Whenever the grid is resized, update the sizes.
-		$effect(() => {
+		onMount(() => {
+			this.setupScrollListener();
+
 			const grid = this.#grid!.ref;
 
 			if (!grid) {
