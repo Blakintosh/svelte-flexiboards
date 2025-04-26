@@ -148,7 +148,7 @@ description: "The props applied to the component rendered, if it has one."
 },
 {
 name: "snippet",
-type: "Snippet<[{ widget: FlexiWidgetController, component?: Component, componentProps?: Record<string, any> }]> | undefined",
+type: "Snippet<[{ widget: FlexiWidgetController }]> | undefined",
 description: "The content rendered within the widget."
 },
 {
@@ -198,12 +198,6 @@ description: "Event handler for when one of the widget's grabbers receives a poi
 name: "onresizerpointerdown",
 type: "(event: PointerEvent) => void",
 description: "Event handler for when one of the widget's resizers receives a pointerdown event."
-},
-// TODO: these are internal methods, why are we listing them???
-{
-name: "setBounds",
-type: "(x: number, y: number, width: number, height: number) => void",
-description: "Sets the bounds of the widget. This is not intended for use externally."
 },
 {
 name: "addGrabber",
