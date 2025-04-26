@@ -33,7 +33,7 @@
 
 <Sidebar.Provider>
 	<AppSidebar />
-	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-8 lg:px-16 py-8">
+	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-4 py-8 lg:px-16">
 		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
 			Dashboard
 			<div class="flex items-center gap-2">
@@ -67,23 +67,23 @@
 				}}
 			>
 				<DashboardTile title="Overall Score" x={0} y={0} draggable={false} resizability={'none'}>
-					<div class="text-2xl font-bold">87</div>
+					<div class="text-lg font-bold lg:text-2xl">87</div>
 					<p class="text-xs text-muted-foreground">+8 from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Total Revenue" x={1} y={0}>
-					<div class="text-2xl font-bold">$45,231.89</div>
+					<div class="text-lg font-bold lg:text-2xl">$45,231.89</div>
 					<p class="text-xs text-muted-foreground">+20.1% from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Subscriptions" x={2} y={0}>
-					<div class="text-2xl font-bold">+2350</div>
+					<div class="text-lg font-bold lg:text-2xl">+2350</div>
 					<p class="text-xs text-muted-foreground">-30.4% from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Sales" x={0} y={1} width={3}>
-					<div class="text-2xl font-bold">+12,234</div>
+					<div class="text-lg font-bold lg:text-2xl">+12,234</div>
 					<p class="text-xs text-muted-foreground">+19.1% from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Active Now" x={0} y={2}>
-					<div class="text-2xl font-bold">+573</div>
+					<div class="text-lg font-bold lg:text-2xl">+573</div>
 					<p class="text-xs text-muted-foreground">+201 since last hour</p>
 				</DashboardTile>
 			</FlexiTarget>
