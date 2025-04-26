@@ -1,13 +1,15 @@
 <script>
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import Rocket from 'lucide-svelte/icons/rocket';
 	$effect(() => {
 		document.title = 'Flexiboards';
 	});
 </script>
 
 <div class="grid h-full w-full grow place-items-center">
-	<div class="flex min-h-0 flex-col items-center gap-16 py-8 lg:py-16">
+	<div class="flex h-full min-h-0 flex-col items-center justify-center gap-16 py-8 lg:py-16">
 		<div class="flex flex-col items-center gap-4 lg:flex-row lg:items-end lg:gap-0">
 			<FlexiBoard>
 				<FlexiTarget
@@ -52,6 +54,10 @@
 		<h2 class="text-center text-xl lg:text-2xl">
 			Headless, reactive drag and drop components for Svelte 5.
 		</h2>
+		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline'}>
+			<Rocket />
+			Version 0.2 out now!
+		</Badge>
 
 		<div class="flex flex-col gap-4 lg:flex-row">
 			<Button

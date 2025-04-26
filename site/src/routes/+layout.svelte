@@ -14,7 +14,7 @@
 
 <Header />
 
-<main class="mb-14 flex-1 px-4 lg:px-8" id="main-content">
+<main class="mb-14 flex min-h-0 flex-1 flex-col px-4 lg:px-8" id="main-content">
 	{@render children()}
 </main>
 
