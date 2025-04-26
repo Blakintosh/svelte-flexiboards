@@ -100,16 +100,6 @@ type: "(widget: FlexiWidgetController) => boolean",
 description: "Deletes the given widget from this target, if it exists."
 },
 {
-name: "restorePreGrabSnapshot",
-type: "() => void",
-description: "Restores the target to its pre-grab state. This is not intended for external use."
-},
-{
-name: "forgetPreGrabSnapshot",
-type: "() => void",
-description: "Forgets the pre-grab state of the target. This is not intended for external use."
-},
-{
 name: "dropWidget",
 type: "(widget: FlexiWidgetController) => boolean",
 description: "Attempts to drop a widget into this target."
@@ -142,16 +132,6 @@ description: "Allows the specifying of the value inside the `repeat()` function 
 name: "columnSizing",
 type: "string | ({ target, grid }: { target: FlexiTargetController, grid: FlexiGrid }) => string",
 description: "Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target. Defaults to 'minmax(0, 1fr)'. Reactive."
-},
-{
-name: "baseColumns",
-type: "number",
-description: "The base number of columns for the target's grid. Defaults to 1. Not reactive."
-},
-{
-name: "baseRows",
-type: "number",
-description: "The base number of rows for the target's grid. Defaults to 1. Not reactive."
 },
 {
 name: "layout",
