@@ -151,11 +151,6 @@ export class GridDimensionTracker {
 			// Which through reactivity will also look at the descendants (eg rows and columns)
 			const grid = this.#grid!;
 
-			untrack(() => {
-				console.log('it was me, sorry', grid.columns, grid.rows, grid);
-				console.trace();
-			});
-
 			// There's a weird edge case where adjusting dimensions causes an infinite effect when the grid is destroyed - but even without
 			// knowing the exact cause, it's sensible to untrack() this regardless.
 			untrack(() => {
