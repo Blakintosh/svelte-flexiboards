@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { flexigrid } from '$lib/system/grid.svelte';
+	import { flexigrid } from '$lib/system/grid/index.js';
 	import type { Snippet } from 'svelte';
 
 	export type FlexiGridProps = {

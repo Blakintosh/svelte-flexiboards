@@ -1,5 +1,6 @@
 <script module lang="ts">
 	import { renderedflexiwidget, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
+	import WidgetTransitionPlaceholder from './widget-transition-placeholder.svelte';
 
 	export type RenderedFlexiWidgetProps = {
 		widget: FlexiWidgetController;
@@ -35,6 +36,7 @@
 	{#if widget.snippet}
 		{@render widget.snippet({
 			widget,
+			// NEXT: Remove these in v0.3
 			component: widget.component,
 			componentProps: widget.componentProps
 		})}
@@ -42,3 +44,8 @@
 		<widget.component {...widget.componentProps ?? {}} />
 	{/if}
 </div>
+
+<!-- When it exists, this temporarily occupies the widget's destination space, allowing the widget to be absolutely positioned to interpolate to its final destination. -->
+{#if widget.shouldDrawPlaceholder}
+	<WidgetTransitionPlaceholder />
+{/if}

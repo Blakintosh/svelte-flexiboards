@@ -14,12 +14,12 @@
 
 <Header />
 
-<main class="grid w-full grow place-items-center overflow-y-auto">
-	<div class="w-full px-8 py-8 lg:max-w-[1440px]">
-		{@render children()}
-	</div>
+<main class="mb-14 flex min-h-0 flex-1 flex-col px-4 lg:px-8" id="main-content">
+	{@render children()}
 </main>
 
-<footer class="w-full py-4 text-center text-sm text-muted-foreground">
-	Work in progress. Expect bugs!
+<footer
+	class="fixed bottom-0 h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur"
+>
+	Preview version. Expect bugs!
 </footer>

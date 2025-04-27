@@ -11,13 +11,13 @@ export type AdderWidgetConfiguration = {
 }
 
 export class FlexiAddController {
-    #provider: InternalFlexiBoardController;
+    provider: InternalFlexiBoardController;
     #addWidget: FlexiAddWidgetFn;
 
     newWidget?: FlexiWidgetController = $state(undefined);
 
     constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
-        this.#provider = provider;
+        this.provider = provider;
         this.#addWidget = addWidgetFn;
 
         this.onpointerdown = this.onpointerdown.bind(this);
@@ -30,14 +30,17 @@ export class FlexiAddController {
             return;
         }
     
-        // Create a widget under this FlexiAdd, which will automatically place it into a grabbed state.
+        // Create a widget under this FlexiAdd.
         this.newWidget = new FlexiWidgetController({
             type: "adder",
             adder: this,
             config: config.widget,
             widthPx: config.widthPx ?? 100,
-            heightPx: config.heightPx ?? 100
+            heightPx: config.heightPx ?? 100,
+            clientX: event.clientX,
+            clientY: event.clientY
         });
+        // When the widget mounts, it'll automatically trigger the drag in event.
 
         // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
         (event.target as HTMLElement).releasePointerCapture(event.pointerId);
@@ -45,7 +48,7 @@ export class FlexiAddController {
     }
 
     onstartwidgetdragin(event: WidgetGrabbedParams) {
-        return this.#provider.onwidgetgrabbed({
+        return this.provider.onwidgetgrabbed({
             ...event,
             adder: this
         });

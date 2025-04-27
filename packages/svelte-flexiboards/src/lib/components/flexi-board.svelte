@@ -16,6 +16,8 @@
 </script>
 
 <script lang="ts">
+	import FlexiPortal from './flexi-portal.svelte';
+
 	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 
 	board = flexiboard(props);
@@ -28,3 +30,6 @@
 
 <!-- Component that tells the board it can start importing stuff, if needed. -->
 <FlexiLayoutLoader />
+
+<!-- Component that uses a shared portal for rendering grabbed widgets over the pointer. -->
+<FlexiPortal />

@@ -15,6 +15,6 @@
 	const { widget, onpointerdown } = flexiresize();
 </script>
 
-<button class={className} {onpointerdown}>
+<button style={"user-select: none; cursor: nwse-resize; touch-action: none;"} class={className} {onpointerdown}>
 	{@render children?.({ widget })}
 </button>

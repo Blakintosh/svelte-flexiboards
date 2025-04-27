@@ -1,10 +1,35 @@
 import adapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { mdsvex } from "mdsvex";
+import { mdsvex, escapeSvelte } from "mdsvex";
+import { createHighlighter } from 'shiki';
+import remarkToc from 'remark-toc';
+import rehypeSlug from 'rehype-slug';
+import { preprocessMeltUI, sequence } from '@melt-ui/pp';
+import examples from 'mdsvexamples';
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
 	extensions: ['.md'],
+	highlight: {
+		highlighter: async (code, lang = 'text') => {
+			const highlighter = await createHighlighter({
+				themes: ['poimandres'],
+				langs: ['javascript', 'typescript', 'svelte']
+			})
+			await highlighter.loadLanguage('javascript', 'typescript', 'svelte')
+			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'poimandres' }))
+			return `{@html \`${html}\` }`
+		}
+	},
+	remarkPlugins: [
+		[remarkToc, { tight: true }], 
+		[examples, {
+			defaults: {
+				Wrapper: '/src/lib/components/ui/code-example/code-example.svelte'
+			}
+		}]
+	],
+	rehypePlugins: [rehypeSlug]
 }
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -12,10 +37,11 @@ const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	extensions: ['.svelte', '.md'],
-	preprocess: [
+	preprocess: sequence([
 		vitePreprocess(),
-		mdsvex(mdsvexOptions)
-	],
+		mdsvex(mdsvexOptions),
+		preprocessMeltUI()
+	]),
 
 	kit: {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

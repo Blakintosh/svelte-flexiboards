@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { Construction } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
+	import { page } from '$app/state';
+
 	let directory = [
 		{
 			section: 'Introduction',
@@ -17,29 +22,41 @@
 				}
 			]
 		},
-		// {
-		// 	section: 'Guides',
-		// 	pages: [
-		// 		{
-		// 			title: 'Export & Import Boards',
-		// 			href: '/docs/guides/exporting-importing-boards'
-		// 		},
-		// 		{
-		// 			title: 'Widget Rendering',
-		// 			href: '/docs/guides/widget-rendering'
-		// 		},
-		// 		{
-		// 			title: 'Managing Widgets',
-		// 			href: '/docs/guides/managing-widgets'
-		// 		},
-		// 		{
-		// 			title: 'Grid Layouts',
-		// 			href: '/docs/guides/grid-layouts'
-		// 		}
-		// 	]
-		// },
 		{
-			section: 'API',
+			section: 'Guides',
+			pages: [
+				// {
+				// 	title: 'Export & Import Boards',
+				// 	href: '/docs/guides/exporting-importing-boards'
+				// },
+				// {
+				// 	title: 'Transitions',
+				// 	href: '/docs/transitions'
+				// },
+				{
+					title: 'Widget Rendering',
+					href: '/docs/widget-rendering'
+				},
+				// {
+				// 	title: 'Managing Widgets',
+				// 	href: '/docs/managing-widgets'
+				// },
+				{
+					title: 'Free-Form Grids',
+					href: '/docs/free-form-grids'
+				},
+				{
+					title: 'Flow Grids',
+					href: '/docs/flow-grids'
+				},
+				{
+					title: 'Multiple Targets',
+					href: '/docs/multiple-targets'
+				}
+			]
+		},
+		{
+			section: 'Component API',
 			pages: [
 				{
 					title: 'FlexiBoard',
@@ -73,13 +90,27 @@
 		// 	]
 		// }
 	];
+
+	let { class: className = '' } = $props();
 </script>
 
-{#each directory as section}
-	<div class="flex flex-col gap-1">
-		<h2 class="mb-1 text-lg font-semibold">{section.section}</h2>
-		{#each section.pages as page}
-			<a href={page.href} class="text-muted-foreground hover:text-primary">{page.title}</a>
-		{/each}
-	</div>
-{/each}
+<div class={cn('flex min-h-0 flex-col gap-8', className)}>
+	{#each directory as section}
+		<div class="flex flex-col gap-1">
+			<h2 class="mb-1 px-3 text-base font-semibold">{section.section}</h2>
+			{#each section.pages as docPage}
+				<Button
+					variant="ghost"
+					size="sm"
+					class={[
+						'inline-flex justify-start text-base font-normal text-muted-foreground hover:text-primary',
+						docPage.href === page.url.pathname && 'text-primary'
+					]}
+					href={docPage.href}
+				>
+					{docPage.title}
+				</Button>
+			{/each}
+		</div>
+	{/each}
+</div>

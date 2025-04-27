@@ -55,6 +55,8 @@ export type WidgetGrabbedParams = {
     widget: FlexiWidgetController;
     xOffset: number;
     yOffset: number;
+    clientX: number;
+    clientY: number;
     capturedHeight: number;
     capturedWidth: number;
 }

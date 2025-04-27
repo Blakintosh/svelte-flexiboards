@@ -58,36 +58,36 @@
 	<title>Flexiboards</title>
 </svelte:head>
 
-<main class="flex h-full min-h-0 w-full flex-col gap-8 px-16 py-8">
-	<h1 class="flex shrink-0 justify-between text-3xl font-semibold">Numbers.</h1>
+<main class="flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
+	<h1 class="flex shrink-0 justify-between text-2xl font-semibold lg:text-3xl">Numbers.</h1>
 
 	<FlexiBoard
-		class="flex items-center justify-center gap-8"
+		class="flex min-h-0 min-w-0 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-6"
 		config={boardConfig}
 		bind:controller={boardController}
 	>
 		<FlexiAdd {addWidget}>
 			{#snippet children({ props })}
 				<button
-					class="flex size-40 flex-col items-center justify-center rounded-lg border p-4"
+					class="flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"
 					{...props}
 				>
-					<Plus class="mb-2 size-12" />
+					<Plus class="mb-2 size-8 lg:size-12" />
 					Add a random number
 				</button>
 			{/snippet}
 		</FlexiAdd>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-[32rem] gap-8 rounded-lg border p-4'}
+			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-6'}
 			config={{
-				baseRows: 3,
-				baseColumns: 3,
 				rowSizing: 'minmax(0, 1fr)',
 				layout: {
 					type: 'free',
-					expandColumns: false,
-					expandRows: false
+					minRows: 3,
+					minColumns: 3,
+					maxRows: 3,
+					maxColumns: 3
 				}
 			}}
 		>
@@ -109,10 +109,10 @@
 		<FlexiDelete>
 			{#snippet children({ props })}
 				<div
-					class="flex size-40 flex-col items-center justify-center rounded-lg border p-4"
+					class="flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"
 					{...props}
 				>
-					<Trash2 class="mb-2 size-12" />
+					<Trash2 class="mb-2 size-8 lg:size-12" />
 					Delete
 				</div>
 			{/snippet}
