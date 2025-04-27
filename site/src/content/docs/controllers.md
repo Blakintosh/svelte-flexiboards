@@ -26,8 +26,8 @@ Here's an example of using it to access the controller of a `FlexiBoard`:
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
 
 	$effect(() => {
-		// Do something with the controller...
-		boardController.importLayout(layout);
+		// Do something with the controller... like import a layout in a later version!
+		//boardController.importLayout(layout);
 	});
 </script>
 
@@ -52,12 +52,12 @@ Returning to our example of loading a layout, here's how you would do it using t
 
 	let { layout } = $props();
 
-	function handleImportLayout(controller: FlexiBoardController) {
-		controller.importLayout(layout);
+	function doSomething(controller: FlexiBoardController) {
+		// do something with the board!
 	}
 </script>
 
-<FlexiBoard oninitialload={handleImportLayout}>
+<FlexiBoard oninitialload={doSomething}>
 	<!-- ... -->
 </FlexiBoard>
 ```
