@@ -1,9 +1,15 @@
 <script module lang="ts">
-	const highlighter = await createHighlighter({
-		themes: ['poimandres'],
-		langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell']
-	});
-	await highlighter.loadLanguage('svelte', 'javascript', 'typescript', 'html', 'css', 'shell');
+	async function loadHighlighter() {
+		const highlighter = await createHighlighter({
+			themes: ['poimandres'],
+			langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell']
+		});
+		await highlighter.loadLanguage('svelte', 'javascript', 'typescript', 'html', 'css', 'shell');
+
+		return { highlighter };
+	}
+
+	const highlighterPromise = loadHighlighter();
 </script>
 
 <script lang="ts">
@@ -27,12 +33,13 @@
 	let copied = $state(false);
 
 	// Reactive statement to generate highlighted HTML when src or lang changes
-	let highlightedCodePromise = $derived.by(() => {
+	let highlightedCodePromise = $derived.by(async () => {
 		async function getHighlightedCode() {
 			const codeContents = rawElement.textContent;
 			const lang = 'svelte';
 
 			try {
+				const { highlighter } = await highlighterPromise;
 				const html = highlighter.codeToHtml(codeContents || '', { lang, theme: 'poimandres' });
 				return html;
 			} catch (error) {
