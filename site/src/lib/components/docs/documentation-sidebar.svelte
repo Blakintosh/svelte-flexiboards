@@ -37,10 +37,10 @@
 					title: 'Widget Rendering',
 					href: '/docs/widget-rendering'
 				},
-				{
-					title: 'Managing Widgets',
-					href: '/docs/managing-widgets'
-				},
+				// {
+				// 	title: 'Managing Widgets',
+				// 	href: '/docs/managing-widgets'
+				// },
 				{
 					title: 'Free-Form Grids',
 					href: '/docs/free-form-grids'
