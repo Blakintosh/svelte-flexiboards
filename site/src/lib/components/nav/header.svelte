@@ -1,15 +1,16 @@
 <script>
 	import ThemeSelector from './theme-selector.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import * as Drawer from "$lib/components/ui/drawer";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	
-	
+	import * as Drawer from '$lib/components/ui/drawer';
+	import { ScrollArea } from '$lib/components/ui/scroll-area';
+
 	import Menu from 'lucide-svelte/icons/menu';
 	import DocumentationSidebar from '../docs/documentation-sidebar.svelte';
 </script>
 
-<header class="flex items-center justify-between border-b h-14 px-8 py-2 sticky shrink-0 top-0 backdrop-blur bg-background/80 z-40">
+<header
+	class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-8 py-2 backdrop-blur"
+>
 	<div class="flex w-[80%] items-center gap-16">
 		<a class="flex items-center justify-start gap-4" href="/">
 			<div class="flex flex-col items-start gap-[0.075rem]">
@@ -81,7 +82,8 @@
 							<Button
 								href="/"
 								variant={'ghost'}
-								class="w-full justify-start text-base font-normal text-muted-foreground">Home</Button
+								class="w-full justify-start text-base font-normal text-muted-foreground"
+								>Home</Button
 							>
 						</li>
 						<li>
@@ -93,7 +95,7 @@
 							>
 						</li>
 					</ul>
-	
+
 					<div class="flex flex-col gap-2 px-4 py-2">
 						<DocumentationSidebar />
 					</div>
