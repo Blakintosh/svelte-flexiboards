@@ -117,6 +117,6 @@
 
 <style lang="postcss">
 	.code-block > :global(pre) {
-		@apply max-h-[40rem] w-auto overflow-auto px-8 py-4 text-sm;
+		@apply max-h-[40rem] w-auto overflow-auto px-8 py-4 text-xs lg:text-sm;
 	}
 </style>
