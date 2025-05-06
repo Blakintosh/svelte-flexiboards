@@ -15,6 +15,7 @@ vi.mock('./base.svelte.js', () => ({
 describe('FreeFormFlexiGrid', () => {
 	let grid: FreeFormFlexiGrid;
 	let nonExpandingGrid: FreeFormFlexiGrid;
+	let nonColumnExpandingGrid: FreeFormFlexiGrid;
 	let mockTarget: InternalFlexiTargetController;
 	let targetConfig: FlexiTargetConfiguration;
 
@@ -71,6 +72,15 @@ describe('FreeFormFlexiGrid', () => {
 				minRows: 3,
 				minColumns: 3,
 				maxRows: 3,
+				maxColumns: 3
+			}
+		});
+		nonColumnExpandingGrid = new FreeFormFlexiGrid(mockTarget, {
+			...targetConfig,
+			layout: {
+				type: 'free',
+				minRows: 3,
+				minColumns: 3,
 				maxColumns: 3
 			}
 		});
@@ -180,21 +190,71 @@ describe('FreeFormFlexiGrid', () => {
 	});
 
 	describe('Grid expansion', () => {
-		it('should expand columns when placing outside grid boundaries', () => {
+		it('should expand columns when placing exceeds grid boundaries', () => {
 			const widget = createMockWidget();
 
-			const result = grid.tryPlaceWidget(widget, 4, 1, 3, 1);
+			const result = grid.tryPlaceWidget(widget, 2, 1, 3, 1);
 
 			expect(result).toBe(true);
 			expect(grid.columns).toBeGreaterThan(3);
 		});
 
-		it('should expand rows when placing outside grid boundaries', () => {
+		it('should expand rows when placing exceeds grid boundaries', () => {
 			const widget = createMockWidget();
 
-			const result = grid.tryPlaceWidget(widget, 1, 4, 1, 3);
+			const result = grid.tryPlaceWidget(widget, 1, 2, 1, 3);
 
 			expect(result).toBe(true);
+			expect(grid.rows).toBeGreaterThan(3);
+		});
+
+		it('should expand rows when pushing widgets beyond grid boundaries', () => {
+			const aWidget = createMockWidget();
+			const bWidget = createMockWidget();
+
+			nonColumnExpandingGrid.tryPlaceWidget(aWidget, 0, 0, 3, 3);
+
+			// State:
+			// aaa
+			// aaa
+			// aaa
+
+			const result = nonColumnExpandingGrid.tryPlaceWidget(bWidget, 0, 2, 1, 1);
+
+			// Expected state:
+			// ---
+			// ---
+			// b--
+			// aaa
+			// aaa
+			// aaa
+
+			expect(result).toBe(true);
+			expect(bWidget.setBounds).toHaveBeenCalledWith(0, 2, 1, 1);
+			expect(aWidget.setBounds).toHaveBeenCalledWith(0, 3, 3, 3);
+			expect(nonColumnExpandingGrid.rows).toBe(6);
+		});
+
+		it('should expand rows when placing outside grid boundaries', () => {
+			const b = createMockWidget();
+
+			// TODO: this test is probably fine for a non-collapsing grid, but we'll need to later
+			// factor in the collapsing grid scenario.
+
+			// State:
+			// ---
+			// ---
+			// ---
+
+			const bResult = grid.tryPlaceWidget(b, 0, 4, 1, 1);
+
+			// Expected state:
+			// ---
+			// ---
+			// ---
+			// b--
+
+			expect(bResult).toBe(true);
 			expect(grid.rows).toBeGreaterThan(3);
 		});
 
