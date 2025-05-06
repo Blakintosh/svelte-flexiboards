@@ -598,9 +598,9 @@ export class FlexiWidgetController {
 		this.#state.width = width;
 		this.#state.height = height;
 
-		// if (interpolate) {
-		// 	this.#interpolateMove(x, y, width, height);
-		// }
+		if (interpolate) {
+			this.#interpolateMove(x, y, width, height);
+		}
 	}
 
 	#interpolateMove(x: number, y: number, width: number, height: number) {
