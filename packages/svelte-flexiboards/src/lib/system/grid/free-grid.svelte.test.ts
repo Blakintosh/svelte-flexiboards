@@ -190,12 +190,52 @@ describe('FreeFormFlexiGrid', () => {
 		});
 
 		it('should expand rows when placing outside grid boundaries', () => {
-			const widget = createMockWidget();
+			const b = createMockWidget();
 
-			const result = grid.tryPlaceWidget(widget, 1, 4, 1, 3);
+			// TODO: this test is probably fine for a non-collapsing grid, but we'll need to later
+			// factor in the collapsing grid scenario.
 
-			expect(result).toBe(true);
-			expect(grid.rows).toBeGreaterThan(3);
+			// State:
+			// ---
+			// ---
+			// ---
+
+			const bResult = grid.tryPlaceWidget(b, 0, 3, 1, 1);
+
+			// Expected state:
+			// ---
+			// ---
+			// ---
+			// b--
+
+			expect(bResult).toBe(true);
+			expect(b.setBounds).toHaveBeenCalledWith(0, 3, 1, 1);
+			expect(grid.rows).toEqual(4);
+		});
+
+		it('should expand rows when placing outside full grid boundaries', () => {
+			const a = createMockWidget();
+			const b = createMockWidget();
+
+			const aResult = grid.tryPlaceWidget(a, 0, 0, 3, 3);
+
+			// State:
+			// aaa
+			// aaa
+			// aaa
+
+			const bResult = grid.tryPlaceWidget(b, 0, 3, 1, 1);
+
+			// Expected state:
+			// aaa
+			// aaa
+			// aaa
+			// b--
+
+			expect(aResult).toBe(true);
+			expect(bResult).toBe(true);
+			expect(b.setBounds).toHaveBeenCalledWith(0, 3, 1, 1);
+			expect(grid.rows).toEqual(4);
 		});
 
 		it('should not expand when expansion is disabled', () => {
