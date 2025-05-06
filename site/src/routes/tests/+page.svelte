@@ -1,47 +1,40 @@
 <script lang="ts">
-    import { FlexiBoard, FlexiTarget, FlexiWidget } from "svelte-flexiboards";
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
 
-<div class="w-full h-full grid place-items-center justify-items-center overflow-y-auto max-h-[80vh]">
+<h1 class="mt-8 text-center text-2xl font-bold">
+	Hi there, it looks like you found the (not so secret) test page!
+</h1>
 
-<div class="container min-w-0 relative">
-    <FlexiBoard class={"border border-red-500 w-full"}>
-        <FlexiTarget key="test" config={{
-            layout: {
-                type: "free",
-                minColumns: 3,
-                minRows: 12,
-                maxColumns: 3
-            },
-            rowSizing: 'minmax(0, 1fr)',
-            widgetDefaults: {
-                className: 'bg-blue-700 text-white h-32'
-            }
-        }} class={"gap-8"}>
-            <FlexiWidget x={0} y={0} width={2} height={1}>
-                1
-            </FlexiWidget>
-            
-            <FlexiWidget x={0} y={1} width={2} height={1}>
-                2
-            </FlexiWidget> 
+<p class="mb-8 text-center text-muted-foreground">
+	Nothing to see here - just a bit of occasional debugging.
+</p>
 
-            <FlexiWidget x={0} y={2} width={2} height={1}> 
-                3
-            </FlexiWidget>
+<div
+	class="grid h-full max-h-[80vh] w-full place-items-center justify-items-center overflow-y-auto"
+>
+	<div class="container relative min-w-0">
+		<FlexiBoard class={'w-full border border-red-500'}>
+			<FlexiTarget
+				key="test"
+				config={{
+					layout: {
+						type: 'free',
+						minColumns: 3,
+						minRows: 3,
+						maxColumns: 3
+					},
+					rowSizing: 'minmax(0, 8rem)',
+					widgetDefaults: {
+						className: 'bg-blue-700 text-white'
+					}
+				}}
+				class={'gap-8'}
+			>
+				<FlexiWidget x={0} y={0} width={3} height={3}>a</FlexiWidget>
 
-            <FlexiWidget x={0} y={3} width={2} height={1}>
-                4
-            </FlexiWidget>
-
-            <FlexiWidget x={0} y={4} width={2} height={1}>
-                5
-            </FlexiWidget>
-
-            <FlexiWidget x={0} y={5} width={2} height={1}>
-                6
-            </FlexiWidget>
-        </FlexiTarget>
-    </FlexiBoard>
-</div>
+				<FlexiWidget x={0} y={3} width={1} height={1}>b</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	</div>
 </div>

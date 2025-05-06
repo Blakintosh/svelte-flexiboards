@@ -31,8 +31,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		expandRows: this.#rawLayoutConfig?.expandRows ?? true
 	});
 
-	#rows: number;
-	#columns: number;
+	#rows: number = $state() as number;
+	#columns: number = $state() as number;
 
 	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
 
