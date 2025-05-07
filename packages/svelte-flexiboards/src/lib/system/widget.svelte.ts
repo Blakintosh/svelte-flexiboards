@@ -229,6 +229,8 @@ export class FlexiWidgetController {
 	 */
 	ref?: HTMLElement = $state(undefined);
 
+	isBeingDropped: boolean = $state(false);
+
 	/**
 	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
 	 * or a change in the target's, or the board's, they will be updated to reflect the new values.
@@ -621,7 +623,8 @@ export class FlexiWidgetController {
 				top: rect.top,
 				width: rect.width,
 				height: rect.height
-			}
+			},
+			this.isBeingDropped
 		);
 	}
 
@@ -892,8 +895,14 @@ class WidgetMoveInterpolator {
 		height: 1
 	});
 
+	#inFirstFrame: boolean = $state(false);
+	#isDropping: boolean = $state(false);
+
 	widgetStyle: string = $derived.by(() => {
-		return `transition: all 100ms ease-in-out; position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
+		if (this.#inFirstFrame) {
+			return `position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
+		}
+		return `transition: all 150ms ${this.#isDropping ? 'ease-out' : 'ease-in-out'}; position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
 	});
 
 	placeholderStyle: string = $derived.by(() => {
@@ -907,11 +916,18 @@ class WidgetMoveInterpolator {
 	}
 
 	// TODO: better name than this InterpolatedWidgetPosition
-	interpolateMove(newDimensions: Dimensions, oldPosition: InterpolatedWidgetPosition) {
+	interpolateMove(
+		newDimensions: Dimensions,
+		oldPosition: InterpolatedWidgetPosition,
+		isDrop: boolean = false
+	) {
 		const containerRect = this.#containerRef?.getBoundingClientRect();
 		if (!containerRect) {
 			return;
 		}
+
+		this.#inFirstFrame = true;
+		this.#isDropping = isDrop;
 
 		if (this.active) {
 			clearTimeout(this.#timeout);
@@ -928,14 +944,22 @@ class WidgetMoveInterpolator {
 			widthPx: oldPosition.width
 		};
 
-		this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
-		this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left;
+		if (isDrop) {
+			this.#interpolatedWidgetPosition.top = oldPosition.top - 2 * containerRect.top;
+			this.#interpolatedWidgetPosition.left = oldPosition.left - 2 * containerRect.left;
+		} else {
+			this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
+			this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left;
+		}
 		this.#interpolatedWidgetPosition.width = oldPosition.width;
 		this.#interpolatedWidgetPosition.height = oldPosition.height;
 
-		this.#timeout = setTimeout(() => {
-			this.active = false;
-		}, 100);
+		requestAnimationFrame(() => {
+			this.#timeout = setTimeout(() => {
+				this.active = false;
+				this.#isDropping = false;
+			}, 150);
+		});
 	}
 
 	onPlaceholderMove(rect: DOMRect) {
@@ -954,7 +978,10 @@ class WidgetMoveInterpolator {
 		this.ref = ref;
 
 		// Now that we're mounted, start moving our widget.
-		this.onPlaceholderMove(this.ref.getBoundingClientRect());
+		requestAnimationFrame(() => {
+			this.#inFirstFrame = false;
+			this.onPlaceholderMove(this.ref.getBoundingClientRect());
+		});
 
 		// However, if the widget moves again before timeout, we need to track and update the position.
 		this.#observer = new MutationObserver((mutations) => {
@@ -964,7 +991,10 @@ class WidgetMoveInterpolator {
 
 			for (const mutation of mutations) {
 				if (mutation.type == 'attributes' && mutation.attributeName == 'style') {
-					this.onPlaceholderMove(this.ref.getBoundingClientRect());
+					requestAnimationFrame(() => {
+						this.#inFirstFrame = false;
+						this.onPlaceholderMove(this.ref.getBoundingClientRect());
+					});
 				}
 			}
 		});
