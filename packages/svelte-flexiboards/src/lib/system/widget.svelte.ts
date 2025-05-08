@@ -626,6 +626,7 @@ export class FlexiWidgetController {
 			},
 			this.isBeingDropped
 		);
+		this.isBeingDropped = false;
 	}
 
 	/**
@@ -945,6 +946,7 @@ class WidgetMoveInterpolator {
 		};
 
 		if (isDrop) {
+			console.log('isDrop', isDrop);
 			this.#interpolatedWidgetPosition.top = oldPosition.top - 2 * containerRect.top;
 			this.#interpolatedWidgetPosition.left = oldPosition.left - 2 * containerRect.left;
 		} else {
