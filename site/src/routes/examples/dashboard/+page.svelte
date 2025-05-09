@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -63,6 +63,9 @@
 						maxColumns: 3,
 						minRows: 4,
 						maxRows: 4
+					},
+					widgetDefaults: {
+						transition: simpleTransitionConfig()
 					}
 				}}
 			>

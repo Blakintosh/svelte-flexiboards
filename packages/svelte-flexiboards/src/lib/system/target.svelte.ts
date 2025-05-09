@@ -434,6 +434,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 
+		widget.isBeingDropped = true;
+
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
 		return this.#tryAddWidget(widget, x, y, width, height);
