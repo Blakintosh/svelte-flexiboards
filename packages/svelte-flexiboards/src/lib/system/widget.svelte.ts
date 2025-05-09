@@ -46,7 +46,7 @@ export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetPara
 export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => SvelteClassValue;
 export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
 
-type FlexiWidgetTransitionTypeConfiguration = {
+export type FlexiWidgetTransitionTypeConfiguration = {
 	duration?: number;
 	easing?: string;
 };
@@ -994,7 +994,7 @@ class WidgetMoveInterpolator {
 			this.#timeout = setTimeout(() => {
 				this.active = false;
 				this.#animation = 'move';
-			}, 150);
+			}, transitionConfig.duration);
 		});
 	}
 

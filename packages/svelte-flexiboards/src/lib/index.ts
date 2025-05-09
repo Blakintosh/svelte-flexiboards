@@ -12,6 +12,8 @@ import {
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetChildrenSnippetParameters,
 	type FlexiWidgetConfiguration,
+	type FlexiWidgetTransitionConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
 	type FlexiWidgetTriggerConfiguration,
 	getFlexiwidgetCtx
 } from './system/widget.svelte.js';
@@ -54,6 +56,8 @@ export {
 	type FlexiWidgetChildrenSnippetParameters,
 	type PointerTriggerCondition,
 	type FlexiWidgetTriggerConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
+	type FlexiWidgetTransitionConfiguration,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	getFlexiwidgetCtx,
