@@ -17,7 +17,7 @@ import {
 } from './system/widget.svelte.js';
 import type { FlexiBoardController } from './system/provider.svelte.js';
 import type { FlexiTargetController } from './system/target.svelte.js';
-import type { FlexiWidgetController } from './system/widget.svelte.js';
+import { type FlexiWidgetController, simpleTransitionConfig } from './system/widget.svelte.js';
 import type {
 	AdderWidgetConfiguration,
 	FlexiAddController,
@@ -56,5 +56,6 @@ export {
 	type FlexiWidgetTriggerConfiguration,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	getFlexiwidgetCtx
+	getFlexiwidgetCtx,
+	simpleTransitionConfig
 };
