@@ -25,6 +25,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "all",
 
 		// Deprecated, remove in v0.3
 		expandColumns: this.#rawLayoutConfig?.expandColumns ?? true,
@@ -67,7 +68,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
-		if (!this.expandIfNeededToFit(x, y, width, height)) {
+		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
 			return false;
 		}
 
@@ -88,6 +89,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#coordinateSystem.addWidget(widget, x, y, width, height);
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
+
 		return true;
 	}
 
@@ -101,7 +103,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
-		if (!this.expandIfNeededToFit(newX, newY, width, height)) {
+		if (!this.adjustGridDimensionsToFit(newX, newY, width, height)) {
 			return false;
 		}
 
@@ -305,7 +307,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
 	}
 
-	expandIfNeededToFit(x: number, y: number, width: number, height: number) {
+	adjustGridDimensionsToFit(x: number, y: number, width: number, height: number) {
 		if (x + width > this.#columns && !this.#tryExpandColumns(x + width)) {
 			return false;
 		}
@@ -353,6 +355,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	get columns() {
 		return this.#columns;
+	}
+
+	get collapsibility() {
+		return this.#layoutConfig.colllapsibility;
 	}
 }
 
@@ -462,6 +468,7 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Add rows.
 		if (newRows > oldRows) {
 			this.layout.push(
 				...Array.from({ length: newRows - oldRows }, () => new Array(this.#columns).fill(null))
@@ -469,6 +476,7 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Remove rows.
 		this.layout.splice(newRows);
 	}
 
@@ -477,11 +485,13 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Add columns.
 		if (newColumns > oldColumns) {
 			this.layout.forEach((row) => row.push(...new Array(newColumns - oldColumns).fill(null)));
 			return;
 		}
 
+		// Remove columns.
 		this.layout.forEach((row) => row.splice(newColumns));
 	}
 
@@ -497,12 +507,15 @@ class FreeFormGridCoordinateSystem {
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
 
+type FreeGridCollapsibility = "none" | "leading" | "trailing" | "endings" | "all";
+
 export type FreeFormTargetLayout = {
 	type: 'free';
 	minRows?: number;
 	minColumns?: number;
 	maxRows?: number;
 	maxColumns?: number;
+	colllapsibility?: FreeGridCollapsibility;
 
 	/**
 	 * @deprecated Use `maxColumns` instead.
