@@ -33,6 +33,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
 
+	// Track whether collapsing is needed to defer it until operations complete
+	#needsCollapsing: boolean = false;
+
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		super(target, targetConfig);
 
@@ -211,11 +214,30 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#widgets.delete(widget);
 		this.#coordinateSystem.removeWidget(widget);
 
-		// After removing a widget, try to collapse rows
-		const newRows = this.#coordinateSystem.applyRowCollapsibility();
-		this.#setRows(newRows); // Use the existing setter to ensure coordinate system is also updated.
+		// Mark that collapsing is needed, but don't apply it immediately
+		this.#needsCollapsing = true;
 
 		return true;
+	}
+
+	/**
+	 * Apply deferred row collapsing if needed. This should be called when widget operations are complete.
+	 */
+	applyDeferredCollapsing(): void {
+		if (!this.#needsCollapsing) {
+			return;
+		}
+
+		const newRows = this.#coordinateSystem.applyRowCollapsibility();
+		this.#setRows(newRows);
+		this.#needsCollapsing = false;
+	}
+
+	/**
+	 * Override the base class method to apply deferred collapsing.
+	 */
+	applyDeferredOperations(): void {
+		this.applyDeferredCollapsing();
 	}
 
 	takeSnapshot(): FreeFormGridSnapshot {
@@ -230,7 +252,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				y: widget.y,
 				width: widget.width,
 				height: widget.height
-			}))
+			})),
+			needsCollapsing: this.#needsCollapsing
 		};
 	}
 
@@ -244,6 +267,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#columns = this.#layoutConfig.minColumns;
 
 		this.#coordinateSystem.clear();
+		this.#needsCollapsing = false;
 	}
 
 	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
@@ -262,6 +286,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			this.#widgets.add(widget.widget);
 			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
 		}
+
+		// Restore the collapsing flag
+		this.#needsCollapsing = snapshot.needsCollapsing;
 	}
 
 	mapRawCellToFinalCell(x: number, y: number): [number, number] {
@@ -527,63 +554,60 @@ class FreeFormGridCoordinateSystem {
 		}
 
 		let newRows = currentRows;
+		let rowsToRemove: number[] = [];
 
+		// Collect all rows that need to be removed based on collapsibility type
 		if (collapsibility === 'all') {
-			let i = 0;
-			while (i < newRows && newRows > minRows) {
+			// Remove all empty rows
+			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
-					this.layout.splice(i, 1);
-					this.bitmaps.splice(i, 1);
-					newRows--;
-
-					// Shift all widgets below this row up by one
-					const widgetsToShift = this.#grid.getWidgetsForModification();
-					for (const widget of widgetsToShift) {
-						if (widget.y > i) {
-							widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
-						}
-					}
-					// Re-evaluate the current row index as the grid has shrunk
-					continue;
+					rowsToRemove.push(i);
 				}
-				i++;
 			}
 		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
-			let i = 0;
-			while (i < newRows && newRows > minRows) {
+			// Remove empty rows from the beginning
+			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
-					this.layout.splice(i, 1);
-					this.bitmaps.splice(i, 1);
-					newRows--;
-
-					const widgetsToShift = this.#grid.getWidgetsForModification();
-					for (const widget of widgetsToShift) {
-						// All widgets are shifted up as we remove from the start
-						widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
-					}
-					// No need to increment i, as the next row is now at the current index
-					continue;
+					rowsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty row for leading collapsibility
+					break;
 				}
-				// Stop if a non-empty row is found when only collapsing leading rows
-				break; 
 			}
 		}
 
 		if (collapsibility === 'trailing' || collapsibility === 'endings') {
-			let i = newRows - 1; // Start from the new end of the grid
-			while (i >= 0 && newRows > minRows) { // Ensure i stays within bounds
-				if (this.#isRowEmpty(i)) {
-					this.layout.splice(i, 1);
-					this.bitmaps.splice(i, 1);
-
-					newRows--;
-					i--;
-					
-					continue;
+			// Remove empty rows from the end
+			for (let i = currentRows - 1; i >= 0 && (currentRows - rowsToRemove.length) > minRows; i--) {
+				if (this.#isRowEmpty(i) && !rowsToRemove.includes(i)) {
+					rowsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty row for trailing collapsibility
+					break;
 				}
-				break;
 			}
 		}
+
+		// Calculate final row count
+		newRows = currentRows - rowsToRemove.length;
+
+		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		rowsToRemove.sort((a, b) => b - a);
+
+		// Remove rows and update widget positions
+		for (const rowIndex of rowsToRemove) {
+			this.layout.splice(rowIndex, 1);
+			this.bitmaps.splice(rowIndex, 1);
+
+			// Update widget positions for all widgets that were below the removed row
+			const widgetsToShift = this.#grid.getWidgetsForModification();
+			for (const widget of widgetsToShift) {
+				if (widget.y > rowIndex) {
+					widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
+				}
+			}
+		}
+
 		return newRows;
 	}
 }
@@ -608,6 +632,7 @@ type FreeFormGridSnapshot = {
 	rows: number;
 	columns: number;
 	widgets: WidgetSnapshot[];
+	needsCollapsing: boolean;
 };
 
 type CollisionCheck = {

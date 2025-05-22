@@ -29,6 +29,14 @@ export abstract class FlexiGrid {
     abstract restoreFromSnapshot(snapshot: unknown): void;
     abstract mapRawCellToFinalCell(x: number, y: number): [number, number];
 
+    /**
+     * Apply any deferred operations like row/column collapsing.
+     * Default implementation does nothing - grid types can override if needed.
+     */
+    applyDeferredOperations(): void {
+        // Default implementation does nothing
+    }
+
     _target: InternalFlexiTargetController;
     _targetConfig: FlexiTargetConfiguration;
 

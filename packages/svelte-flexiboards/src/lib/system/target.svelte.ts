@@ -289,6 +289,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
 
+		// Apply any deferred operations like row collapsing now that the operation is complete
+		this.grid.applyDeferredOperations();
+
 		return deleted;
 	}
 
@@ -436,7 +439,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
-		return this.#tryAddWidget(widget, x, y, width, height);
+		const result = this.#tryAddWidget(widget, x, y, width, height);
+
+		// Apply any deferred operations like row collapsing now that the operation is complete
+		this.grid.applyDeferredOperations();
+
+		return result;
 	}
 
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {
