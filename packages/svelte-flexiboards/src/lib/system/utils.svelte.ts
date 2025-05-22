@@ -116,6 +116,8 @@ type GridDimensions = {
 	rowGap: number;
 };
 
+type ScrollListener = { element: EventTarget; handler: () => void };
+
 export class GridDimensionTracker {
 	#dimensions: GridDimensions = $state({
 		left: 0,
@@ -140,6 +142,9 @@ export class GridDimensionTracker {
 
 	#targetConfig: FlexiTargetConfiguration = $state({} as FlexiTargetConfiguration);
 
+	#activeScrollListeners: { element: EventTarget; handler: () => void }[] = [];
+	#currentScrollableAncestors: HTMLElement[] = [];
+
 	constructor(grid: FlexiGrid, targetConfig: FlexiTargetConfiguration) {
 		this.#grid = grid;
 		this.#targetConfig = targetConfig;
@@ -160,7 +165,7 @@ export class GridDimensionTracker {
 
 		// Whenever the grid is resized, update the sizes.
 		onMount(() => {
-			this.setupScrollListener();
+			this.setupScrollListeners();
 
 			const grid = this.#grid!.ref;
 
@@ -181,6 +186,7 @@ export class GridDimensionTracker {
 
 			return () => {
 				observer.disconnect();
+				this.#cleanupScrollListeners();
 			};
 		});
 	}
@@ -236,31 +242,96 @@ export class GridDimensionTracker {
 		this.#dimensions.rowString = templateRows;
 	}
 
-	setupScrollListener() {
-		const grid = this.#grid;
-		const gridElement = grid?.ref;
+	#cleanupScrollListeners() {
+		this.#activeScrollListeners.forEach(({ element, handler }) => {
+			element.removeEventListener('scroll', handler);
+		});
+		this.#activeScrollListeners = [];
+		this.#currentScrollableAncestors = [];
+	}
 
+	#updatePositionOnScroll() {
+		if (!this.#grid?.ref) return;
+		const rect = this.#grid.ref.getBoundingClientRect();
+
+		// Update in-place for reactivity.
+		this.#dimensions.left = rect.left;
+		this.#dimensions.top = rect.top;
+		this.#dimensions.width = rect.width;
+		this.#dimensions.height = rect.height;
+	}
+
+	#attachScrollListeners(elements: EventTarget[]): ScrollListener[] {
+		const listeners: ScrollListener[] = [];
+		const handler = () => this.#updatePositionOnScroll();
+
+		elements.forEach((element) => {
+			element.addEventListener('scroll', handler, { passive: true });
+			listeners.push({ element, handler });
+		});
+		return listeners;
+	}
+
+	setupScrollListeners() {
+		const gridElement = this.#grid?.ref;
 		if (!gridElement || !window) {
 			return;
 		}
 
-		const updatePositionOnScroll = () => {
-			const rect = gridElement.getBoundingClientRect();
+		this.#cleanupScrollListeners(); // Clean up any existing listeners first
 
-			// Update in-place for reactivity.
-			this.#dimensions.left = rect.left;
-			this.#dimensions.top = rect.top;
-			this.#dimensions.width = rect.width;
-			this.#dimensions.height = rect.height;
-		};
+		this.#currentScrollableAncestors = this.#getScrollableAncestors(gridElement);
+		const listenersToAttach = [window, ...this.#currentScrollableAncestors];
+		this.#activeScrollListeners = this.#attachScrollListeners(listenersToAttach);
 
-		// Set up scroll listener, and initially update
-		window.addEventListener('scroll', updatePositionOnScroll, { passive: true });
-		updatePositionOnScroll();
+		this.#updatePositionOnScroll(); // Initial update
+	}
 
-		return () => {
-			window.removeEventListener('scroll', updatePositionOnScroll);
-		};
+	refreshScrollListeners() {
+		const gridElement = this.#grid?.ref;
+		if (!gridElement || !window) {
+			return;
+		}
+
+		const newAncestors = this.#getScrollableAncestors(gridElement);
+
+		const ancestorsChanged =
+			newAncestors.length !== this.#currentScrollableAncestors.length ||
+			newAncestors.some((ancestor, index) => ancestor !== this.#currentScrollableAncestors[index]);
+
+		if (ancestorsChanged) {
+			this.#cleanupScrollListeners();
+			this.#currentScrollableAncestors = newAncestors;
+			const listenersToAttach = [window, ...this.#currentScrollableAncestors];
+			this.#activeScrollListeners = this.#attachScrollListeners(listenersToAttach);
+			this.#updatePositionOnScroll(); // Update dimensions after listeners are set
+		}
+	}
+
+	#getScrollableAncestors(element: HTMLElement | null): HTMLElement[] {
+		const ancestors: HTMLElement[] = [];
+		if (!element) {
+			return ancestors;
+		}
+
+		// Get all ancestors of the element that are scrollable.
+		let parent = element.parentElement;
+		while (parent) {
+			const style = window.getComputedStyle(parent);
+			const overflowY = style.getPropertyValue('overflow-y');
+			const overflowX = style.getPropertyValue('overflow-x');
+			const isScrollable =
+				((overflowY === 'auto' || overflowY === 'scroll') &&
+					parent.scrollHeight > parent.clientHeight) ||
+				((overflowX === 'auto' || overflowX === 'scroll') &&
+					parent.scrollWidth > parent.clientWidth);
+
+			if (isScrollable) {
+				ancestors.push(parent);
+			}
+			parent = parent.parentElement;
+		}
+		return ancestors;
 	}
 
 	getCellFromPointerPosition(clientX: number, clientY: number): CellPosition | null {

@@ -28,8 +28,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "all"
 	});
 
-	#rows: number;
-	#columns: number;
+	#rows: number = $state() as number;
+	#columns: number = $state() as number;
 
 	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
 
