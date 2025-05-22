@@ -25,11 +25,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
-		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "all",
-
-		// Deprecated, remove in v0.3
-		expandColumns: this.#rawLayoutConfig?.expandColumns ?? true,
-		expandRows: this.#rawLayoutConfig?.expandRows ?? true
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "all"
 	});
 
 	#rows: number;
@@ -46,8 +42,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		const layout = targetConfig.layout as FreeFormTargetLayout;
 
 		// v0.3: Remove baseRows and baseColumns
-		this.#rows = layout.minRows ?? targetConfig.baseRows ?? 1;
-		this.#columns = layout.minColumns ?? targetConfig.baseColumns ?? 1;
+		this.#rows = layout.minRows ?? 1;
+		this.#columns = layout.minColumns ?? 1;
 
 		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
 	}
@@ -215,9 +211,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#widgets.delete(widget);
 		this.#coordinateSystem.removeWidget(widget);
 
-		// If we now have empty rows or columns at the ends, remove them.
-		// this.#removeTrailingEmptyRows();
-		// this.#removeTrailingEmptyColumns();
+		// After removing a widget, try to collapse rows
+		const newRows = this.#coordinateSystem.applyRowCollapsibility();
+		this.#setRows(newRows); // Use the existing setter to ensure coordinate system is also updated.
 
 		return true;
 	}
@@ -314,6 +310,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		if (y + height > this.#rows && !this.#tryExpandRows(y + height)) {
 			return false;
 		}
+
 		return true;
 	}
 
@@ -359,6 +356,18 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	get collapsibility() {
 		return this.#layoutConfig.colllapsibility;
+	}
+
+	get minRows() {
+		return this.#layoutConfig.minRows;
+	}
+
+	get minColumns() {
+		return this.#layoutConfig.minColumns;
+	}
+
+	public getWidgetsForModification(): FlexiWidgetController[] {
+		return Array.from(this.#widgets);
 	}
 }
 
@@ -503,6 +512,80 @@ class FreeFormGridCoordinateSystem {
 	updateForColumns(oldColumns: number, newColumns: number) {
 		this.#adjustLayoutColumns(oldColumns, newColumns);
 	}
+
+	#isRowEmpty(row: number) {
+		return this.bitmaps[row] === 0;
+	}
+
+	applyRowCollapsibility(): number {
+		const currentRows = this.#rows;
+		const minRows = this.#grid.minRows;
+		const collapsibility = this.#grid.collapsibility;
+
+		if (collapsibility === 'none' || currentRows <= minRows) {
+			return currentRows;
+		}
+
+		let newRows = currentRows;
+
+		if (collapsibility === 'all') {
+			let i = 0;
+			while (i < newRows && newRows > minRows) {
+				if (this.#isRowEmpty(i)) {
+					this.layout.splice(i, 1);
+					this.bitmaps.splice(i, 1);
+					newRows--;
+
+					// Shift all widgets below this row up by one
+					const widgetsToShift = this.#grid.getWidgetsForModification();
+					for (const widget of widgetsToShift) {
+						if (widget.y > i) {
+							widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
+						}
+					}
+					// Re-evaluate the current row index as the grid has shrunk
+					continue;
+				}
+				i++;
+			}
+		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
+			let i = 0;
+			while (i < newRows && newRows > minRows) {
+				if (this.#isRowEmpty(i)) {
+					this.layout.splice(i, 1);
+					this.bitmaps.splice(i, 1);
+					newRows--;
+
+					const widgetsToShift = this.#grid.getWidgetsForModification();
+					for (const widget of widgetsToShift) {
+						// All widgets are shifted up as we remove from the start
+						widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
+					}
+					// No need to increment i, as the next row is now at the current index
+					continue;
+				}
+				// Stop if a non-empty row is found when only collapsing leading rows
+				break; 
+			}
+		}
+
+		if (collapsibility === 'trailing' || collapsibility === 'endings') {
+			let i = newRows - 1; // Start from the new end of the grid
+			while (i >= 0 && newRows > minRows) { // Ensure i stays within bounds
+				if (this.#isRowEmpty(i)) {
+					this.layout.splice(i, 1);
+					this.bitmaps.splice(i, 1);
+
+					newRows--;
+					i--;
+					
+					continue;
+				}
+				break;
+			}
+		}
+		return newRows;
+	}
 }
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
@@ -516,16 +599,6 @@ export type FreeFormTargetLayout = {
 	maxRows?: number;
 	maxColumns?: number;
 	colllapsibility?: FreeGridCollapsibility;
-
-	/**
-	 * @deprecated Use `maxColumns` instead.
-	 */
-	expandColumns?: boolean;
-
-	/**
-	 * @deprecated Use `maxRows` instead.
-	 */
-	expandRows?: boolean;
 };
 type DerivedFreeFormTargetLayout = Required<FreeFormTargetLayout>;
 

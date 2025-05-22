@@ -31,9 +31,9 @@
 	<title>Flexiboards</title>
 </svelte:head>
 
-<Sidebar.Provider>
+<Sidebar.Provider class="grow min-h-0 h-full">
 	<AppSidebar />
-	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-4 py-8 lg:px-16">
+	<main class="flex grow min-h-0 w-full flex-col gap-8 px-4 py-8 lg:px-16">
 		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
 			Dashboard
 			<div class="flex items-center gap-2">
@@ -51,7 +51,7 @@
 			</div>
 		</h1>
 
-		<FlexiBoard class={'grow overflow-y-auto'} config={boardConfig} onfirstcreate={onBoardReady}>
+		<FlexiBoard class={'grow min-h-0 overflow-y-auto'} config={boardConfig} onfirstcreate={onBoardReady}>
 			<FlexiTarget
 				key="left"
 				class={'h-full gap-2 lg:gap-4'}
@@ -61,8 +61,9 @@
 						type: 'free',
 						minColumns: 3,
 						maxColumns: 3,
-						minRows: 4,
-						maxRows: 4
+						minRows: 2,
+						maxRows: 4,
+						colllapsibility: 'all'
 					}
 				}}
 			>
