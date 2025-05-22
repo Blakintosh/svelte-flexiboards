@@ -94,7 +94,7 @@ description: "The reactive configuration of the widget."
 {
 name: "isShadow",
 type: "boolean",
-description: "Whether this widget is a shadow dropzone widget."
+description: "Whether this widget is a shadow-sm dropzone widget."
 },
 {
 name: "isGrabbed",

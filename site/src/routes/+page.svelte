@@ -54,7 +54,7 @@
 		<h2 class="text-center text-xl lg:text-2xl">
 			Headless, reactive drag and drop components for Svelte 5.
 		</h2>
-		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline'}>
+		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline-solid'}>
 			<Rocket />
 			Version 0.2 out now!
 		</Badge>

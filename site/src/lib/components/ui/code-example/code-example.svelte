@@ -81,15 +81,15 @@
 	</Tabs.List>
 	<Tabs.Content value="preview">
 		<div
-			class="not-prose preview mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+			class="not-prose preview mt-2 ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 		>
 			{@render example()}
 		</div>
 	</Tabs.Content>
 	<Tabs.Content value="code">
-		<div class="not-prose code-block group relative max-h-[40rem] overflow-clip rounded-md">
+		<div class="not-prose code-block group relative max-h-160 overflow-clip rounded-md">
 			<button
-				class="absolute right-4 top-2 z-10 rounded-md bg-muted p-2 text-muted-foreground opacity-0 transition-opacity duration-200 hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring group-hover:opacity-100"
+				class="absolute right-4 top-2 z-10 rounded-md bg-muted p-2 text-muted-foreground opacity-0 transition-opacity duration-200 hover:bg-muted hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring group-hover:opacity-100"
 				onclick={copyCode}
 				aria-label="Copy code to clipboard"
 			>
@@ -116,7 +116,9 @@
 </div>
 
 <style lang="postcss">
+	/* @reference '/app.css';
+
 	.code-block > :global(pre) {
-		@apply max-h-[40rem] w-auto overflow-auto px-8 py-4 text-xs lg:text-sm;
-	}
+		@apply max-h-160 w-auto overflow-auto px-8 py-4 text-xs;
+	} */
 </style>
