@@ -29,6 +29,7 @@ export type FreeFormTargetLayout = {
 	minColumns?: number;
 	maxRows?: number;
 	maxColumns?: number;
+	collapsibility?: FreeGridCollapsibility;
 };
 ```
 
@@ -37,6 +38,12 @@ export type FreeFormTargetLayout = {
 - `minRows`: The minimum number of rows that the grid should have.
 - `maxColumns`: The maximum number of columns that the grid should have. When equal to `minColumns`, the grid will not expand in the column direction.
 - `maxRows`: The maximum number of rows that the grid should have. When equal to `minRows`, the grid will not expand in the row direction.
+- `collapsibility`: Whether the grid _collapses_ to remove empty rows and columns, and if so, when. Can be any of: 
+	- `none` (don't collapse)
+	- `leading` (collapse at the start of the grid)
+	- `trailing` (collapse at the end of the grid)
+	- `endings` (collapse at either end of the grid)
+	- or `any` (collapse any empty row/column).
 
 ## Example
 

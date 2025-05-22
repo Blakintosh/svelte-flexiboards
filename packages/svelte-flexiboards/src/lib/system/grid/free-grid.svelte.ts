@@ -25,7 +25,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
-		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "all"
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "any"
 	});
 
 	#rows: number = $state() as number;
@@ -557,7 +557,7 @@ class FreeFormGridCoordinateSystem {
 		let rowsToRemove: number[] = [];
 
 		// Collect all rows that need to be removed based on collapsibility type
-		if (collapsibility === 'all') {
+		if (collapsibility === 'any') {
 			// Remove all empty rows
 			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
@@ -614,7 +614,7 @@ class FreeFormGridCoordinateSystem {
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
 
-type FreeGridCollapsibility = "none" | "leading" | "trailing" | "endings" | "all";
+type FreeGridCollapsibility = "none" | "leading" | "trailing" | "endings" | "any";
 
 export type FreeFormTargetLayout = {
 	type: 'free';

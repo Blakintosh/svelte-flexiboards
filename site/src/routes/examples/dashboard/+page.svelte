@@ -63,7 +63,7 @@
 						maxColumns: 3,
 						minRows: 2,
 						maxRows: 4,
-						colllapsibility: 'all'
+						colllapsibility: 'any'
 					}
 				}}
 			>
