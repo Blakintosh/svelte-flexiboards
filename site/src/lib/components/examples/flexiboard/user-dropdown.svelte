@@ -12,7 +12,7 @@
 			<div class="flex items-center gap-4">
 				<Avatar.Root class="size-8 rounded-lg border">
 					<Avatar.Image src="https://github.com/blakintosh.png" alt="Blakintosh" />
-					<Avatar.Fallback>Blakintosh</Avatar.Fallback>
+					<Avatar.Fallback class="rounded-lg">B</Avatar.Fallback>
 				</Avatar.Root>
 				<div class="flex flex-col gap-0.5 leading-none">
 					<span class="font-semibold">Blakintosh</span>

@@ -55,7 +55,7 @@
 			The headless drag-and-drop toolkit for Svelte.
 		</h2>
 		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline'}>
-			<Rocket />
+			<Rocket size={32} class="size-8 text-xl" />
 			Version 0.3 out now!
 		</Badge>
 
