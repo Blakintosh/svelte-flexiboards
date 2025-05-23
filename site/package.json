@@ -36,6 +36,7 @@
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
+		"@lucide/svelte": "^0.482.0",
 		"@melt-ui/pp": "^0.3.2",
 		"@sveltejs/adapter-auto": "^3.3.1",
 		"@sveltejs/adapter-vercel": "^5.6.2",
@@ -60,7 +61,7 @@
 		"svelte": "^5.20.1",
 		"svelte-check": "^4.1.4",
 		"tailwind-merge": "^3.3.0",
-		"tailwind-variants": "^1.0.0",
+		"tailwind-variants": "^0.2.1",
 		"tailwindcss": "^4.1.7",
 		"tw-animate-css": "^1.3.0",
 		"typescript": "^5.7.3",
@@ -69,7 +70,6 @@
 		"vite": "^5.4.14"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^0.511.0",
 		"@melt-ui/svelte": "^0.86.6",
 		"formsnap": "^2.0.1",
 		"mdsvexamples": "^0.5.0",
