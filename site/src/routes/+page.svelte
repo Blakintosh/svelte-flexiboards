@@ -52,11 +52,11 @@
 			<h1 class="font-display text-4xl lg:text-6xl">Flexiboards</h1>
 		</div>
 		<h2 class="text-center text-xl lg:text-2xl">
-			Headless, reactive drag and drop components for Svelte 5.
+			The headless drag-and-drop toolkit for Svelte.
 		</h2>
-		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline-solid'}>
+		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline'}>
 			<Rocket />
-			Version 0.2 out now!
+			Version 0.3 out now!
 		</Badge>
 
 		<div class="flex flex-col gap-4 lg:flex-row">
