@@ -19,7 +19,7 @@
 </main>
 
 <footer
-	class="fixed bottom-0 h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur"
+	class="fixed bottom-0 h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur-sm"
 >
 	Preview version. Expect bugs!
 </footer>
