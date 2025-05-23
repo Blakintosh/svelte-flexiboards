@@ -107,7 +107,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return 'position: relative;';
 		}
 
-		return `position: relative; overflow: hidden; ${this.#getStyleForCurrentWidgetAction()}`;
+		return `position: relative; overflow: visible; ${this.#getStyleForCurrentWidgetAction()}`;
 	});
 
 	#getStyleForCurrentWidgetAction() {

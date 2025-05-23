@@ -46,7 +46,7 @@
 	>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-6'}
+			class={'aspect-square h-64 gap-2 rounded-lg border p-4 lg:h-128 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 6rem)',
 				layout: {

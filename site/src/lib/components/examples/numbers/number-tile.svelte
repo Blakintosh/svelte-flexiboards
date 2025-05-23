@@ -8,6 +8,6 @@
 	let { number }: NumberTileProps = $props();
 </script>
 
-<div class="flex h-full items-center justify-center rounded-md bg-muted p-4 text-2xl font-bold">
+<div class="flex h-full items-center justify-center rounded-md bg-card text-card-foreground shadow-sm border p-4 text-2xl font-bold">
 	{number}
 </div>
