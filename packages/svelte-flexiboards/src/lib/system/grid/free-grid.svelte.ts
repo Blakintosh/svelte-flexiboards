@@ -221,23 +221,27 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	/**
-	 * Apply deferred row collapsing if needed. This should be called when widget operations are complete.
+	 * Applies row and column collapsing, if needed.
 	 */
-	applyDeferredCollapsing(): void {
+	applyCollapsingIfNeeded(): void {
 		if (!this.#needsCollapsing) {
 			return;
 		}
 
 		const newRows = this.#coordinateSystem.applyRowCollapsibility();
 		this.#setRows(newRows);
+
+		const newColumns = this.#coordinateSystem.applyColumnCollapsibility();
+		this.#setColumns(newColumns);
+
 		this.#needsCollapsing = false;
 	}
 
 	/**
-	 * Override the base class method to apply deferred collapsing.
+	 * Collapse rows and columns if needed.
 	 */
-	applyDeferredOperations(): void {
-		this.applyDeferredCollapsing();
+	applyPostCompletionOperations(): void {
+		this.applyCollapsingIfNeeded();
 	}
 
 	takeSnapshot(): FreeFormGridSnapshot {
@@ -609,6 +613,108 @@ class FreeFormGridCoordinateSystem {
 		}
 
 		return newRows;
+	}
+
+	applyColumnCollapsibility(): number {
+		const currentColumns = this.#columns;
+		const minColumns = this.#grid.minColumns;
+		const collapsibility = this.#grid.collapsibility;
+
+		if (collapsibility === 'none' || currentColumns <= minColumns) {
+			return currentColumns;
+		}
+
+		let newColumns = currentColumns;
+		let columnsToRemove: number[] = [];
+
+		// Collect all columns that need to be removed based on collapsibility type
+		if (collapsibility === 'any') {
+			// Remove all empty columns
+			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+				if (this.#isColumnEmpty(i)) {
+					columnsToRemove.push(i);
+				}
+			}
+		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
+			// Remove empty columns from the beginning
+			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+				if (this.#isColumnEmpty(i)) {
+					columnsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty column for leading collapsibility
+					break;
+				}
+			}
+		}
+
+		if (collapsibility === 'trailing' || collapsibility === 'endings') {
+			// Remove empty columns from the end
+			for (let i = currentColumns - 1; i >= 0 && (currentColumns - columnsToRemove.length) > minColumns; i--) {
+				if (this.#isColumnEmpty(i) && !columnsToRemove.includes(i)) {
+					columnsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty column for trailing collapsibility
+					break;
+				}
+			}
+		}
+
+		// Calculate final column count
+		newColumns = currentColumns - columnsToRemove.length;
+
+		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		columnsToRemove.sort((a, b) => b - a);
+
+		// Remove columns and update widget positions
+		for (const columnIndex of columnsToRemove) {
+			// Remove the column from the layout
+			this.layout.forEach(row => row.splice(columnIndex, 1));
+			
+			// Update bitmaps by removing the column bit and shifting
+			for (let rowIndex = 0; rowIndex < this.bitmaps.length; rowIndex++) {
+				this.bitmaps[rowIndex] = this.#removeColumnFromBitmap(this.bitmaps[rowIndex], columnIndex);
+			}
+
+			// Update widget positions for all widgets that were to the right of the removed column
+			const widgetsToShift = this.#grid.getWidgetsForModification();
+			for (const widget of widgetsToShift) {
+				if (widget.x > columnIndex) {
+					widget.setBounds(widget.x - 1, widget.y, widget.width, widget.height);
+				}
+			}
+		}
+
+		return newColumns;
+	}
+
+	#isColumnEmpty(column: number): boolean {
+		const columnBit = 1 << column;
+		for (let row = 0; row < this.bitmaps.length; row++) {
+			if (this.bitmaps[row] & columnBit) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	#removeColumnFromBitmap(bitmap: number, columnIndex: number): number {
+		let result = 0;
+		let targetBit = 0;
+		
+		for (let sourceBit = 0; sourceBit < 32; sourceBit++) {
+			if (sourceBit === columnIndex) {
+				// Skip this bit (remove the column)
+				continue;
+			}
+			
+			if (bitmap & (1 << sourceBit)) {
+				result |= (1 << targetBit);
+			}
+			
+			targetBit++;
+		}
+		
+		return result;
 	}
 }
 

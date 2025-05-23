@@ -394,7 +394,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (!actionSucceeded && currentWidgetAction.target) {
 			currentWidgetAction.target.restorePreGrabSnapshot();
 			// Apply deferred operations after restoring (in case the restore action affected the grid)
-			(currentWidgetAction.target as any).grid?.applyDeferredOperations?.();
+			currentWidgetAction.target.applyGridPostCompletionOperations();
 		}
 
 		this.#currentWidgetAction = null;
@@ -425,7 +425,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			from.forgetPreGrabSnapshot();
 			
 			// Apply deferred operations to the source target (like collapsing empty rows)
-			(from as any).grid?.applyDeferredOperations?.();
+			from.applyGridPostCompletionOperations();
 		}
 
 		widget.target = to;

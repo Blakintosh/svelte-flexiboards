@@ -493,4 +493,70 @@ describe('FreeFormFlexiGrid', () => {
 			expect(grid.rows).toBe(3);
 		})
 	})
+
+	describe('Column Expansion and Collapsibility Tests', () => {
+		let grid: FreeFormFlexiGrid;
+		let mockTarget: InternalFlexiTargetController;
+
+		beforeEach(() => {
+			mockTarget = {} as InternalFlexiTargetController;
+			const targetConfig: FlexiTargetConfiguration = {
+				layout: {
+					type: 'free',
+					minColumns: 2,
+					minRows: 2,
+					maxRows: 2, // Fixed at 2 rows
+					colllapsibility: 'any'
+				},
+				rowSizing: 'auto',
+				columnSizing: 'auto'
+			};
+			grid = new FreeFormFlexiGrid(mockTarget, targetConfig);
+		});
+
+		describe('Column expansion', () => {
+			it('should expand columns when placing widgets beyond current boundaries', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				// State:
+				// --
+				// --
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 2);
+				const result = grid.tryPlaceWidget(widget2, 1, 0, 3, 2);
+
+				// Expected state:
+				// abbb
+				// abbb
+
+				expect(result).toBe(true);
+
+				expect(grid.columns).toBe(4);
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 3, 2);
+			});
+
+			it('should handle placing wide widgets that require column expansion', () => {
+				const widget = createMockWidget();
+
+				// State:
+				// --
+				// --
+
+				const result = grid.tryPlaceWidget(widget, 1, 0, 5, 1);
+
+				// Expected state:
+				// -aaaaa
+				// ------
+
+				expect(result).toBe(true);
+				expect(grid.columns).toBe(6);
+				expect(widget.setBounds).toHaveBeenCalledWith(1, 0, 5, 1);
+			});
+		});
+
+		// TODO: grid collapsibility tests - which needs a fix to how positions
+		// are normalised.
+	});
 });

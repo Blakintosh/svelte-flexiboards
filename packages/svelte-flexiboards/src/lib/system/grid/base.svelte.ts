@@ -30,12 +30,9 @@ export abstract class FlexiGrid {
     abstract mapRawCellToFinalCell(x: number, y: number): [number, number];
 
     /**
-     * Apply any deferred operations like row/column collapsing.
-     * Default implementation does nothing - grid types can override if needed.
+     * Apply any post-completion operations like row/column collapsing.
      */
-    applyDeferredOperations(): void {
-        // Default implementation does nothing
-    }
+    applyPostCompletionOperations(): void {}
 
     _target: InternalFlexiTargetController;
     _targetConfig: FlexiTargetConfiguration;
