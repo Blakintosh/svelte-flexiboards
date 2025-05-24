@@ -11,10 +11,6 @@ published: true
 	import Flow2DExample from '$lib/components/docs/flow-grids/flow-2d-example.svelte';
 </script>
 
-_**NOTE:** In v0.1, the `component` and `componentProps` props passed to the `FlexiWidget` component were also passed to the `children` snippet as parameters. This was deemed redundant given the snippet approach's use-cases, and has been deprecated in v0.2. They will be removed in v0.3._
-
-_Naturally, if you opt for the snippets approach, you can instantiate any Svelte component as part of the snippet._
-
 ## Introduction
 
 In Flexiboards, the FlexiWidget component allows you to create a widget with drag-and-drop functionality within the scope of the FlexiBoard. Within it, though, you'll want to render some content.

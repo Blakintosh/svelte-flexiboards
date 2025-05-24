@@ -141,6 +141,11 @@ export interface FlexiTargetController {
 	forgetPreGrabSnapshot(): void;
 
 	/**
+	 * Applies any post-completion operations like row/column collapsing.
+	 */
+	applyGridPostCompletionOperations(): void;
+
+	/**
 	 * Attempts to drop a widget into this target.
 	 * @param widget The widget to drop.
 	 * @returns Whether the widget was dropped.
@@ -289,6 +294,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
 
+		// Apply any deferred operations like row collapsing now that the operation is complete
+		this.applyGridPostCompletionOperations();
+
 		return deleted;
 	}
 
@@ -398,6 +406,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#preGrabSnapshot = null;
 	}
 
+	applyGridPostCompletionOperations(): void {
+		this.grid.applyPostCompletionOperations();
+	}
+
 	startResizeWidget(params: WidgetStartResizeParams) {
 		// Remove the widget as it's now in a pseudo-floating state.
 		this.grid.removeWidget(params.widget);
@@ -436,7 +448,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
-		return this.#tryAddWidget(widget, x, y, width, height);
+		const result = this.#tryAddWidget(widget, x, y, width, height);
+
+		// Apply any deferred operations like row collapsing now that the operation is complete
+		this.applyGridPostCompletionOperations();
+
+		return result;
 	}
 
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {

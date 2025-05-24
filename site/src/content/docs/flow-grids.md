@@ -11,10 +11,6 @@ published: true
 	import Flow2DExample from '$lib/components/docs/flow-grids/flow-2d-example.svelte';
 </script>
 
-_**NOTE:** In v0.1, there was ambiguity with the use of the `baseRows` and `baseColumns` properties (stored on the target's configuration) and use of values stored on the `layout` object. A breaking change has been made to the library meaning that `baseRows` and `baseColumns` are now deprecated. Additionally, the `disallowExpansion` property has been deprecated in favour of `maxFlowAxis`._
-
-_These properties will be removed in v0.3. Use `layout.rows` and `layout.columns` instead to set the initial size of the grid, and set `maxFlowAxis` to your row count to disable grid expansion._
-
 ## Introduction
 
 Flow grids are a _dense_ grid layout, where widgets are placed relative to each other in an ordered manner. The configuration of the flow grid then determines the layout of the ordered widgets.
