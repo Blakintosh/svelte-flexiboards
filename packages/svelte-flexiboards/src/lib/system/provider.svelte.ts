@@ -19,7 +19,7 @@ import {
 	type FlexiTargetPartialConfiguration
 } from './target.svelte.js';
 import type { FlexiWidgetController, FlexiWidgetDefaults } from './widget.svelte.js';
-import { PointerPositionWatcher } from './utils.svelte.js';
+import { AutoScrollService, getPointerService, PointerService } from './utils.svelte.js';
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { FlexiTarget } from '$lib/index.js';
 import type { FlexiPortalController } from './portal.js';
@@ -76,7 +76,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#ref: ProxiedValue<HTMLElement | null> = $state({ value: null });
 
-	#positionWatcher: PointerPositionWatcher = new PointerPositionWatcher(this.#ref);
+	#pointerService: PointerService = getPointerService();
+	#autoScrollService: AutoScrollService = new AutoScrollService(this.#ref);
 
 	#rawProps?: FlexiBoardProps = $state(undefined);
 	config?: FlexiBoardConfiguration = $derived(this.#rawProps?.config);
@@ -93,11 +94,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#rawProps = props;
 
 		const onpointerup = this.#onpointerup.bind(this);
+		const onkeydown = this.#onkeydown.bind(this);
 		$effect(() => {
 			window.addEventListener('pointerup', onpointerup);
+			window.addEventListener('keydown', onkeydown);
 
 			return () => {
 				window.removeEventListener('pointerup', onpointerup);
+				window.removeEventListener('keydown', onkeydown);
 			};
 		});
 	}
@@ -107,7 +111,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return 'position: relative;';
 		}
 
-		return `position: relative; overflow: hidden; ${this.#getStyleForCurrentWidgetAction()}`;
+		return `position: relative; ${this.#getStyleForCurrentWidgetAction()}`;
 	});
 
 	#getStyleForCurrentWidgetAction() {
@@ -186,7 +190,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		if (event.clientX !== undefined && event.clientY !== undefined) {
-			this.#positionWatcher.updatePosition(event.clientX, event.clientY);
+			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
 
 		const action: WidgetGrabAction = {
@@ -197,8 +201,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
 			capturedHeightPx: event.capturedHeight,
-			capturedWidthPx: event.capturedWidth,
-			positionWatcher: this.#positionWatcher
+			capturedWidthPx: event.capturedWidth
 		};
 		this.#currentWidgetAction = action;
 
@@ -207,7 +210,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.#lockViewport();
-		this.#positionWatcher.autoScroll = true;
+		this.#autoScrollService.shouldAutoScroll = true;
+		this.#pointerService.keyboardControlsActive = true;
 
 		// Only matters if the event source is a target, which isn't the case when the widget is being dragged into the board.
 		if (event.target) {
@@ -242,8 +246,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			heightPx: event.heightPx,
 			widthPx: event.widthPx,
 			initialHeightUnits: event.widget.height,
-			initialWidthUnits: event.widget.width,
-			positionWatcher: this.#positionWatcher
+			initialWidthUnits: event.widget.width
 		};
 
 		this.#currentWidgetAction = action;
@@ -280,6 +283,31 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.handleWidgetRelease();
+	}
+
+	#onkeydown(event: KeyboardEvent) {
+		if(!this.#currentWidgetAction) {
+			return;
+		}
+
+		// If they pressed Esc, then just cancel.
+		if(event.key == 'Escape') {
+			if (this.portal) {
+				this.portal.returnWidgetFromPortal(this.#currentWidgetAction!.widget);
+			}
+			this.#releaseCurrentWidgetAction();
+			event.stopPropagation();
+			event.preventDefault();
+			return;
+		}
+
+		// If they pressed Enter, then try to place as-is
+		if(event.key == 'Enter') {
+			this.handleWidgetRelease();
+			event.stopPropagation();
+			event.preventDefault();
+			return;
+		}
 	}
 
 	handleWidgetRelease() {
@@ -334,6 +362,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.portal) {
 			this.portal.returnWidgetFromPortal(action.widget);
 		}
+		this.#autoScrollService.shouldAutoScroll = false;
+		this.#pointerService.keyboardControlsActive = false;
 
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
@@ -359,7 +389,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.#releaseCurrentWidgetAction(true);
-		this.#positionWatcher.autoScroll = false;
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {

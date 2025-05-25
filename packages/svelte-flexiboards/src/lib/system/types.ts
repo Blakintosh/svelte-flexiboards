@@ -1,6 +1,6 @@
 import type { FlexiWidgetController, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration } from "./widget.svelte.js";
 import type { FlexiTargetController, InternalFlexiTargetController } from "./target.svelte.js";
-import type { PointerPositionWatcher } from "./utils.svelte.js";
+import type { PointerService } from "./utils.svelte.js";
 import type { Component } from "svelte";
 import type { FlexiAddController } from "./manage.svelte.js";
 
@@ -29,7 +29,6 @@ export type WidgetGrabAction = {
     adder?: FlexiAddController;
     offsetX: number;
     offsetY: number;
-    positionWatcher: PointerPositionWatcher;
     capturedHeightPx: number;
     capturedWidthPx: number;
 }
@@ -46,7 +45,6 @@ export type WidgetResizeAction = {
     widthPx: number;
     initialHeightUnits: number;
     initialWidthUnits: number;
-    positionWatcher: PointerPositionWatcher;
 }   
 
 export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
@@ -112,3 +110,6 @@ export type HoveredTargetEvent = {
 }
 
 export type FlexiSavedLayout = Record<string, FlexiWidgetConfiguration[]>;
+
+export type WidgetActionEvent = (PointerEvent & { isKeyboard?: undefined}) 
+    | (KeyboardEvent & { isKeyboard: true, clientX: number, clientY: number });

@@ -12,9 +12,18 @@
 <script lang="ts">
 	let { class: className, children }: FlexiGrabProps = $props();
 
-	const { widget, onpointerdown } = flexigrab();
+	const { widget, onpointerdown, onkeydown } = flexigrab();
 </script>
 
-<button style={"user-select: none; cursor: grab; touch-action: none;"} class={className} {onpointerdown}>
+<button 
+	style={
+		"user-select: none; touch-action: none;" +
+		widget.draggable ? "cursor: grab;" : "cursor: not-allowed;"
+	} 
+	disabled={!widget.draggable} 
+	class={className} 
+	{onpointerdown}
+	{onkeydown}
+>
 	{@render children?.({ widget })}
 </button>

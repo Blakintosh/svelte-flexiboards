@@ -19,13 +19,16 @@ import type {
 	WidgetGrabAction,
 	WidgetResizeAction,
 	WidgetResizability,
-	Position
+	Position,
+	WidgetActionEvent
 } from './types.js';
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
 import {
+	getPointerService,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
+	PointerService,
 	WidgetPointerEventWatcher,
 	type PointerTriggerCondition
 } from './utils.svelte.js';
@@ -224,6 +227,8 @@ export class FlexiWidgetController {
 	#targetWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.config.widgetDefaults);
 	#rawConfig: FlexiWidgetConfiguration = $state() as FlexiWidgetConfiguration;
 
+	#pointerService: PointerService = getPointerService();
+
 	/**
 	 * The DOM element bound to this widget.
 	 */
@@ -377,8 +382,8 @@ export class FlexiWidgetController {
 	}
 
 	#getGrabbedWidgetStyle(action: WidgetGrabAction) {
-		const locationOffsetX = action.positionWatcher.position.x - action.offsetX;
-		const locationOffsetY = action.positionWatcher.position.y - action.offsetY;
+		const locationOffsetX = this.#pointerService.position.x - action.offsetX;
+		const locationOffsetY = this.#pointerService.position.y - action.offsetY;
 
 		// Fixed when it's a grabbed widget.
 		const height = action.capturedHeightPx;
@@ -393,8 +398,8 @@ export class FlexiWidgetController {
 		// Guard against division by zero if initial width is somehow 0
 		const unitSizeX = action.initialWidthUnits > 0 ? action.widthPx / action.initialWidthUnits : 1;
 
-		const deltaX = action.positionWatcher.position.x - action.offsetX;
-		const deltaY = action.positionWatcher.position.y - action.offsetY;
+		const deltaX = this.#pointerService.position.x - action.offsetX;
+		const deltaY = this.#pointerService.position.y - action.offsetY;
 
 		// For resizing, top and left should remain fixed at their initial positions.
 		const top = action.top;
@@ -450,6 +455,7 @@ export class FlexiWidgetController {
 		// Allows the event handlers to be called without binding to the widget instance.
 		this.onpointerdown = this.onpointerdown.bind(this);
 		this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
+		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
 	}
 
@@ -465,10 +471,12 @@ export class FlexiWidgetController {
 		this.#grabPointerEventWatcher.onstartpointerdown(event);
 	}
 
-	ongrab(event: PointerEvent) {
+	ongrab(event: WidgetActionEvent) {
 		this.#grabWidget(event.clientX, event.clientY);
 		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		if(!event.isKeyboard) {
+			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		}
 	}
 
 	/**
@@ -483,12 +491,40 @@ export class FlexiWidgetController {
 		this.#grabPointerEventWatcher.onstartpointerdown(event);
 	}
 
-	onresize(event: PointerEvent) {
+	ongrabberkeydown(event: KeyboardEvent) {
+		console.log('got event!')
+		if(!this.draggable || !this.ref) {
+			return;
+		}
+
+		if(event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = this.ref.getBoundingClientRect();
+
+		const x = rect.left + (rect.width / 2);
+		const y = rect.top + (rect.height / 2);
+		return this.ongrab({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		})
+	}
+
+	onresize(event: WidgetActionEvent) {
 		// Pass the pointer ID and target element to the internal method
 		this.#startResizeWidget(event.clientX, event.clientY);
 
 		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
-		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		if(!event.isKeyboard) {
+			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		}
 	}
 
 	initiateFirstDragIn() {
@@ -633,7 +669,8 @@ export class FlexiWidgetController {
 		this.#grabbers++;
 
 		return {
-			onpointerdown: this.ongrabberpointerdown
+			onpointerdown: this.ongrabberpointerdown,
+			onkeydown: this.ongrabberkeydown
 		};
 	}
 
@@ -1037,13 +1074,13 @@ export function flexigrab() {
 		);
 	}
 
-	const { onpointerdown } = widget.addGrabber();
+	const { onpointerdown, onkeydown } = widget.addGrabber();
 
 	onDestroy(() => {
 		widget.removeGrabber();
 	});
 
-	return { widget, onpointerdown };
+	return { widget, onpointerdown, onkeydown };
 }
 
 export function flexiresize() {
