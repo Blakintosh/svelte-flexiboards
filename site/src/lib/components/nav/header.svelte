@@ -9,12 +9,12 @@
 </script>
 
 <header
-	class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-8 py-2 backdrop-blur"
+	class="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b bg-background/80 px-8 py-2 backdrop-blur-sm"
 >
 	<div class="flex w-[80%] items-center gap-16">
 		<a class="flex items-center justify-start gap-4" href="/">
 			<div class="flex flex-col items-start gap-[0.075rem]">
-				<div class="h-1 w-[1rem] rounded-[1px] bg-orange-500"></div>
+				<div class="h-1 w-4 rounded-[1px] bg-orange-500"></div>
 				<div class="h-1 w-[0.67rem] rounded-[1px] bg-orange-500"></div>
 				<div class="h-1 w-[0.33rem] rounded-[1px] bg-orange-500"></div>
 			</div>
