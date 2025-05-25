@@ -275,6 +275,9 @@ export class AutoScrollService {
 		// For HTML/BODY elements, clamp the boundaries to the viewport
 		const effectiveRect = this.#getEffectiveRect(container, rect);
 
+		// TODO: tweak so the pointer can be outside bounds, but within an abs threshold
+		// of the edge of the container.
+
 		// Check if pointer is within this container's effective bounds
 		const isWithinBounds = 
 			clientX >= effectiveRect.left && 

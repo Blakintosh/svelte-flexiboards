@@ -264,8 +264,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		const wasHovered = this.hovered;
 
-		// TODO: need to double check that this hovered state resets itself properly
-
 		if (isPointerOver && !wasHovered) {
 			// Pointer entered the target
 			this.onpointerenter();
