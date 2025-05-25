@@ -29,6 +29,11 @@ export abstract class FlexiGrid {
     abstract restoreFromSnapshot(snapshot: unknown): void;
     abstract mapRawCellToFinalCell(x: number, y: number): [number, number];
 
+    /**
+     * Apply any post-completion operations like row/column collapsing.
+     */
+    applyPostCompletionOperations(): void {}
+
     _target: InternalFlexiTargetController;
     _targetConfig: FlexiTargetConfiguration;
 

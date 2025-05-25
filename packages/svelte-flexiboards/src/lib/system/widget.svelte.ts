@@ -35,14 +35,6 @@ import {
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
-	/**
-	 * @deprecated When using the snippets approach, instantiate the component directly in the snippet.
-	 */
-	component?: Component;
-	/**
-	 * @deprecated When using the snippets approach, instantiate the component directly in the snippet.
-	 */
-	componentProps?: Record<string, any>;
 };
 export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
 

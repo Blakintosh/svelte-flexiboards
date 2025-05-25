@@ -25,16 +25,16 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
-
-		// Deprecated, remove in v0.3
-		expandColumns: this.#rawLayoutConfig?.expandColumns ?? true,
-		expandRows: this.#rawLayoutConfig?.expandRows ?? true
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "any"
 	});
 
 	#rows: number = $state() as number;
 	#columns: number = $state() as number;
 
 	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
+
+	// Track whether collapsing is needed to defer it until operations complete
+	#needsCollapsing: boolean = false;
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		super(target, targetConfig);
@@ -45,8 +45,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		const layout = targetConfig.layout as FreeFormTargetLayout;
 
 		// v0.3: Remove baseRows and baseColumns
-		this.#rows = layout.minRows ?? targetConfig.baseRows ?? 1;
-		this.#columns = layout.minColumns ?? targetConfig.baseColumns ?? 1;
+		this.#rows = layout.minRows ?? 1;
+		this.#columns = layout.minColumns ?? 1;
 
 		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
 	}
@@ -67,7 +67,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
-		if (!this.expandIfNeededToFit(x, y, width, height)) {
+		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
 			return false;
 		}
 
@@ -88,6 +88,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#coordinateSystem.addWidget(widget, x, y, width, height);
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
+
 		return true;
 	}
 
@@ -101,7 +102,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
-		if (!this.expandIfNeededToFit(newX, newY, width, height)) {
+		if (!this.adjustGridDimensionsToFit(newX, newY, width, height)) {
 			return false;
 		}
 
@@ -213,11 +214,34 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#widgets.delete(widget);
 		this.#coordinateSystem.removeWidget(widget);
 
-		// If we now have empty rows or columns at the ends, remove them.
-		// this.#removeTrailingEmptyRows();
-		// this.#removeTrailingEmptyColumns();
+		// Mark that collapsing is needed, but don't apply it immediately
+		this.#needsCollapsing = true;
 
 		return true;
+	}
+
+	/**
+	 * Applies row and column collapsing, if needed.
+	 */
+	applyCollapsingIfNeeded(): void {
+		if (!this.#needsCollapsing) {
+			return;
+		}
+
+		const newRows = this.#coordinateSystem.applyRowCollapsibility();
+		this.#setRows(newRows);
+
+		const newColumns = this.#coordinateSystem.applyColumnCollapsibility();
+		this.#setColumns(newColumns);
+
+		this.#needsCollapsing = false;
+	}
+
+	/**
+	 * Collapse rows and columns if needed.
+	 */
+	applyPostCompletionOperations(): void {
+		this.applyCollapsingIfNeeded();
 	}
 
 	takeSnapshot(): FreeFormGridSnapshot {
@@ -232,7 +256,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				y: widget.y,
 				width: widget.width,
 				height: widget.height
-			}))
+			})),
+			needsCollapsing: this.#needsCollapsing
 		};
 	}
 
@@ -246,6 +271,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#columns = this.#layoutConfig.minColumns;
 
 		this.#coordinateSystem.clear();
+		this.#needsCollapsing = false;
 	}
 
 	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
@@ -264,6 +290,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			this.#widgets.add(widget.widget);
 			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
 		}
+
+		// Restore the collapsing flag
+		this.#needsCollapsing = snapshot.needsCollapsing;
 	}
 
 	mapRawCellToFinalCell(x: number, y: number): [number, number] {
@@ -305,13 +334,14 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
 	}
 
-	expandIfNeededToFit(x: number, y: number, width: number, height: number) {
+	adjustGridDimensionsToFit(x: number, y: number, width: number, height: number) {
 		if (x + width > this.#columns && !this.#tryExpandColumns(x + width)) {
 			return false;
 		}
 		if (y + height > this.#rows && !this.#tryExpandRows(y + height)) {
 			return false;
 		}
+
 		return true;
 	}
 
@@ -353,6 +383,22 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	get columns() {
 		return this.#columns;
+	}
+
+	get collapsibility() {
+		return this.#layoutConfig.colllapsibility;
+	}
+
+	get minRows() {
+		return this.#layoutConfig.minRows;
+	}
+
+	get minColumns() {
+		return this.#layoutConfig.minColumns;
+	}
+
+	public getWidgetsForModification(): FlexiWidgetController[] {
+		return Array.from(this.#widgets);
 	}
 }
 
@@ -462,6 +508,7 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Add rows.
 		if (newRows > oldRows) {
 			this.layout.push(
 				...Array.from({ length: newRows - oldRows }, () => new Array(this.#columns).fill(null))
@@ -469,6 +516,7 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Remove rows.
 		this.layout.splice(newRows);
 	}
 
@@ -477,11 +525,13 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
+		// Add columns.
 		if (newColumns > oldColumns) {
 			this.layout.forEach((row) => row.push(...new Array(newColumns - oldColumns).fill(null)));
 			return;
 		}
 
+		// Remove columns.
 		this.layout.forEach((row) => row.splice(newColumns));
 	}
 
@@ -493,9 +543,184 @@ class FreeFormGridCoordinateSystem {
 	updateForColumns(oldColumns: number, newColumns: number) {
 		this.#adjustLayoutColumns(oldColumns, newColumns);
 	}
+
+	#isRowEmpty(row: number) {
+		return this.bitmaps[row] === 0;
+	}
+
+	applyRowCollapsibility(): number {
+		const currentRows = this.#rows;
+		const minRows = this.#grid.minRows;
+		const collapsibility = this.#grid.collapsibility;
+
+		if (collapsibility === 'none' || currentRows <= minRows) {
+			return currentRows;
+		}
+
+		let newRows = currentRows;
+		let rowsToRemove: number[] = [];
+
+		// Collect all rows that need to be removed based on collapsibility type
+		if (collapsibility === 'any') {
+			// Remove all empty rows
+			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
+				if (this.#isRowEmpty(i)) {
+					rowsToRemove.push(i);
+				}
+			}
+		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
+			// Remove empty rows from the beginning
+			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
+				if (this.#isRowEmpty(i)) {
+					rowsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty row for leading collapsibility
+					break;
+				}
+			}
+		}
+
+		if (collapsibility === 'trailing' || collapsibility === 'endings') {
+			// Remove empty rows from the end
+			for (let i = currentRows - 1; i >= 0 && (currentRows - rowsToRemove.length) > minRows; i--) {
+				if (this.#isRowEmpty(i) && !rowsToRemove.includes(i)) {
+					rowsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty row for trailing collapsibility
+					break;
+				}
+			}
+		}
+
+		// Calculate final row count
+		newRows = currentRows - rowsToRemove.length;
+
+		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		rowsToRemove.sort((a, b) => b - a);
+
+		// Remove rows and update widget positions
+		for (const rowIndex of rowsToRemove) {
+			this.layout.splice(rowIndex, 1);
+			this.bitmaps.splice(rowIndex, 1);
+
+			// Update widget positions for all widgets that were below the removed row
+			const widgetsToShift = this.#grid.getWidgetsForModification();
+			for (const widget of widgetsToShift) {
+				if (widget.y > rowIndex) {
+					widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
+				}
+			}
+		}
+
+		return newRows;
+	}
+
+	applyColumnCollapsibility(): number {
+		const currentColumns = this.#columns;
+		const minColumns = this.#grid.minColumns;
+		const collapsibility = this.#grid.collapsibility;
+
+		if (collapsibility === 'none' || currentColumns <= minColumns) {
+			return currentColumns;
+		}
+
+		let newColumns = currentColumns;
+		let columnsToRemove: number[] = [];
+
+		// Collect all columns that need to be removed based on collapsibility type
+		if (collapsibility === 'any') {
+			// Remove all empty columns
+			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+				if (this.#isColumnEmpty(i)) {
+					columnsToRemove.push(i);
+				}
+			}
+		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
+			// Remove empty columns from the beginning
+			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+				if (this.#isColumnEmpty(i)) {
+					columnsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty column for leading collapsibility
+					break;
+				}
+			}
+		}
+
+		if (collapsibility === 'trailing' || collapsibility === 'endings') {
+			// Remove empty columns from the end
+			for (let i = currentColumns - 1; i >= 0 && (currentColumns - columnsToRemove.length) > minColumns; i--) {
+				if (this.#isColumnEmpty(i) && !columnsToRemove.includes(i)) {
+					columnsToRemove.push(i);
+				} else {
+					// Stop when we hit the first non-empty column for trailing collapsibility
+					break;
+				}
+			}
+		}
+
+		// Calculate final column count
+		newColumns = currentColumns - columnsToRemove.length;
+
+		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		columnsToRemove.sort((a, b) => b - a);
+
+		// Remove columns and update widget positions
+		for (const columnIndex of columnsToRemove) {
+			// Remove the column from the layout
+			this.layout.forEach(row => row.splice(columnIndex, 1));
+			
+			// Update bitmaps by removing the column bit and shifting
+			for (let rowIndex = 0; rowIndex < this.bitmaps.length; rowIndex++) {
+				this.bitmaps[rowIndex] = this.#removeColumnFromBitmap(this.bitmaps[rowIndex], columnIndex);
+			}
+
+			// Update widget positions for all widgets that were to the right of the removed column
+			const widgetsToShift = this.#grid.getWidgetsForModification();
+			for (const widget of widgetsToShift) {
+				if (widget.x > columnIndex) {
+					widget.setBounds(widget.x - 1, widget.y, widget.width, widget.height);
+				}
+			}
+		}
+
+		return newColumns;
+	}
+
+	#isColumnEmpty(column: number): boolean {
+		const columnBit = 1 << column;
+		for (let row = 0; row < this.bitmaps.length; row++) {
+			if (this.bitmaps[row] & columnBit) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	#removeColumnFromBitmap(bitmap: number, columnIndex: number): number {
+		let result = 0;
+		let targetBit = 0;
+		
+		for (let sourceBit = 0; sourceBit < 32; sourceBit++) {
+			if (sourceBit === columnIndex) {
+				// Skip this bit (remove the column)
+				continue;
+			}
+			
+			if (bitmap & (1 << sourceBit)) {
+				result |= (1 << targetBit);
+			}
+			
+			targetBit++;
+		}
+		
+		return result;
+	}
 }
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
+
+type FreeGridCollapsibility = "none" | "leading" | "trailing" | "endings" | "any";
 
 export type FreeFormTargetLayout = {
 	type: 'free';
@@ -503,16 +728,7 @@ export type FreeFormTargetLayout = {
 	minColumns?: number;
 	maxRows?: number;
 	maxColumns?: number;
-
-	/**
-	 * @deprecated Use `maxColumns` instead.
-	 */
-	expandColumns?: boolean;
-
-	/**
-	 * @deprecated Use `maxRows` instead.
-	 */
-	expandRows?: boolean;
+	colllapsibility?: FreeGridCollapsibility;
 };
 type DerivedFreeFormTargetLayout = Required<FreeFormTargetLayout>;
 
@@ -522,6 +738,7 @@ type FreeFormGridSnapshot = {
 	rows: number;
 	columns: number;
 	widgets: WidgetSnapshot[];
+	needsCollapsing: boolean;
 };
 
 type CollisionCheck = {
