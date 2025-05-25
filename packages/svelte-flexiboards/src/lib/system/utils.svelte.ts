@@ -78,6 +78,8 @@ export class AutoScrollService {
 	#ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
 	#pointerService: PointerService = getPointerService();
 	#scrollableContainers: HTMLElement[] = $state([]);
+	#animationFrameId: number | null = null;
+	#isScrolling: boolean = false;
 
 	shouldAutoScroll: boolean = $state(false);
 
@@ -88,7 +90,7 @@ export class AutoScrollService {
 			const { x, y } = this.#pointerService.position;
 
 			untrack(() => {
-				this.manageAutoScroll(x, y);
+				this.#checkScrollConditions(x, y);
 			})
 		});
 
@@ -97,6 +99,13 @@ export class AutoScrollService {
 			if (this.ref) {
 				this.#updateScrollableContainers();
 			}
+		});
+
+		// Cleanup when the service is destroyed
+		$effect(() => {
+			return () => {
+				this.#stopContinuousScroll();
+			};
 		});
 	}
 
@@ -148,15 +157,69 @@ export class AutoScrollService {
 		return canScrollY || canScrollX;
 	}
 
-	manageAutoScroll(clientX: number, clientY: number) {
+	#checkScrollConditions(clientX: number, clientY: number) {
 		if (!this.ref || !this.shouldAutoScroll || this.#scrollableContainers.length === 0) {
+			this.#stopContinuousScroll();
 			return;
 		}
 
 		// NEXT: Provide a configuration option for the scroll threshold and speed.
 		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
 		const scrollThreshold = 48;
-		const scrollSpeed = 10;
+
+		// Check if we should be scrolling any container
+		let shouldScroll = false;
+		for (const container of this.#scrollableContainers) {
+			if (this.#shouldScrollContainer(container, clientX, clientY, scrollThreshold)) {
+				shouldScroll = true;
+				break;
+			}
+		}
+
+		if (shouldScroll && !this.#isScrolling) {
+			this.#startContinuousScroll();
+		} else if (!shouldScroll && this.#isScrolling) {
+			this.#stopContinuousScroll();
+		}
+	}
+
+	#startContinuousScroll() {
+		if (this.#isScrolling) {
+			return;
+		}
+
+		this.#isScrolling = true;
+		this.#continuousScrollLoop();
+	}
+
+	#stopContinuousScroll() {
+		if (this.#animationFrameId !== null) {
+			cancelAnimationFrame(this.#animationFrameId);
+			this.#animationFrameId = null;
+		}
+		this.#isScrolling = false;
+	}
+
+	#continuousScrollLoop() {
+		if (!this.#isScrolling) {
+			return;
+		}
+
+		const { x, y } = this.#pointerService.position;
+		this.#performAutoScroll(x, y);
+
+		this.#animationFrameId = requestAnimationFrame(() => {
+			this.#continuousScrollLoop();
+		});
+	}
+
+	#performAutoScroll(clientX: number, clientY: number) {
+		if (!this.ref || !this.shouldAutoScroll || this.#scrollableContainers.length === 0) {
+			return;
+		}
+
+		const scrollThreshold = 48;
+		const scrollSpeed = 4;
 
 		// Try scrolling containers in hierarchical order (target first, then ancestors)
 		for (const container of this.#scrollableContainers) {
@@ -167,6 +230,36 @@ export class AutoScrollService {
 				break;
 			}
 		}
+	}
+
+	#shouldScrollContainer(container: HTMLElement, clientX: number, clientY: number, scrollThreshold: number): boolean {
+		const rect = container.getBoundingClientRect();
+		const effectiveRect = this.#getEffectiveRect(container, rect);
+
+		// Check if pointer is within this container's effective bounds
+		const isWithinBounds = 
+			clientX >= effectiveRect.left && 
+			clientX <= effectiveRect.right && 
+			clientY >= effectiveRect.top && 
+			clientY <= effectiveRect.bottom;
+
+		if (!isWithinBounds) {
+			return false;
+		}
+
+		const scrollInfo = this.#getScrollInfo(container);
+
+		// Check if we're in a scroll zone and can actually scroll
+		const inVerticalScrollZone = 
+			(clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) ||
+			(clientY < effectiveRect.top + scrollThreshold && scrollInfo.canScrollUp);
+
+		const inHorizontalScrollZone = 
+			(clientX > effectiveRect.right - scrollThreshold && scrollInfo.canScrollRight) ||
+			(clientX < effectiveRect.left + scrollThreshold && scrollInfo.canScrollLeft);
+
+		return (container.scrollHeight > container.clientHeight && inVerticalScrollZone) ||
+			   (container.scrollWidth > container.clientWidth && inHorizontalScrollZone);
 	}
 
 	#tryScrollContainer(
@@ -274,6 +367,13 @@ export class AutoScrollService {
 
 	get ref() {
 		return this.#ref.value;
+	}
+
+	/**
+	 * Manually stop continuous scrolling. Useful for external control.
+	 */
+	stopScrolling() {
+		this.#stopContinuousScroll();
 	}
 }
 
@@ -762,3 +862,5 @@ export class WidgetPointerEventWatcher {
 		this.#widget.ongrab(event);
 	}
 }
+
+

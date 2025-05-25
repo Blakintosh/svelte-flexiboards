@@ -25,6 +25,7 @@ import { FlowFlexiGrid, type FlowTargetLayout } from './grid/index.js';
 import { FreeFormFlexiGrid, type FreeFormTargetLayout } from './grid/free-grid.svelte.js';
 import { type FlexiGrid } from './grid/index.js';
 import type { FlexiTargetProps } from '$lib/components/flexi-target.svelte';
+import { getPointerService } from './utils.svelte.js';
 
 type TargetSizingFn = ({
 	target,
@@ -202,6 +203,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	#targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
+	#pointerService = getPointerService();
+
 	config: FlexiTargetConfiguration = $derived({
 		layout: this.#targetConfig?.layout ??
 			this.#providerTargetDefaults?.layout ?? {
@@ -230,6 +233,46 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.provider = provider;
 		this.#targetConfig = config;
 		this.key = key;
+
+		// Track pointer position changes to emulate pointer enter/leave events for keyboard controls
+		$effect(() => {
+			const { x, y } = this.#pointerService.position;
+			
+			// Only check when keyboard controls are active
+			untrack(() => {
+				this.#checkPointerOverTarget(x, y);
+			});
+		});
+	}
+
+	/**
+	 * Checks if the pointer is over this target's DOM element and triggers enter/leave events as needed.
+	 */
+	#checkPointerOverTarget(clientX: number, clientY: number) {
+		if (typeof window === 'undefined' || !this.#grid?.ref) {
+			return;
+		}
+
+		const targetElement = this.#grid.ref;
+		const rect = targetElement.getBoundingClientRect();
+		
+		const isPointerOver = 
+			clientX >= rect.left && 
+			clientX <= rect.right && 
+			clientY >= rect.top && 
+			clientY <= rect.bottom;
+
+		const wasHovered = this.hovered;
+
+		// TODO: need to double check that this hovered state resets itself properly
+
+		if (isPointerOver && !wasHovered) {
+			// Pointer entered the target
+			this.onpointerenter();
+		} else if (!isPointerOver && wasHovered) {
+			// Pointer left the target
+			this.onpointerleave();
+		}
 	}
 
 	#tryAddWidget(
@@ -705,8 +748,6 @@ export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: stri
 	setContext(contextKey, target);
 
 	return {
-		onpointerenter: () => target.onpointerenter(),
-		onpointerleave: () => target.onpointerleave(),
 		target: target as FlexiTargetController
 	};
 }

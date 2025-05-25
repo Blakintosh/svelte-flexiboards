@@ -65,14 +65,14 @@
 		onfirstcreate
 	}: FlexiTargetProps = $props();
 
-	const { onpointerenter, onpointerleave, target } = flexitarget(config, key);
+	const { target } = flexitarget(config, key);
 
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
 </script>
 
-<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
+<div class={containerClass} role="grid" tabindex={0}>
 	{@render header?.({ target })}
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
