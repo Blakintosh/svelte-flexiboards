@@ -10,7 +10,7 @@
 <script lang="ts">
 	let { widget }: RenderedFlexiWidgetProps = $props();
 
-	const { onpointerdown } = renderedflexiwidget(widget);
+	const { onpointerdown, onkeydown } = renderedflexiwidget(widget);
 
 	let derivedClassName = $derived.by(() => {
 		if (typeof widget.className === 'function') {
@@ -25,6 +25,7 @@
 	class={derivedClassName}
 	style={widget.style}
 	{onpointerdown}
+	{onkeydown}
 	aria-grabbed={widget.isGrabbed}
 	aria-label="Flexi Widget"
 	aria-roledescription="Flexi Widget"

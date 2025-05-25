@@ -454,6 +454,7 @@ export class FlexiWidgetController {
 
 		// Allows the event handlers to be called without binding to the widget instance.
 		this.onpointerdown = this.onpointerdown.bind(this);
+		this.onkeydown = this.onkeydown.bind(this);
 		this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
 		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
@@ -469,6 +470,31 @@ export class FlexiWidgetController {
 		}
 
 		this.#grabPointerEventWatcher.onstartpointerdown(event);
+	}
+
+	onkeydown(event: KeyboardEvent) {
+		if(!this.draggable || !event.target || this.#grabbers) {
+			return;
+		}
+
+		if(event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+		const x = rect.left + (rect.width / 2);
+		const y = rect.top + (rect.height / 2);
+		return this.ongrab({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		});
 	}
 
 	ongrab(event: WidgetActionEvent) {
@@ -492,7 +518,6 @@ export class FlexiWidgetController {
 	}
 
 	ongrabberkeydown(event: KeyboardEvent) {
-		console.log('got event!')
 		if(!this.draggable || !this.ref) {
 			return;
 		}
@@ -505,7 +530,7 @@ export class FlexiWidgetController {
 		event.stopPropagation();
 		event.preventDefault();
 
-		const rect = this.ref.getBoundingClientRect();
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
 
 		const x = rect.left + (rect.width / 2);
 		const y = rect.top + (rect.height / 2);
@@ -514,7 +539,7 @@ export class FlexiWidgetController {
 			clientX: x,
 			clientY: y,
 			isKeyboard: true
-		})
+		});
 	}
 
 	onresize(event: WidgetActionEvent) {
@@ -1062,7 +1087,8 @@ export function renderedflexiwidget(widget: FlexiWidgetController) {
 
 	return {
 		widget,
-		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event)
+		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event),
+		onkeydown: (event: KeyboardEvent) => widget.onkeydown(event)
 	};
 }
 
