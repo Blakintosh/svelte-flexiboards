@@ -35,10 +35,7 @@
 >
 	{#if widget.snippet}
 		{@render widget.snippet({
-			widget,
-			// NEXT: Remove these in v0.3
-			component: widget.component,
-			componentProps: widget.componentProps
+			widget
 		})}
 	{:else if widget.component}
 		<widget.component {...widget.componentProps ?? {}} />
