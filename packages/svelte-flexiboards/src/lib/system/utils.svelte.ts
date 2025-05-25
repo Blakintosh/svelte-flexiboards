@@ -8,6 +8,7 @@ import type { FlexiGrid } from './grid/base.svelte.js';
 import type { FlexiTargetConfiguration } from './target.svelte.js';
 import type { FlexiWidgetController, FlexiWidgetTriggerConfiguration } from './widget.svelte.js';
 import { onMount, untrack } from 'svelte';
+import { FlexiKeyboardController } from './keyboard.svelte.js';
 
 export class PointerPositionWatcher {
 	#position: Position = $state({
@@ -15,10 +16,12 @@ export class PointerPositionWatcher {
 		y: 0
 	});
 	#ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
+	#keyboardController: FlexiKeyboardController;
 	autoScroll: boolean = false;
 
 	constructor(ref: ProxiedValue<HTMLElement | null>) {
 		this.#ref = ref;
+		this.#keyboardController = new FlexiKeyboardController(this);
 
 		const onPointerMove = (event: PointerEvent) => {
 			if (!this.ref) {
