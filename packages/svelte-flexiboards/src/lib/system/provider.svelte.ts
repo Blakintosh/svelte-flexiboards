@@ -359,7 +359,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
 			action.widget.delete();
-			this.#currentWidgetAction = null;
+			this.#releaseCurrentWidgetAction(true);
 			return;
 		}
 
