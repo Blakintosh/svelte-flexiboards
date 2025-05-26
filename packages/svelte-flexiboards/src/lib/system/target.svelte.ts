@@ -239,42 +239,34 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#targetConfig = config;
 		this.key = key;
 
-		// Track pointer position changes to emulate pointer enter/leave events for keyboard controls
+		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
+		// make it universal with our keyboard pointer.
 		$effect(() => {
-			const { x, y } = this.#pointerService.position;
+			if(!this.#grid?.ref) {
+				return;
+			}
+
+			const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
 			
 			// Only check when keyboard controls are active
 			untrack(() => {
-				this.#checkPointerOverTarget(x, y);
+				this.#updatePointerOverState(isPointerInside);
 			});
 		});
 	}
 
 	/**
-	 * Checks if the pointer is over this target's DOM element and triggers enter/leave events as needed.
+	 * Dispatches the appropriate enter/leave events based on the pointer's current state.
 	 */
-	#checkPointerOverTarget(clientX: number, clientY: number) {
-		if (typeof window === 'undefined' || !this.#grid?.ref) {
-			return;
-		}
-
-		const targetElement = this.#grid.ref;
-		const rect = targetElement.getBoundingClientRect();
-		
-		const isPointerOver = 
-			clientX >= rect.left && 
-			clientX <= rect.right && 
-			clientY >= rect.top && 
-			clientY <= rect.bottom;
-
+	#updatePointerOverState(inside: boolean) {
 		const wasHovered = this.hovered;
 
-		if (isPointerOver && !wasHovered) {
-			// Pointer entered the target
-			this.onpointerenter();
-		} else if (!isPointerOver && wasHovered) {
-			// Pointer left the target
-			this.onpointerleave();
+		if (inside && !wasHovered) {
+			// Just entered
+			this.onpointerentertarget();
+		} else if (!inside && wasHovered) {
+			// Just left
+			this.onpointerleavetarget();
 		}
 	}
 
@@ -408,7 +400,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	// Events
-	onpointerenter() {
+	onpointerentertarget() {
 		this.hovered = true;
 
 		this.provider.onpointerentertarget({
@@ -416,7 +408,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		});
 	}
 
-	onpointerleave() {
+	onpointerleavetarget() {
 		this.hovered = false;
 
 		this.provider.onpointerleavetarget({

@@ -1,5 +1,8 @@
+import { untrack } from "svelte";
 import { getFlexiboardCtx, getInternalFlexiboardCtx, type InternalFlexiBoardController } from "./provider.svelte.js";
-import type { WidgetGrabbedParams } from "./types.js";
+import type { SvelteClassValue, WidgetGrabbedParams } from "./types.js";
+import type { PointerService } from "./utils.svelte.js";
+import { getPointerService } from "./utils.svelte.js";
 import { FlexiWidgetController, type FlexiWidgetConfiguration } from "./widget.svelte.js";
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
@@ -71,11 +74,56 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
     }
 }
 
+export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => SvelteClassValue;
+export type FlexiDeleteClasses = SvelteClassValue | FlexiDeleteClassFunction;
+
+export class FlexiDeleteController {
+    #provider: InternalFlexiBoardController;
+    #pointerService: PointerService = getPointerService();
+    ref: HTMLElement | null = null;
+
+    #inside: boolean = false;
+
+    constructor(provider: InternalFlexiBoardController) {
+        this.#provider = provider;
+
+		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
+		// make it universal with our keyboard pointer.
+		$effect(() => {
+			if(!this.ref) {
+				return;
+			}
+
+			const isPointerInside = this.#pointerService.isPointerInside(this.ref);
+			
+			// Only check when keyboard controls are active
+			untrack(() => {
+				this.#updatePointerOverState(isPointerInside);
+			});
+		});
+    }
+
+    #updatePointerOverState(inside: boolean) {
+        const wasHovered = this.#inside;
+
+        if(inside && !wasHovered) {
+            this.#provider.onenterdeleter();
+        } else if(!inside && wasHovered) {
+            this.#provider.onleavedeleter();
+        }
+
+        this.#inside = inside;
+    }
+}
+
 export function flexidelete() {
     const provider = getInternalFlexiboardCtx();
+    const deleter = new FlexiDeleteController(provider);
 
     return {
-        onpointerenter: () => provider.onenterdeleter(),
-        onpointerleave: () => provider.onleavedeleter()
+        deleter,
+        // TODO: remove in v0.4
+        onpointerenter: () => { },
+        onpointerleave: () => { }
     }
 }

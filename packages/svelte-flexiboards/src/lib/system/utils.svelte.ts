@@ -43,6 +43,22 @@ export class PointerService {
 	}
 
 	/**
+	 * Utility method to check if the pointer is inside an element.
+	 * @param element The element to check if the pointer is inside.
+	 * @returns True if the pointer is inside the element, false otherwise.
+	 */
+	isPointerInside(element: HTMLElement) {
+		const rect = element.getBoundingClientRect();
+
+		const { x, y } = this.#position;
+
+		return x >= rect.left 
+			&& x <= rect.right 
+			&& y >= rect.top
+			&& y <= rect.bottom;
+	}
+
+	/**
 	 * The current position of the pointer.
 	 */
 	get position() {
