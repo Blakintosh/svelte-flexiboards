@@ -106,16 +106,12 @@
 				y={2}
 			/>
 		</FlexiTarget>
-		<FlexiDelete>
-			{#snippet children({ props })}
-				<div
-					class="flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"
-					{...props}
-				>
-					<Trash2 class="mb-2 size-8 lg:size-12" />
-					Delete
-				</div>
-			{/snippet}
+		<FlexiDelete class={(deleter) => [
+			"flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base",
+			deleter.isHovered && 'bg-red-500'
+		]}>
+			<Trash2 class="mb-2 size-8 lg:size-12" />
+			Delete
 		</FlexiDelete>
 	</FlexiBoard>
 </main>

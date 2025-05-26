@@ -7,9 +7,6 @@ import type { FlexiAddController } from "./manage.svelte.js";
 export type ProxiedValue<T> = {
     value: T;
 }
-
-export type SvelteClassValue = string | import('clsx').ClassArray | import('clsx').ClassDictionary | undefined | null;
-
 export type Position = {
     x: number;
     y: number;

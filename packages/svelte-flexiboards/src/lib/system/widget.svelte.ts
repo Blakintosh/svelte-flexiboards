@@ -15,7 +15,6 @@ import {
 } from './target.svelte.js';
 import type {
 	WidgetAction,
-	SvelteClassValue,
 	WidgetGrabAction,
 	WidgetResizeAction,
 	WidgetResizability,
@@ -32,14 +31,15 @@ import {
 	WidgetPointerEventWatcher,
 	type PointerTriggerCondition
 } from './utils.svelte.js';
+import type { ClassValue } from 'svelte/elements';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
 };
 export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
 
-export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => SvelteClassValue;
-export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
+export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => ClassValue;
+export type FlexiWidgetClasses = ClassValue | FlexiWidgetClassFunction;
 
 export type FlexiWidgetTransitionConfiguration = {
 	duration?: number;

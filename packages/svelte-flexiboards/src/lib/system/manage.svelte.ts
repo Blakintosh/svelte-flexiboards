@@ -1,9 +1,10 @@
 import { untrack } from "svelte";
 import { getFlexiboardCtx, getInternalFlexiboardCtx, type InternalFlexiBoardController } from "./provider.svelte.js";
-import type { SvelteClassValue, WidgetGrabbedParams } from "./types.js";
+import type { WidgetGrabbedParams } from "./types.js";
 import type { PointerService } from "./utils.svelte.js";
 import { getPointerService } from "./utils.svelte.js";
 import { FlexiWidgetController, type FlexiWidgetConfiguration } from "./widget.svelte.js";
+import type { ClassValue } from "svelte/elements";
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -74,8 +75,8 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
     }
 }
 
-export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => SvelteClassValue;
-export type FlexiDeleteClasses = SvelteClassValue | FlexiDeleteClassFunction;
+export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
+export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
 
 export class FlexiDeleteController {
     #provider: InternalFlexiBoardController;

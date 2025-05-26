@@ -5,18 +5,19 @@
 		type FlexiBoardController
 	} from '$lib/system/provider.svelte.js';
 	import type { Snippet } from 'svelte';
-	import type { FlexiCommonProps, SvelteClassValue } from '$lib/system/types.js';
+	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import FlexiLayoutLoader from './flexi-layout-loader.svelte';
 
 	export type FlexiBoardProps = FlexiCommonProps<FlexiBoardController> & {
 		children: Snippet;
 		config?: FlexiBoardConfiguration;
-		class?: SvelteClassValue;
+		class?: ClassValue;
 	};
 </script>
 
 <script lang="ts">
 	import FlexiPortal from './flexi-portal.svelte';
+	import type { ClassValue } from 'svelte/elements';
 
 	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 

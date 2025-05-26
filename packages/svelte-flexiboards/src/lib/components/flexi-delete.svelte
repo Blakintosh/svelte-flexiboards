@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { FlexiCommonProps, SvelteClassValue } from '$lib/system/types.js';
+	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import { flexidelete, FlexiDeleteController, type FlexiDeleteClasses } from '$lib/system/manage.svelte.js';
 
 	type FlexiDeleteChildrenProps = {
