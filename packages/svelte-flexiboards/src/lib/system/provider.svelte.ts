@@ -228,13 +228,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return null;
 		}
 
-		const providerRef = this.ref;
-		if (!providerRef) {
-			throw new Error('Provider ref is not set');
-		}
-
-		const providerRect = providerRef.getBoundingClientRect();
-
 		const action: WidgetResizeAction = {
 			action: 'resize',
 			target: event.target,
@@ -292,8 +285,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// If they pressed Esc, then just cancel.
 		if(event.key == 'Escape') {
+			const widget = this.#currentWidgetAction!.widget;
 			if (this.portal) {
-				this.portal.returnWidgetFromPortal(this.#currentWidgetAction!.widget);
+				this.portal.returnWidgetFromPortal(widget);
 			}
 			this.#releaseCurrentWidgetAction();
 			event.stopPropagation();
@@ -359,12 +353,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	// }
 
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
-		if (this.portal) {
-			this.portal.returnWidgetFromPortal(action.widget);
-		}
-		this.#autoScrollService.shouldAutoScroll = false;
-		this.#pointerService.keyboardControlsActive = false;
-
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
 			action.widget.delete();
@@ -392,11 +380,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
-		if (this.portal) {
-			this.portal.returnWidgetFromPortal(action.widget);
-		}
-		action.target.tryDropWidget(action.widget);
-		this.#releaseCurrentWidgetAction();
+		const success = action.target.tryDropWidget(action.widget);
+		this.#releaseCurrentWidgetAction(success);
 	}
 
 	#releaseCurrentWidgetAction(actionSucceeded: boolean = false) {
@@ -407,6 +392,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		const widget = currentWidgetAction.widget;
+
+		if (this.portal) {
+			this.portal.returnWidgetFromPortal(widget);
+		}
 
 		// If the widget is still being grabbed, we'll need to release it.
 		if (widget.currentAction) {
@@ -421,10 +410,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// The widget wasn't placed successfully, so go back to the pre-grab state on the target.
 		if (!actionSucceeded && currentWidgetAction.target) {
+			currentWidgetAction.target.cancelDrop();
 			currentWidgetAction.target.restorePreGrabSnapshot();
 			// Apply deferred operations after restoring (in case the restore action affected the grid)
 			currentWidgetAction.target.applyGridPostCompletionOperations();
 		}
+
+		// Disable the focus trap and auto-scroll.
+		this.#autoScrollService.shouldAutoScroll = false;
+		this.#pointerService.keyboardControlsActive = false;
 
 		this.#currentWidgetAction = null;
 	}

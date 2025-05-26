@@ -142,6 +142,11 @@ export interface FlexiTargetController {
 	forgetPreGrabSnapshot(): void;
 
 	/**
+	 * Cancels the current drop action.
+	 */
+	cancelDrop(): void;
+
+	/**
 	 * Applies any post-completion operations like row/column collapsing.
 	 */
 	applyGridPostCompletionOperations(): void;
@@ -470,6 +475,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		return result;
+	}
+
+	cancelDrop() {
+		console.log('CANCELDROP')
+		this.actionWidget = null;
+		this.#removeDropzoneWidget();
 	}
 
 	tryDropWidget(widget: FlexiWidgetController): boolean {
