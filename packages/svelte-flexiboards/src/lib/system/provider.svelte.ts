@@ -249,6 +249,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.#lockViewport();
+		// TODO: re-evaluate this at a later point, as vertical sizing is a thing
+		this.#autoScrollService.shouldAutoScroll = false;
+		this.#pointerService.keyboardControlsActive = true;
 
 		return action;
 	}

@@ -450,6 +450,7 @@ export class FlexiWidgetController {
 		this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
 		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
+		this.onresizerkeydown = this.onresizerkeydown.bind(this);
 	}
 
 	/**
@@ -572,6 +573,31 @@ export class FlexiWidgetController {
 		}
 
 		this.#resizePointerEventWatcher.onstartpointerdown(event);
+	}
+
+	onresizerkeydown(event: KeyboardEvent) {
+		if(this.resizability == 'none' || !event.target) {
+			return;
+		}
+
+		if(event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+		const x = rect.left + (rect.width / 2);
+		const y = rect.top + (rect.height / 2);
+		return this.onresize({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		});
 	}
 
 	#grabWidget(clientX: number, clientY: number) {
@@ -706,7 +732,8 @@ export class FlexiWidgetController {
 		this.#resizers++;
 
 		return {
-			onpointerdown: this.onresizerpointerdown
+			onpointerdown: this.onresizerpointerdown,
+			onkeydown: this.onresizerkeydown
 		};
 	}
 
@@ -1109,13 +1136,13 @@ export function flexiresize() {
 		);
 	}
 
-	const { onpointerdown } = widget.addResizer();
+	const { onpointerdown, onkeydown } = widget.addResizer();
 
 	onDestroy(() => {
 		widget.removeResizer();
 	});
 
-	return { widget, onpointerdown };
+	return { widget, onpointerdown, onkeydown };
 }
 
 export function getFlexiwidgetCtx() {

@@ -12,9 +12,9 @@
 <script lang="ts">
 	let { class: className, children }: FlexiResizeProps = $props();
 
-	const { widget, onpointerdown } = flexiresize();
+	const { widget, onpointerdown, onkeydown } = flexiresize();
 </script>
 
-<button style={"user-select: none; cursor: nwse-resize; touch-action: none;"} class={className} {onpointerdown}>
+<button style={"user-select: none; cursor: nwse-resize; touch-action: none;"} class={className} {onpointerdown} {onkeydown}>
 	{@render children?.({ widget })}
 </button>

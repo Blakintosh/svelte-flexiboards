@@ -478,7 +478,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	cancelDrop() {
-		console.log('CANCELDROP')
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 	}
