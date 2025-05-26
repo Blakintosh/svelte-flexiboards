@@ -22,10 +22,11 @@
 </script>
 
 <script lang="ts">
-	let { children, addWidget, controller }: FlexiAddProps = $props();
+	let { children, addWidget, controller = $bindable(), onfirstcreate }: FlexiAddProps = $props();
 
 	const { adder, onpointerdown } = flexiadd(addWidget);
 	controller = adder;
+	onfirstcreate?.(adder);
 </script>
 
 {@render children?.({ adder, props: {

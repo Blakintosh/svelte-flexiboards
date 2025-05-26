@@ -114,6 +114,10 @@ export class FlexiDeleteController {
 
         this.#inside = inside;
     }
+
+    get isHovered() {
+        return this.#inside;
+    }
 }
 
 export function flexidelete() {

@@ -14,18 +14,19 @@
 		onpointerleave: (event: PointerEvent) => void;
 	};
 
-	export type FlexiDeleteProps = {
+	export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 		class?: FlexiDeleteClasses;
 		children?: Snippet<[{ deleter: FlexiDeleteController; props: FlexiDeleteChildrenProps }]>;
 	};
 </script>
 
 <script lang="ts">
-	let { class: className, children }: FlexiDeleteProps = $props();
+	let { class: className, children, controller = $bindable(), onfirstcreate }: FlexiDeleteProps = $props();
 
 	// TODO: remove pointer events in v0.4
 	const { deleter, onpointerenter, onpointerleave } = flexidelete();
-
+	controller = deleter;
+	onfirstcreate?.(deleter);
 
 	let derivedClassName = $derived.by(() => {
 		if(!deleter) {
