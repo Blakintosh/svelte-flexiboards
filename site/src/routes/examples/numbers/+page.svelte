@@ -107,8 +107,8 @@
 			/>
 		</FlexiTarget>
 		<FlexiDelete class={(deleter) => [
-			"flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base",
-			deleter.isHovered && 'bg-red-500'
+			"flex size-32 flex-col duration-150 items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base",
+			deleter.isHovered && 'border-red-800 bg-red-400/20'
 		]}>
 			<Trash2 class="mb-2 size-8 lg:size-12" />
 			Delete

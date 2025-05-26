@@ -83,7 +83,7 @@ export class FlexiDeleteController {
     #pointerService: PointerService = getPointerService();
     ref: HTMLElement | null = null;
 
-    #inside: boolean = false;
+    #inside: boolean = $state(false);
 
     constructor(provider: InternalFlexiBoardController) {
         this.#provider = provider;
