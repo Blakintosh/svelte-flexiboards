@@ -18,14 +18,28 @@
 <script lang="ts">
 	import FlexiPortal from './flexi-portal.svelte';
 	import type { ClassValue } from 'svelte/elements';
+	import { generateUniqueId, assistiveTextStyle } from '$lib/system/utils.svelte.js';
 
 	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 
 	board = flexiboard(props);
 	onfirstcreate?.(board);
+
+	let assistiveTextId = generateUniqueId();
 </script>
 
-<div class={props.class} bind:this={board.ref} style={board.style}>
+<div
+	class={props.class}
+	bind:this={board.ref}
+	style={board.style}
+	role="application"
+	aria-label="Interactive drag-and-drop interface"
+	aria-describedby={assistiveTextId}
+>
+	<span style={assistiveTextStyle} id={assistiveTextId}>
+		Press Enter to grab or resize widgets. Once grabbed, use Arrow keys to move/resize the widget,
+		Enter to confirm the action, or Esc to cancel it.
+	</span>
 	{@render props.children()}
 </div>
 

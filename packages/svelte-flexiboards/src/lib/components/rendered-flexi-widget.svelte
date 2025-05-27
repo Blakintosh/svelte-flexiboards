@@ -19,6 +19,17 @@
 
 		return widget.className;
 	});
+
+	let ariaLabel = $derived.by(() => {
+		if (widget.isShadow) {
+			return 'Widget action preview';
+		}
+		if (widget.draggable && widget.resizable) {
+			return 'Interactive widget';
+		}
+
+		return 'Static widget';
+	});
 </script>
 
 <div
@@ -26,12 +37,13 @@
 	style={widget.style}
 	{onpointerdown}
 	{onkeydown}
-	aria-grabbed={widget.isGrabbed}
-	aria-label="Widget"
-	aria-roledescription={widget.draggable ? 'This widget can be dragged-and-dropped': undefined}
-	aria-dropeffect={widget.draggable ? "move" : undefined}
-	role="gridcell"
-	tabindex={0}
+	aria-grabbed={widget.draggable && !widget.isShadow ? widget.isGrabbed : undefined}
+	aria-label={ariaLabel}
+	aria-dropeffect={widget.draggable ? 'move' : undefined}
+	role="cell"
+	aria-colindex={widget.x}
+	aria-rowindex={widget.y}
+	tabindex={widget.draggable && !widget.hasGrabbers ? 0 : undefined}
 	bind:this={widget.ref}
 >
 	{#if widget.snippet}

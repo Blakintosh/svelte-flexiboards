@@ -171,6 +171,18 @@ export interface FlexiTargetController {
 	 * @returns The action that was started, or null if the action couldn't be started.
 	 */
 	startResizeWidget(params: WidgetStartResizeParams): WidgetAction | null;
+
+	/**
+	 * The number of columns currently being used in the target grid.
+	 * This value is readonly.
+	 */
+	get columns(): number;
+
+	/**
+	 * The number of rows currently being used in the target grid.
+	 * This value is readonly.
+	 */
+	get rows(): number;
 }
 
 export class InternalFlexiTargetController implements FlexiTargetController {
@@ -242,12 +254,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
 		$effect(() => {
-			if(!this.#grid?.ref) {
+			if (!this.#grid?.ref) {
 				return;
 			}
 
 			const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
-			
+
 			// Only check when keyboard controls are active
 			untrack(() => {
 				this.#updatePointerOverState(isPointerInside);

@@ -22,7 +22,7 @@ export class PointerService {
 	constructor() {
 		this.#keyboardController = new KeyboardPointerController(this);
 
-		if(typeof window === 'undefined') {
+		if (typeof window === 'undefined') {
 			return;
 		}
 
@@ -52,10 +52,7 @@ export class PointerService {
 
 		const { x, y } = this.#position;
 
-		return x >= rect.left 
-			&& x <= rect.right 
-			&& y >= rect.top
-			&& y <= rect.bottom;
+		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 	}
 
 	/**
@@ -78,7 +75,7 @@ let pointerService: PointerService | undefined = undefined;
 
 export function getPointerService() {
 	// Define pointer service at time of calling, so that effect context is assured.
-	if(!pointerService) {
+	if (!pointerService) {
 		pointerService = new PointerService();
 	}
 
@@ -107,7 +104,7 @@ export class AutoScrollService {
 
 			untrack(() => {
 				this.#checkScrollConditions(x, y);
-			})
+			});
 		});
 
 		// Update scrollable containers when ref changes
@@ -140,7 +137,7 @@ export class AutoScrollService {
 	#getScrollableAncestors(element: HTMLElement): HTMLElement[] {
 		const ancestors: HTMLElement[] = [];
 		let parent = element.parentElement;
-		
+
 		while (parent) {
 			const isScrollable = this.#isElementScrollable(parent);
 
@@ -159,15 +156,19 @@ export class AutoScrollService {
 	#isElementScrollable(element: HTMLElement): boolean {
 		if (this.#isPageLevel(element)) {
 			// Page-level elements can be scrollable without explicit overflow styles
-			return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+			return (
+				element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
+			);
 		}
 
 		const style = window.getComputedStyle(element);
 		const { overflowY, overflowX } = style;
-		
-		const canScrollY = (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'visible') && 
+
+		const canScrollY =
+			(overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'visible') &&
 			element.scrollHeight > element.clientHeight;
-		const canScrollX = (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'visible') && 
+		const canScrollX =
+			(overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'visible') &&
 			element.scrollWidth > element.clientWidth;
 
 		return canScrollY || canScrollX;
@@ -239,8 +240,14 @@ export class AutoScrollService {
 
 		// Try scrolling containers in hierarchical order (target first, then ancestors)
 		for (const container of this.#scrollableContainers) {
-			const scrollResult = this.#tryScrollContainer(container, clientX, clientY, scrollThreshold, scrollSpeed);
-			
+			const scrollResult = this.#tryScrollContainer(
+				container,
+				clientX,
+				clientY,
+				scrollThreshold,
+				scrollSpeed
+			);
+
 			// If we successfully scrolled this container, stop here to maintain hierarchy
 			if (scrollResult.didScroll) {
 				break;
@@ -248,15 +255,20 @@ export class AutoScrollService {
 		}
 	}
 
-	#shouldScrollContainer(container: HTMLElement, clientX: number, clientY: number, scrollThreshold: number): boolean {
+	#shouldScrollContainer(
+		container: HTMLElement,
+		clientX: number,
+		clientY: number,
+		scrollThreshold: number
+	): boolean {
 		const rect = container.getBoundingClientRect();
 		const effectiveRect = this.#getEffectiveRect(container, rect);
 
 		// Check if pointer is within this container's effective bounds
-		const isWithinBounds = 
-			clientX >= effectiveRect.left && 
-			clientX <= effectiveRect.right && 
-			clientY >= effectiveRect.top && 
+		const isWithinBounds =
+			clientX >= effectiveRect.left &&
+			clientX <= effectiveRect.right &&
+			clientY >= effectiveRect.top &&
 			clientY <= effectiveRect.bottom;
 
 		if (!isWithinBounds) {
@@ -266,23 +278,25 @@ export class AutoScrollService {
 		const scrollInfo = this.#getScrollInfo(container);
 
 		// Check if we're in a scroll zone and can actually scroll
-		const inVerticalScrollZone = 
+		const inVerticalScrollZone =
 			(clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) ||
 			(clientY < effectiveRect.top + scrollThreshold && scrollInfo.canScrollUp);
 
-		const inHorizontalScrollZone = 
+		const inHorizontalScrollZone =
 			(clientX > effectiveRect.right - scrollThreshold && scrollInfo.canScrollRight) ||
 			(clientX < effectiveRect.left + scrollThreshold && scrollInfo.canScrollLeft);
 
-		return (container.scrollHeight > container.clientHeight && inVerticalScrollZone) ||
-			   (container.scrollWidth > container.clientWidth && inHorizontalScrollZone);
+		return (
+			(container.scrollHeight > container.clientHeight && inVerticalScrollZone) ||
+			(container.scrollWidth > container.clientWidth && inHorizontalScrollZone)
+		);
 	}
 
 	#tryScrollContainer(
-		container: HTMLElement, 
-		clientX: number, 
-		clientY: number, 
-		scrollThreshold: number, 
+		container: HTMLElement,
+		clientX: number,
+		clientY: number,
+		scrollThreshold: number,
 		scrollSpeed: number
 	): { didScroll: boolean } {
 		const rect = container.getBoundingClientRect();
@@ -295,10 +309,10 @@ export class AutoScrollService {
 		// of the edge of the container.
 
 		// Check if pointer is within this container's effective bounds
-		const isWithinBounds = 
-			clientX >= effectiveRect.left && 
-			clientX <= effectiveRect.right && 
-			clientY >= effectiveRect.top && 
+		const isWithinBounds =
+			clientX >= effectiveRect.left &&
+			clientX <= effectiveRect.right &&
+			clientY >= effectiveRect.top &&
 			clientY <= effectiveRect.bottom;
 
 		if (!isWithinBounds) {
@@ -342,7 +356,7 @@ export class AutoScrollService {
 				bottom: Math.min(window.innerHeight, rect.bottom)
 			};
 		}
-		
+
 		// Use actual boundaries for regular containers
 		return rect;
 	}
@@ -356,7 +370,7 @@ export class AutoScrollService {
 			const scrollWidth = document.documentElement.scrollWidth;
 			const clientHeight = window.innerHeight;
 			const clientWidth = window.innerWidth;
-			
+
 			return {
 				canScrollDown: scrollTop + clientHeight < scrollHeight,
 				canScrollUp: scrollTop > 0,
@@ -364,10 +378,10 @@ export class AutoScrollService {
 				canScrollLeft: scrollLeft > 0
 			};
 		}
-		
+
 		// Use element properties for regular containers
 		const { scrollTop, scrollLeft, scrollHeight, scrollWidth, clientHeight, clientWidth } = element;
-		
+
 		return {
 			canScrollDown: scrollTop + clientHeight < scrollHeight,
 			canScrollUp: scrollTop > 0,
@@ -396,82 +410,80 @@ export class AutoScrollService {
 	}
 }
 
-
 export class KeyboardPointerController {
-    active = false;
-    #moveStep: number = 20;
-    #pointerService: PointerService;
+	active = false;
+	#moveStep: number = 20;
+	#pointerService: PointerService;
 
-    constructor(pointerService: PointerService) {
-        this.#pointerService = pointerService;
+	constructor(pointerService: PointerService) {
+		this.#pointerService = pointerService;
 
-		if(typeof window === 'undefined') {
+		if (typeof window === 'undefined') {
 			return;
 		}
 
-        const cancelFocusChangeIfTrapped = this.#cancelFocusChangeIfTrapped.bind(this);
-        const movePointer = this.#movePointer.bind(this);
+		const cancelFocusChangeIfTrapped = this.#cancelFocusChangeIfTrapped.bind(this);
+		const movePointer = this.#movePointer.bind(this);
 
 		window.addEventListener('keydown', cancelFocusChangeIfTrapped);
 		window.addEventListener('keydown', movePointer);
-    }
+	}
 
-    #cancelFocusChangeIfTrapped(event: KeyboardEvent) {
-        if(!this.active) {
-            return;
-        }
-        
-        if(event.key === "Tab") {
-            event.preventDefault();
-        }
-    }
-
-    #movePointer(event: KeyboardEvent) {
-		if(!this.active) {
+	#cancelFocusChangeIfTrapped(event: KeyboardEvent) {
+		if (!this.active) {
 			return;
 		}
 
-        const moveStep = this.#getMoveStep(event);
+		if (event.key === 'Tab') {
+			event.preventDefault();
+		}
+	}
+
+	#movePointer(event: KeyboardEvent) {
+		if (!this.active) {
+			return;
+		}
+
+		const moveStep = this.#getMoveStep(event);
 
 		const { x, y } = this.#pointerService.position;
 
-        if(event.key === "ArrowUp") {
-            this.#pointerService.updatePosition(x, y - moveStep);
-            event.preventDefault();
-            return;
-        }
+		if (event.key === 'ArrowUp') {
+			this.#pointerService.updatePosition(x, y - moveStep);
+			event.preventDefault();
+			return;
+		}
 
-        if(event.key === "ArrowDown") {
-            this.#pointerService.updatePosition(x, y + moveStep);
-            event.preventDefault();
-            return;
-        }
+		if (event.key === 'ArrowDown') {
+			this.#pointerService.updatePosition(x, y + moveStep);
+			event.preventDefault();
+			return;
+		}
 
-        if(event.key === "ArrowLeft") {
-            this.#pointerService.updatePosition(x - moveStep, y);
-            event.preventDefault();
-            return;
-        }
+		if (event.key === 'ArrowLeft') {
+			this.#pointerService.updatePosition(x - moveStep, y);
+			event.preventDefault();
+			return;
+		}
 
-        if(event.key === "ArrowRight") {
-            this.#pointerService.updatePosition(x + moveStep, y);
-            event.preventDefault();
-            return;
-        }
-    }
+		if (event.key === 'ArrowRight') {
+			this.#pointerService.updatePosition(x + moveStep, y);
+			event.preventDefault();
+			return;
+		}
+	}
 
-    #getMoveStep(event: KeyboardEvent) {
-        if(event.shiftKey) {
-            return this.#moveStep * 10;
-        }
+	#getMoveStep(event: KeyboardEvent) {
+		if (event.shiftKey) {
+			return this.#moveStep * 10;
+		}
 
-        if(event.ctrlKey || event.metaKey) {
-            return this.#moveStep * 0.1;
-        }
+		if (event.ctrlKey || event.metaKey) {
+			return this.#moveStep * 0.1;
+		}
 
-        return this.#moveStep;
-    }
-    
+		return this.#moveStep;
+	}
 }
 
 type CellPosition = {
@@ -882,4 +894,20 @@ export class WidgetPointerEventWatcher {
 	}
 }
 
+let uniqueIdIndex = 0;
+export function generateUniqueId(prefix: string = 'flexiboard-') {
+	return prefix + uniqueIdIndex++;
+}
 
+/* Adapted from TailwindCSS sr-only */
+export const assistiveTextStyle = `
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+`;

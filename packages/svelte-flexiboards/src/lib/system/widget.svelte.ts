@@ -309,6 +309,9 @@ export class FlexiWidgetController {
 	#grabbers: number = $state(0);
 	#resizers: number = $state(0);
 
+	hasGrabbers: boolean = $derived(this.#grabbers > 0);
+	hasResizers: boolean = $derived(this.#resizers > 0);
+
 	// TODO: try make this internal.
 	mounted: boolean = $state(false);
 
@@ -348,7 +351,7 @@ export class FlexiWidgetController {
 	});
 
 	#getCursorStyle() {
-		if(!this.mounted) {
+		if (!this.mounted) {
 			return '';
 		}
 
@@ -473,11 +476,11 @@ export class FlexiWidgetController {
 	}
 
 	onkeydown(event: KeyboardEvent) {
-		if(!this.draggable || !event.target || this.#grabbers) {
+		if (!this.draggable || !event.target || this.#grabbers) {
 			return;
 		}
 
-		if(event.key !== 'Enter') {
+		if (event.key !== 'Enter') {
 			return;
 		}
 
@@ -487,8 +490,8 @@ export class FlexiWidgetController {
 
 		const rect = (event.target as HTMLElement).getBoundingClientRect();
 
-		const x = rect.left + (rect.width / 2);
-		const y = rect.top + (rect.height / 2);
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
 		return this.ongrab({
 			...event,
 			clientX: x,
@@ -500,7 +503,7 @@ export class FlexiWidgetController {
 	ongrab(event: WidgetActionEvent) {
 		this.#grabWidget(event.clientX, event.clientY);
 		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-		if(!event.isKeyboard) {
+		if (!event.isKeyboard) {
 			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
 		}
 	}
@@ -518,11 +521,11 @@ export class FlexiWidgetController {
 	}
 
 	ongrabberkeydown(event: KeyboardEvent) {
-		if(!this.draggable || !this.ref) {
+		if (!this.draggable || !this.ref) {
 			return;
 		}
 
-		if(event.key !== 'Enter') {
+		if (event.key !== 'Enter') {
 			return;
 		}
 
@@ -532,8 +535,8 @@ export class FlexiWidgetController {
 
 		const rect = (event.target as HTMLElement).getBoundingClientRect();
 
-		const x = rect.left + (rect.width / 2);
-		const y = rect.top + (rect.height / 2);
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
 		return this.ongrab({
 			...event,
 			clientX: x,
@@ -547,7 +550,7 @@ export class FlexiWidgetController {
 		this.#startResizeWidget(event.clientX, event.clientY);
 
 		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
-		if(!event.isKeyboard) {
+		if (!event.isKeyboard) {
 			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
 		}
 	}
@@ -584,11 +587,11 @@ export class FlexiWidgetController {
 	}
 
 	onresizerkeydown(event: KeyboardEvent) {
-		if(this.resizability == 'none' || !event.target) {
+		if (this.resizability == 'none' || !event.target) {
 			return;
 		}
 
-		if(event.key !== 'Enter') {
+		if (event.key !== 'Enter') {
 			return;
 		}
 
@@ -598,8 +601,8 @@ export class FlexiWidgetController {
 
 		const rect = (event.target as HTMLElement).getBoundingClientRect();
 
-		const x = rect.left + (rect.width / 2);
-		const y = rect.top + (rect.height / 2);
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
 		return this.onresize({
 			...event,
 			clientX: x,

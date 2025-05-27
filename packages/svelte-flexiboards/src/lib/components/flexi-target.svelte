@@ -71,7 +71,7 @@
 	onfirstcreate?.(target);
 </script>
 
-<div class={containerClass} role="grid" tabindex={0}>
+<div class={containerClass}>
 	{@render header?.({ target })}
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
@@ -81,7 +81,7 @@
 		{:else if target.prepared}
 			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
 			{#each [...target.widgets].sort((a, b) => {
-				if(a.y == b.y) {
+				if (a.y == b.y) {
 					return a.x - b.x;
 				}
 				return a.y - b.y;
