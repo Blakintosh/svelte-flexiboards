@@ -3,6 +3,7 @@
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import { flexidelete, FlexiDeleteController, type FlexiDeleteClasses } from '$lib/system/manage.svelte.js';
 
+	/** @deprecated FlexiDelete's children props are now redundant and will be removed in v0.4. */
 	type FlexiDeleteChildrenProps = {
 		/**
 		 * @deprecated This has been replaced with internal pointer management and is redundant. These events will be removed in v0.4.

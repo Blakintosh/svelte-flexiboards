@@ -7,11 +7,18 @@ published: true
 
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
+    import HeadsUp from '$lib/components/docs/heads-up.svelte';
 </script>
 
-_**Breaking change in v0.3:** In order to make FlexiDelete more accessible, we now create a wrapper div around the FlexiDelete component. Previously, the user was responsible for creating such an element._
+<HeadsUp title="Breaking Change Notice">
+    In order to make FlexiDelete more accessible, we now create a wrapper div around the FlexiDelete component. Previously, the user was responsible for creating such an element.
 
-_You can style the FlexiDelete div using the new `class` prop. Please note that the `props` snippet property containing the `onpointerenter` and `onpointerleave` events is now deprecated and will be removed in v0.4. They are currently maintained as dead event handlers for compatibility purposes._
+    You can style the FlexiDelete div using the new `class` prop. 
+    
+    Please note that the `props` snippet property containing the `onpointerenter` and `onpointerleave` events is now deprecated and will be removed in v0.4. They are currently maintained as dead event handlers for compatibility purposes.
+
+    See [Breaking Changes in v0.3](/docs/breaking-changes-to-03) for more details.
+</HeadsUp>
 
 ## FlexiDelete (component)
 

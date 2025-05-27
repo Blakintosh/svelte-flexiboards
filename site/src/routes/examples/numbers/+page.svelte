@@ -108,6 +108,8 @@
 		]}>
 			<Trash2 class="mb-2 size-8 lg:size-12" />
 			Delete
+
+			<span class="sr-only">Drag a widget here to delete it</span>
 		</FlexiDelete>
 	</FlexiBoard>
 </main>

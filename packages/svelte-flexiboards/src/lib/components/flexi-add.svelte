@@ -11,8 +11,15 @@
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
 
+	/** @deprecated FlexiAdd's children props are now redundant and will be removed in v0.4. */
 	type FlexiAddChildrenProps = {
+		/**
+		 * @deprecated This has been replaced with internal pointer management and is redundant. This event will be removed in v0.4.
+		 */
 		onpointerdown: (event: PointerEvent) => void;
+		/**
+		 * @deprecated This has been moved to the internal button so is now redundant. It will be removed in v0.4.
+		 */
 		style: string;
 	};
 
