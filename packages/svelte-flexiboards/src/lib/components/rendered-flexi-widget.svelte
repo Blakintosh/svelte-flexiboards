@@ -30,6 +30,8 @@
 
 		return 'Static widget';
 	});
+
+	$inspect('widget.draggable', widget.draggable, '!widget.hasGrabbers', !widget.hasGrabbers);
 </script>
 
 <div
@@ -43,6 +45,8 @@
 	role="cell"
 	aria-colindex={widget.x}
 	aria-rowindex={widget.y}
+	aria-colspan={widget.width}
+	aria-rowspan={widget.height}
 	tabindex={widget.draggable && !widget.hasGrabbers ? 0 : undefined}
 	bind:this={widget.ref}
 >

@@ -1,7 +1,12 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
-	import { flexidelete, FlexiDeleteController, type FlexiDeleteClasses } from '$lib/system/manage.svelte.js';
+	import {
+		flexidelete,
+		FlexiDeleteController,
+		type FlexiDeleteClasses
+	} from '$lib/system/manage.svelte.js';
+	import { assistiveTextStyle, generateUniqueId } from '$lib/system/utils.svelte.js';
 
 	/** @deprecated FlexiDelete's children props are now redundant and will be removed in v0.4. */
 	type FlexiDeleteChildrenProps = {
@@ -22,7 +27,12 @@
 </script>
 
 <script lang="ts">
-	let { class: className, children, controller = $bindable(), onfirstcreate }: FlexiDeleteProps = $props();
+	let {
+		class: className,
+		children,
+		controller = $bindable(),
+		onfirstcreate
+	}: FlexiDeleteProps = $props();
 
 	// TODO: remove pointer events in v0.4
 	const { deleter, onpointerenter, onpointerleave } = flexidelete();
@@ -30,7 +40,7 @@
 	onfirstcreate?.(deleter);
 
 	let derivedClassName = $derived.by(() => {
-		if(!deleter) {
+		if (!deleter) {
 			return '';
 		}
 
@@ -40,15 +50,18 @@
 
 		return className;
 	});
+
+	let assistiveTextId = generateUniqueId();
 </script>
 
-<!-- dropeffect is deprecated, but there's no aria alternative so we'll leave it for now. -->
-<div 
+<div
 	role="region"
-	bind:this={deleter.ref} 
+	bind:this={deleter.ref}
 	class={derivedClassName}
-	aria-label="Drag a widget here to delete it"
-	aria-dropeffect="move"
+	aria-describedby={assistiveTextId}
 >
+	<span style={assistiveTextStyle} id={assistiveTextId}>
+		Drag a widget here and press Enter to delete it.
+	</span>
 	{@render children?.({ deleter, props: { onpointerenter, onpointerleave } })}
 </div>

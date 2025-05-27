@@ -895,7 +895,7 @@ export class WidgetPointerEventWatcher {
 }
 
 let uniqueIdIndex = 0;
-export function generateUniqueId(prefix: string = 'flexiboard-') {
+export function generateUniqueId(prefix: string = 'flexi-') {
 	return prefix + uniqueIdIndex++;
 }
 

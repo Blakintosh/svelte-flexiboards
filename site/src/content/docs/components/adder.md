@@ -13,11 +13,12 @@ published: true
 <HeadsUp title="Breaking Change Notice">
     In order to make FlexiAdd more accessible, we now create a wrapper button around the FlexiAdd component. Previously, the user was responsible for creating such an element.
 
-    You can style the FlexiAdd div using the new `class` prop. 
-    
+    You can style the FlexiAdd div using the new `class` prop.
+
     Please note that the `props` snippet property containing the `onpointerdown` and `style` props is now deprecated and will be removed in v0.4. They are currently maintained as empty props for compatibility purposes.
 
     See [Breaking Changes in v0.3](/docs/breaking-changes-to-03) for more details.
+
 </HeadsUp>
 
 ## FlexiAdd (component)
@@ -32,11 +33,6 @@ description: "The child content of the adder, containing the contents of the add
 name: "class",
 type: "FlexiAddClasses",
 description: "The class names to apply to the adder's button element."
-},
-{
-name: "aria-label",
-type: "string?",
-description: "Defaults to 'Add a new widget'. Allows you to specify a custom label to describe your adder's functionality."
 },
 {
 name: "addWidget",
