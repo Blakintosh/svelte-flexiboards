@@ -541,7 +541,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
-		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height);
+		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height, true);
 
 		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
 		// if (added) {
@@ -575,7 +575,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.removeWidget(dropzoneWidget);
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
-		grid.tryPlaceWidget(dropzoneWidget, x, y, width, height);
+		grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {

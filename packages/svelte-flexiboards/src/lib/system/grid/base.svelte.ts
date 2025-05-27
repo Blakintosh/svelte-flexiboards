@@ -23,7 +23,7 @@ export type WidgetSnapshot = {
 }
 
 export abstract class FlexiGrid {
-    abstract tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number): boolean;
+    abstract tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number, isGrabbedWidget?: boolean): boolean;
     abstract removeWidget(widget: FlexiWidgetController): boolean;
     abstract takeSnapshot(): unknown;
     abstract restoreFromSnapshot(snapshot: unknown): void;

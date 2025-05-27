@@ -101,7 +101,8 @@ export class FlowFlexiGrid extends FlexiGrid {
 		cellX?: number,
 		cellY?: number,
 		width: number = 1,
-		height: number = 1
+		height: number = 1,
+		isGrabbedWidget: boolean = false
 	): boolean {
 		const isRowFlow = this.isRowFlow;
 
