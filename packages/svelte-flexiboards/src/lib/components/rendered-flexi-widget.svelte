@@ -30,8 +30,6 @@
 
 		return 'Static widget';
 	});
-
-	$inspect('widget.draggable', widget.draggable, '!widget.hasGrabbers', !widget.hasGrabbers);
 </script>
 
 <div
