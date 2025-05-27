@@ -15,13 +15,11 @@
 	const { widget, onpointerdown, onkeydown } = flexigrab();
 </script>
 
-<button 
-	style={
-		"user-select: none; touch-action: none;" +
-		widget.draggable && widget.mounted ? "cursor: grab;" : "cursor: not-allowed;"
-	} 
-	disabled={!widget.draggable || !widget.mounted} 
-	class={className} 
+<button
+	style={'user-select: none; touch-action: none;' +
+		(widget.draggable && widget.mounted ? 'cursor: grab;' : 'cursor: not-allowed;')}
+	disabled={!widget.draggable || !widget.mounted}
+	class={className}
 	{onpointerdown}
 	{onkeydown}
 >
