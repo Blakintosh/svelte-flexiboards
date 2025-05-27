@@ -80,7 +80,12 @@
 		{#if !target.prepared && children}
 			{@render children()}
 		{:else if target.prepared}
-			{#each target.widgets as widget (widget)}
+			{#each [...target.widgets].sort((a, b) => {
+				if(a.y == b.y) {
+					return a.x - b.x;
+				}
+				return a.y - b.y;
+			}) as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
