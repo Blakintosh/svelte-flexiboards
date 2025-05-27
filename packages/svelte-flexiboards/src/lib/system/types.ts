@@ -48,6 +48,7 @@ export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
 export type WidgetGrabbedParams = {
     widget: FlexiWidgetController;
+    ref: HTMLElement;
     xOffset: number;
     yOffset: number;
     clientX: number;

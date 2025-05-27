@@ -559,7 +559,8 @@ export class FlexiWidgetController {
 			clientY: this.#initialY!,
 			// Pass through the base size of the widget.
 			capturedHeight: this.#initialHeightPx!,
-			capturedWidth: this.#initialWidthPx!
+			capturedWidth: this.#initialWidthPx!,
+			ref: this.ref!
 		});
 	}
 
@@ -619,6 +620,7 @@ export class FlexiWidgetController {
 		// Propagate an event up to the parent target, indicating that the widget has been grabbed.
 		this.currentAction = this.target.grabWidget({
 			widget: this,
+			ref: this.ref,
 			xOffset,
 			yOffset,
 			clientX,

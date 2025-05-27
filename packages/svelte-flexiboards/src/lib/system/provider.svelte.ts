@@ -193,6 +193,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
 
+		// TODO: might be worth doing this for grabs via keyboard.
+		// Focus the widget that's been grabbed.
+		// setTimeout(() => {
+		// 	event.ref.focus();
+		// }, 0);
+
 		const action: WidgetGrabAction = {
 			action: 'grab',
 			target: event.target,
