@@ -309,6 +309,9 @@ export class FlexiWidgetController {
 	#grabbers: number = $state(0);
 	#resizers: number = $state(0);
 
+	// TODO: try make this internal.
+	mounted: boolean = $state(false);
+
 	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(
 		new WidgetPointerEventWatcher(this, 'grab')
 	);
@@ -345,6 +348,10 @@ export class FlexiWidgetController {
 	});
 
 	#getCursorStyle() {
+		if(!this.mounted) {
+			return '';
+		}
+
 		if (!this.draggable) {
 			return '';
 		}
@@ -1105,6 +1112,10 @@ export function renderedflexiwidget(widget: FlexiWidgetController) {
 			widget.initiateFirstDragIn();
 		});
 	}
+
+	onMount(() => {
+		widget.mounted = true;
+	});
 
 	return {
 		widget,

@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import {
 		flexitarget,
-		type FlexiTargetConfiguration,
 		type FlexiTargetController,
 		type FlexiTargetPartialConfiguration
 	} from '$lib/system/target.svelte.js';
@@ -80,6 +79,7 @@
 		{#if !target.prepared && children}
 			{@render children()}
 		{:else if target.prepared}
+			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
 			{#each [...target.widgets].sort((a, b) => {
 				if(a.y == b.y) {
 					return a.x - b.x;

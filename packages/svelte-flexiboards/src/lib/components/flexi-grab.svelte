@@ -18,9 +18,9 @@
 <button 
 	style={
 		"user-select: none; touch-action: none;" +
-		widget.draggable ? "cursor: grab;" : "cursor: not-allowed;"
+		widget.draggable && widget.mounted ? "cursor: grab;" : "cursor: not-allowed;"
 	} 
-	disabled={!widget.draggable} 
+	disabled={!widget.draggable || !widget.mounted} 
 	class={className} 
 	{onpointerdown}
 	{onkeydown}
