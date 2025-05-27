@@ -42,11 +42,12 @@ export class FlexiAddController {
     }
 
     onkeydown(event: KeyboardEvent) {
-        if(event.key !== 'Enter' || !this.ref) {
+        if(event.key !== 'Enter' || !this.ref || this.newWidget) {
             return;
         }
 
         const rect = this.ref.getBoundingClientRect();
+        event.stopPropagation();
 
         this.#initiateWidgetDragIn(
             rect.left + rect.width / 2, 
