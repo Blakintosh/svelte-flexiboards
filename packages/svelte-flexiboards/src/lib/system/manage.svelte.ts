@@ -14,20 +14,48 @@ export type AdderWidgetConfiguration = {
     heightPx?: number;
 }
 
+export type FlexiAddClassFunction = (adder: FlexiAddController) => ClassValue;
+export type FlexiAddClasses = ClassValue | FlexiAddClassFunction;
+
 export class FlexiAddController {
     provider: InternalFlexiBoardController;
     #addWidget: FlexiAddWidgetFn;
 
     newWidget?: FlexiWidgetController = $state(undefined);
 
+    ref: HTMLElement | null = $state(null);
+
     constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
         this.provider = provider;
         this.#addWidget = addWidgetFn;
 
         this.onpointerdown = this.onpointerdown.bind(this);
+        this.onkeydown = this.onkeydown.bind(this);
     }
 
     onpointerdown(event: PointerEvent) {
+        this.#initiateWidgetDragIn(event.clientX, event.clientY);
+
+        // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
+        (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+        event.preventDefault();
+    }
+
+    onkeydown(event: KeyboardEvent) {
+        if(event.key !== 'Enter' || !this.ref) {
+            return;
+        }
+
+        const rect = this.ref.getBoundingClientRect();
+
+        this.#initiateWidgetDragIn(
+            rect.left + rect.width / 2, 
+            rect.top + rect.height / 2
+        );
+    }
+
+    #initiateWidgetDragIn(clientX: number, clientY: number) {
+
         const config = this.#addWidget();
 
         if(!config || !config.widget) {
@@ -41,14 +69,10 @@ export class FlexiAddController {
             config: config.widget,
             widthPx: config.widthPx ?? 100,
             heightPx: config.heightPx ?? 100,
-            clientX: event.clientX,
-            clientY: event.clientY
+            clientX,
+            clientY
         });
         // When the widget mounts, it'll automatically trigger the drag in event.
-
-        // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-        (event.target as HTMLElement).releasePointerCapture(event.pointerId);
-        event.preventDefault();
     }
 
     onstartwidgetdragin(event: WidgetGrabbedParams) {
@@ -71,7 +95,8 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
 
     return {
         adder,
-        onpointerdown: (event: PointerEvent) => adder.onpointerdown(event)
+        onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
+        onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
     }
 }
 

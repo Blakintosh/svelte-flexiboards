@@ -2,6 +2,7 @@
 	import {
 		FlexiAddController,
 		flexiadd,
+		type FlexiAddClasses,
 		type FlexiAddWidgetFn
 	} from '$lib/system/manage.svelte.js';
 	import FlexiWidget from './rendered-flexi-widget.svelte';
@@ -16,23 +17,53 @@
 	};
 
 	export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
+		class?: FlexiAddClasses;
+		'aria-label'?: string;
 		children?: Snippet<[{ adder: FlexiAddController; props: FlexiAddChildrenProps }]>;
 		addWidget: FlexiAddWidgetFn;
 	};
 </script>
 
 <script lang="ts">
-	let { children, addWidget, controller = $bindable(), onfirstcreate }: FlexiAddProps = $props();
+	let { 
+		children, 
+		addWidget, 
+		controller = $bindable(), 
+		onfirstcreate,
+		class: className,
+		'aria-label': ariaLabel = 'Add a widget'
+	}: FlexiAddProps = $props();
 
-	const { adder, onpointerdown } = flexiadd(addWidget);
+	const { adder, onpointerdown, onkeydown } = flexiadd(addWidget);
 	controller = adder;
 	onfirstcreate?.(adder);
+
+	const dummyOnpointerdown = (event: PointerEvent) => {};
+
+	let derivedClassName = $derived.by(() => {
+		if(!adder) {
+			return '';
+		}
+
+		if(typeof className === 'function') {
+			return className(adder);
+		}
+
+		return className;
+	});
 </script>
 
-{@render children?.({ adder, props: {
-	onpointerdown,
-	style: 'touch-action: none;'
-} })}
+<!-- TODO: will probably need a breaking change, because we need a ref to get the start widget position -->
+<button 
+	class={derivedClassName} 
+	bind:this={adder.ref}
+	aria-label={ariaLabel}
+	style={"touch-action: none;"}
+	{onpointerdown}
+	{onkeydown}
+>
+	{@render children?.({ adder, props: { style: '', onpointerdown: dummyOnpointerdown } })}
+</button>
 
 <div style="display: none;">
 	<!-- Mimics the behaviour of a FlexiTarget, as we need to render the widget so that we can "drag it in" from -->
