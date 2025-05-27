@@ -27,9 +27,9 @@
 	{onpointerdown}
 	{onkeydown}
 	aria-grabbed={widget.isGrabbed}
-	aria-label="Flexi Widget"
-	aria-roledescription="Flexi Widget"
-	aria-dropeffect="move"
+	aria-label="Widget"
+	aria-roledescription={widget.draggable ? 'This widget can be dragged-and-dropped': undefined}
+	aria-dropeffect={widget.draggable ? "move" : undefined}
 	role="gridcell"
 	tabindex={0}
 	bind:this={widget.ref}
