@@ -19,6 +19,10 @@
 				{
 					title: 'Controllers',
 					href: '/docs/controllers'
+				},
+				{
+					title: 'Breaking Changes in v0.3',
+					href: '/docs/breaking-changes-to-03'
 				}
 			]
 		},

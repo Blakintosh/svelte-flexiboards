@@ -46,7 +46,7 @@ importers:
   packages/svelte-flexiboards:
     dependencies:
       svelte:
-        specifier: ^5.0.0
+        specifier: ^5.16.0
         version: 5.20.1
     devDependencies:
       '@sveltejs/adapter-auto':

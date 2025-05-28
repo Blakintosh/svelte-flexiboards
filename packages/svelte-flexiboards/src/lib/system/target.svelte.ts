@@ -25,6 +25,7 @@ import { FlowFlexiGrid, type FlowTargetLayout } from './grid/index.js';
 import { FreeFormFlexiGrid, type FreeFormTargetLayout } from './grid/free-grid.svelte.js';
 import { type FlexiGrid } from './grid/index.js';
 import type { FlexiTargetProps } from '$lib/components/flexi-target.svelte';
+import { getPointerService } from './utils.svelte.js';
 
 type TargetSizingFn = ({
 	target,
@@ -141,6 +142,11 @@ export interface FlexiTargetController {
 	forgetPreGrabSnapshot(): void;
 
 	/**
+	 * Cancels the current drop action.
+	 */
+	cancelDrop(): void;
+
+	/**
 	 * Applies any post-completion operations like row/column collapsing.
 	 */
 	applyGridPostCompletionOperations(): void;
@@ -165,6 +171,18 @@ export interface FlexiTargetController {
 	 * @returns The action that was started, or null if the action couldn't be started.
 	 */
 	startResizeWidget(params: WidgetStartResizeParams): WidgetAction | null;
+
+	/**
+	 * The number of columns currently being used in the target grid.
+	 * This value is readonly.
+	 */
+	get columns(): number;
+
+	/**
+	 * The number of rows currently being used in the target grid.
+	 * This value is readonly.
+	 */
+	get rows(): number;
 }
 
 export class InternalFlexiTargetController implements FlexiTargetController {
@@ -202,6 +220,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	#targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
+	#pointerService = getPointerService();
+
 	config: FlexiTargetConfiguration = $derived({
 		layout: this.#targetConfig?.layout ??
 			this.#providerTargetDefaults?.layout ?? {
@@ -230,6 +250,36 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.provider = provider;
 		this.#targetConfig = config;
 		this.key = key;
+
+		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
+		// make it universal with our keyboard pointer.
+		$effect(() => {
+			if (!this.#grid?.ref) {
+				return;
+			}
+
+			const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
+
+			// Only check when keyboard controls are active
+			untrack(() => {
+				this.#updatePointerOverState(isPointerInside);
+			});
+		});
+	}
+
+	/**
+	 * Dispatches the appropriate enter/leave events based on the pointer's current state.
+	 */
+	#updatePointerOverState(inside: boolean) {
+		const wasHovered = this.hovered;
+
+		if (inside && !wasHovered) {
+			// Just entered
+			this.onpointerentertarget();
+		} else if (!inside && wasHovered) {
+			// Just left
+			this.onpointerleavetarget();
+		}
 	}
 
 	#tryAddWidget(
@@ -362,7 +412,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	// Events
-	onpointerenter() {
+	onpointerentertarget() {
 		this.hovered = true;
 
 		this.provider.onpointerentertarget({
@@ -370,7 +420,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		});
 	}
 
-	onpointerleave() {
+	onpointerleavetarget() {
 		this.hovered = false;
 
 		this.provider.onpointerleavetarget({
@@ -429,6 +479,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		return result;
+	}
+
+	cancelDrop() {
+		this.actionWidget = null;
+		this.#removeDropzoneWidget();
 	}
 
 	tryDropWidget(widget: FlexiWidgetController): boolean {
@@ -705,8 +760,6 @@ export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: stri
 	setContext(contextKey, target);
 
 	return {
-		onpointerenter: () => target.onpointerenter(),
-		onpointerleave: () => target.onpointerleave(),
 		target: target as FlexiTargetController
 	};
 }

@@ -1,20 +1,29 @@
 <script module lang="ts">
 	import { flexiresize, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
 	import type { Snippet } from 'svelte';
-	import type { SvelteClassValue } from '$lib/system/types.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	type FlexiResizeProps = {
 		children?: Snippet<[{ widget: FlexiWidgetController }]>;
-		class?: SvelteClassValue;
+		class?: ClassValue;
 	};
 </script>
 
 <script lang="ts">
 	let { class: className, children }: FlexiResizeProps = $props();
 
-	const { widget, onpointerdown } = flexiresize();
+	const { widget, onpointerdown, onkeydown } = flexiresize();
 </script>
 
-<button style={"user-select: none; cursor: nwse-resize; touch-action: none;"} class={className} {onpointerdown}>
+<button
+	style={'user-select: none; touch-action: none;' +
+		(widget.resizability != 'none' && widget.mounted
+			? 'cursor: nwse-resize'
+			: 'cursor: not-allowed')}
+	class={className}
+	disabled={widget.resizability == 'none' || !widget.mounted}
+	{onpointerdown}
+	{onkeydown}
+>
 	{@render children?.({ widget })}
 </button>

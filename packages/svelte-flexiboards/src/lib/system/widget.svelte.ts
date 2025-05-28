@@ -15,28 +15,31 @@ import {
 } from './target.svelte.js';
 import type {
 	WidgetAction,
-	SvelteClassValue,
 	WidgetGrabAction,
 	WidgetResizeAction,
 	WidgetResizability,
-	Position
+	Position,
+	WidgetActionEvent
 } from './types.js';
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
 import {
+	getPointerService,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
+	PointerService,
 	WidgetPointerEventWatcher,
 	type PointerTriggerCondition
 } from './utils.svelte.js';
+import type { ClassValue } from 'svelte/elements';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
 };
 export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetParameters]>;
 
-export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => SvelteClassValue;
-export type FlexiWidgetClasses = SvelteClassValue | FlexiWidgetClassFunction;
+export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => ClassValue;
+export type FlexiWidgetClasses = ClassValue | FlexiWidgetClassFunction;
 
 export type FlexiWidgetTransitionConfiguration = {
 	duration?: number;
@@ -216,6 +219,8 @@ export class FlexiWidgetController {
 	#targetWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.config.widgetDefaults);
 	#rawConfig: FlexiWidgetConfiguration = $state() as FlexiWidgetConfiguration;
 
+	#pointerService: PointerService = getPointerService();
+
 	/**
 	 * The DOM element bound to this widget.
 	 */
@@ -304,6 +309,12 @@ export class FlexiWidgetController {
 	#grabbers: number = $state(0);
 	#resizers: number = $state(0);
 
+	hasGrabbers: boolean = $derived(this.#grabbers > 0);
+	hasResizers: boolean = $derived(this.#resizers > 0);
+
+	// TODO: try make this internal.
+	mounted: boolean = $state(false);
+
 	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(
 		new WidgetPointerEventWatcher(this, 'grab')
 	);
@@ -340,6 +351,10 @@ export class FlexiWidgetController {
 	});
 
 	#getCursorStyle() {
+		if (!this.mounted) {
+			return '';
+		}
+
 		if (!this.draggable) {
 			return '';
 		}
@@ -369,8 +384,8 @@ export class FlexiWidgetController {
 	}
 
 	#getGrabbedWidgetStyle(action: WidgetGrabAction) {
-		const locationOffsetX = action.positionWatcher.position.x - action.offsetX;
-		const locationOffsetY = action.positionWatcher.position.y - action.offsetY;
+		const locationOffsetX = this.#pointerService.position.x - action.offsetX;
+		const locationOffsetY = this.#pointerService.position.y - action.offsetY;
 
 		// Fixed when it's a grabbed widget.
 		const height = action.capturedHeightPx;
@@ -385,8 +400,8 @@ export class FlexiWidgetController {
 		// Guard against division by zero if initial width is somehow 0
 		const unitSizeX = action.initialWidthUnits > 0 ? action.widthPx / action.initialWidthUnits : 1;
 
-		const deltaX = action.positionWatcher.position.x - action.offsetX;
-		const deltaY = action.positionWatcher.position.y - action.offsetY;
+		const deltaX = this.#pointerService.position.x - action.offsetX;
+		const deltaY = this.#pointerService.position.y - action.offsetY;
 
 		// For resizing, top and left should remain fixed at their initial positions.
 		const top = action.top;
@@ -441,8 +456,11 @@ export class FlexiWidgetController {
 
 		// Allows the event handlers to be called without binding to the widget instance.
 		this.onpointerdown = this.onpointerdown.bind(this);
+		this.onkeydown = this.onkeydown.bind(this);
 		this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
+		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
+		this.onresizerkeydown = this.onresizerkeydown.bind(this);
 	}
 
 	/**
@@ -457,10 +475,37 @@ export class FlexiWidgetController {
 		this.#grabPointerEventWatcher.onstartpointerdown(event);
 	}
 
-	ongrab(event: PointerEvent) {
+	onkeydown(event: KeyboardEvent) {
+		if (!this.draggable || !event.target || this.#grabbers) {
+			return;
+		}
+
+		if (event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
+		return this.ongrab({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		});
+	}
+
+	ongrab(event: WidgetActionEvent) {
 		this.#grabWidget(event.clientX, event.clientY);
 		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		if (!event.isKeyboard) {
+			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		}
 	}
 
 	/**
@@ -475,12 +520,39 @@ export class FlexiWidgetController {
 		this.#grabPointerEventWatcher.onstartpointerdown(event);
 	}
 
-	onresize(event: PointerEvent) {
+	ongrabberkeydown(event: KeyboardEvent) {
+		if (!this.draggable || !this.ref) {
+			return;
+		}
+
+		if (event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
+		return this.ongrab({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		});
+	}
+
+	onresize(event: WidgetActionEvent) {
 		// Pass the pointer ID and target element to the internal method
 		this.#startResizeWidget(event.clientX, event.clientY);
 
 		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
-		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		if (!event.isKeyboard) {
+			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		}
 	}
 
 	initiateFirstDragIn() {
@@ -497,7 +569,8 @@ export class FlexiWidgetController {
 			clientY: this.#initialY!,
 			// Pass through the base size of the widget.
 			capturedHeight: this.#initialHeightPx!,
-			capturedWidth: this.#initialWidthPx!
+			capturedWidth: this.#initialWidthPx!,
+			ref: this.ref!
 		});
 	}
 
@@ -511,6 +584,31 @@ export class FlexiWidgetController {
 		}
 
 		this.#resizePointerEventWatcher.onstartpointerdown(event);
+	}
+
+	onresizerkeydown(event: KeyboardEvent) {
+		if (this.resizability == 'none' || !event.target) {
+			return;
+		}
+
+		if (event.key !== 'Enter') {
+			return;
+		}
+
+		// so that the board's listener doesn't interfere
+		event.stopPropagation();
+		event.preventDefault();
+
+		const rect = (event.target as HTMLElement).getBoundingClientRect();
+
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
+		return this.onresize({
+			...event,
+			clientX: x,
+			clientY: y,
+			isKeyboard: true
+		});
 	}
 
 	#grabWidget(clientX: number, clientY: number) {
@@ -532,6 +630,7 @@ export class FlexiWidgetController {
 		// Propagate an event up to the parent target, indicating that the widget has been grabbed.
 		this.currentAction = this.target.grabWidget({
 			widget: this,
+			ref: this.ref,
 			xOffset,
 			yOffset,
 			clientX,
@@ -625,7 +724,8 @@ export class FlexiWidgetController {
 		this.#grabbers++;
 
 		return {
-			onpointerdown: this.ongrabberpointerdown
+			onpointerdown: this.ongrabberpointerdown,
+			onkeydown: this.ongrabberkeydown
 		};
 	}
 
@@ -644,7 +744,8 @@ export class FlexiWidgetController {
 		this.#resizers++;
 
 		return {
-			onpointerdown: this.onresizerpointerdown
+			onpointerdown: this.onresizerpointerdown,
+			onkeydown: this.onresizerkeydown
 		};
 	}
 
@@ -1015,9 +1116,14 @@ export function renderedflexiwidget(widget: FlexiWidgetController) {
 		});
 	}
 
+	onMount(() => {
+		widget.mounted = true;
+	});
+
 	return {
 		widget,
-		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event)
+		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event),
+		onkeydown: (event: KeyboardEvent) => widget.onkeydown(event)
 	};
 }
 
@@ -1029,13 +1135,13 @@ export function flexigrab() {
 		);
 	}
 
-	const { onpointerdown } = widget.addGrabber();
+	const { onpointerdown, onkeydown } = widget.addGrabber();
 
 	onDestroy(() => {
 		widget.removeGrabber();
 	});
 
-	return { widget, onpointerdown };
+	return { widget, onpointerdown, onkeydown };
 }
 
 export function flexiresize() {
@@ -1046,13 +1152,13 @@ export function flexiresize() {
 		);
 	}
 
-	const { onpointerdown } = widget.addResizer();
+	const { onpointerdown, onkeydown } = widget.addResizer();
 
 	onDestroy(() => {
 		widget.removeResizer();
 	});
 
-	return { widget, onpointerdown };
+	return { widget, onpointerdown, onkeydown };
 }
 
 export function getFlexiwidgetCtx() {

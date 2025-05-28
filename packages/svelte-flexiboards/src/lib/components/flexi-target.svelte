@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import {
 		flexitarget,
-		type FlexiTargetConfiguration,
 		type FlexiTargetController,
 		type FlexiTargetPartialConfiguration
 	} from '$lib/system/target.svelte.js';
@@ -65,14 +64,14 @@
 		onfirstcreate
 	}: FlexiTargetProps = $props();
 
-	const { onpointerenter, onpointerleave, target } = flexitarget(config, key);
+	const { target } = flexitarget(config, key);
 
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
 </script>
 
-<div class={containerClass} {onpointerenter} {onpointerleave} role="grid" tabindex={0}>
+<div class={containerClass}>
 	{@render header?.({ target })}
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
@@ -80,7 +79,13 @@
 		{#if !target.prepared && children}
 			{@render children()}
 		{:else if target.prepared}
-			{#each target.widgets as widget (widget)}
+			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
+			{#each [...target.widgets].sort((a, b) => {
+				if (a.y == b.y) {
+					return a.x - b.x;
+				}
+				return a.y - b.y;
+			}) as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}

@@ -80,7 +80,7 @@
 		</div>
 
 		<div
-			class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[75vw] xl:w-[980px] 2xl:w-[1440px]"
+			class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[75vw] xl:w-[1200px] 2xl:w-[1440px]"
 		>
 			<div
 				class="relative flex aspect-9/18 min-h-0 w-full items-stretch overflow-clip lg:aspect-video"

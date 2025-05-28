@@ -3,97 +3,486 @@
     'Creating Reactive Browser APIs In Svelte' video, found at https://youtu.be/BKyENJQ6KdQ.
 */
 
-import type { Position, ProxiedValue } from './types.js';
+import type { Position, ProxiedValue, WidgetActionEvent } from './types.js';
 import type { FlexiGrid } from './grid/base.svelte.js';
 import type { FlexiTargetConfiguration } from './target.svelte.js';
 import type { FlexiWidgetController, FlexiWidgetTriggerConfiguration } from './widget.svelte.js';
-import { onMount, untrack } from 'svelte';
+import { getContext, onMount, setContext, untrack } from 'svelte';
 
-export class PointerPositionWatcher {
+/**
+ * A singleton service that globally tracks the current position of the pointer.
+ */
+export class PointerService {
 	#position: Position = $state({
 		x: 0,
 		y: 0
 	});
-	#ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
-	autoScroll: boolean = false;
+	#keyboardController: KeyboardPointerController;
 
-	constructor(ref: ProxiedValue<HTMLElement | null>) {
-		this.#ref = ref;
+	constructor() {
+		this.#keyboardController = new KeyboardPointerController(this);
 
-		const onPointerMove = (event: PointerEvent) => {
-			if (!this.ref) {
-				return;
-			}
-
-			this.updateScroll(event.clientX, event.clientY);
-
-			const rect = this.ref.getBoundingClientRect();
-
-			// this.#position.x = event.clientX - rect.left;
-			// this.#position.y = event.clientY - rect.top;
-			this.#position.x = event.clientX;
-			this.#position.y = event.clientY;
-
-			event.preventDefault();
-		};
-
-		$effect(() => {
-			window.addEventListener('pointermove', onPointerMove);
-
-			return () => {
-				window.removeEventListener('pointermove', onPointerMove);
-			};
-		});
-	}
-
-	updatePosition(clientX: number, clientY: number) {
-		if (!this.ref) {
+		if (typeof window === 'undefined') {
 			return;
 		}
 
-		this.updateScroll(clientX, clientY);
+		const updatePosition = this.updatePosition.bind(this);
 
+		const onPointerMove = (event: PointerEvent) => {
+			updatePosition(event.clientX, event.clientY);
+		};
+
+		// As this is singleton, we'll reuse it for the duration of the browser session
+		// (ie no disposal)
+		window.addEventListener('pointermove', onPointerMove);
+	}
+
+	updatePosition(clientX: number, clientY: number) {
 		this.#position.x = clientX;
 		this.#position.y = clientY;
 	}
 
-	updateScroll(clientX: number, clientY: number) {
-		if (!this.autoScroll) {
-			return;
-		}
+	/**
+	 * Utility method to check if the pointer is inside an element.
+	 * @param element The element to check if the pointer is inside.
+	 * @returns True if the pointer is inside the element, false otherwise.
+	 */
+	isPointerInside(element: HTMLElement) {
+		const rect = element.getBoundingClientRect();
 
-		if (!this.ref) {
-			return;
-		}
+		const { x, y } = this.#position;
 
-		const rect = this.ref.getBoundingClientRect();
-
-		// NEXT: Provide a configuration option for the scroll threshold and speed.
-		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
-		const scrollThreshold = 48;
-		const scrollSpeed = 10;
-
-		// Scroll vertically if near top or bottom edges.
-		if (clientY > rect.bottom - scrollThreshold) {
-			this.ref.scrollBy(0, scrollSpeed);
-		} else if (clientY < rect.top + scrollThreshold) {
-			this.ref.scrollBy(0, -scrollSpeed);
-		}
-
-		// Scroll horizontally if near left or right edges.
-		if (clientX > rect.right - scrollThreshold) {
-			this.ref.scrollBy(scrollSpeed, 0);
-		} else if (clientX < rect.left + scrollThreshold) {
-			this.ref.scrollBy(-scrollSpeed, 0);
-		}
+		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 	}
 
+	/**
+	 * The current position of the pointer.
+	 */
 	get position() {
 		return this.#position;
 	}
 
+	get keyboardControlsActive() {
+		return this.#keyboardController.active;
+	}
+
+	set keyboardControlsActive(value: boolean) {
+		this.#keyboardController.active = value;
+	}
+}
+
+let pointerService: PointerService | undefined = undefined;
+
+export function getPointerService() {
+	// Define pointer service at time of calling, so that effect context is assured.
+	if (!pointerService) {
+		pointerService = new PointerService();
+	}
+
+	return pointerService;
+}
+
+/**
+ * A service scoped to a FlexiBoard that manages auto-scrolling of the board itself,
+ * as well as any ancestors to it. Scrolls containers in hierarchical order: target first,
+ * then its parent, then grandparent, etc.
+ */
+export class AutoScrollService {
+	#ref: ProxiedValue<HTMLElement | null> = $state() as ProxiedValue<HTMLElement | null>;
+	#pointerService: PointerService = getPointerService();
+	#scrollableContainers: HTMLElement[] = $state([]);
+	#animationFrameId: number | null = null;
+	#isScrolling: boolean = false;
+
+	shouldAutoScroll: boolean = $state(false);
+
+	constructor(ref: ProxiedValue<HTMLElement | null>) {
+		this.#ref = ref;
+
+		$effect(() => {
+			const { x, y } = this.#pointerService.position;
+
+			untrack(() => {
+				this.#checkScrollConditions(x, y);
+			});
+		});
+
+		// Update scrollable containers when ref changes
+		$effect(() => {
+			if (this.ref) {
+				this.#updateScrollableContainers();
+			}
+		});
+
+		// Cleanup when the service is destroyed
+		$effect(() => {
+			return () => {
+				this.#stopContinuousScroll();
+			};
+		});
+	}
+
+	#updateScrollableContainers() {
+		if (!this.ref) {
+			this.#scrollableContainers = [];
+			return;
+		}
+
+		// Start with the target element itself, then add ancestors
+		const containers = [this.ref];
+		containers.push(...this.#getScrollableAncestors(this.ref));
+		this.#scrollableContainers = containers;
+	}
+
+	#getScrollableAncestors(element: HTMLElement): HTMLElement[] {
+		const ancestors: HTMLElement[] = [];
+		let parent = element.parentElement;
+
+		while (parent) {
+			const isScrollable = this.#isElementScrollable(parent);
+
+			if (isScrollable) {
+				ancestors.push(parent);
+			}
+			parent = parent.parentElement;
+		}
+		return ancestors;
+	}
+
+	#isPageLevel(element: HTMLElement): boolean {
+		return element.tagName === 'HTML' || element.tagName === 'BODY';
+	}
+
+	#isElementScrollable(element: HTMLElement): boolean {
+		if (this.#isPageLevel(element)) {
+			// Page-level elements can be scrollable without explicit overflow styles
+			return (
+				element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
+			);
+		}
+
+		const style = window.getComputedStyle(element);
+		const { overflowY, overflowX } = style;
+
+		const canScrollY =
+			(overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'visible') &&
+			element.scrollHeight > element.clientHeight;
+		const canScrollX =
+			(overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'visible') &&
+			element.scrollWidth > element.clientWidth;
+
+		return canScrollY || canScrollX;
+	}
+
+	#checkScrollConditions(clientX: number, clientY: number) {
+		if (!this.ref || !this.shouldAutoScroll || this.#scrollableContainers.length === 0) {
+			this.#stopContinuousScroll();
+			return;
+		}
+
+		// NEXT: Provide a configuration option for the scroll threshold and speed.
+		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
+		const scrollThreshold = 48;
+
+		// Check if we should be scrolling any container
+		let shouldScroll = false;
+		for (const container of this.#scrollableContainers) {
+			if (this.#shouldScrollContainer(container, clientX, clientY, scrollThreshold)) {
+				shouldScroll = true;
+				break;
+			}
+		}
+
+		if (shouldScroll && !this.#isScrolling) {
+			this.#startContinuousScroll();
+		} else if (!shouldScroll && this.#isScrolling) {
+			this.#stopContinuousScroll();
+		}
+	}
+
+	#startContinuousScroll() {
+		if (this.#isScrolling) {
+			return;
+		}
+
+		this.#isScrolling = true;
+		this.#continuousScrollLoop();
+	}
+
+	#stopContinuousScroll() {
+		if (this.#animationFrameId !== null) {
+			cancelAnimationFrame(this.#animationFrameId);
+			this.#animationFrameId = null;
+		}
+		this.#isScrolling = false;
+	}
+
+	#continuousScrollLoop() {
+		if (!this.#isScrolling) {
+			return;
+		}
+
+		const { x, y } = this.#pointerService.position;
+		this.#performAutoScroll(x, y);
+
+		this.#animationFrameId = requestAnimationFrame(() => {
+			this.#continuousScrollLoop();
+		});
+	}
+
+	#performAutoScroll(clientX: number, clientY: number) {
+		if (!this.ref || !this.shouldAutoScroll || this.#scrollableContainers.length === 0) {
+			return;
+		}
+
+		const scrollThreshold = 48;
+		const scrollSpeed = 4;
+
+		// Try scrolling containers in hierarchical order (target first, then ancestors)
+		for (const container of this.#scrollableContainers) {
+			const scrollResult = this.#tryScrollContainer(
+				container,
+				clientX,
+				clientY,
+				scrollThreshold,
+				scrollSpeed
+			);
+
+			// If we successfully scrolled this container, stop here to maintain hierarchy
+			if (scrollResult.didScroll) {
+				break;
+			}
+		}
+	}
+
+	#shouldScrollContainer(
+		container: HTMLElement,
+		clientX: number,
+		clientY: number,
+		scrollThreshold: number
+	): boolean {
+		const rect = container.getBoundingClientRect();
+		const effectiveRect = this.#getEffectiveRect(container, rect);
+
+		// Check if pointer is within this container's effective bounds
+		const isWithinBounds =
+			clientX >= effectiveRect.left &&
+			clientX <= effectiveRect.right &&
+			clientY >= effectiveRect.top &&
+			clientY <= effectiveRect.bottom;
+
+		if (!isWithinBounds) {
+			return false;
+		}
+
+		const scrollInfo = this.#getScrollInfo(container);
+
+		// Check if we're in a scroll zone and can actually scroll
+		const inVerticalScrollZone =
+			(clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) ||
+			(clientY < effectiveRect.top + scrollThreshold && scrollInfo.canScrollUp);
+
+		const inHorizontalScrollZone =
+			(clientX > effectiveRect.right - scrollThreshold && scrollInfo.canScrollRight) ||
+			(clientX < effectiveRect.left + scrollThreshold && scrollInfo.canScrollLeft);
+
+		return (
+			(container.scrollHeight > container.clientHeight && inVerticalScrollZone) ||
+			(container.scrollWidth > container.clientWidth && inHorizontalScrollZone)
+		);
+	}
+
+	#tryScrollContainer(
+		container: HTMLElement,
+		clientX: number,
+		clientY: number,
+		scrollThreshold: number,
+		scrollSpeed: number
+	): { didScroll: boolean } {
+		const rect = container.getBoundingClientRect();
+		let didScroll = false;
+
+		// For HTML/BODY elements, clamp the boundaries to the viewport
+		const effectiveRect = this.#getEffectiveRect(container, rect);
+
+		// TODO: tweak so the pointer can be outside bounds, but within an abs threshold
+		// of the edge of the container.
+
+		// Check if pointer is within this container's effective bounds
+		const isWithinBounds =
+			clientX >= effectiveRect.left &&
+			clientX <= effectiveRect.right &&
+			clientY >= effectiveRect.top &&
+			clientY <= effectiveRect.bottom;
+
+		if (!isWithinBounds) {
+			return { didScroll: false };
+		}
+
+		const scrollInfo = this.#getScrollInfo(container);
+
+		// Check vertical scrolling conditions
+		if (container.scrollHeight > container.clientHeight) {
+			if (clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) {
+				this.#scrollElement(container, 0, scrollSpeed);
+				didScroll = true;
+			} else if (clientY < effectiveRect.top + scrollThreshold && scrollInfo.canScrollUp) {
+				this.#scrollElement(container, 0, -scrollSpeed);
+				didScroll = true;
+			}
+		}
+
+		// Check horizontal scrolling conditions
+		if (container.scrollWidth > container.clientWidth) {
+			if (clientX > effectiveRect.right - scrollThreshold && scrollInfo.canScrollRight) {
+				this.#scrollElement(container, scrollSpeed, 0);
+				didScroll = true;
+			} else if (clientX < effectiveRect.left + scrollThreshold && scrollInfo.canScrollLeft) {
+				this.#scrollElement(container, -scrollSpeed, 0);
+				didScroll = true;
+			}
+		}
+
+		return { didScroll };
+	}
+
+	#getEffectiveRect(container: HTMLElement, rect: DOMRect) {
+		if (this.#isPageLevel(container)) {
+			// Clamp page-level boundaries to viewport
+			return {
+				left: Math.max(0, rect.left),
+				right: Math.min(window.innerWidth, rect.right),
+				top: Math.max(0, rect.top),
+				bottom: Math.min(window.innerHeight, rect.bottom)
+			};
+		}
+
+		// Use actual boundaries for regular containers
+		return rect;
+	}
+
+	#getScrollInfo(element: HTMLElement) {
+		if (this.#isPageLevel(element)) {
+			// Use window/document properties for page-level scrolling
+			const scrollTop = window.scrollY;
+			const scrollLeft = window.scrollX;
+			const scrollHeight = document.documentElement.scrollHeight;
+			const scrollWidth = document.documentElement.scrollWidth;
+			const clientHeight = window.innerHeight;
+			const clientWidth = window.innerWidth;
+
+			return {
+				canScrollDown: scrollTop + clientHeight < scrollHeight,
+				canScrollUp: scrollTop > 0,
+				canScrollRight: scrollLeft + clientWidth < scrollWidth,
+				canScrollLeft: scrollLeft > 0
+			};
+		}
+
+		// Use element properties for regular containers
+		const { scrollTop, scrollLeft, scrollHeight, scrollWidth, clientHeight, clientWidth } = element;
+
+		return {
+			canScrollDown: scrollTop + clientHeight < scrollHeight,
+			canScrollUp: scrollTop > 0,
+			canScrollRight: scrollLeft + clientWidth < scrollWidth,
+			canScrollLeft: scrollLeft > 0
+		};
+	}
+
+	#scrollElement(element: HTMLElement, deltaX: number, deltaY: number) {
+		if (this.#isPageLevel(element)) {
+			window.scrollBy(deltaX, deltaY);
+		} else {
+			element.scrollBy(deltaX, deltaY);
+		}
+	}
+
 	get ref() {
 		return this.#ref.value;
+	}
+
+	/**
+	 * Manually stop continuous scrolling. Useful for external control.
+	 */
+	stopScrolling() {
+		this.#stopContinuousScroll();
+	}
+}
+
+export class KeyboardPointerController {
+	active = false;
+	#moveStep: number = 20;
+	#pointerService: PointerService;
+
+	constructor(pointerService: PointerService) {
+		this.#pointerService = pointerService;
+
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const cancelFocusChangeIfTrapped = this.#cancelFocusChangeIfTrapped.bind(this);
+		const movePointer = this.#movePointer.bind(this);
+
+		window.addEventListener('keydown', cancelFocusChangeIfTrapped);
+		window.addEventListener('keydown', movePointer);
+	}
+
+	#cancelFocusChangeIfTrapped(event: KeyboardEvent) {
+		if (!this.active) {
+			return;
+		}
+
+		if (event.key === 'Tab') {
+			event.preventDefault();
+		}
+	}
+
+	#movePointer(event: KeyboardEvent) {
+		if (!this.active) {
+			return;
+		}
+
+		const moveStep = this.#getMoveStep(event);
+
+		const { x, y } = this.#pointerService.position;
+
+		if (event.key === 'ArrowUp') {
+			this.#pointerService.updatePosition(x, y - moveStep);
+			event.preventDefault();
+			return;
+		}
+
+		if (event.key === 'ArrowDown') {
+			this.#pointerService.updatePosition(x, y + moveStep);
+			event.preventDefault();
+			return;
+		}
+
+		if (event.key === 'ArrowLeft') {
+			this.#pointerService.updatePosition(x - moveStep, y);
+			event.preventDefault();
+			return;
+		}
+
+		if (event.key === 'ArrowRight') {
+			this.#pointerService.updatePosition(x + moveStep, y);
+			event.preventDefault();
+			return;
+		}
+	}
+
+	#getMoveStep(event: KeyboardEvent) {
+		if (event.shiftKey) {
+			return this.#moveStep * 10;
+		}
+
+		if (event.ctrlKey || event.metaKey) {
+			return this.#moveStep * 0.1;
+		}
+
+		return this.#moveStep;
 	}
 }
 
@@ -496,7 +885,7 @@ export class WidgetPointerEventWatcher {
 		}, trigger.duration);
 	}
 
-	#triggerWidgetEvent(event: PointerEvent) {
+	#triggerWidgetEvent(event: WidgetActionEvent) {
 		if (this.#type == 'resize') {
 			this.#widget.onresize(event);
 			return;
@@ -504,3 +893,21 @@ export class WidgetPointerEventWatcher {
 		this.#widget.ongrab(event);
 	}
 }
+
+let uniqueIdIndex = 0;
+export function generateUniqueId(prefix: string = 'flexi-') {
+	return prefix + uniqueIdIndex++;
+}
+
+/* Adapted from TailwindCSS sr-only */
+export const assistiveTextStyle = `
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+`;

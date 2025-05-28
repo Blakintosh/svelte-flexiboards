@@ -14,6 +14,14 @@
 	const { grid } = flexigrid();
 </script>
 
-<div class={className} bind:this={grid.ref} style={grid?.style}>
+<div
+	class={className}
+	role="grid"
+	aria-label="Drag-and-drop grid"
+	aria-colcount={grid.columns}
+	aria-rowcount={grid.rows}
+	bind:this={grid.ref}
+	style={grid?.style}
+>
 	{@render children?.()}
 </div>

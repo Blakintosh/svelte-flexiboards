@@ -7,15 +7,32 @@ published: true
 
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
+    import HeadsUp from '$lib/components/docs/heads-up.svelte';
 </script>
+
+<HeadsUp title="Breaking Change Notice">
+    In order to make FlexiAdd more accessible, we now create a wrapper button around the FlexiAdd component. Previously, the user was responsible for creating such an element.
+
+    You can style the FlexiAdd div using the new `class` prop.
+
+    Please note that the `props` snippet property containing the `onpointerdown` and `style` props is now deprecated and will be removed in v0.4. They are currently maintained as empty props for compatibility purposes.
+
+    See [Breaking Changes in v0.3](/docs/breaking-changes-to-03) for more details.
+
+</HeadsUp>
 
 ## FlexiAdd (component)
 
 <ApiReference title="Props" api={[
 {
 name: "children",
-type: "Snippet<[{ adder: FlexiAddController; props: FlexiAddChildrenProps }]>",
-description: "The child content of the adder, containing some button-like element. In order to use the `FlexiAdd` component, your children must be button-like and spread the `props` passed."
+type: "Snippet<[{ adder: FlexiAddController }]>",
+description: "The child content of the adder, containing the contents of the adder button."
+},
+{
+name: "class",
+type: "FlexiAddClasses",
+description: "The class names to apply to the adder's button element."
 },
 {
 name: "addWidget",
