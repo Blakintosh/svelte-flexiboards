@@ -23,6 +23,7 @@ import { AutoScrollService, getPointerService, PointerService } from './utils.sv
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { FlexiTarget } from '$lib/index.js';
 import type { FlexiPortalController } from './portal.js';
+import type { AriaPoliteness, FlexiAnnouncerController } from './announcer.svelte.js';
 
 export type FlexiBoardConfiguration = {
 	widgetDefaults?: FlexiWidgetDefaults;
@@ -88,6 +89,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#ready: boolean = false;
 
 	portal: FlexiPortalController | null = null;
+
+	#announcer: FlexiAnnouncerController | null = null;
 
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
@@ -226,6 +229,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			});
 		}
 
+		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
+
 		return action;
 	}
 
@@ -259,6 +264,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#autoScrollService.shouldAutoScroll = false;
 		this.#pointerService.keyboardControlsActive = true;
 
+		this.announce(`You are resizing the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
+
 		return action;
 	}
 
@@ -288,12 +295,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#onkeydown(event: KeyboardEvent) {
-		if(!this.#currentWidgetAction) {
+		if (!this.#currentWidgetAction) {
 			return;
 		}
 
 		// If they pressed Esc, then just cancel.
-		if(event.key == 'Escape') {
+		if (event.key == 'Escape') {
 			const widget = this.#currentWidgetAction!.widget;
 			if (this.portal) {
 				this.portal.returnWidgetFromPortal(widget);
@@ -305,7 +312,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		// If they pressed Enter, then try to place as-is
-		if(event.key == 'Enter') {
+		if (event.key == 'Enter') {
 			this.handleWidgetRelease();
 			event.stopPropagation();
 			event.preventDefault();
@@ -325,6 +332,16 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			case 'resize':
 				this.#handleResizingWidgetRelease(currentAction);
 				break;
+		}
+	}
+
+	attachAnnouncer(announcer: FlexiAnnouncerController) {
+		this.#announcer = announcer;
+	}
+
+	announce(message: string, politeness: AriaPoliteness = 'polite') {
+		if (this.#announcer) {
+			this.#announcer.announce(message, politeness);
 		}
 	}
 
@@ -425,6 +442,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			currentWidgetAction.target.applyGridPostCompletionOperations();
 		}
 
+		this.announce(`You have released the widget.`);
+
 		// Disable the focus trap and auto-scroll.
 		this.#autoScrollService.shouldAutoScroll = false;
 		this.#pointerService.keyboardControlsActive = false;
@@ -455,7 +474,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (from) {
 			from.widgets.delete(widget);
 			from.forgetPreGrabSnapshot();
-			
+
 			// Apply deferred operations to the source target (like collapsing empty rows)
 			from.applyGridPostCompletionOperations();
 		}

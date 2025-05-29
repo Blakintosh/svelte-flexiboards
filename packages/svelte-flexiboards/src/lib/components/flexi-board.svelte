@@ -19,6 +19,7 @@
 	import FlexiPortal from './flexi-portal.svelte';
 	import type { ClassValue } from 'svelte/elements';
 	import { generateUniqueId, assistiveTextStyle } from '$lib/system/utils.svelte.js';
+	import FlexiAnnouncer from './flexi-announcer.svelte';
 
 	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 
@@ -41,6 +42,8 @@
 		Enter to confirm the action, or Esc to cancel it.
 	</span>
 	{@render props.children()}
+
+	<FlexiAnnouncer provider={board} />
 </div>
 
 <!-- Component that tells the board it can start importing stuff, if needed. -->
