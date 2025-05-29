@@ -56,13 +56,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		inputX?: number,
 		inputY?: number,
 		inputWidth?: number,
-		inputHeight?: number
+		inputHeight?: number,
+		isGrabbedWidget: boolean = false
 	): boolean {
 		let [x, y, width, height] = this.#normalisePlacementDimensions(
 			inputX,
 			inputY,
 			inputWidth,
-			inputHeight
+			inputHeight,
+			isGrabbedWidget
 		);
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
@@ -299,19 +301,21 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return [Math.floor(x), Math.floor(y)];
 	}
 
-	#normalisePlacementDimensions(x?: number, y?: number, width?: number, height?: number) {
+	#normalisePlacementDimensions(x?: number, y?: number, width?: number, height?: number, isGrabbedWidget?: boolean) {
 		if (x === undefined || y === undefined) {
 			throw new Error(
 				'Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.'
 			);
 		}
 
-		// Make sure the widget can only expand the grid relative from its current dimensions.
-		if (x >= this.#columns) {
-			x = this.#columns - 1;
-		}
-		if (y >= this.#rows) {
-			y = this.#rows - 1;
+		// Make sure the grabbed widget can only expand the grid relative from its current dimensions.
+		if(isGrabbedWidget) {
+			if (x >= this.#columns) {
+				x = this.#columns - 1;
+			}
+			if (y >= this.#rows) {
+				y = this.#rows - 1;
+			}
 		}
 
 		return [x, y, width ?? 1, height ?? 1];

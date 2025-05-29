@@ -50,6 +50,8 @@
 <!-- TODO: right now, the widget position doesn't adjust for collisions during SSR, probably because
  	the effect only runs once during SSR. This MIGHT be unavoidable. If so, we should document this
 	caveat with SSR and encourage users NOT to load boards with collisions, where possible. -->
+<!-- TODO: this is also a problem with grid dimensions, because they don't populate any expansions
+ until after SSR. -->
 
 <div
 	class={derivedClassName}
