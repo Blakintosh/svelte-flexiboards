@@ -32,16 +32,6 @@ export type FlowTargetLayout = {
 	flowAxis: 'row' | 'column';
 
 	/**
-	 * Whether the grid should be blocked from automatically expanding when all cell space is used.
-	 *
-	 * - When unset and the flow axis is set to "row", the grid will create new rows when the last row is full.
-	 * - When unset and the flow axis is set to "column", the grid will create new columns when the last column is full.
-	 * - When set to true, the grid will be at capacity when all cells are used.
-	 * @deprecated Use maxFlowAxis == rows or columns to control expandability.
-	 */
-	disallowExpansion?: boolean;
-
-	/**
 	 * The maximum number of rows or columns that can be used depending on what the flow axis is set to.
 	 *
 	 * - When flowAxis is set to "row", the grid will not allow more rows than this value.
@@ -60,7 +50,7 @@ export type FlowTargetLayout = {
 	columns?: number;
 };
 
-type DerivedFlowTargetLayout = Omit<Required<FlowTargetLayout>, 'disallowExpansion'> & Pick<FlowTargetLayout, 'disallowExpansion'>;
+type DerivedFlowTargetLayout = Required<FlowTargetLayout>;
 
 type FlowMoveOperation = {
 	widget: FlexiWidgetController;
@@ -91,8 +81,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 		placementStrategy: this.#rawLayoutConfig.placementStrategy ?? 'append',
 		rows: this.#rawLayoutConfig.rows ?? 1,
 		columns: this.#rawLayoutConfig.columns ?? 1,
-		disallowInsert: this.#rawLayoutConfig.disallowInsert ?? false,
-		disallowExpansion: this.#rawLayoutConfig.disallowExpansion ?? false
+		disallowInsert: this.#rawLayoutConfig.disallowInsert ?? false
 	});
 
 	#coordinateSystem: FlowGridCoordinateSystem = new FlowGridCoordinateSystem(this);
@@ -112,7 +101,8 @@ export class FlowFlexiGrid extends FlexiGrid {
 		cellX?: number,
 		cellY?: number,
 		width: number = 1,
-		height: number = 1
+		height: number = 1,
+		isGrabbedWidget: boolean = false
 	): boolean {
 		const isRowFlow = this.isRowFlow;
 

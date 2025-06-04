@@ -1,20 +1,27 @@
 <script module lang="ts">
 	import { flexigrab, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
 	import type { Snippet } from 'svelte';
-	import type { SvelteClassValue } from '$lib/system/types.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	type FlexiGrabProps = {
 		children?: Snippet<[{ widget: FlexiWidgetController }]>;
-		class?: SvelteClassValue;
+		class?: ClassValue;
 	};
 </script>
 
 <script lang="ts">
 	let { class: className, children }: FlexiGrabProps = $props();
 
-	const { widget, onpointerdown } = flexigrab();
+	const { widget, onpointerdown, onkeydown } = flexigrab();
 </script>
 
-<button style={"user-select: none; cursor: grab; touch-action: none;"} class={className} {onpointerdown}>
+<button
+	style={'user-select: none; touch-action: none;' +
+		(widget.draggable && widget.mounted ? 'cursor: grab;' : 'cursor: not-allowed;')}
+	disabled={!widget.draggable || !widget.mounted}
+	class={className}
+	{onpointerdown}
+	{onkeydown}
+>
 	{@render children?.({ widget })}
 </button>

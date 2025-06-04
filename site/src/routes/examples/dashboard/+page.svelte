@@ -31,9 +31,9 @@
 	<title>Flexiboards</title>
 </svelte:head>
 
-<Sidebar.Provider>
+<Sidebar.Provider class="h-full min-h-0 grow">
 	<AppSidebar />
-	<main class="flex h-full min-h-0 w-full flex-col gap-8 px-4 py-8 lg:px-16">
+	<main class="flex min-h-0 w-full grow flex-col gap-8 px-4 py-8 lg:px-16">
 		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
 			Dashboard
 			<div class="flex items-center gap-2">
@@ -51,7 +51,11 @@
 			</div>
 		</h1>
 
-		<FlexiBoard class={'grow overflow-y-auto'} config={boardConfig} onfirstcreate={onBoardReady}>
+		<FlexiBoard
+			class={'min-h-0 grow overflow-y-auto'}
+			config={boardConfig}
+			onfirstcreate={onBoardReady}
+		>
 			<FlexiTarget
 				key="left"
 				class={'h-full gap-2 lg:gap-4'}
@@ -61,30 +65,31 @@
 						type: 'free',
 						minColumns: 3,
 						maxColumns: 3,
-						minRows: 4,
-						maxRows: 4
+						minRows: 2,
+						maxRows: 4,
+						colllapsibility: 'any'
 					}
 				}}
 			>
 				<DashboardTile title="Overall Score" x={0} y={0} draggable={false} resizability={'none'}>
 					<div class="text-lg font-bold lg:text-2xl">87</div>
-					<p class="text-xs text-muted-foreground">+8 from last month</p>
+					<p class="text-muted-foreground text-xs">+8 from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Total Revenue" x={1} y={0}>
 					<div class="text-lg font-bold lg:text-2xl">$45,231.89</div>
-					<p class="text-xs text-muted-foreground">+20.1% from last month</p>
+					<p class="text-muted-foreground text-xs">+20.1% from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Subscriptions" x={2} y={0}>
 					<div class="text-lg font-bold lg:text-2xl">+2350</div>
-					<p class="text-xs text-muted-foreground">-30.4% from last month</p>
+					<p class="text-muted-foreground text-xs">-30.4% from last month</p>
 				</DashboardTile>
 				<DashboardTile title="Sales" x={0} y={1} width={3}>
 					<div class="text-lg font-bold lg:text-2xl">+12,234</div>
-					<p class="text-xs text-muted-foreground">+19.1% from last month</p>
+					<p class="text-muted-foreground text-xs">+19.1% from last month</p>
 				</DashboardTile>
-				<DashboardTile title="Active Now" x={0} y={2}>
+				<DashboardTile title="Active Now" x={0} y={1}>
 					<div class="text-lg font-bold lg:text-2xl">+573</div>
-					<p class="text-xs text-muted-foreground">+201 since last hour</p>
+					<p class="text-muted-foreground text-xs">+201 since last hour</p>
 				</DashboardTile>
 			</FlexiTarget>
 		</FlexiBoard>

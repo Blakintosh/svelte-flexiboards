@@ -26,7 +26,7 @@ import type {
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	type PointerTriggerCondition
+	type PointerTriggerCondition,
 } from './system/utils.svelte.js';
 export * from './system/types.js';
 
