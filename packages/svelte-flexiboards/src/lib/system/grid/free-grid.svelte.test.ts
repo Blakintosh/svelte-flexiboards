@@ -53,7 +53,7 @@ describe('FreeFormFlexiGrid', () => {
 				layout: {
 					type: 'free',
 					minRows: 3,
-					minColumns: 3,
+					minColumns: 3
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -491,8 +491,39 @@ describe('FreeFormFlexiGrid', () => {
 
 			expect(d.setBounds).toHaveBeenCalledWith(0, 2, 3, 1);
 			expect(grid.rows).toBe(3);
-		})
-	})
+		});
+
+		it('should maintain state during an unsuccessful placement', () => {
+			// a is not draggable
+			const a = createMockWidget(undefined, undefined, undefined, undefined, false);
+			const b = createMockWidget();
+			const c = createMockWidget();
+			const d = createMockWidget();
+			const e = createMockWidget();
+
+			// State:
+			// abc
+			// ddd
+			// e--
+
+			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+			grid.tryPlaceWidget(b, 1, 0, 1, 1);
+			grid.tryPlaceWidget(c, 2, 0, 1, 1);
+			grid.tryPlaceWidget(d, 0, 1, 3, 1);
+			grid.tryPlaceWidget(e, 0, 1, 1, 1);
+
+			// Now try to move e to (0, 0)
+			const result = grid.tryPlaceWidget(e, 0, 0, 1, 1);
+
+			// Expected state:
+			// abc
+			// ddd
+			// e--
+
+			expect(result).toBe(false);
+			expect(grid.rows).toBe(3);
+		});
+	});
 
 	describe('Column Expansion and Collapsibility Tests', () => {
 		let grid: FreeFormFlexiGrid;

@@ -462,13 +462,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		from: FlexiTargetController | undefined,
 		to: FlexiTargetController
 	): boolean {
-		let defaultPrevented = false;
-
 		const dropSuccessful = to.tryDropWidget(widget);
-
-		if (defaultPrevented) {
-			return false;
-		}
 
 		// If the widget is new, it has no from target.
 		if (from) {
@@ -476,7 +470,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			from.forgetPreGrabSnapshot();
 
 			// Apply deferred operations to the source target (like collapsing empty rows)
-			from.applyGridPostCompletionOperations();
+			if (dropSuccessful) {
+				from.applyGridPostCompletionOperations();
+			}
 		}
 
 		widget.target = to;

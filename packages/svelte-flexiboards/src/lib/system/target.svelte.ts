@@ -205,6 +205,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#dropzoneWidget: ProxiedValue<FlexiWidgetController | null> = $state({
 		value: null
 	});
+	#isDropzoneWidgetAdded: boolean = $state(false);
 
 	#mouseCellPosition: Position = $state({
 		x: 0,
@@ -406,7 +407,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			},
 			isShadow: true
 		});
-		this.widgets.add(shadow);
 
 		return shadow;
 	}
@@ -506,7 +506,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const result = this.#tryAddWidget(widget, x, y, width, height);
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
-		this.applyGridPostCompletionOperations();
+		if (result) {
+			this.applyGridPostCompletionOperations();
+		}
 
 		return result;
 	}
@@ -555,6 +557,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height, true);
 
+		if (added) {
+			this.widgets.add(this.dropzoneWidget);
+		}
+
 		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
 		// if (added) {
 		// 	this.widgets.add(this.dropzoneWidget);
@@ -587,7 +593,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.removeWidget(dropzoneWidget);
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
-		grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
+		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
+
+		if (!added && this.#isDropzoneWidgetAdded) {
+			this.widgets.delete(this.dropzoneWidget!);
+			this.#isDropzoneWidgetAdded = false;
+		} else if (added && !this.#isDropzoneWidgetAdded) {
+			this.widgets.add(this.dropzoneWidget!);
+			this.#isDropzoneWidgetAdded = true;
+		}
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
@@ -651,7 +665,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const grid = this.grid;
 
 		grid.removeWidget(this.dropzoneWidget);
-		this.widgets.delete(this.dropzoneWidget);
+		if (this.#isDropzoneWidgetAdded) {
+			this.widgets.delete(this.dropzoneWidget);
+			this.#isDropzoneWidgetAdded = false;
+		}
 
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 		this.#gridSnapshot = null;
