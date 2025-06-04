@@ -69,6 +69,15 @@
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
+
+	let orderedWidgets = $derived(
+		[...target.widgets].toSorted((a, b) => {
+			if (a.y == b.y) {
+				return a.x - b.x;
+			}
+			return a.y - b.y;
+		})
+	);
 </script>
 
 <div class={containerClass}>
@@ -80,13 +89,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each target.widgets as widget (widget)}
-			<!-- {#each [...target.widgets].toSorted((a, b) => {
-				if (a.y == b.y) {
-					return a.x - b.x;
-				}
-				return a.y - b.y;
-			}) as widget (widget)} -->
+			{#each orderedWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
