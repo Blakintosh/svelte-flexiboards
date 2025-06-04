@@ -1,6 +1,6 @@
 # Flexiboards
 
-Headless, reactive drag-and-drop components for Svelte 5. [https://www.flexiboards.dev/](https://www.flexiboards.dev/)
+The headless drag-and-drop toolkit for Svelte. [https://www.flexiboards.dev/](https://www.flexiboards.dev/)
 
 This monorepo contains the source code for the Flexiboards library as well as the documentation site.
 

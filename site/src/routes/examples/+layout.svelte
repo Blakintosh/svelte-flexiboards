@@ -69,7 +69,7 @@
 				href={`https://github.com/Blakintosh/svelte-flexiboards/issues/new?assignees=&labels=example&template=example-request.md&title=Example`}
 				target="_blank"
 				rel="noopener noreferrer"
-				variant={'outline'}>Request an example</Button
+				variant={'outline-solid'}>Request an example</Button
 			> -->
 			<Button
 				href={`https://github.com/Blakintosh/svelte-flexiboards/tree/main/site/src/routes/examples/${data.slug}`}
@@ -80,10 +80,10 @@
 		</div>
 
 		<div
-			class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[75vw] xl:w-[980px] 2xl:w-[1440px]"
+			class="w-full divide-y overflow-clip rounded-lg border lg:block lg:w-[75vw] xl:w-[1200px] 2xl:w-[1440px]"
 		>
 			<div
-				class="relative flex aspect-[9/18] min-h-0 w-full items-stretch overflow-clip lg:aspect-video"
+				class="relative flex aspect-9/18 min-h-0 w-full items-stretch overflow-clip lg:aspect-video"
 			>
 				{@render children?.()}
 			</div>

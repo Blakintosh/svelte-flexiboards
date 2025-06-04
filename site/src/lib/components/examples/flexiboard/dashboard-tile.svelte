@@ -35,17 +35,17 @@
 	]}
 >
 	{#snippet children({ widget })}
-		<Card.Root class="flex h-full w-full flex-col justify-between">
+		<Card.Root class="flex h-full w-full flex-col justify-between py-4">
 			<div>
-				<Card.Header class="p-4 lg:p-6">
-					<Card.Title class="flex items-center gap-2 text-sm font-semibold lg:text-xl">
+				<Card.Header class="px-2 lg:px-4">
+					<Card.Title class="flex items-center gap-2 text-sm font-semibold lg:text-lg truncate">
 						{#if widget.draggable}
 							<Grabber size={grabberSize} class="text-muted-foreground" />
 						{/if}
 						{title}
 					</Card.Title>
 				</Card.Header>
-				<Card.Content class="p-4 lg:p-6">
+				<Card.Content class="px-2 lg:px-4 pt-4">
 					{#if childrenSnippet}
 						{@render childrenSnippet?.({ widget, Component })}
 					{:else if Component}
