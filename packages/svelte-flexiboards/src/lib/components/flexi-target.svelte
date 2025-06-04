@@ -73,7 +73,10 @@
 	let orderedWidgets = $derived(
 		[...target.widgets].toSorted((a, b) => {
 			if (a.y == b.y) {
-				return a.x - b.x;
+				if (a.x != b.x) {
+					return a.x - b.x;
+				}
+				return a.isShadow ? 1 : -1;
 			}
 			return a.y - b.y;
 		})
