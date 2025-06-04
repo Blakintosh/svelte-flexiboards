@@ -80,12 +80,13 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each [...target.widgets].sort((a, b) => {
+			{#each target.widgets as widget (widget)}
+			<!-- {#each [...target.widgets].sort((a, b) => {
 				if (a.y == b.y) {
 					return a.x - b.x;
 				}
 				return a.y - b.y;
-			}) as widget (widget)}
+			}) as widget (widget)} -->
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
