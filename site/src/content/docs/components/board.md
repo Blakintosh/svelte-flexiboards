@@ -19,7 +19,7 @@ description: "The configuration object for the board."
 },
 {
 name: "class",
-type: "SvelteClassValue",
+type: "ClassValue",
 description: "The class to apply to the board."
 },
 {

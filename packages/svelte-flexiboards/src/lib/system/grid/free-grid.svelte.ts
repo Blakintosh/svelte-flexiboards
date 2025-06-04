@@ -25,7 +25,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
-		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? "any"
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? 'any'
 	});
 
 	#rows: number = $state() as number;
@@ -56,13 +56,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		inputX?: number,
 		inputY?: number,
 		inputWidth?: number,
-		inputHeight?: number
+		inputHeight?: number,
+		isGrabbedWidget: boolean = false
 	): boolean {
 		let [x, y, width, height] = this.#normalisePlacementDimensions(
 			inputX,
 			inputY,
 			inputWidth,
-			inputHeight
+			inputHeight,
+			isGrabbedWidget
 		);
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
@@ -76,6 +78,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
+			console.log('[trace] tryPlaceWidget: failed to resolve collisions');
 			return false;
 		}
 
@@ -299,19 +302,27 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return [Math.floor(x), Math.floor(y)];
 	}
 
-	#normalisePlacementDimensions(x?: number, y?: number, width?: number, height?: number) {
+	#normalisePlacementDimensions(
+		x?: number,
+		y?: number,
+		width?: number,
+		height?: number,
+		isGrabbedWidget?: boolean
+	) {
 		if (x === undefined || y === undefined) {
 			throw new Error(
 				'Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.'
 			);
 		}
 
-		// Make sure the widget can only expand the grid relative from its current dimensions.
-		if (x >= this.#columns) {
-			x = this.#columns - 1;
-		}
-		if (y >= this.#rows) {
-			y = this.#rows - 1;
+		// Make sure the grabbed widget can only expand the grid relative from its current dimensions.
+		if (isGrabbedWidget) {
+			if (x >= this.#columns) {
+				x = this.#columns - 1;
+			}
+			if (y >= this.#rows) {
+				y = this.#rows - 1;
+			}
 		}
 
 		return [x, y, width ?? 1, height ?? 1];
@@ -563,14 +574,14 @@ class FreeFormGridCoordinateSystem {
 		// Collect all rows that need to be removed based on collapsibility type
 		if (collapsibility === 'any') {
 			// Remove all empty rows
-			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
+			for (let i = 0; i < currentRows && currentRows - rowsToRemove.length > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
 					rowsToRemove.push(i);
 				}
 			}
 		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
 			// Remove empty rows from the beginning
-			for (let i = 0; i < currentRows && (currentRows - rowsToRemove.length) > minRows; i++) {
+			for (let i = 0; i < currentRows && currentRows - rowsToRemove.length > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
 					rowsToRemove.push(i);
 				} else {
@@ -582,7 +593,7 @@ class FreeFormGridCoordinateSystem {
 
 		if (collapsibility === 'trailing' || collapsibility === 'endings') {
 			// Remove empty rows from the end
-			for (let i = currentRows - 1; i >= 0 && (currentRows - rowsToRemove.length) > minRows; i--) {
+			for (let i = currentRows - 1; i >= 0 && currentRows - rowsToRemove.length > minRows; i--) {
 				if (this.#isRowEmpty(i) && !rowsToRemove.includes(i)) {
 					rowsToRemove.push(i);
 				} else {
@@ -630,14 +641,22 @@ class FreeFormGridCoordinateSystem {
 		// Collect all columns that need to be removed based on collapsibility type
 		if (collapsibility === 'any') {
 			// Remove all empty columns
-			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+			for (
+				let i = 0;
+				i < currentColumns && currentColumns - columnsToRemove.length > minColumns;
+				i++
+			) {
 				if (this.#isColumnEmpty(i)) {
 					columnsToRemove.push(i);
 				}
 			}
 		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
 			// Remove empty columns from the beginning
-			for (let i = 0; i < currentColumns && (currentColumns - columnsToRemove.length) > minColumns; i++) {
+			for (
+				let i = 0;
+				i < currentColumns && currentColumns - columnsToRemove.length > minColumns;
+				i++
+			) {
 				if (this.#isColumnEmpty(i)) {
 					columnsToRemove.push(i);
 				} else {
@@ -649,7 +668,11 @@ class FreeFormGridCoordinateSystem {
 
 		if (collapsibility === 'trailing' || collapsibility === 'endings') {
 			// Remove empty columns from the end
-			for (let i = currentColumns - 1; i >= 0 && (currentColumns - columnsToRemove.length) > minColumns; i--) {
+			for (
+				let i = currentColumns - 1;
+				i >= 0 && currentColumns - columnsToRemove.length > minColumns;
+				i--
+			) {
 				if (this.#isColumnEmpty(i) && !columnsToRemove.includes(i)) {
 					columnsToRemove.push(i);
 				} else {
@@ -668,8 +691,8 @@ class FreeFormGridCoordinateSystem {
 		// Remove columns and update widget positions
 		for (const columnIndex of columnsToRemove) {
 			// Remove the column from the layout
-			this.layout.forEach(row => row.splice(columnIndex, 1));
-			
+			this.layout.forEach((row) => row.splice(columnIndex, 1));
+
 			// Update bitmaps by removing the column bit and shifting
 			for (let rowIndex = 0; rowIndex < this.bitmaps.length; rowIndex++) {
 				this.bitmaps[rowIndex] = this.#removeColumnFromBitmap(this.bitmaps[rowIndex], columnIndex);
@@ -700,27 +723,27 @@ class FreeFormGridCoordinateSystem {
 	#removeColumnFromBitmap(bitmap: number, columnIndex: number): number {
 		let result = 0;
 		let targetBit = 0;
-		
+
 		for (let sourceBit = 0; sourceBit < 32; sourceBit++) {
 			if (sourceBit === columnIndex) {
 				// Skip this bit (remove the column)
 				continue;
 			}
-			
+
 			if (bitmap & (1 << sourceBit)) {
-				result |= (1 << targetBit);
+				result |= 1 << targetBit;
 			}
-			
+
 			targetBit++;
 		}
-		
+
 		return result;
 	}
 }
 
 type FreeGridLayout = (FlexiWidgetController | null)[][];
 
-type FreeGridCollapsibility = "none" | "leading" | "trailing" | "endings" | "any";
+type FreeGridCollapsibility = 'none' | 'leading' | 'trailing' | 'endings' | 'any';
 
 export type FreeFormTargetLayout = {
 	type: 'free';

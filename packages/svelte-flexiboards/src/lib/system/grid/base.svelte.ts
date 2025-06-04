@@ -1,9 +1,9 @@
 
-import { setContext } from "svelte";
+import { setContext, untrack } from "svelte";
 import { getContext } from "svelte";
 import type { InternalFlexiTargetController, FlexiTargetConfiguration, TargetSizing } from "../target.svelte.js";
 import { getInternalFlexitargetCtx } from "../target.svelte.js";
-import { GridDimensionTracker } from "../utils.svelte.js";
+import { getPointerService, GridDimensionTracker, PointerService } from "../utils.svelte.js";
 import type { FlexiWidgetController } from "../widget.svelte.js";
 
 export type MoveOperation = {
@@ -23,7 +23,7 @@ export type WidgetSnapshot = {
 }
 
 export abstract class FlexiGrid {
-    abstract tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number): boolean;
+    abstract tryPlaceWidget(widget: FlexiWidgetController, cellX?: number, cellY?: number, width?: number, height?: number, isGrabbedWidget?: boolean): boolean;
     abstract removeWidget(widget: FlexiWidgetController): boolean;
     abstract takeSnapshot(): unknown;
     abstract restoreFromSnapshot(snapshot: unknown): void;
@@ -44,6 +44,7 @@ export abstract class FlexiGrid {
 
 
 	#ref: { ref: HTMLElement | null } = $state({ ref: null });
+    #pointerService: PointerService = getPointerService();
 
     _dimensionTracker: GridDimensionTracker;
 
@@ -53,15 +54,13 @@ export abstract class FlexiGrid {
 
         this._dimensionTracker = new GridDimensionTracker(this, targetConfig);
 
-        this.onpointermove = this.onpointermove.bind(this);
-
         $effect(() => {
-            window.addEventListener('pointermove', this.onpointermove);
+            const { x, y } = this.#pointerService.position;
 
-            return () => {
-                window.removeEventListener('pointermove', this.onpointermove);
-            };
-        });
+            untrack(() => {
+                this.#updatePointerPosition(x, y);
+            })
+        })
     }
 
     style: string = $derived.by(() => {
@@ -112,10 +111,6 @@ export abstract class FlexiGrid {
      * Clears the grid layout.
      */
     abstract clear(): void;
-
-    onpointermove(event: PointerEvent) {
-        this.#updatePointerPosition(event.clientX, event.clientY);
-    }
 
     forceUpdatePointerPosition(clientX: number, clientY: number) {
         this.#updatePointerPosition(clientX, clientY);
