@@ -24,6 +24,7 @@ import type {
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
 import {
+	getElementMidpoint,
 	getPointerService,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
@@ -32,6 +33,7 @@ import {
 	type PointerTriggerCondition
 } from './utils.svelte.js';
 import type { ClassValue } from 'svelte/elements';
+import { FlexiControllerBase } from './base.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
@@ -217,7 +219,7 @@ const defaultTriggerConfig: FlexiWidgetTriggerConfiguration = {
 	pen: longPressTriggerConfig()
 };
 
-export class FlexiWidgetController {
+export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState> {
 	/**
 	 * The target this widget is under, if any.
 	 */
@@ -288,18 +290,6 @@ export class FlexiWidgetController {
 			this.#targetWidgetDefaults?.resizeTrigger ??
 			this.#providerWidgetDefaults?.resizeTrigger ??
 			defaultTriggerConfig
-	});
-
-	/**
-	 * Stores the underlying state of the widget. This differs to the derived config above, because it contains configuration items that
-	 * are only written to once when the widget is created. Properties stored in here do not react to changes in the config.
-	 */
-	#state: FlexiWidgetState = $state({
-		currentAction: null,
-		width: 1,
-		height: 1,
-		x: 0,
-		y: 0
 	});
 
 	/**
@@ -449,11 +439,16 @@ export class FlexiWidgetController {
 
 	// Constructor for widget creation directly under a FlexiTarget
 	constructor(ctor: FlexiWidgetConstructor) {
-		this.#rawConfig = ctor.config;
+		// Initialise the state proxy.
+		super({
+			currentAction: null,
+			width: ctor.config.width ?? 1,
+			height: ctor.config.height ?? 1,
+			x: 0,
+			y: 0
+		});
 
-		// Populate the state proxy with the configuration values.
-		this.#state.width = ctor.config.width ?? 1;
-		this.#state.height = ctor.config.height ?? 1;
+		this.#rawConfig = ctor.config;
 
 		if (ctor.type == 'target') {
 			this.target = ctor.target;
@@ -549,10 +544,7 @@ export class FlexiWidgetController {
 		event.stopPropagation();
 		event.preventDefault();
 
-		const rect = (event.target as HTMLElement).getBoundingClientRect();
-
-		const x = rect.left + rect.width / 2;
-		const y = rect.top + rect.height / 2;
+		const { x, y } = getElementMidpoint(event.target as HTMLElement);
 		return this.ongrab({
 			...event,
 			clientX: x,
@@ -615,10 +607,7 @@ export class FlexiWidgetController {
 		event.stopPropagation();
 		event.preventDefault();
 
-		const rect = (event.target as HTMLElement).getBoundingClientRect();
-
-		const x = rect.left + rect.width / 2;
-		const y = rect.top + rect.height / 2;
+		const { x, y } = getElementMidpoint(event.target as HTMLElement);
 		return this.onresize({
 			...event,
 			clientX: x,
@@ -692,18 +681,18 @@ export class FlexiWidgetController {
 	 */
 	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
 		if (
-			this.#state.x == x &&
-			this.#state.y == y &&
-			this.#state.width == width &&
-			this.#state.height == height
+			this.state.x == x &&
+			this.state.y == y &&
+			this.state.width == width &&
+			this.state.height == height
 		) {
 			return;
 		}
 
-		this.#state.x = x;
-		this.#state.y = y;
-		this.#state.width = width;
-		this.#state.height = height;
+		this.state.x = x;
+		this.state.y = y;
+		this.state.width = width;
+		this.state.height = height;
 
 		if (interpolate) {
 			this.#interpolateMove(x, y, width, height);
@@ -814,11 +803,11 @@ export class FlexiWidgetController {
 	 * When this is null, the widget is not being grabbed.
 	 */
 	get currentAction() {
-		return this.#state.currentAction;
+		return this.state.currentAction;
 	}
 
 	set currentAction(value: WidgetAction | null) {
-		this.#state.currentAction = value;
+		this.state.currentAction = value;
 	}
 
 	/**
@@ -854,14 +843,14 @@ export class FlexiWidgetController {
 	 * The width in units of the widget.
 	 */
 	get width() {
-		return this.#state.width;
+		return this.state.width;
 	}
 
 	/**
 	 * The height in units of the widget.
 	 */
 	get height() {
-		return this.#state.height;
+		return this.state.height;
 	}
 
 	/**
@@ -912,14 +901,14 @@ export class FlexiWidgetController {
 	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get x() {
-		return this.#state.x;
+		return this.state.x;
 	}
 
 	/**
 	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get y() {
-		return this.#state.y;
+		return this.state.y;
 	}
 
 	/**

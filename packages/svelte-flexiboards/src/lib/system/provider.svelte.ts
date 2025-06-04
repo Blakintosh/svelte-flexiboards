@@ -509,11 +509,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 const contextKey = Symbol('flexiboard');
 
-export function flexiboard(props: FlexiBoardProps) {
+export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController {
 	const board = new InternalFlexiBoardController(props);
 
 	setContext(contextKey, board);
-	return board as FlexiBoardController;
+	return board;
 }
 
 /**
