@@ -12,12 +12,14 @@ import {
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetChildrenSnippetParameters,
 	type FlexiWidgetConfiguration,
+	type FlexiWidgetTransitionConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
 	type FlexiWidgetTriggerConfiguration,
 	getFlexiwidgetCtx
 } from './system/widget.svelte.js';
 import type { FlexiBoardController } from './system/provider.svelte.js';
 import type { FlexiTargetController } from './system/target.svelte.js';
-import type { FlexiWidgetController } from './system/widget.svelte.js';
+import { type FlexiWidgetController, simpleTransitionConfig } from './system/widget.svelte.js';
 import type {
 	AdderWidgetConfiguration,
 	FlexiAddController,
@@ -54,7 +56,10 @@ export {
 	type FlexiWidgetChildrenSnippetParameters,
 	type PointerTriggerCondition,
 	type FlexiWidgetTriggerConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
+	type FlexiWidgetTransitionConfiguration,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	getFlexiwidgetCtx
+	getFlexiwidgetCtx,
+	simpleTransitionConfig
 };

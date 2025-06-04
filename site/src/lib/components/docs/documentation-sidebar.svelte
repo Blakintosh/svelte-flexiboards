@@ -33,10 +33,10 @@
 				// 	title: 'Export & Import Boards',
 				// 	href: '/docs/guides/exporting-importing-boards'
 				// },
-				// {
-				// 	title: 'Transitions',
-				// 	href: '/docs/transitions'
-				// },
+				{
+					title: 'Transitions',
+					href: '/docs/transitions'
+				},
 				{
 					title: 'Widget Rendering',
 					href: '/docs/widget-rendering'

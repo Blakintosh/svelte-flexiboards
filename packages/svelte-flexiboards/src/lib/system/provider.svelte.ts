@@ -386,6 +386,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
+		// Now that the widget has left the portal, apply an offset to its current position to account for the board's position.
+		// (Otherwise, the widget gains +board.left and +board.top to its position)
+		const boardRect = this.ref?.getBoundingClientRect();
+		// this isn't pretty, but should do the job.
+		if (boardRect && action.widget.ref) {
+			action.widget.ref.style.left = `${action.widget.ref.offsetLeft - boardRect.left}px`;
+			action.widget.ref.style.top = `${action.widget.ref.offsetTop - boardRect.top}px`;
+		}
+
 		// If no target is hovered, then just release the widget.
 		if (!this.#hoveredTarget) {
 			this.#releaseCurrentWidgetAction();
@@ -406,6 +415,19 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
+		if (this.portal) {
+			this.portal.returnWidgetFromPortal(action.widget);
+		}
+
+		// Now that the widget has left the portal, apply an offset to its current position to account for the board's position.
+		// (Otherwise, the widget gains +board.left and +board.top to its position)
+		const boardRect = this.ref?.getBoundingClientRect();
+		// this isn't pretty, but should do the job.
+		if (boardRect && action.widget.ref) {
+			action.widget.ref.style.left = `${action.widget.ref.offsetLeft - boardRect.left}px`;
+			action.widget.ref.style.top = `${action.widget.ref.offsetTop - boardRect.top}px`;
+		}
+
 		const success = action.target.tryDropWidget(action.widget);
 		this.#releaseCurrentWidgetAction(success);
 	}

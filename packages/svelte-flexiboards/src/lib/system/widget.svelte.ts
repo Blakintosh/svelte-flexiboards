@@ -41,9 +41,15 @@ export type FlexiWidgetChildrenSnippet = Snippet<[FlexiWidgetChildrenSnippetPara
 export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => ClassValue;
 export type FlexiWidgetClasses = ClassValue | FlexiWidgetClassFunction;
 
-export type FlexiWidgetTransitionConfiguration = {
+export type FlexiWidgetTransitionTypeConfiguration = {
 	duration?: number;
 	easing?: string;
+};
+
+export type FlexiWidgetTransitionConfiguration = {
+	move?: FlexiWidgetTransitionTypeConfiguration;
+	drop?: FlexiWidgetTransitionTypeConfiguration;
+	// resize?: FlexiWidgetTransitionTypeConfiguration;
 };
 
 export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondition>;
@@ -173,6 +179,11 @@ type FlexiWidgetDerivedConfiguration = {
 	 * on the widget. E.g. a long press.
 	 */
 	resizeTrigger: FlexiWidgetTriggerConfiguration;
+
+	/**
+	 * The transition configuration for this widget.
+	 */
+	transition: FlexiWidgetTransitionConfiguration;
 };
 
 type FlexiWidgetUnderAdderConstructor = {
@@ -196,6 +207,8 @@ type FlexiWidgetConstructor = (
 ) & {
 	config: FlexiWidgetConfiguration;
 };
+
+type WidgetMovementAnimation = 'move' | 'drop';
 
 const defaultTriggerConfig: FlexiWidgetTriggerConfiguration = {
 	default: immediateTriggerConfig(),
@@ -225,6 +238,8 @@ export class FlexiWidgetController {
 	 * The DOM element bound to this widget.
 	 */
 	ref?: HTMLElement = $state(undefined);
+
+	isBeingDropped: boolean = $state(false);
 
 	/**
 	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
@@ -261,7 +276,8 @@ export class FlexiWidgetController {
 		transition:
 			this.#rawConfig.transition ??
 			this.#targetWidgetDefaults?.transition ??
-			this.#providerWidgetDefaults?.transition,
+			this.#providerWidgetDefaults?.transition ??
+			{}, // Default behaviour: don't animate
 		grabTrigger:
 			this.#rawConfig.grabTrigger ??
 			this.#targetWidgetDefaults?.grabTrigger ??
@@ -443,10 +459,10 @@ export class FlexiWidgetController {
 			this.target = ctor.target;
 			this.isShadow = ctor.isShadow ?? false;
 
-			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider);
+			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider, this);
 		} else if (ctor.type == 'adder') {
 			this.adder = ctor.adder;
-			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider);
+			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider, this);
 
 			this.#initialX = ctor.clientX;
 			this.#initialY = ctor.clientY;
@@ -689,9 +705,20 @@ export class FlexiWidgetController {
 		this.#state.width = width;
 		this.#state.height = height;
 
-		// if (interpolate) {
-		// 	this.#interpolateMove(x, y, width, height);
-		// }
+		if (interpolate) {
+			this.#interpolateMove(x, y, width, height);
+		}
+	}
+
+	#getMovementAnimation(): WidgetMovementAnimation {
+		switch (this.currentAction?.action) {
+			case 'grab':
+				return 'drop';
+			case 'resize':
+				return 'drop';
+			default:
+				return 'move';
+		}
 	}
 
 	#interpolateMove(x: number, y: number, width: number, height: number) {
@@ -712,8 +739,10 @@ export class FlexiWidgetController {
 				top: rect.top,
 				width: rect.width,
 				height: rect.height
-			}
+			},
+			this.#getMovementAnimation()
 		);
+		this.isBeingDropped = false;
 	}
 
 	/**
@@ -932,6 +961,13 @@ export class FlexiWidgetController {
 	get interpolator() {
 		return this.#interpolator;
 	}
+
+	/**
+	 * Gets the transition configuration for this widget.
+	 */
+	get transitionConfig() {
+		return this.#config.transition;
+	}
 }
 
 type Dimensions = Position & {
@@ -939,7 +975,7 @@ type Dimensions = Position & {
 	height: number;
 };
 
-type InterpolatedWidgetPosition = {
+type InterpolationPosition = {
 	left: number;
 	top: number;
 	width: number;
@@ -978,31 +1014,52 @@ class WidgetMoveInterpolator {
 		widthPx: 0
 	});
 
-	#interpolatedWidgetPosition: InterpolatedWidgetPosition = $state({
+	#interpolatedWidgetPosition: InterpolationPosition = $state({
 		left: 0,
 		top: 0,
 		width: 1,
 		height: 1
 	});
 
+	#inInitialFrame: boolean = $state(false);
+	#animation: WidgetMovementAnimation = $state('move');
+
+	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
+	#transitionConfig: FlexiWidgetTransitionConfiguration = $derived(this.#widget?.transitionConfig);
+
 	widgetStyle: string = $derived.by(() => {
-		return `transition: all 100ms ease-in-out; position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
+		const transitionConfig = this.#getTransitionConfigForAnimation(this.#animation);
+		if (this.#inInitialFrame || !transitionConfig?.duration || !transitionConfig?.easing) {
+			return `position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
+		}
+
+		return `transition: all ${transitionConfig.duration}ms ${transitionConfig.easing}; position: absolute; top: ${this.#interpolatedWidgetPosition.top}px; left: ${this.#interpolatedWidgetPosition.left}px; width: ${this.#interpolatedWidgetPosition.width}px; height: ${this.#interpolatedWidgetPosition.height}px;`;
 	});
 
 	placeholderStyle: string = $derived.by(() => {
 		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; width: ${this.#placeholderPosition.widthPx}px; height: ${this.#placeholderPosition.heightPx}px; visibility: hidden;`;
 	});
 
-	constructor(provider: InternalFlexiBoardController) {
+	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
 		this.#provider = provider;
+		this.#widget = widget;
 		this.onPlaceholderMount = this.onPlaceholderMount.bind(this);
 		this.onPlaceholderUnmount = this.onPlaceholderUnmount.bind(this);
 	}
 
-	// TODO: better name than this InterpolatedWidgetPosition
-	interpolateMove(newDimensions: Dimensions, oldPosition: InterpolatedWidgetPosition) {
+	interpolateMove(
+		newDimensions: Dimensions,
+		oldPosition: InterpolationPosition,
+		animation: WidgetMovementAnimation = 'move'
+	) {
 		const containerRect = this.#containerRef?.getBoundingClientRect();
 		if (!containerRect) {
+			return;
+		}
+
+		// If a config hasn't been set for this animation, then don't animate.
+		const transitionConfig = this.#getTransitionConfigForAnimation(animation);
+		if (!transitionConfig || !transitionConfig.duration || !transitionConfig.easing) {
 			return;
 		}
 
@@ -1026,21 +1083,29 @@ class WidgetMoveInterpolator {
 		this.#interpolatedWidgetPosition.width = oldPosition.width;
 		this.#interpolatedWidgetPosition.height = oldPosition.height;
 
-		this.#timeout = setTimeout(() => {
-			this.active = false;
-		}, 100);
+		requestAnimationFrame(() => {
+			this.#timeout = setTimeout(() => {
+				this.active = false;
+				this.#animation = 'move';
+			}, transitionConfig.duration);
+		});
 	}
 
 	onPlaceholderMove(rect: DOMRect) {
-		const containerRect = this.#containerRef?.getBoundingClientRect();
-		if (!containerRect) {
-			return;
-		}
+		requestAnimationFrame(() => {
+			this.#inInitialFrame = false;
 
-		this.#interpolatedWidgetPosition.top = rect.top - containerRect.top;
-		this.#interpolatedWidgetPosition.left = rect.left - containerRect.left;
-		this.#interpolatedWidgetPosition.width = rect.width;
-		this.#interpolatedWidgetPosition.height = rect.height;
+			// Now finalise the position.
+			const containerRect = this.#containerRef?.getBoundingClientRect();
+			if (!containerRect) {
+				return;
+			}
+
+			this.#interpolatedWidgetPosition.top = rect.top - containerRect.top;
+			this.#interpolatedWidgetPosition.left = rect.left - containerRect.left;
+			this.#interpolatedWidgetPosition.width = rect.width;
+			this.#interpolatedWidgetPosition.height = rect.height;
+		});
 	}
 
 	onPlaceholderMount(ref: HTMLElement) {
@@ -1072,6 +1137,10 @@ class WidgetMoveInterpolator {
 
 		this.#observer?.disconnect();
 		this.#observer = undefined;
+	}
+
+	#getTransitionConfigForAnimation(animation: WidgetMovementAnimation) {
+		return this.#transitionConfig[animation];
 	}
 }
 
@@ -1183,4 +1252,21 @@ export function getFlexiwidgetInterpolatorCtx() {
 	}
 
 	return widget.interpolator;
+}
+
+/**
+ * A helper function to use ease-in-out transitions for move animations, and ease-out for drop animations.
+ * @returns The configuration object.
+ */
+export function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
+	return {
+		move: {
+			duration: 150,
+			easing: 'ease-in-out'
+		},
+		drop: {
+			duration: 150,
+			easing: 'ease-out'
+		}
+	};
 }
