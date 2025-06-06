@@ -26,6 +26,7 @@ import { FreeFormFlexiGrid, type FreeFormTargetLayout } from './grid/free-grid.s
 import { type FlexiGrid } from './grid/index.js';
 import type { FlexiTargetProps } from '$lib/components/flexi-target.svelte';
 import { getPointerService } from './utils.svelte.js';
+import type { FlexiEventBus } from './event-bus.js';
 
 type TargetSizingFn = ({
 	target,
@@ -190,6 +191,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
+	#eventBus: FlexiEventBus;
+
 	#providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
 	providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
 
@@ -245,12 +248,14 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	constructor(
 		provider: InternalFlexiBoardController,
+		eventBus: FlexiEventBus,
 		key: string,
 		config?: FlexiTargetPartialConfiguration
 	) {
 		this.provider = provider;
 		this.#targetConfig = config;
 		this.key = key;
+		this.#eventBus = eventBus;
 
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
@@ -322,6 +327,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
 		const widget = new FlexiWidgetController({
 			type: 'target',
+			eventBus: this.#eventBus,
 			target: this,
 			config
 		});

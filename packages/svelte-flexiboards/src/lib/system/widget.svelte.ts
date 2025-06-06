@@ -19,7 +19,9 @@ import type {
 	WidgetResizeAction,
 	WidgetResizability,
 	Position,
-	WidgetActionEvent
+	WidgetActionEvent,
+	WidgetGrabbedEvent,
+	WidgetResizingEvent
 } from './types.js';
 import type { FlexiAddController } from './manage.svelte.js';
 import type { InternalFlexiBoardController } from './provider.svelte.js';
@@ -34,6 +36,7 @@ import {
 } from './utils.svelte.js';
 import type { ClassValue } from 'svelte/elements';
 import { FlexiControllerBase } from './base.svelte.js';
+import type { FlexiEventBus } from './event-bus.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
@@ -207,6 +210,7 @@ type FlexiWidgetConstructor = (
 	| FlexiWidgetUnderAdderConstructor
 	| FlexiWidgetUnderTargetConstructor
 ) & {
+	eventBus: FlexiEventBus;
 	config: FlexiWidgetConfiguration;
 };
 
@@ -224,11 +228,6 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 	 * The target this widget is under, if any.
 	 */
 	target?: FlexiTargetController = $state(undefined);
-
-	/**
-	 * The adder this widget is currently being created under, if any.
-	 */
-	adder?: FlexiAddController = $state(undefined);
 
 	#providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.providerWidgetDefaults);
 	#targetWidgetDefaults?: FlexiWidgetDefaults = $derived(this.target?.config.widgetDefaults);
@@ -320,6 +319,8 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 
 	// TODO: try make this internal.
 	mounted: boolean = $state(false);
+
+	#eventBus: FlexiEventBus;
 
 	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(
 		new WidgetPointerEventWatcher(this, 'grab')
@@ -448,6 +449,7 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 			y: 0
 		});
 
+		this.#eventBus = ctor.eventBus;
 		this.#rawConfig = ctor.config;
 
 		if (ctor.type == 'target') {
@@ -472,6 +474,8 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
 		this.onresizerkeydown = this.onresizerkeydown.bind(this);
+
+		this.#eventBus.subscribe('widget:grabbed', this.ongrabbed.bind(this));
 	}
 
 	/**
@@ -517,6 +521,50 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 		if (!event.isKeyboard) {
 			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
 		}
+	}
+
+	ongrabbed(event: WidgetGrabbedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		setTimeout(() => {
+			this.ref?.focus();
+		}, 0);
+
+		this.currentAction = {
+			action: 'grab',
+			widget: this,
+			offsetX: event.xOffset,
+			offsetY: event.yOffset,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx
+		};
+	}
+
+	onresizing(event: WidgetResizingEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		setTimeout(() => {
+			this.ref?.focus();
+		}, 0);
+
+		this.currentAction = {
+			action: 'resize',
+			widget: this,
+			offsetX: event.xOffset,
+			offsetY: event.yOffset,
+			left: event.left,
+			top: event.top,
+			heightPx: event.heightPx,
+			widthPx: event.widthPx,
+			initialHeightUnits: event.initialHeightUnits,
+			initialWidthUnits: event.initialWidthUnits
+		};
 	}
 
 	/**

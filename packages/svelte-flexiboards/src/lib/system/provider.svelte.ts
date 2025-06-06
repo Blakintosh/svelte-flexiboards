@@ -24,6 +24,7 @@ import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { FlexiTarget } from '$lib/index.js';
 import type { FlexiPortalController } from './portal.js';
 import type { AriaPoliteness, FlexiAnnouncerController } from './announcer.svelte.js';
+import { createEventBus, type FlexiEventBus } from './event-bus.js';
 
 export type FlexiBoardConfiguration = {
 	widgetDefaults?: FlexiWidgetDefaults;
@@ -92,6 +93,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#announcer: FlexiAnnouncerController | null = null;
 
+	#eventBus: FlexiEventBus = createEventBus();
+
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
@@ -107,6 +110,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				window.removeEventListener('keydown', onkeydown);
 			};
 		});
+
+		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
 	}
 
 	style: string = $derived.by(() => {
@@ -147,7 +152,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return this.#targets.get(key)!;
 		}
 
-		const target = new InternalFlexiTargetController(this, key, config);
+		const target = new InternalFlexiTargetController(this, this.#eventBus, key, config);
 		this.#targets.set(key, target);
 		return target;
 	}
