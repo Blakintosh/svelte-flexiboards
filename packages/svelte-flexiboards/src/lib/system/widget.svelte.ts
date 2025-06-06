@@ -451,7 +451,7 @@ export class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState>
 		this.#rawConfig = ctor.config;
 
 		if (ctor.type == 'target') {
-			this.target = ctor.target;
+			this.target = ctor.target as FlexiTargetController;
 			this.isShadow = ctor.isShadow ?? false;
 
 			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider, this);

@@ -1,4 +1,4 @@
-import { getContext, setContext } from 'svelte';
+import { getContext, setContext, tick } from 'svelte';
 import type {
 	WidgetAction,
 	HoveredTargetEvent,
@@ -197,10 +197,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		// TODO: might be worth doing this for grabs via keyboard.
-		// Focus the widget that's been grabbed.
-		// setTimeout(() => {
+		// We need to wait for the widget to be portalled before we can acquire its focus.
+		// tick().then(() => {
 		// 	event.ref.focus();
-		// }, 0);
+		// });
+		setTimeout(() => {
+			event.ref.focus();
+		}, 0);
 
 		const action: WidgetGrabAction = {
 			action: 'grab',
