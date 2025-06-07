@@ -1,7 +1,3 @@
-import { getContext, setContext } from 'svelte';
-import type { FlexiTargetController } from './target.svelte.js';
-import { FlexiWidgetController } from './widget.svelte.js';
-import type { FlexiAddController } from './manage.svelte.js';
 import type { WidgetGrabbedEvent } from './types.js';
 
 export interface EventMap {

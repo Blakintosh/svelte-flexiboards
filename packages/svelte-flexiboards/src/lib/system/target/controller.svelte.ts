@@ -1,190 +1,29 @@
-import { getContext, setContext, untrack } from 'svelte';
-import {
-	getFlexiboardCtx,
-	getInternalFlexiboardCtx,
-	InternalFlexiBoardController
-} from './provider.svelte.js';
-import {
-	type FlexiWidgetConfiguration,
-	type FlexiWidgetDefaults,
-	FlexiWidgetController
-} from './widget.svelte.js';
+import { untrack } from 'svelte';
+import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
+import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
 import type {
 	GrabbedWidgetMouseEvent,
 	MouseGridCellMoveEvent,
 	Position,
 	ProxiedValue,
-	WidgetAction,
-	WidgetDroppedEvent,
-	WidgetGrabAction,
 	WidgetGrabbedParams,
 	WidgetStartResizeParams
-} from './types.js';
+} from '../types.js';
+import { FlexiWidgetController } from '../widget/base.svelte.js';
+import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
+import type { InternalFlexiBoardController } from '../provider.svelte.js';
+import type { FlexiEventBus } from '../event-bus.js';
+import type { FlexiTargetController } from './base.svelte.js';
 import { SvelteSet } from 'svelte/reactivity';
-import { FlowFlexiGrid, type FlowTargetLayout } from './grid/index.js';
-import { FreeFormFlexiGrid, type FreeFormTargetLayout } from './grid/free-grid.svelte.js';
-import { type FlexiGrid } from './grid/index.js';
-import type { FlexiTargetProps } from '$lib/components/flexi-target.svelte';
-import { getPointerService } from './shared/utils.svelte.js';
-import type { FlexiEventBus } from './event-bus.js';
-
-type TargetSizingFn = ({
-	target,
-	grid
-}: {
-	target: FlexiTargetController;
-	grid: FlexiGrid;
-}) => string;
-export type TargetSizing = TargetSizingFn | string;
-
-export type FlexiTargetDefaults = {
-	/**
-	 * Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target.
-	 */
-	rowSizing?: TargetSizing;
-	/**
-	 * Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target.
-	 */
-	columnSizing?: TargetSizing;
-
-	/**
-	 * The layout algorithm and parameters to use for the target grid.
-	 */
-	layout?: TargetLayout;
-
-	/**
-	 * The number of rows to use for the target grid.
-	 * @deprecated This property will be removed in v0.3. Use `layout.minRows` instead.
-	 */
-	baseRows?: number;
-
-	/**
-	 * The number of columns to use for the target grid.
-	 * @deprecated This property will be removed in v0.3. Use `layout.minColumns` instead.
-	 */
-	baseColumns?: number;
-};
-
-// Exclude deprecated properties
-type RequiredFlexiTargetProperties = Omit<
-	Required<FlexiTargetDefaults>,
-	'baseRows' | 'baseColumns'
->;
-
-export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
-	widgetDefaults?: FlexiWidgetDefaults;
-};
-
-export type FlexiTargetConfiguration = RequiredFlexiTargetProperties &
-	// Don't make these mandatory, as they're deprecatedß
-	Pick<FlexiTargetDefaults, 'baseRows' | 'baseColumns'> & {
-		widgetDefaults?: FlexiWidgetDefaults;
-	};
-
-export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;
-
-export interface FlexiTargetController {
-	/**
-	 * The widgets currently in this target.
-	 */
-	widgets: SvelteSet<FlexiWidgetController>;
-
-	/**
-	 * The reactive configuration of the target.
-	 */
-	config: FlexiTargetConfiguration;
-
-	/**
-	 * The reactive default widget configuration passed through from the provider, if it exists.
-	 */
-	providerWidgetDefaults?: FlexiWidgetDefaults;
-
-	/**
-	 * Whether the target is prepared and ready to render widgets.
-	 */
-	get prepared(): boolean;
-
-	/**
-	 * Creates a new widget under this target.
-	 * @param config The configuration of the widget to create.
-	 * @returns The newly created widget if it could be placed, or undefined if not.
-	 */
-	createWidget(config: FlexiWidgetConfiguration): FlexiWidgetController | undefined;
-
-	/**
-	 * Deletes the given widget from this target, if it exists.
-	 * @returns Whether the widget was deleted.
-	 */
-	deleteWidget(widget: FlexiWidgetController): boolean;
-
-	// NEXT: Add import/export layout.
-	// /**
-	//  * Imports a layout of widgets into this target, replacing any existing widgets.
-	//  * @param layout The layout to import.
-	//  */
-	// importLayout(layout: FlexiWidgetConfiguration[]): void;
-
-	// /**
-	//  * Exports the current layout of widgets from this target.
-	//  * @returns The layout of widgets.
-	//  */
-	// exportLayout(): FlexiWidgetConfiguration[];
-
-	/**
-	 * Restores the target to its pre-grab state.
-	 * @remarks This is not intended for external use.
-	 */
-	restorePreGrabSnapshot(): void;
-
-	/**
-	 * Forgets the pre-grab state of the target.
-	 * @remarks This is not intended for external use.
-	 */
-	forgetPreGrabSnapshot(): void;
-
-	/**
-	 * Cancels the current drop action.
-	 */
-	cancelDrop(): void;
-
-	/**
-	 * Applies any post-completion operations like row/column collapsing.
-	 */
-	applyGridPostCompletionOperations(): void;
-
-	/**
-	 * Attempts to drop a widget into this target.
-	 * @param widget The widget to drop.
-	 * @returns Whether the widget was dropped.
-	 */
-	tryDropWidget(widget: FlexiWidgetController): boolean;
-
-	/**
-	 * Grabs a widget.
-	 * @param params The parameters for the grab action.
-	 * @returns The action that was started, or null if the action couldn't be started.
-	 */
-	grabWidget(params: WidgetGrabbedParams): WidgetAction | null;
-
-	/**
-	 * Starts resizing a widget.
-	 * @param params The parameters for the resize action.
-	 * @returns The action that was started, or null if the action couldn't be started.
-	 */
-	startResizeWidget(params: WidgetStartResizeParams): WidgetAction | null;
-
-	/**
-	 * The number of columns currently being used in the target grid.
-	 * This value is readonly.
-	 */
-	get columns(): number;
-
-	/**
-	 * The number of rows currently being used in the target grid.
-	 * This value is readonly.
-	 */
-	get rows(): number;
-}
+import type {
+	FlexiTargetActionWidget,
+	FlexiTargetConfiguration,
+	FlexiTargetDefaults,
+	FlexiTargetPartialConfiguration,
+	FlexiTargetState
+} from './types.js';
+import { getPointerService } from '../shared/utils.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	widgets: SvelteSet<FlexiWidgetController> = $state(new SvelteSet());
@@ -325,7 +164,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
-		const widget = new FlexiWidgetController({
+		const widget = new InternalFlexiWidgetController({
 			type: 'target',
 			eventBus: this.#eventBus,
 			target: this,
@@ -398,7 +237,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#createShadow(of: FlexiWidgetController) {
-		const shadow = new FlexiWidgetController({
+		const shadow = new InternalFlexiWidgetController({
 			type: 'target',
 			target: this,
 			config: {
@@ -720,7 +559,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * This value is readonly.
 	 */
 	get columns() {
-		return this.#grid?.columns;
+		return this.#grid?.columns ?? 0;
 	}
 
 	/**
@@ -728,7 +567,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * This value is readonly.
 	 */
 	get rows() {
-		return this.#grid?.rows;
+		return this.#grid?.rows ?? 0;
 	}
 
 	get grid() {
@@ -748,69 +587,4 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	set dropzoneWidget(value: FlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
 	}
-}
-
-type FlexiTargetActionWidget = {
-	action: WidgetAction['action'];
-	widget: FlexiWidgetController;
-};
-
-type FlexiTargetState = {
-	/**
-	 * Whether the target is currently being hovered over by the mouse.
-	 */
-	hovered: boolean;
-
-	/**
-	 * When set, this indicates a widget action that is currently being performed (or is focused) on this target.
-	 */
-	actionWidget: FlexiTargetActionWidget | null;
-
-	/**
-	 * Whether the target is mounted and ready to render widgets.
-	 */
-	prepared: boolean;
-};
-
-const contextKey = Symbol('flexitarget');
-
-/**
- * Creates a new {@link FlexiTargetController} instance in the context of the current FlexiBoard.
- * @returns A {@link FlexiTargetController} instance.
- */
-export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: string) {
-	const provider = getInternalFlexiboardCtx();
-	const target = provider.createTarget(config, key);
-
-	setContext(contextKey, target);
-
-	return {
-		target: target as FlexiTargetController
-	};
-}
-
-/**
- * Gets the current {@link InternalFlexiTargetController} instance, if any. Throws an error if no target is found.
- * @internal
- * @returns An {@link InternalFlexiTargetController} instance.
- */
-export function getInternalFlexitargetCtx() {
-	const target = getContext<InternalFlexiTargetController | undefined>(contextKey);
-
-	// No provider to attach to.
-	if (!target) {
-		throw new Error(
-			'Cannot get FlexiTarget context outside of a registered target. Ensure that flexitarget() (or <FlexiTarget>) is called within a <FlexiBoard> component.'
-		);
-	}
-
-	return target;
-}
-
-/**
- * Gets the current {@link FlexiTargetController} instance, if any. Throws an error if no target is found.
- * @returns A {@link FlexiTargetController} instance.
- */
-export function getFlexitargetCtx() {
-	return getInternalFlexitargetCtx() as FlexiTargetController;
 }

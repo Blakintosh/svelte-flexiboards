@@ -6,11 +6,11 @@
 		type FlexiAddWidgetFn
 	} from '$lib/system/manage.svelte.js';
 	import FlexiWidget from './rendered-flexi-widget.svelte';
-	import type { FlexiWidgetConfiguration } from '$lib/system/widget.svelte.js';
+	import type { FlexiWidgetConfiguration } from '$lib/system/widget/types.js';
 	import type { Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
-	import { assistiveTextStyle, generateUniqueId } from '$lib/system/utils.svelte.js';
+	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
 
 	/** @deprecated FlexiAdd's children props are now redundant and will be removed in v0.4. */
 	type FlexiAddChildrenProps = {

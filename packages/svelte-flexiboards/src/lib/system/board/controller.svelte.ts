@@ -1,72 +1,28 @@
-import { getContext, setContext, tick } from 'svelte';
-import type {
-	WidgetAction,
-	HoveredTargetEvent,
-	WidgetDroppedEvent,
-	WidgetGrabbedParams,
-	WidgetStartResizeParams,
-	WidgetGrabAction,
-	WidgetResizeAction,
-	FlexiSavedLayout,
-	ProxiedValue,
-	WidgetGrabbedEvent,
-	WidgetStartResizeEvent
-} from './types.js';
-import {
-	InternalFlexiTargetController,
-	type FlexiTargetDefaults,
-	type FlexiTargetController,
-	type FlexiTargetPartialConfiguration
-} from './target.svelte.js';
-import type { FlexiWidgetController, FlexiWidgetDefaults } from './widget.svelte.js';
-import { AutoScrollService, getPointerService, PointerService } from './shared/utils.svelte.js';
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
-import type { FlexiTarget } from '$lib/index.js';
-import type { FlexiPortalController } from './portal.js';
-import type { AriaPoliteness, FlexiAnnouncerController } from './announcer.svelte.js';
-import { createEventBus, type FlexiEventBus } from './event-bus.js';
-
-export type FlexiBoardConfiguration = {
-	widgetDefaults?: FlexiWidgetDefaults;
-	targetDefaults?: FlexiTargetDefaults;
-};
-
-export interface FlexiBoardController {
-	/**
-	 * The reactive styling to apply to the board's root element.
-	 */
-	style: string;
-
-	/**
-	 * The reactive DOM reference to the board's root element.
-	 */
-	ref: HTMLElement | null;
-
-	/**
-	 * Moves an existing widget from one target to another.
-	 * @param widget The widget to move.
-	 * @param from The target to move the widget from.
-	 * @param to The target to move the widget to.
-	 */
-	moveWidget(
-		widget: FlexiWidgetController,
-		from: FlexiTargetController | undefined,
-		to: FlexiTargetController
-	): void;
-
-	// NEXT: Add import/export layout.
-	/**
-	 * Imports a widget layout into the board.
-	 * @param layout The widget layout to import.
-	 */
-	// importLayout(layout: FlexiSavedLayout): void;
-
-	/**
-	 * Exports the current widget layout of the board.
-	 * @returns The current widget layout of the board.
-	 */
-	// exportLayout(): FlexiSavedLayout;
-}
+import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.svelte.js';
+import { createEventBus, type FlexiEventBus } from '../event-bus.js';
+import type { FlexiPortalController } from '../portal.js';
+import {
+	AutoScrollService,
+	getPointerService,
+	type PointerService
+} from '../shared/utils.svelte.js';
+import type { FlexiTargetController } from '../target/base.svelte.js';
+import { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { FlexiTargetPartialConfiguration } from '../target/types.js';
+import type {
+	FlexiSavedLayout,
+	HoveredTargetEvent,
+	ProxiedValue,
+	WidgetAction,
+	WidgetGrabAction,
+	WidgetGrabbedEvent,
+	WidgetResizeAction,
+	WidgetStartResizeEvent
+} from '../types.js';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiBoardController } from './base.svelte.js';
+import type { FlexiBoardConfiguration } from './types.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
@@ -513,40 +469,4 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#nextTargetKey() {
 		return `target-${this.#nextTargetIndex++}`;
 	}
-}
-
-const contextKey = Symbol('flexiboard');
-
-export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController {
-	const board = new InternalFlexiBoardController(props);
-
-	setContext(contextKey, board);
-	return board;
-}
-
-/**
- * Gets the current {@link InternalFlexiBoardController} instance, if any. Throws an error if no board is found.
- * @internal
- * @returns An {@link InternalFlexiBoardController} instance.
- */
-export function getInternalFlexiboardCtx() {
-	const board = getContext<InternalFlexiBoardController | undefined>(contextKey);
-
-	// No provider to attach to.
-	if (!board) {
-		throw new Error(
-			'Cannot get FlexiBoard context outside of a registered board. Ensure that flexiboard() (or <FlexiBoard>) is called.'
-		);
-	}
-
-	return board;
-}
-
-/**
- * Gets the current {@link FlexiBoard} instance, if any. Throws an error if no board is found.
- * @internal
- * @returns A {@link FlexiBoard} instance.
- */
-export function getFlexiboardCtx() {
-	return getInternalFlexiboardCtx() as FlexiBoardController;
 }

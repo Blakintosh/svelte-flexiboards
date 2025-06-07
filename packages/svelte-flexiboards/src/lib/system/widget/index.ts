@@ -6,8 +6,8 @@ import type {
 	FlexiWidgetTriggerConfiguration
 } from './types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
-import { getInternalFlexitargetCtx } from '../target.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
+import { getInternalFlexitargetCtx } from '../target/index.js';
 
 const contextKey = Symbol('flexiwidget');
 

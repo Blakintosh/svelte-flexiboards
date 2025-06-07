@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { flexiannouncer } from '$lib/system/announcer.svelte.js';
-	import type { InternalFlexiBoardController } from '$lib/system/provider.svelte.js';
-	import { assistiveTextStyle } from '$lib/system/utils.svelte.js';
+	import type { InternalFlexiBoardController } from '$lib/system/board/controller.svelte.js';
+	import { assistiveTextStyle } from '$lib/system/shared/utils.svelte.js';
 
 	type FlexiAnnouncerProps = {
 		provider: InternalFlexiBoardController;

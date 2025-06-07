@@ -1,9 +1,7 @@
 <script module lang="ts">
-	import {
-		flexiboard,
-		type FlexiBoardConfiguration,
-		type FlexiBoardController
-	} from '$lib/system/provider.svelte.js';
+	import { flexiboard } from '$lib/system/board/index.js';
+	import type { FlexiBoardController } from '$lib/system/board/base.svelte.js';
+	import type { FlexiBoardConfiguration } from '$lib/system/board/types.js';
 	import type { Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import FlexiLayoutLoader from './flexi-layout-loader.svelte';
@@ -21,9 +19,11 @@
 	import { generateUniqueId, assistiveTextStyle } from '$lib/system/shared/utils.svelte.js';
 	import FlexiAnnouncer from './flexi-announcer.svelte';
 
-	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
+	let { controller = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 
-	board = flexiboard(props);
+	const board = flexiboard(props);
+	controller = board;
+
 	onfirstcreate?.(board);
 
 	let assistiveTextId = generateUniqueId();

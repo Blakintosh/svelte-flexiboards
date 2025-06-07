@@ -1,5 +1,6 @@
 <script module lang="ts">
-	import { flexiresize, type FlexiWidgetController } from '$lib/system/widget.svelte.js';
+	import { flexiresize } from '$lib/system/widget/index.js';
+	import type { FlexiWidgetController } from '$lib/system/widget/base.svelte.js';
 	import type { Snippet } from 'svelte';
 	import type { ClassValue } from 'svelte/elements';
 

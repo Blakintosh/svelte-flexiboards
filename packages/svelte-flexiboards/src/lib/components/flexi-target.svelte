@@ -1,10 +1,9 @@
 <script module lang="ts">
 	import type { Snippet } from 'svelte';
-	import {
-		flexitarget,
-		type FlexiTargetController,
-		type FlexiTargetPartialConfiguration
-	} from '$lib/system/target.svelte.js';
+	import { flexitarget } from '$lib/system/target/index.js';
+	import type { FlexiTargetController } from '$lib/system/target/base.svelte.js';
+	import type { FlexiTargetPartialConfiguration } from '$lib/system/target/types.js';
+
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 
 	export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
