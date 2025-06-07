@@ -66,7 +66,7 @@ function dispatchPointerDownGrab(
 
 	// TODO: this MIGHT not be necessary anymore, due to our simulated pointer watcher.
 	// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-	(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+	// (event.target as HTMLElement).releasePointerCapture(event.pointerId);
 
 	// event.stopPropagation();
 	// event.preventDefault();
@@ -153,7 +153,7 @@ function dispatchPointerDownResize(
 	}
 
 	// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-	(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+	// (event.target as HTMLElement).releasePointerCapture(event.pointerId);
 
 	// event.stopPropagation();
 	// event.preventDefault();

@@ -15,8 +15,10 @@ import type {
 	HoveredTargetEvent,
 	ProxiedValue,
 	WidgetAction,
+	WidgetCancelEvent,
 	WidgetGrabAction,
 	WidgetGrabbedEvent,
+	WidgetReleaseEvent,
 	WidgetResizeAction,
 	WidgetStartResizeEvent
 } from '../types.js';
@@ -49,25 +51,16 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#announcer: FlexiAnnouncerController | null = null;
 
-	#eventBus: FlexiEventBus = flexiEventBus();
+	#eventBus: FlexiEventBus;
 
-	constructor(props: FlexiBoardProps) {
+	constructor(props: FlexiBoardProps, eventBus: FlexiEventBus) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
-
-		const onpointerup = this.#onpointerup.bind(this);
-		const onkeydown = this.#onkeydown.bind(this);
-		$effect(() => {
-			window.addEventListener('pointerup', onpointerup);
-			window.addEventListener('keydown', onkeydown);
-
-			return () => {
-				window.removeEventListener('pointerup', onpointerup);
-				window.removeEventListener('keydown', onkeydown);
-			};
-		});
+		this.#eventBus = eventBus;
 
 		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
+		this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this));
 	}
 
 	style: string = $derived.by(() => {
@@ -234,41 +227,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
 	}
 
-	#onpointerup(event: PointerEvent) {
-		if (!this.#currentWidgetAction) {
-			return;
-		}
-
-		this.handleWidgetRelease();
-	}
-
-	#onkeydown(event: KeyboardEvent) {
-		if (!this.#currentWidgetAction) {
-			return;
-		}
-
-		// If they pressed Esc, then just cancel.
-		if (event.key == 'Escape') {
-			const widget = this.#currentWidgetAction!.widget;
-			if (this.portal) {
-				this.portal.returnWidgetFromPortal(widget);
-			}
-			this.#releaseCurrentWidgetAction();
-			event.stopPropagation();
-			event.preventDefault();
-			return;
-		}
-
-		// If they pressed Enter, then try to place as-is
-		if (event.key == 'Enter') {
-			this.handleWidgetRelease();
-			event.stopPropagation();
-			event.preventDefault();
-			return;
-		}
-	}
-
-	handleWidgetRelease() {
+	handleWidgetRelease(event: WidgetReleaseEvent) {
 		this.#unlockViewport();
 
 		const currentAction = this.#currentWidgetAction!;
@@ -281,6 +240,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				this.#handleResizingWidgetRelease(currentAction);
 				break;
 		}
+	}
+
+	handleWidgetCancel(event: WidgetCancelEvent) {
+		if (this.portal) {
+			this.portal.returnWidgetFromPortal(event.widget);
+		}
+		this.#unlockViewport();
+		this.#releaseCurrentWidgetAction();
 	}
 
 	attachAnnouncer(announcer: FlexiAnnouncerController) {
@@ -452,5 +419,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#nextTargetKey() {
 		return `target-${this.#nextTargetIndex++}`;
+	}
+
+	get currentWidgetAction() {
+		return this.#currentWidgetAction;
 	}
 }

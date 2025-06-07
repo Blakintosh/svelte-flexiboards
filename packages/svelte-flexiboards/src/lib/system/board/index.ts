@@ -4,16 +4,19 @@ import { InternalFlexiBoardController } from './controller.svelte.js';
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import { flexiEventBus } from '../shared/event-bus.js';
 import type { FlexiBoardConfiguration } from './types.js';
+import { boardEvents } from './events.js';
 
 const contextKey = Symbol('flexiboard');
 
 export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController {
 	// Create the event bus context for this board at the same time.
-	flexiEventBus();
+	const eventBus = flexiEventBus();
 
-	const board = new InternalFlexiBoardController(props);
+	const board = new InternalFlexiBoardController(props, eventBus);
 
 	setContext(contextKey, board);
+	boardEvents(board);
+
 	return board;
 }
 

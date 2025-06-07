@@ -88,7 +88,11 @@ export type WidgetResizingEvent = {
 	top: number;
 };
 
-export type WidgetReleasedEvent = {
+export type WidgetReleaseEvent = {
+	widget: FlexiWidgetController;
+};
+
+export type WidgetCancelEvent = {
 	widget: FlexiWidgetController;
 };
 

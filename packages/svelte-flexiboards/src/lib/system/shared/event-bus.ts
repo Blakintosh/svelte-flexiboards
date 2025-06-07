@@ -1,9 +1,16 @@
 import { getContext, setContext } from 'svelte';
-import type { WidgetGrabbedEvent, WidgetResizingEvent } from '../types.js';
+import type {
+	WidgetCancelEvent,
+	WidgetGrabbedEvent,
+	WidgetReleaseEvent,
+	WidgetResizingEvent
+} from '../types.js';
 
 export interface EventMap {
 	'widget:grabbed': WidgetGrabbedEvent;
 	'widget:resizing': WidgetResizingEvent;
+	'widget:release': WidgetReleaseEvent;
+	'widget:cancel': WidgetCancelEvent;
 }
 
 // Event listener function type
