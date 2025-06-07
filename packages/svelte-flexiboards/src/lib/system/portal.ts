@@ -1,5 +1,5 @@
-import { getInternalFlexiboardCtx } from './provider.svelte.js';
-import type { FlexiWidgetController } from './widget.svelte.js';
+import { getInternalFlexiboardCtx } from './board/index.js';
+import type { FlexiWidgetController } from './widget/index.js';
 
 /**
  * GrabbedPortal manages a single container in the DOM where grabbed/resizing

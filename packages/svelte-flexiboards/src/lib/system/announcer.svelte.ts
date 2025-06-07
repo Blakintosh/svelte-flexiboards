@@ -1,4 +1,4 @@
-import type { InternalFlexiBoardController } from './provider.svelte.js';
+import type { InternalFlexiBoardController } from './board/controller.svelte.js';
 import { generateUniqueId } from './shared/utils.svelte.js';
 
 export type AriaPoliteness = 'off' | 'polite' | 'assertive';

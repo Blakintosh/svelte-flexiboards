@@ -88,16 +88,12 @@ export type WidgetResizingEvent = {
 	top: number;
 };
 
-export type WidgetStartResizeEvent = WidgetStartResizeParams & {
-	target: InternalFlexiTargetController;
+export type WidgetReleasedEvent = {
+	widget: FlexiWidgetController;
 };
 
-/**
- * Event object that captures widget grabbed event data.
- */
-export type WidgetDroppedEvent = {
-	widget: FlexiWidgetController;
-	preventDefault: () => void;
+export type WidgetStartResizeEvent = WidgetStartResizeParams & {
+	target: InternalFlexiTargetController;
 };
 
 export type WidgetOverEvent = {

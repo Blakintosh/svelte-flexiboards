@@ -1,6 +1,6 @@
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.svelte.js';
-import { createEventBus, type FlexiEventBus } from '../event-bus.js';
+import { flexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiPortalController } from '../portal.js';
 import {
 	AutoScrollService,
@@ -49,7 +49,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#announcer: FlexiAnnouncerController | null = null;
 
-	#eventBus: FlexiEventBus = createEventBus();
+	#eventBus: FlexiEventBus = flexiEventBus();
 
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
@@ -157,15 +157,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
 
-		// TODO: might be worth doing this for grabs via keyboard.
-		// We need to wait for the widget to be portalled before we can acquire its focus.
-		// tick().then(() => {
-		// 	event.ref.focus();
-		// });
-		setTimeout(() => {
-			event.ref.focus();
-		}, 0);
-
 		const action: WidgetGrabAction = {
 			action: 'grab',
 			target: event.target,
@@ -173,8 +164,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			adder: event.adder,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
-			capturedHeightPx: event.capturedHeight,
-			capturedWidthPx: event.capturedWidth
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx
 		};
 		this.#currentWidgetAction = action;
 
@@ -185,13 +176,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#lockViewport();
 		this.#autoScrollService.shouldAutoScroll = true;
 		this.#pointerService.keyboardControlsActive = true;
-
-		// Only matters if the event source is a target, which isn't the case when the widget is being dragged into the board.
-		if (event.target) {
-			event.target.ongrabbedwidgetover({
-				widget: event.widget
-			});
-		}
 
 		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
 

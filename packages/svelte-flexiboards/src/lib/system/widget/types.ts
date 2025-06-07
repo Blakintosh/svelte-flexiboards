@@ -1,5 +1,5 @@
 import type { ClassValue } from 'svelte/elements';
-import type { FlexiEventBus } from '../event-bus.js';
+import type { FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { Component, Snippet } from 'svelte';
 import {
@@ -9,7 +9,7 @@ import {
 } from '../shared/utils.svelte.js';
 import type { Position, WidgetAction, WidgetResizability } from '../types.js';
 import type { FlexiAddController } from '../manage.svelte.js';
-import type { InternalFlexiTargetController } from '../target.svelte.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
@@ -97,7 +97,7 @@ export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
 	metadata?: Record<string, any>;
 };
 
-type FlexiWidgetState = {
+export type FlexiWidgetState = {
 	currentAction: WidgetAction | null;
 	width: number;
 	height: number;
@@ -105,7 +105,7 @@ type FlexiWidgetState = {
 	y: number;
 };
 
-type FlexiWidgetDerivedConfiguration = {
+export type FlexiWidgetDerivedConfiguration = {
 	/**
 	 * The name of the widget, which can be used to identify it in exported layouts.
 	 */

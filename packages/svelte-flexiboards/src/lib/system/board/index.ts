@@ -2,10 +2,15 @@ import { getContext, setContext } from 'svelte';
 import type { FlexiBoardController } from './base.svelte.js';
 import { InternalFlexiBoardController } from './controller.svelte.js';
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
+import { flexiEventBus } from '../shared/event-bus.js';
+import type { FlexiBoardConfiguration } from './types.js';
 
 const contextKey = Symbol('flexiboard');
 
 export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController {
+	// Create the event bus context for this board at the same time.
+	flexiEventBus();
+
 	const board = new InternalFlexiBoardController(props);
 
 	setContext(contextKey, board);
@@ -38,3 +43,6 @@ export function getInternalFlexiboardCtx() {
 export function getFlexiboardCtx() {
 	return getInternalFlexiboardCtx() as FlexiBoardController;
 }
+
+/* Exports to go to root index.ts */
+export { type FlexiBoardController, type FlexiBoardConfiguration };

@@ -1,7 +1,6 @@
 <script module lang="ts">
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
-	import { onMount } from 'svelte';
 	import type {
 		FlexiWidgetChildrenSnippet,
 		FlexiWidgetClasses,

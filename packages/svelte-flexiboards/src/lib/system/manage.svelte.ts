@@ -1,14 +1,13 @@
 import { untrack } from 'svelte';
-import {
-	getFlexiboardCtx,
-	getInternalFlexiboardCtx,
-	type InternalFlexiBoardController
-} from './provider.svelte.js';
+import { getInternalFlexiboardCtx } from './board/index.js';
+
 import type { WidgetGrabbedParams } from './types.js';
 import type { PointerService } from './shared/utils.svelte.js';
 import { getPointerService } from './shared/utils.svelte.js';
-import { FlexiWidgetController, type FlexiWidgetConfiguration } from './widget.svelte.js';
 import type { ClassValue } from 'svelte/elements';
+import type { InternalFlexiBoardController } from './board/controller.svelte.js';
+import type { FlexiWidgetController, FlexiWidgetConfiguration } from './widget/index.js';
+import { InternalFlexiWidgetController } from './widget/controller.svelte.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -64,7 +63,7 @@ export class FlexiAddController {
 		}
 
 		// Create a widget under this FlexiAdd.
-		this.newWidget = new FlexiWidgetController({
+		this.newWidget = new InternalFlexiWidgetController({
 			type: 'adder',
 			adder: this,
 			config: config.widget,

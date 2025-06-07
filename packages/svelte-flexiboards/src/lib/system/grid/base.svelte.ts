@@ -1,13 +1,10 @@
 import { setContext, untrack } from 'svelte';
 import { getContext } from 'svelte';
-import type {
-	InternalFlexiTargetController,
-	FlexiTargetConfiguration,
-	TargetSizing
-} from '../target.svelte.js';
-import { getInternalFlexitargetCtx } from '../target.svelte.js';
 import { getPointerService, GridDimensionTracker, PointerService } from '../shared/utils.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { FlexiTargetConfiguration, TargetSizing } from '../target/types.js';
+import type { FlexiWidgetController } from '../widget/index.js';
+import { getInternalFlexitargetCtx } from '../target/index.js';
 
 export type MoveOperation = {
 	widget: FlexiWidgetController;

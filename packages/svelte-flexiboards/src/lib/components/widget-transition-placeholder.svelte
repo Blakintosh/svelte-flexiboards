@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getFlexiwidgetInterpolatorCtx } from '$lib/system/widget.svelte.js';
+	import { getFlexiwidgetInterpolatorCtx } from '$lib/system/widget/index.js';
 	import { onMount } from 'svelte';
 
 	const interpolator = getFlexiwidgetInterpolatorCtx();

@@ -6,6 +6,7 @@ import type {
 	MouseGridCellMoveEvent,
 	Position,
 	ProxiedValue,
+	WidgetGrabbedEvent,
 	WidgetGrabbedParams,
 	WidgetStartResizeParams
 } from '../types.js';
@@ -13,7 +14,7 @@ import { FlexiWidgetController } from '../widget/base.svelte.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
 import type { InternalFlexiBoardController } from '../provider.svelte.js';
-import type { FlexiEventBus } from '../event-bus.js';
+import type { FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiTargetController } from './base.svelte.js';
 import { SvelteSet } from 'svelte/reactivity';
 import type {
@@ -110,6 +111,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				this.#updatePointerOverState(isPointerInside);
 			});
 		});
+
+		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
 	}
 
 	/**
@@ -239,6 +242,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#createShadow(of: FlexiWidgetController) {
 		const shadow = new InternalFlexiWidgetController({
 			type: 'target',
+			eventBus: this.#eventBus,
 			target: this,
 			config: {
 				width: of.width,
@@ -363,6 +367,19 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {
 		this.#updateMouseCellPosition(event.cellX, event.cellY);
 		this.#updateDropzoneWidget();
+	}
+
+	onwidgetgrabbed(event: WidgetGrabbedEvent) {
+		// Nothing to do if it's not under this target.
+		if (event.target != this) {
+			return;
+		}
+
+		this.actionWidget = {
+			action: 'grab',
+			widget: event.widget
+		};
+		this.#createDropzoneWidget();
 	}
 
 	ongrabbedwidgetover(event: GrabbedWidgetMouseEvent) {

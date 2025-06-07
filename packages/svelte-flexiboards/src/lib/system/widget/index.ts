@@ -1,13 +1,16 @@
 import { getContext, onDestroy, onMount, setContext } from 'svelte';
-import { immediateTriggerConfig, longPressTriggerConfig } from '../shared/utils.svelte.js';
 import type {
+	FlexiWidgetChildrenSnippet,
+	FlexiWidgetChildrenSnippetParameters,
 	FlexiWidgetConfiguration,
 	FlexiWidgetTransitionConfiguration,
+	FlexiWidgetTransitionTypeConfiguration,
 	FlexiWidgetTriggerConfiguration
 } from './types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
+import { widgetEvents, widgetGrabberEvents } from './events.js';
 
 const contextKey = Symbol('flexiwidget');
 
@@ -54,10 +57,11 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 		widget.mounted = true;
 	});
 
+	const events = widgetEvents(widget);
+
 	return {
 		widget,
-		onpointerdown: (event: PointerEvent) => widget.onpointerdown(event),
-		onkeydown: (event: KeyboardEvent) => widget.onkeydown(event)
+		...events
 	};
 }
 
@@ -69,13 +73,15 @@ export function flexigrab() {
 		);
 	}
 
-	const { onpointerdown, onkeydown } = widget.addGrabber();
+	widget.addGrabber();
 
 	onDestroy(() => {
 		widget.removeGrabber();
 	});
 
-	return { widget, onpointerdown, onkeydown };
+	const events = widgetGrabberEvents(widget);
+
+	return { widget, ...events };
 }
 
 export function flexiresize() {
@@ -107,7 +113,7 @@ export function getInternalFlexiwidgetCtx() {
 	return widget;
 }
 
-export function getFlexiwidgetCtx() {
+function getFlexiwidgetCtx() {
 	const widget = getContext<FlexiWidgetController>(contextKey);
 
 	if (!widget) {
@@ -135,7 +141,7 @@ export function getFlexiwidgetInterpolatorCtx() {
  * A helper function to use ease-in-out transitions for move animations, and ease-out for drop animations.
  * @returns The configuration object.
  */
-export function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
+function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	return {
 		move: {
 			duration: 150,
@@ -147,3 +153,16 @@ export function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 		}
 	};
 }
+
+/* Exports to go to root index.ts */
+export {
+	type FlexiWidgetController,
+	simpleTransitionConfig,
+	type FlexiWidgetChildrenSnippet,
+	type FlexiWidgetChildrenSnippetParameters,
+	type FlexiWidgetConfiguration,
+	type FlexiWidgetTransitionConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
+	type FlexiWidgetTriggerConfiguration,
+	getFlexiwidgetCtx
+};

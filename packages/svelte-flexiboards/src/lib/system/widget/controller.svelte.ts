@@ -1,11 +1,10 @@
-import type { FlexiEventBus } from '../event-bus.js';
+import type { FlexiEventBus } from '../shared/event-bus.js';
 import {
 	getElementMidpoint,
 	getPointerService,
 	WidgetPointerEventWatcher,
 	type PointerService
 } from '../shared/utils.svelte.js';
-import type { FlexiTargetController } from '../target.svelte.js';
 import type {
 	WidgetActionEvent,
 	WidgetGrabAction,
@@ -14,7 +13,7 @@ import type {
 	WidgetResizingEvent
 } from '../types.js';
 import { FlexiWidgetController } from './base.svelte.js';
-import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.svelte.js';
+import { type WidgetMovementAnimation } from './interpolator.svelte.js';
 import type { FlexiWidgetConstructor } from './types.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
@@ -181,83 +180,12 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		// Allows the event handlers to be called without binding to the widget instance.
-		this.onpointerdown = this.onpointerdown.bind(this);
-		this.onkeydown = this.onkeydown.bind(this);
-		this.ongrabberpointerdown = this.ongrabberpointerdown.bind(this);
-		this.ongrabberkeydown = this.ongrabberkeydown.bind(this);
 		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
 		this.onresizerkeydown = this.onresizerkeydown.bind(this);
 
 		this.#eventBus.subscribe('widget:grabbed', this.ongrabbed.bind(this));
-	}
 
-	/**
-	 * Event handler for when the widget receives a pointerdown event.
-	 * @param event The event object.
-	 */
-	onpointerdown(event: PointerEvent) {
-		if (!this.draggable || !event.target || this.#grabbers) {
-			return;
-		}
-
-		this.#grabPointerEventWatcher.onstartpointerdown(event);
-	}
-
-	/**
-	 * Event handler for when one of the widget's grabbers receives a pointerdown event.
-	 * @param event The event object.
-	 */
-	ongrabberpointerdown(event: PointerEvent) {
-		if (!this.draggable || !event.target) {
-			return;
-		}
-
-		this.#grabPointerEventWatcher.onstartpointerdown(event);
-	}
-
-	/**
-	 * Event handler for when the widget receives a keydown event.
-	 * @param event The event object.
-	 */
-	onkeydown(event: KeyboardEvent) {
-		if (this.#grabbers) {
-			return;
-		}
-
-		this.#dispatchKeydownGrabbedEvent(event);
-	}
-
-	/**
-	 * Event handler for when one of the widget's grabbers receives a keydown event.
-	 * @param event The event object.
-	 */
-	ongrabberkeydown(event: KeyboardEvent) {
-		this.#dispatchKeydownGrabbedEvent(event);
-	}
-
-	#dispatchKeydownGrabbedEvent(event: KeyboardEvent) {
-		if (!this.draggable || !this.ref || event.key !== 'Enter') {
-			return;
-		}
-
-		// so that the board's listener doesn't interfere
-		event.stopPropagation();
-		event.preventDefault();
-
-		const { x, y } = getElementMidpoint(event.target as HTMLElement);
-
-		this.#dispatchGrabbedEvent({
-			clientX: x,
-			clientY: y
-		});
-	}
-
-	ongrab(event: WidgetActionEvent) {
-		this.#grabWidget(event.clientX, event.clientY);
-		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-		if (!event.isKeyboard) {
-			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
-		}
+		// TODO: no unsubscribe method
 	}
 
 	ongrabbed(event: WidgetGrabbedEvent) {
@@ -367,54 +295,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		});
 	}
 
-	#dispatchGrabbedEvent({ clientX, clientY }: { clientX: number; clientY: number }) {
-		const rect = this.ref?.getBoundingClientRect();
-		if (!rect) {
-			return;
-		}
-
-		this.#eventBus.dispatch('widget:grabbed', {
-			widget: this,
-			target: this.target,
-			clientX,
-			clientY,
-			capturedHeightPx: rect.height,
-			capturedWidthPx: rect.width,
-			xOffset: clientX - rect.left,
-			yOffset: clientY - rect.top
-		});
-	}
-
-	#grabWidget(clientX: number, clientY: number) {
-		if (!this.ref) {
-			throw new Error('A FlexiWidget was instantiated without a bound reference element.');
-		}
-
-		// If the widget is new, then this event shouldn't fire yet.
-		if (!this.target) {
-			return;
-		}
-
-		const rect = this.ref.getBoundingClientRect();
-
-		// Get the offset of the cursor relative to the widget's bounds.
-		const xOffset = clientX - rect.left;
-		const yOffset = clientY - rect.top;
-
-		// Propagate an event up to the parent target, indicating that the widget has been grabbed.
-		this.currentAction = this.target.grabWidget({
-			widget: this,
-			ref: this.ref,
-			xOffset,
-			yOffset,
-			clientX,
-			clientY,
-			// Capture the current size of the widget so that we can fix this once it's moving.
-			capturedHeight: rect.height,
-			capturedWidth: rect.width
-		});
-	}
-
 	#startResizeWidget(clientX: number, clientY: number) {
 		if (!this.ref) {
 			throw new Error('A FlexiWidget was instantiated without a bound reference element.');
@@ -508,11 +388,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	addGrabber() {
 		this.#grabbers++;
-
-		return {
-			onpointerdown: this.ongrabberpointerdown,
-			onkeydown: this.ongrabberkeydown
-		};
 	}
 
 	/**

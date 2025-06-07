@@ -1,7 +1,9 @@
-import type { WidgetGrabbedEvent } from './types.js';
+import { getContext, setContext } from 'svelte';
+import type { WidgetGrabbedEvent, WidgetResizingEvent } from '../types.js';
 
 export interface EventMap {
 	'widget:grabbed': WidgetGrabbedEvent;
+	'widget:resizing': WidgetResizingEvent;
 }
 
 // Event listener function type
@@ -14,6 +16,7 @@ export class FlexiEventBus {
 
 	dispatch<K extends keyof EventMap>(eventName: K, data: EventMap[K]): void {
 		// Notify event listeners that the event happened.
+		console.log('[event-bus] dispatching event', eventName, data);
 		const eventListeners = this.listeners[eventName];
 		if (eventListeners) {
 			eventListeners.forEach((listener) => listener(data));
@@ -45,6 +48,23 @@ export class FlexiEventBus {
 	}
 }
 
-export function createEventBus() {
-	return new FlexiEventBus();
+const contextKey = Symbol('flexieventbus');
+
+export function flexiEventBus() {
+	const eventBus = new FlexiEventBus();
+
+	setContext(contextKey, eventBus);
+	return eventBus;
+}
+
+export function getFlexiEventBusCtx() {
+	const eventBus = getContext<FlexiEventBus | undefined>(contextKey);
+
+	if (!eventBus) {
+		throw new Error(
+			'Cannot get FlexiEventBus context outside of a registered event bus. Ensure that flexiEventBus() is called.'
+		);
+	}
+
+	return eventBus;
 }

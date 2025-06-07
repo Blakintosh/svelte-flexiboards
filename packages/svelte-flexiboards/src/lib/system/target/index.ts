@@ -1,5 +1,8 @@
 import { getContext, setContext } from 'svelte';
 import type { FlexiTargetController } from './base.svelte.js';
+import type { InternalFlexiTargetController } from './controller.svelte.js';
+import type { FlexiTargetConfiguration, FlexiTargetPartialConfiguration } from './types.js';
+import { getInternalFlexiboardCtx } from '../board/index.js';
 
 const contextKey = Symbol('flexitarget');
 
@@ -43,3 +46,6 @@ export function getInternalFlexitargetCtx() {
 export function getFlexitargetCtx() {
 	return getInternalFlexitargetCtx() as FlexiTargetController;
 }
+
+/* Exports to go to root index.ts */
+export { type FlexiTargetConfiguration, type FlexiTargetController };
