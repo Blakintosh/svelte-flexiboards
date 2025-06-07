@@ -19,7 +19,7 @@ import {
 	type FlexiTargetPartialConfiguration
 } from './target.svelte.js';
 import type { FlexiWidgetController, FlexiWidgetDefaults } from './widget.svelte.js';
-import { AutoScrollService, getPointerService, PointerService } from './utils.svelte.js';
+import { AutoScrollService, getPointerService, PointerService } from './shared/utils.svelte.js';
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { FlexiTarget } from '$lib/index.js';
 import type { FlexiPortalController } from './portal.js';

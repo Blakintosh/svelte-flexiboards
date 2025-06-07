@@ -1,13 +1,9 @@
-/*
-    This MousePosition utility class is inspired by the MousePositionState class from Joy of Code's
-    'Creating Reactive Browser APIs In Svelte' video, found at https://youtu.be/BKyENJQ6KdQ.
-*/
-
-import type { Position, ProxiedValue, WidgetActionEvent } from './types.js';
-import type { FlexiGrid } from './grid/base.svelte.js';
-import type { FlexiTargetConfiguration } from './target.svelte.js';
-import type { FlexiWidgetController, FlexiWidgetTriggerConfiguration } from './widget.svelte.js';
+import type { Position, ProxiedValue, WidgetActionEvent } from '../types.js';
+import type { FlexiGrid } from '../grid/base.svelte.js';
+import type { FlexiTargetConfiguration } from '../target.svelte.js';
+import type { FlexiWidgetTriggerConfiguration } from '../widget.svelte.js';
 import { getContext, onMount, setContext, untrack } from 'svelte';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.

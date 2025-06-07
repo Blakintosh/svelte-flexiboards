@@ -1,160 +1,160 @@
-import { untrack } from "svelte";
-import { getFlexiboardCtx, getInternalFlexiboardCtx, type InternalFlexiBoardController } from "./provider.svelte.js";
-import type { WidgetGrabbedParams } from "./types.js";
-import type { PointerService } from "./utils.svelte.js";
-import { getPointerService } from "./utils.svelte.js";
-import { FlexiWidgetController, type FlexiWidgetConfiguration } from "./widget.svelte.js";
-import type { ClassValue } from "svelte/elements";
+import { untrack } from 'svelte';
+import {
+	getFlexiboardCtx,
+	getInternalFlexiboardCtx,
+	type InternalFlexiBoardController
+} from './provider.svelte.js';
+import type { WidgetGrabbedParams } from './types.js';
+import type { PointerService } from './shared/utils.svelte.js';
+import { getPointerService } from './shared/utils.svelte.js';
+import { FlexiWidgetController, type FlexiWidgetConfiguration } from './widget.svelte.js';
+import type { ClassValue } from 'svelte/elements';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
 export type AdderWidgetConfiguration = {
-    widget: FlexiWidgetConfiguration;
-    widthPx?: number;
-    heightPx?: number;
-}
+	widget: FlexiWidgetConfiguration;
+	widthPx?: number;
+	heightPx?: number;
+};
 
 export type FlexiAddClassFunction = (adder: FlexiAddController) => ClassValue;
 export type FlexiAddClasses = ClassValue | FlexiAddClassFunction;
 
 export class FlexiAddController {
-    provider: InternalFlexiBoardController;
-    #addWidget: FlexiAddWidgetFn;
+	provider: InternalFlexiBoardController;
+	#addWidget: FlexiAddWidgetFn;
 
-    newWidget?: FlexiWidgetController = $state(undefined);
+	newWidget?: FlexiWidgetController = $state(undefined);
 
-    ref: HTMLElement | null = $state(null);
+	ref: HTMLElement | null = $state(null);
 
-    constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
-        this.provider = provider;
-        this.#addWidget = addWidgetFn;
+	constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
+		this.provider = provider;
+		this.#addWidget = addWidgetFn;
 
-        this.onpointerdown = this.onpointerdown.bind(this);
-        this.onkeydown = this.onkeydown.bind(this);
-    }
+		this.onpointerdown = this.onpointerdown.bind(this);
+		this.onkeydown = this.onkeydown.bind(this);
+	}
 
-    onpointerdown(event: PointerEvent) {
-        this.#initiateWidgetDragIn(event.clientX, event.clientY);
+	onpointerdown(event: PointerEvent) {
+		this.#initiateWidgetDragIn(event.clientX, event.clientY);
 
-        // Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
-        (event.target as HTMLElement).releasePointerCapture(event.pointerId);
-        event.preventDefault();
-    }
+		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
+		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		event.preventDefault();
+	}
 
-    onkeydown(event: KeyboardEvent) {
-        if(event.key !== 'Enter' || !this.ref || this.newWidget) {
-            return;
-        }
+	onkeydown(event: KeyboardEvent) {
+		if (event.key !== 'Enter' || !this.ref || this.newWidget) {
+			return;
+		}
 
-        const rect = this.ref.getBoundingClientRect();
-        event.stopPropagation();
+		const rect = this.ref.getBoundingClientRect();
+		event.stopPropagation();
 
-        this.#initiateWidgetDragIn(
-            rect.left + rect.width / 2, 
-            rect.top + rect.height / 2
-        );
-    }
+		this.#initiateWidgetDragIn(rect.left + rect.width / 2, rect.top + rect.height / 2);
+	}
 
-    #initiateWidgetDragIn(clientX: number, clientY: number) {
+	#initiateWidgetDragIn(clientX: number, clientY: number) {
+		const config = this.#addWidget();
 
-        const config = this.#addWidget();
+		if (!config || !config.widget) {
+			return;
+		}
 
-        if(!config || !config.widget) {
-            return;
-        }
-    
-        // Create a widget under this FlexiAdd.
-        this.newWidget = new FlexiWidgetController({
-            type: "adder",
-            adder: this,
-            config: config.widget,
-            widthPx: config.widthPx ?? 100,
-            heightPx: config.heightPx ?? 100,
-            clientX,
-            clientY
-        });
-        // When the widget mounts, it'll automatically trigger the drag in event.
-    }
+		// Create a widget under this FlexiAdd.
+		this.newWidget = new FlexiWidgetController({
+			type: 'adder',
+			adder: this,
+			config: config.widget,
+			widthPx: config.widthPx ?? 100,
+			heightPx: config.heightPx ?? 100,
+			clientX,
+			clientY
+		});
+		// When the widget mounts, it'll automatically trigger the drag in event.
+	}
 
-    onstartwidgetdragin(event: WidgetGrabbedParams) {
-        return this.provider.onwidgetgrabbed({
-            ...event,
-            adder: this
-        });
-    }
+	onstartwidgetdragin(event: WidgetGrabbedParams) {
+		return this.provider.onwidgetgrabbed({
+			...event,
+			adder: this
+		});
+	}
 
-    onstopwidgetdragin() {
-        // Whether it got placed into a target or not, the FlexiAdd's work is done.
-        this.newWidget = undefined;
-    }
+	onstopwidgetdragin() {
+		// Whether it got placed into a target or not, the FlexiAdd's work is done.
+		this.newWidget = undefined;
+	}
 }
 
 export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
-    const provider = getInternalFlexiboardCtx();
+	const provider = getInternalFlexiboardCtx();
 
-    const adder = new FlexiAddController(provider, addWidgetFn);
+	const adder = new FlexiAddController(provider, addWidgetFn);
 
-    return {
-        adder,
-        onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
-        onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
-    }
+	return {
+		adder,
+		onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
+		onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
+	};
 }
 
 export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
 export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
 
 export class FlexiDeleteController {
-    #provider: InternalFlexiBoardController;
-    #pointerService: PointerService = getPointerService();
-    ref: HTMLElement | null = null;
+	#provider: InternalFlexiBoardController;
+	#pointerService: PointerService = getPointerService();
+	ref: HTMLElement | null = null;
 
-    #inside: boolean = $state(false);
+	#inside: boolean = $state(false);
 
-    constructor(provider: InternalFlexiBoardController) {
-        this.#provider = provider;
+	constructor(provider: InternalFlexiBoardController) {
+		this.#provider = provider;
 
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
 		$effect(() => {
-			if(!this.ref) {
+			if (!this.ref) {
 				return;
 			}
 
 			const isPointerInside = this.#pointerService.isPointerInside(this.ref);
-			
+
 			// Only check when keyboard controls are active
 			untrack(() => {
 				this.#updatePointerOverState(isPointerInside);
 			});
 		});
-    }
+	}
 
-    #updatePointerOverState(inside: boolean) {
-        const wasHovered = this.#inside;
+	#updatePointerOverState(inside: boolean) {
+		const wasHovered = this.#inside;
 
-        if(inside && !wasHovered) {
-            this.#provider.onenterdeleter();
-        } else if(!inside && wasHovered) {
-            this.#provider.onleavedeleter();
-        }
+		if (inside && !wasHovered) {
+			this.#provider.onenterdeleter();
+		} else if (!inside && wasHovered) {
+			this.#provider.onleavedeleter();
+		}
 
-        this.#inside = inside;
-    }
+		this.#inside = inside;
+	}
 
-    get isHovered() {
-        return this.#inside;
-    }
+	get isHovered() {
+		return this.#inside;
+	}
 }
 
 export function flexidelete() {
-    const provider = getInternalFlexiboardCtx();
-    const deleter = new FlexiDeleteController(provider);
+	const provider = getInternalFlexiboardCtx();
+	const deleter = new FlexiDeleteController(provider);
 
-    return {
-        deleter,
-        // TODO: remove in v0.4
-        onpointerenter: () => { },
-        onpointerleave: () => { }
-    }
+	return {
+		deleter,
+		// TODO: remove in v0.4
+		onpointerenter: () => {},
+		onpointerleave: () => {}
+	};
 }

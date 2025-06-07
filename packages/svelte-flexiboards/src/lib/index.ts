@@ -28,8 +28,8 @@ import type {
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	type PointerTriggerCondition,
-} from './system/utils.svelte.js';
+	type PointerTriggerCondition
+} from './system/shared/utils.svelte.js';
 export * from './system/types.js';
 
 export {

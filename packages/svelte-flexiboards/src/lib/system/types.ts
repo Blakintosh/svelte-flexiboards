@@ -1,13 +1,9 @@
-import type {
-	FlexiWidgetController,
-	FlexiWidgetChildrenSnippet,
-	FlexiWidgetClasses,
-	FlexiWidgetConfiguration
-} from './widget.svelte.js';
 import type { FlexiTargetController, InternalFlexiTargetController } from './target.svelte.js';
-import type { PointerService } from './utils.svelte.js';
+import type { PointerService } from './shared/utils.svelte.js';
 import type { Component } from 'svelte';
 import type { FlexiAddController } from './manage.svelte.js';
+import type { FlexiWidgetController } from './widget/base.svelte.js';
+import type { FlexiWidgetConfiguration } from './widget/types.js';
 
 export type ProxiedValue<T> = {
 	value: T;

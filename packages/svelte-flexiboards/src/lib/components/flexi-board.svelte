@@ -18,7 +18,7 @@
 <script lang="ts">
 	import FlexiPortal from './flexi-portal.svelte';
 	import type { ClassValue } from 'svelte/elements';
-	import { generateUniqueId, assistiveTextStyle } from '$lib/system/utils.svelte.js';
+	import { generateUniqueId, assistiveTextStyle } from '$lib/system/shared/utils.svelte.js';
 	import FlexiAnnouncer from './flexi-announcer.svelte';
 
 	let { controller: board = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();

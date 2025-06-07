@@ -25,7 +25,7 @@ import { FlowFlexiGrid, type FlowTargetLayout } from './grid/index.js';
 import { FreeFormFlexiGrid, type FreeFormTargetLayout } from './grid/free-grid.svelte.js';
 import { type FlexiGrid } from './grid/index.js';
 import type { FlexiTargetProps } from '$lib/components/flexi-target.svelte';
-import { getPointerService } from './utils.svelte.js';
+import { getPointerService } from './shared/utils.svelte.js';
 import type { FlexiEventBus } from './event-bus.js';
 
 type TargetSizingFn = ({
