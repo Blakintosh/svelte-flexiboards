@@ -1,6 +1,6 @@
 import type { Component } from 'svelte';
 import { FlexiControllerBase } from '../base.svelte.js';
-import type { FlexiTargetController } from '../target.svelte.js';
+import type { FlexiTargetController } from '../target/index.js';
 import type { WidgetAction, WidgetResizability } from '../types.js';
 import {
 	defaultTriggerConfig,
@@ -8,7 +8,8 @@ import {
 	type FlexiWidgetClasses,
 	type FlexiWidgetConfiguration,
 	type FlexiWidgetConstructor,
-	type FlexiWidgetDefaults
+	type FlexiWidgetDefaults,
+	type FlexiWidgetDerivedConfiguration
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
 

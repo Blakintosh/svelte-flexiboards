@@ -1,5 +1,5 @@
 import type { SvelteSet } from 'svelte/reactivity';
-import type { FlexiTargetConfiguration } from '../target.svelte.js';
+import type { FlexiTargetConfiguration } from './types.js';
 import type { WidgetAction, WidgetGrabbedParams, WidgetStartResizeParams } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';

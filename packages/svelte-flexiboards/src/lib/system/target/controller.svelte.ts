@@ -98,12 +98,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		this.#trackPointerHover();
 
-		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
+		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
 		this.#eventBus.subscribe('widget:cancel', this.onWidgetCancel.bind(this));
+		this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this));
 		this.#eventBus.subscribe('widget:dropped', this.onWidgetDropped.bind(this));
 
 		this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this));
 		this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this));
+
+		this.#eventBus.subscribe('widget:entertarget', this.onWidgetEnterTarget.bind(this));
+		this.#eventBus.subscribe('widget:leavetarget', this.onWidgetLeaveTarget.bind(this));
 	}
 
 	#trackPointerHover() {
@@ -132,11 +136,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (inside && !wasHovered) {
 			// Just entered
 			this.#eventBus.dispatch('target:pointerenter', {
+				board: this.provider,
 				target: this
 			});
 		} else if (!inside && wasHovered) {
 			// Just left
 			this.#eventBus.dispatch('target:pointerleave', {
+				board: this.provider,
 				target: this
 			});
 		}
@@ -273,18 +279,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	// Events
 	onPointerEnterTarget() {
 		this.hovered = true;
-
-		this.provider.onpointerentertarget({
-			target: this
-		});
 	}
 
 	onPointerLeaveTarget() {
 		this.hovered = false;
-
-		this.provider.onpointerleavetarget({
-			target: this
-		});
 	}
 
 	grabWidget(params: WidgetGrabbedParams) {
@@ -379,7 +377,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#updateDropzoneWidget();
 	}
 
-	onwidgetgrabbed(event: WidgetGrabbedEvent) {
+	onWidgetGrabbed(event: WidgetGrabbedEvent) {
 		// Nothing to do if it's not under this target.
 		if (event.target != this) {
 			return;
@@ -404,13 +402,42 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.applyGridPostCompletionOperations();
 	}
 
+	onWidgetRelease(event: WidgetEvent) {
+		if (event.board != this.provider || !this.actionWidget) {
+			return;
+		}
+
+		const actionWidget = this.actionWidget;
+
+		// We're trying to drop it on our target, so check this is possible.
+		const succeeded = this.tryDropWidget(actionWidget.widget);
+
+		if (!succeeded) {
+			return;
+		}
+		this.#eventBus.dispatch('widget:dropped', {
+			widget: actionWidget.widget,
+			board: this.provider,
+			oldTarget: event.target,
+			newTarget: this
+		});
+	}
+
 	onWidgetDropped(event: WidgetDroppedEvent) {
-		if (event.newTarget != this) {
+		if (event.oldTarget != this) {
+			return;
+		}
+
+		if (event.newTarget == event.oldTarget) {
 			return;
 		}
 	}
 
-	ongrabbedwidgetover(event: GrabbedWidgetMouseEvent) {
+	onWidgetEnterTarget(event: WidgetEvent) {
+		if (event.target != this) {
+			return;
+		}
+
 		this.actionWidget = {
 			action: 'grab',
 			widget: event.widget
@@ -419,7 +446,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#createDropzoneWidget();
 	}
 
-	ongrabbedwidgetleave() {
+	onWidgetLeaveTarget(event: WidgetEvent) {
+		if (event.target != this) {
+			return;
+		}
+
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 	}

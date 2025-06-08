@@ -16,6 +16,8 @@ export interface EventMap {
 	'widget:dropped': WidgetDroppedEvent;
 	'target:pointerenter': TargetEvent;
 	'target:pointerleave': TargetEvent;
+	'widget:entertarget': WidgetEvent;
+	'widget:leavetarget': WidgetEvent;
 }
 
 // Event listener function type

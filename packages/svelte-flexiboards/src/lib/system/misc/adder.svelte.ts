@@ -4,6 +4,7 @@ import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { WidgetGrabbedParams } from '../types.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -20,6 +21,8 @@ export class FlexiAddController {
 	provider: InternalFlexiBoardController;
 	#addWidget: FlexiAddWidgetFn;
 
+	#eventBus: FlexiEventBus;
+
 	newWidget?: FlexiWidgetController = $state(undefined);
 
 	ref: HTMLElement | null = $state(null);
@@ -27,6 +30,8 @@ export class FlexiAddController {
 	constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
 		this.provider = provider;
 		this.#addWidget = addWidgetFn;
+
+		this.#eventBus = getFlexiEventBus();
 
 		this.onpointerdown = this.onpointerdown.bind(this);
 		this.onkeydown = this.onkeydown.bind(this);
@@ -72,10 +77,10 @@ export class FlexiAddController {
 	}
 
 	onstartwidgetdragin(event: WidgetGrabbedParams) {
-		return this.provider.onwidgetgrabbed({
-			...event,
-			adder: this
-		});
+		// return this.provider.onwidgetgrabbed({
+		// 	...event,
+		// 	adder: this
+		// });
 	}
 
 	onstopwidgetdragin() {

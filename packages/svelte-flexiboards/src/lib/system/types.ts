@@ -1,10 +1,13 @@
-import type { FlexiTargetController, InternalFlexiTargetController } from './target.svelte.js';
+import type { FlexiTargetController } from './target/index.js';
+import type { InternalFlexiTargetController } from './target/controller.svelte.js';
 import type { PointerService } from './shared/utils.svelte.js';
 import type { Component } from 'svelte';
-import type { FlexiAddController } from './manage.svelte.js';
+import type { FlexiAddController } from './misc/adder.svelte.js';
 import type { FlexiWidgetController } from './widget/base.svelte.js';
 import type { FlexiWidgetConfiguration } from './widget/types.js';
 import type { FlexiBoardController } from './board/base.svelte.js';
+import type { InternalFlexiBoardController } from './board/controller.svelte.js';
+import type { InternalFlexiWidgetController } from './widget/controller.svelte.js';
 
 export type ProxiedValue<T> = {
 	value: T;
@@ -33,7 +36,6 @@ export type WidgetGrabAction = {
 export type WidgetResizeAction = {
 	action: 'resize';
 	widget: FlexiWidgetController;
-	target: FlexiTargetController;
 	offsetX: number;
 	offsetY: number;
 	left: number;
@@ -68,9 +70,9 @@ export type WidgetStartResizeParams = {
 };
 
 export type WidgetEvent = {
-	target?: FlexiTargetController;
-	board: FlexiBoardController;
-	widget: FlexiWidgetController;
+	target?: InternalFlexiTargetController;
+	board: InternalFlexiBoardController;
+	widget: InternalFlexiWidgetController;
 };
 
 // Event objects
@@ -85,18 +87,20 @@ export type WidgetGrabbedEvent = WidgetEvent & {
 };
 
 export type WidgetResizingEvent = WidgetEvent & {
-	target: FlexiTargetController;
+	target: InternalFlexiTargetController;
 	offsetX: number;
 	offsetY: number;
 	left: number;
 	top: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
 };
 
 export type WidgetDroppedEvent = {
-	widget: FlexiWidgetController;
-	board: FlexiBoardController;
-	oldTarget?: FlexiTargetController;
-	newTarget?: FlexiTargetController;
+	widget: InternalFlexiWidgetController;
+	board: InternalFlexiBoardController;
+	oldTarget?: InternalFlexiTargetController;
+	newTarget?: InternalFlexiTargetController;
 };
 
 export type WidgetStartResizeEvent = WidgetStartResizeParams & {
@@ -104,16 +108,17 @@ export type WidgetStartResizeEvent = WidgetStartResizeParams & {
 };
 
 export type WidgetOverEvent = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	mousePosition: Position;
 };
 
 export type WidgetOutEvent = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 };
 
 export type TargetEvent = {
-	target: FlexiTargetController;
+	board: InternalFlexiBoardController;
+	target: InternalFlexiTargetController;
 };
 
 export type MouseGridCellMoveEvent = {

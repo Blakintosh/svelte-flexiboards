@@ -4,9 +4,7 @@
 		flexiadd,
 		type FlexiAddClasses,
 		type FlexiAddWidgetFn
-	} from '$lib/system/manage.svelte.js';
-	import FlexiWidget from './rendered-flexi-widget.svelte';
-	import type { FlexiWidgetConfiguration } from '$lib/system/widget/types.js';
+	} from '$lib/system/misc/adder.svelte.js';
 	import type { Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';

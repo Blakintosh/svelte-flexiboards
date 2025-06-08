@@ -221,14 +221,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.currentAction = {
 			action: 'resize',
 			widget: this,
-			offsetX: event.xOffset,
-			offsetY: event.yOffset,
+			offsetX: event.offsetX,
+			offsetY: event.offsetY,
 			left: event.left,
 			top: event.top,
-			heightPx: event.heightPx,
-			widthPx: event.widthPx,
-			initialHeightUnits: event.initialHeightUnits,
-			initialWidthUnits: event.initialWidthUnits
+			heightPx: event.capturedHeightPx,
+			widthPx: event.capturedWidthPx,
+			initialHeightUnits: event.capturedHeightPx,
+			initialWidthUnits: event.capturedWidthPx
 		};
 	}
 

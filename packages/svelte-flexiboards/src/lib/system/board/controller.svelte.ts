@@ -14,6 +14,7 @@ import type {
 	FlexiSavedLayout,
 	HoveredTargetEvent,
 	ProxiedValue,
+	TargetEvent,
 	WidgetAction,
 	WidgetEvent,
 	WidgetGrabAction,
@@ -29,7 +30,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
 
 	#targets: Map<string, InternalFlexiTargetController> = new Map();
-	#hoveredTarget: InternalFlexiTargetController | null = $state(null);
+	hoveredTarget: InternalFlexiTargetController | null = null;
 
 	#hoveredOverDeleter: boolean = $state(false);
 
@@ -57,9 +58,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#rawProps = props;
 		this.#eventBus = getFlexiEventBus();
 
-		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
+		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
 		this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this));
 		this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this));
+
+		this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this));
+		this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this));
 	}
 
 	style: string = $derived.by(() => {
@@ -105,28 +109,42 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return target;
 	}
 
-	onpointerentertarget(event: HoveredTargetEvent) {
-		this.#hoveredTarget = event.target;
+	onPointerEnterTarget(event: TargetEvent) {
+		if (event.board != this) {
+			return;
+		}
+
+		this.hoveredTarget = event.target;
 
 		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
 		const currentAction = this.#currentWidgetAction;
 		if (currentAction?.action === 'grab') {
-			event.target.ongrabbedwidgetover({
+			this.#eventBus.dispatch('widget:entertarget', {
+				board: this,
+				target: event.target,
 				widget: currentAction.widget
 			});
 		}
 	}
 
-	onpointerleavetarget(event: HoveredTargetEvent) {
+	onPointerLeaveTarget(event: TargetEvent) {
+		if (event.board != this) {
+			return;
+		}
+
 		// Failsafe in case another target is already registered as hovered.
-		if (this.#hoveredTarget === event.target) {
-			this.#hoveredTarget = null;
+		if (this.hoveredTarget === event.target) {
+			this.hoveredTarget = null;
 		}
 
 		// If a widget is currently being grabbed, propagate a grabbed widget over event to this target.
 		const currentAction = this.#currentWidgetAction;
 		if (currentAction?.action === 'grab') {
-			event.target.ongrabbedwidgetleave();
+			this.#eventBus.dispatch('widget:leavetarget', {
+				board: this,
+				target: event.target,
+				widget: currentAction.widget
+			});
 		}
 
 		// If it's resize, then we don't care that the pointer has left the target.
@@ -140,7 +158,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#hoveredOverDeleter = false;
 	}
 
-	onwidgetgrabbed(event: WidgetGrabbedEvent) {
+	onWidgetGrabbed(event: WidgetGrabbedEvent) {
 		if (this.#currentWidgetAction || event.board !== this) {
 			return;
 		}
@@ -152,7 +170,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		const action: WidgetGrabAction = {
 			action: 'grab',
 			widget: event.widget,
-			adder: event.adder,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
 			capturedHeightPx: event.capturedHeightPx,
@@ -172,7 +189,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		const action: WidgetResizeAction = {
 			action: 'resize',
-			target: event.target,
 			widget: event.widget,
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
@@ -281,6 +297,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
+		// TODO: find a better solution to this, eek.
 		// Now that the widget has left the portal, apply an offset to its current position to account for the board's position.
 		// (Otherwise, the widget gains +board.left and +board.top to its position)
 		const boardRect = this.ref?.getBoundingClientRect();
@@ -290,23 +307,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			action.widget.ref.style.top = `${action.widget.ref.offsetTop - boardRect.top}px`;
 		}
 
-		// If no target is hovered, then just release the widget.
-		if (!this.#hoveredTarget) {
-			this.#releaseCurrentWidgetAction();
-			return;
-		}
-
-		if (action.adder) {
-			action.adder.onstopwidgetdragin();
-		}
-		const shouldDrop = this.moveWidget(action.widget, action.target, this.#hoveredTarget);
-
-		if (!shouldDrop) {
-			this.#releaseCurrentWidgetAction();
-			return;
-		}
-
-		this.#releaseCurrentWidgetAction(true);
+		this.#releaseCurrentWidgetAction();
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
@@ -319,32 +320,17 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			action.widget.ref.style.top = `${action.widget.ref.offsetTop - boardRect.top}px`;
 		}
 
-		const success = action.target.tryDropWidget(action.widget);
-		this.#releaseCurrentWidgetAction(success);
+		this.#releaseCurrentWidgetAction();
 	}
 
-	#releaseCurrentWidgetAction(actionSucceeded: boolean = false) {
+	#releaseCurrentWidgetAction() {
 		const currentWidgetAction = this.#currentWidgetAction;
 
 		if (!currentWidgetAction) {
 			return;
 		}
 
-		const widget = currentWidgetAction.widget;
-
-		// If the widget is still being grabbed, we'll need to release it.
-		if (widget.currentAction) {
-			widget.currentAction = null;
-		}
-
-		// If this widget is new from an adder, then it needs to remove it regardless of the outcome.
-		if (currentWidgetAction.action == 'grab' && currentWidgetAction.adder) {
-			currentWidgetAction.widget.adder = undefined;
-			currentWidgetAction.adder.onstopwidgetdragin();
-		}
-
 		this.announce(`You have released the widget.`);
-
 		this.#currentWidgetAction = null;
 	}
 

@@ -11,6 +11,8 @@ export function boardEvents(board: InternalFlexiBoardController) {
 		}
 
 		eventBus.dispatch('widget:release', {
+			board,
+			target: board.hoveredTarget,
 			widget: board.currentWidgetAction.widget
 		});
 	};
@@ -22,13 +24,17 @@ export function boardEvents(board: InternalFlexiBoardController) {
 
 		if (event.key == 'Escape') {
 			eventBus.dispatch('widget:cancel', {
-				widget: board.currentWidgetAction.widget
+				board,
+				widget: board.currentWidgetAction.widget,
+				target: board.hoveredTarget
 			});
 		}
 
 		if (event.key == 'Enter') {
 			eventBus.dispatch('widget:release', {
-				widget: board.currentWidgetAction.widget
+				board,
+				widget: board.currentWidgetAction.widget,
+				target: board.hoveredTarget
 			});
 		}
 	};
