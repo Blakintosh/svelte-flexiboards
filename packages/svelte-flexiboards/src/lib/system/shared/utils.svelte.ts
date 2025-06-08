@@ -11,6 +11,7 @@ import type { FlexiWidgetTriggerConfiguration } from '../widget/types.js';
 import { getContext, onMount, setContext, untrack } from 'svelte';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import { getFlexiEventBus, type FlexiEventBus } from './event-bus.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.
@@ -153,6 +154,7 @@ export class AutoScrollService {
 	}
 
 	stopAutoScroll(event: WidgetEvent) {
+		console.log('stopAutoScroll', event);
 		this.shouldAutoScroll = false;
 	}
 
@@ -812,120 +814,6 @@ export class GridDimensionTracker {
 			}
 		}
 		return axisCoordinates.length;
-	}
-}
-
-interface PointerDownTriggerCondition {
-	type: 'immediate';
-}
-
-interface PointerLongPressTriggerCondition {
-	type: 'longPress';
-	duration: number;
-}
-
-export const immediateTriggerConfig = (): PointerDownTriggerCondition => ({ type: 'immediate' });
-export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({
-	type: 'longPress',
-	duration: duration ?? 300
-});
-
-export type PointerTriggerCondition =
-	| PointerDownTriggerCondition
-	| PointerLongPressTriggerCondition;
-
-/**
- * Watches pointer events on a widget, issuing a grab event to the widget if the event satisfies the configured behaviour.
- * (e.g. long press for touch)
- */
-export class WidgetPointerEventWatcher {
-	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
-	#type: 'grab' | 'resize' = $state('grab');
-
-	#triggerConfig: FlexiWidgetTriggerConfiguration = $derived(
-		this.#type == 'resize' ? this.#widget.resizeTrigger : this.#widget.grabTrigger
-	);
-
-	constructor(widget: FlexiWidgetController, type: 'grab' | 'resize') {
-		// TODO: integrate into event bus architecture
-		this.#widget = widget;
-		this.#type = type;
-	}
-
-	onstartpointerdown(event: PointerEvent) {
-		const pointerType = event.pointerType;
-
-		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
-
-		event.preventDefault();
-
-		if (triggerForType.type == 'longPress') {
-			return this.#handleLongPress(event, triggerForType);
-		}
-		return this.#triggerWidgetEvent(event);
-	}
-
-	#eventTimeout: ReturnType<typeof setTimeout> | null = null;
-
-	#handleLongPress(event: PointerEvent, trigger: PointerLongPressTriggerCondition) {
-		if (this.#eventTimeout) {
-			clearTimeout(this.#eventTimeout);
-		}
-
-		const startX = event.clientX;
-		const startY = event.clientY;
-		const pointerId = event.pointerId;
-
-		const moveThreshold = 16; // 16px movement threshold
-		let isPointerDown = true;
-		let currentX = startX;
-		let currentY = startY;
-
-		// Track if pointer is still down and its position
-		const pointerUpHandler = (e: PointerEvent) => {
-			if (e.pointerId === pointerId) {
-				isPointerDown = false;
-				document.removeEventListener('pointerup', pointerUpHandler);
-				document.removeEventListener('pointercancel', pointerUpHandler);
-				document.removeEventListener('pointermove', pointerMoveHandler);
-			}
-		};
-
-		// Track pointer movement
-		const pointerMoveHandler = (e: PointerEvent) => {
-			if (e.pointerId === pointerId) {
-				e.preventDefault();
-				currentX = e.clientX;
-				currentY = e.clientY;
-			}
-		};
-
-		document.addEventListener('pointerup', pointerUpHandler);
-		document.addEventListener('pointercancel', pointerUpHandler);
-		document.addEventListener('pointermove', pointerMoveHandler);
-
-		this.#eventTimeout = setTimeout(() => {
-			// Only trigger if pointer is still down and hasn't moved too much
-			if (isPointerDown) {
-				const distance = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
-
-				if (distance <= moveThreshold) {
-					this.#triggerWidgetEvent(event);
-				}
-			}
-
-			document.removeEventListener('pointerup', pointerUpHandler);
-			document.removeEventListener('pointercancel', pointerUpHandler);
-			document.removeEventListener('pointermove', pointerMoveHandler);
-		}, trigger.duration);
-	}
-
-	#triggerWidgetEvent(event: WidgetActionEvent) {
-		if (this.#type == 'resize') {
-			this.#widget.onresize(event);
-			return;
-		}
-		this.#widget.ongrab(event);
 	}
 }
 

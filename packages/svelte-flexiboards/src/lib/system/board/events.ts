@@ -12,7 +12,7 @@ export function boardEvents(board: InternalFlexiBoardController) {
 
 		eventBus.dispatch('widget:release', {
 			board,
-			target: board.hoveredTarget,
+			target: board.hoveredTarget ?? undefined,
 			widget: board.currentWidgetAction.widget
 		});
 	};
@@ -26,7 +26,7 @@ export function boardEvents(board: InternalFlexiBoardController) {
 			eventBus.dispatch('widget:cancel', {
 				board,
 				widget: board.currentWidgetAction.widget,
-				target: board.hoveredTarget
+				target: board.hoveredTarget ?? undefined
 			});
 		}
 
@@ -34,7 +34,7 @@ export function boardEvents(board: InternalFlexiBoardController) {
 			eventBus.dispatch('widget:release', {
 				board,
 				widget: board.currentWidgetAction.widget,
-				target: board.hoveredTarget
+				target: board.hoveredTarget ?? undefined
 			});
 		}
 	};

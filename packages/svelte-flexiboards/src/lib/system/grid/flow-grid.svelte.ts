@@ -1,7 +1,8 @@
 import { untrack } from 'svelte';
 import { FlexiGrid, type WidgetSnapshot } from './base.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte.js';
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/index.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 
 /**
  * The layout configuration for a flow layout based grid.

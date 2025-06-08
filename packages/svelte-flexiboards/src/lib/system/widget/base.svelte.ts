@@ -102,13 +102,14 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 
 		this.#rawConfig = ctor.config;
 
+		// TODO: needing to differentiate between target and adder is dumb if it's just for grabbing the board context.
+
 		if (ctor.type == 'target') {
 			this.target = ctor.target as FlexiTargetController;
 			this.isShadow = ctor.isShadow ?? false;
 
 			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider, this);
 		} else if (ctor.type == 'adder') {
-			this.adder = ctor.adder;
 			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider, this);
 
 			// this.#initialX = ctor.clientX;

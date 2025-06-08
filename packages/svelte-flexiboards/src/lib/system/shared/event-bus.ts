@@ -1,6 +1,8 @@
 import { getContext, setContext } from 'svelte';
 import type {
+	AdderWidgetReadyEvent,
 	TargetEvent,
+	WidgetDeleteEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
 	WidgetGrabbedEvent,
@@ -14,10 +16,12 @@ export interface EventMap {
 	'widget:cancel': WidgetEvent;
 	// Called when a release has been confirmed to be possible.
 	'widget:dropped': WidgetDroppedEvent;
+	'widget:delete': WidgetDeleteEvent;
 	'target:pointerenter': TargetEvent;
 	'target:pointerleave': TargetEvent;
 	'widget:entertarget': WidgetEvent;
 	'widget:leavetarget': WidgetEvent;
+	'adder:widgetready': AdderWidgetReadyEvent;
 }
 
 // Event listener function type

@@ -4,6 +4,7 @@ import { FlexiEventBus, getFlexiEventBusCtx } from '../shared/event-bus.js';
 import { getElementMidpoint } from '../shared/utils.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
+import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 
 type WidgetEventSource = {
 	widget: InternalFlexiWidgetController;
@@ -14,6 +15,7 @@ type WidgetEventSource = {
 export function widgetEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
 	const board = getFlexiboardCtx();
+	const eventWatcher = new WidgetPointerEventWatcher(widget, 'grab');
 
 	return {
 		onpointerdown: (event: PointerEvent) => {

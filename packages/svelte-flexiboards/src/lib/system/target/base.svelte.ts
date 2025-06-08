@@ -80,19 +80,7 @@ export interface FlexiTargetController {
 	 */
 	tryDropWidget(widget: FlexiWidgetController): boolean;
 
-	/**
-	 * Grabs a widget.
-	 * @param params The parameters for the grab action.
-	 * @returns The action that was started, or null if the action couldn't be started.
-	 */
-	grabWidget(params: WidgetGrabbedParams): WidgetAction | null;
-
-	/**
-	 * Starts resizing a widget.
-	 * @param params The parameters for the resize action.
-	 * @returns The action that was started, or null if the action couldn't be started.
-	 */
-	startResizeWidget(params: WidgetStartResizeParams): WidgetAction | null;
+	// TODO: grabWidget and startResizeWidget are gone, need to remake them later so API stays the same.
 
 	/**
 	 * The number of columns currently being used in the target grid.

@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import {
-		FlexiAddController,
+		type FlexiAddController,
 		flexiadd,
 		type FlexiAddClasses,
 		type FlexiAddWidgetFn

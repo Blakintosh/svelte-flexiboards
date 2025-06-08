@@ -10,7 +10,8 @@ import type {
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
-import { widgetEvents, widgetGrabberEvents } from './events.js';
+import { widgetEvents, widgetGrabberEvents, widgetResizerEvents } from './events.js';
+import { dragInOnceMounted, hasInternalFlexiaddCtx } from '../misc/adder.svelte.js';
 
 const contextKey = Symbol('flexiwidget');
 
@@ -47,10 +48,8 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 		// console.warn('Error setting context', error);
 	}
 
-	if (widget.adder) {
-		onMount(() => {
-			widget.initiateFirstDragIn();
-		});
+	if (hasInternalFlexiaddCtx()) {
+		dragInOnceMounted(widget);
 	}
 
 	onMount(() => {
@@ -92,13 +91,15 @@ export function flexiresize() {
 		);
 	}
 
-	const { onpointerdown, onkeydown } = widget.addResizer();
+	widget.addResizer();
 
 	onDestroy(() => {
 		widget.removeResizer();
 	});
 
-	return { widget, onpointerdown, onkeydown };
+	const events = widgetResizerEvents(widget);
+
+	return { widget, ...events };
 }
 
 export function getInternalFlexiwidgetCtx() {

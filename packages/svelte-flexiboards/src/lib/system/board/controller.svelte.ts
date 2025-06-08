@@ -20,6 +20,7 @@ import type {
 	WidgetGrabAction,
 	WidgetGrabbedEvent,
 	WidgetResizeAction,
+	WidgetResizingEvent,
 	WidgetStartResizeEvent
 } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
@@ -59,6 +60,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#eventBus = getFlexiEventBus();
 
 		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
 		this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this));
 		this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this));
 
@@ -182,31 +184,26 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
 	}
 
-	onwidgetstartresize(event: WidgetStartResizeEvent) {
-		if (this.#currentWidgetAction) {
-			return null;
+	onWidgetResizing(event: WidgetResizingEvent) {
+		if (this.#currentWidgetAction || event.board !== this) {
+			return;
 		}
 
-		const action: WidgetResizeAction = {
+		this.#currentWidgetAction = {
 			action: 'resize',
 			widget: event.widget,
-			offsetX: event.xOffset,
-			offsetY: event.yOffset,
+			offsetX: event.offsetX,
+			offsetY: event.offsetY,
 			left: event.left,
 			top: event.top,
-			heightPx: event.heightPx,
-			widthPx: event.widthPx,
+			heightPx: event.capturedHeightPx,
+			widthPx: event.capturedWidthPx,
 			initialHeightUnits: event.widget.height,
 			initialWidthUnits: event.widget.width
 		};
 
-		this.#currentWidgetAction = action;
-
 		this.#lockViewport();
-
 		this.announce(`You are resizing the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
-
-		return action;
 	}
 
 	#originalOverscrollBehaviorY: string | null = null;
@@ -292,8 +289,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
-			action.widget.delete();
-			this.#releaseCurrentWidgetAction(true);
+			this.#eventBus.dispatch('widget:delete', {
+				widget: action.widget
+			});
+			this.#releaseCurrentWidgetAction();
 			return;
 		}
 

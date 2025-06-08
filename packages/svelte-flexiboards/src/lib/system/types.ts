@@ -2,7 +2,7 @@ import type { FlexiTargetController } from './target/index.js';
 import type { InternalFlexiTargetController } from './target/controller.svelte.js';
 import type { PointerService } from './shared/utils.svelte.js';
 import type { Component } from 'svelte';
-import type { FlexiAddController } from './misc/adder.svelte.js';
+import type { FlexiAddController, InternalFlexiAddController } from './misc/adder.svelte.js';
 import type { FlexiWidgetController } from './widget/base.svelte.js';
 import type { FlexiWidgetConfiguration } from './widget/types.js';
 import type { FlexiBoardController } from './board/base.svelte.js';
@@ -26,7 +26,7 @@ export type WidgetResizability = 'none' | 'horizontal' | 'vertical' | 'both';
 
 export type WidgetGrabAction = {
 	action: 'grab';
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	offsetX: number;
 	offsetY: number;
 	capturedHeightPx: number;
@@ -35,7 +35,7 @@ export type WidgetGrabAction = {
 
 export type WidgetResizeAction = {
 	action: 'resize';
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	offsetX: number;
 	offsetY: number;
 	left: number;
@@ -49,7 +49,7 @@ export type WidgetResizeAction = {
 export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
 export type WidgetGrabbedParams = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	ref: HTMLElement;
 	xOffset: number;
 	yOffset: number;
@@ -60,7 +60,7 @@ export type WidgetGrabbedParams = {
 };
 
 export type WidgetStartResizeParams = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	xOffset: number;
 	yOffset: number;
 	left: number;
@@ -69,9 +69,18 @@ export type WidgetStartResizeParams = {
 	widthPx: number;
 };
 
+export type AdderWidgetReadyEvent = {
+	adder: InternalFlexiAddController;
+	widget: InternalFlexiWidgetController;
+};
+
 export type WidgetEvent = {
 	target?: InternalFlexiTargetController;
 	board: InternalFlexiBoardController;
+	widget: InternalFlexiWidgetController;
+};
+
+export type WidgetDeleteEvent = {
 	widget: InternalFlexiWidgetController;
 };
 

@@ -1,10 +1,16 @@
 import type { ClassValue } from 'svelte/elements';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
-import type { WidgetGrabbedParams } from '../types.js';
+import type {
+	AdderWidgetReadyEvent,
+	WidgetDeleteEvent,
+	WidgetEvent,
+	WidgetGrabbedParams
+} from '../types.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import { getContext, hasContext, onMount, setContext } from 'svelte';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -17,13 +23,26 @@ export type AdderWidgetConfiguration = {
 export type FlexiAddClassFunction = (adder: FlexiAddController) => ClassValue;
 export type FlexiAddClasses = ClassValue | FlexiAddClassFunction;
 
-export class FlexiAddController {
+export interface FlexiAddController {
+	ref: HTMLElement | null;
+}
+
+type NewWidgetDragInParams = {
+	clientX: number;
+	clientY: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+};
+
+export class InternalFlexiAddController implements FlexiAddController {
 	provider: InternalFlexiBoardController;
 	#addWidget: FlexiAddWidgetFn;
 
 	#eventBus: FlexiEventBus;
 
-	newWidget?: FlexiWidgetController = $state(undefined);
+	newWidget?: InternalFlexiWidgetController = $state(undefined);
+
+	toCreateParams: NewWidgetDragInParams | null = $state(null);
 
 	ref: HTMLElement | null = $state(null);
 
@@ -35,6 +54,11 @@ export class FlexiAddController {
 
 		this.onpointerdown = this.onpointerdown.bind(this);
 		this.onkeydown = this.onkeydown.bind(this);
+
+		this.#eventBus.subscribe('adder:widgetready', this.onWidgetReady.bind(this));
+
+		this.#eventBus.subscribe('widget:release', this.onWidgetDragInComplete.bind(this));
+		this.#eventBus.subscribe('widget:delete', this.onWidgetDragInComplete.bind(this));
 	}
 
 	onpointerdown(event: PointerEvent) {
@@ -76,6 +100,21 @@ export class FlexiAddController {
 		// When the widget mounts, it'll automatically trigger the drag in event.
 	}
 
+	onWidgetReady(event: AdderWidgetReadyEvent) {
+		if (event.adder !== this || !this.toCreateParams) {
+			return;
+		}
+
+		// Start the grab event.
+		this.#eventBus.dispatch('widget:grabbed', {
+			board: this.provider,
+			widget: event.widget,
+			xOffset: 0,
+			yOffset: 0,
+			...this.toCreateParams
+		});
+	}
+
 	onstartwidgetdragin(event: WidgetGrabbedParams) {
 		// return this.provider.onwidgetgrabbed({
 		// 	...event,
@@ -83,20 +122,66 @@ export class FlexiAddController {
 		// });
 	}
 
-	onstopwidgetdragin() {
-		// Whether it got placed into a target or not, the FlexiAdd's work is done.
-		this.newWidget = undefined;
+	onWidgetDragInComplete(event: { widget: InternalFlexiWidgetController }) {
+		if (event.widget !== this.newWidget) {
+			return;
+		}
+
+		this.#clearWidget();
 	}
+
+	#clearWidget() {
+		this.newWidget = undefined;
+		this.toCreateParams = null;
+	}
+}
+
+const contextKey = Symbol('flexiadd');
+
+export function hasInternalFlexiaddCtx() {
+	return hasContext(contextKey);
+}
+
+export function getInternalFlexiaddCtx() {
+	const adder = getContext<InternalFlexiAddController>(contextKey);
+	if (!adder) {
+		// TODO: make this error message in line with others.
+		throw new Error('No FlexiAdd context found. ');
+	}
+
+	return adder;
+}
+
+export function getFlexiaddCtx() {
+	const adder = getContext<FlexiAddController>(contextKey);
+	if (!adder) {
+		// TODO: make this error message in line with others.
+		throw new Error('No FlexiAdd context found. ');
+	}
+	return adder;
 }
 
 export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
 	const provider = getInternalFlexiboardCtx();
 
-	const adder = new FlexiAddController(provider, addWidgetFn);
+	const adder = new InternalFlexiAddController(provider, addWidgetFn);
+	setContext(contextKey, adder);
 
 	return {
 		adder,
 		onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
 		onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
 	};
+}
+
+export function dragInOnceMounted(widget: InternalFlexiWidgetController) {
+	const adder = getInternalFlexiaddCtx();
+	const eventBus = getFlexiEventBus();
+
+	onMount(() => {
+		eventBus.dispatch('adder:widgetready', {
+			adder,
+			widget
+		});
+	});
 }

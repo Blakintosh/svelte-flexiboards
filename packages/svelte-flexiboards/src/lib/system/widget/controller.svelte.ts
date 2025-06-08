@@ -7,6 +7,8 @@ import {
 } from '../shared/utils.svelte.js';
 import type {
 	WidgetActionEvent,
+	WidgetDeleteEvent,
+	WidgetEvent,
 	WidgetGrabAction,
 	WidgetGrabbedEvent,
 	WidgetResizeAction,
@@ -179,16 +181,18 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.#initialWidthPx = ctor.widthPx;
 		}
 
-		// Allows the event handlers to be called without binding to the widget instance.
-		this.onresizerpointerdown = this.onresizerpointerdown.bind(this);
-		this.onresizerkeydown = this.onresizerkeydown.bind(this);
+		this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this));
 
-		this.#eventBus.subscribe('widget:grabbed', this.ongrabbed.bind(this));
+		this.#eventBus.subscribe('widget:release', this.onReleased.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this));
+
+		this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this));
 
 		// TODO: no unsubscribe method
 	}
 
-	ongrabbed(event: WidgetGrabbedEvent) {
+	onGrabbed(event: WidgetGrabbedEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -208,7 +212,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		};
 	}
 
-	onresizing(event: WidgetResizingEvent) {
+	onResizing(event: WidgetResizingEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -232,91 +236,12 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		};
 	}
 
-	onresize(event: WidgetActionEvent) {
-		// Pass the pointer ID and target element to the internal method
-		this.#startResizeWidget(event.clientX, event.clientY);
-
-		// Don't implicitly keep the pointer capture, as then mobile can't properly maintain correct focuses.
-		if (!event.isKeyboard) {
-			(event.target as HTMLElement).releasePointerCapture(event.pointerId);
-		}
-	}
-
-	initiateFirstDragIn() {
-		if (!this.adder) {
+	onReleased(event: WidgetEvent) {
+		if (event.widget !== this) {
 			return;
 		}
 
-		// Start the widget drag in event
-		this.currentAction = this.adder.onstartwidgetdragin({
-			widget: this,
-			xOffset: 0,
-			yOffset: 0,
-			clientX: this.#initialX!,
-			clientY: this.#initialY!,
-			// Pass through the base size of the widget.
-			capturedHeight: this.#initialHeightPx!,
-			capturedWidth: this.#initialWidthPx!,
-			ref: this.ref!
-		});
-	}
-
-	/**
-	 * Event handler for when one of the widget's resizers receives a pointerdown event.
-	 * @param event The event object.
-	 */
-	onresizerpointerdown(event: PointerEvent) {
-		if (this.resizability == 'none' || !event.target) {
-			return;
-		}
-
-		this.#resizePointerEventWatcher.onstartpointerdown(event);
-	}
-
-	onresizerkeydown(event: KeyboardEvent) {
-		if (this.resizability == 'none' || !event.target) {
-			return;
-		}
-
-		if (event.key !== 'Enter') {
-			return;
-		}
-
-		// so that the board's listener doesn't interfere
-		event.stopPropagation();
-		event.preventDefault();
-
-		const { x, y } = getElementMidpoint(event.target as HTMLElement);
-		return this.onresize({
-			...event,
-			clientX: x,
-			clientY: y,
-			isKeyboard: true
-		});
-	}
-
-	#startResizeWidget(clientX: number, clientY: number) {
-		if (!this.ref) {
-			throw new Error('A FlexiWidget was instantiated without a bound reference element.');
-		}
-
-		// If the widget is new, then this event shouldn't fire yet.
-		if (!this.target) {
-			return;
-		}
-
-		const rect = this.ref.getBoundingClientRect();
-
-		// Propagate an event up to the parent target, indicating that the widget has started resizing.
-		this.currentAction = this.target.startResizeWidget({
-			widget: this,
-			xOffset: clientX,
-			yOffset: clientY,
-			left: rect.left,
-			top: rect.top,
-			heightPx: rect.height,
-			widthPx: rect.width
-		});
+		this.currentAction = null;
 	}
 
 	/**
@@ -403,11 +328,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	addResizer() {
 		this.#resizers++;
-
-		return {
-			onpointerdown: this.onresizerpointerdown,
-			onkeydown: this.onresizerkeydown
-		};
 	}
 
 	/**
@@ -421,21 +341,29 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Deletes this widget from its target and board.
 	 */
 	delete() {
-		// If the widget hasn't been assigned to a target yet, then we just need to take it off the adder that
-		// created it.
-		if (this.adder) {
-			this.adder.onstopwidgetdragin();
-			return;
-		}
+		this.#eventBus.dispatch('widget:delete', {
+			widget: this
+		});
 
-		// Otherwise it should have a target.
-		if (!this.target) {
-			throw new Error(
-				'A FlexiWidget was deleted without a bound target. This is likely a Flexiboards bug.'
-			);
-		}
+		// // If the widget hasn't been assigned to a target yet, then we just need to take it off the adder that
+		// // created it.
+		// if (this.adder) {
+		// 	this.adder.onstopwidgetdragin();
+		// 	return;
+		// }
 
-		this.target.deleteWidget(this);
+		// // Otherwise it should have a target.
+		// if (!this.target) {
+		// 	throw new Error(
+		// 		'A FlexiWidget was deleted without a bound target. This is likely a Flexiboards bug.'
+		// 	);
+		// }
+
+		// this.target.deleteWidget(this);
+		// this.currentAction = null;
+	}
+
+	onDelete(event: WidgetDeleteEvent) {
 		this.currentAction = null;
 	}
 }

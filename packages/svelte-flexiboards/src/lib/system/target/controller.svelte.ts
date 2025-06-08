@@ -10,6 +10,7 @@ import type {
 	WidgetEvent,
 	WidgetGrabbedEvent,
 	WidgetGrabbedParams,
+	WidgetResizingEvent,
 	WidgetStartResizeParams
 } from '../types.js';
 import { FlexiWidgetController } from '../widget/base.svelte.js';
@@ -99,6 +100,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#trackPointerHover();
 
 		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
 		this.#eventBus.subscribe('widget:cancel', this.onWidgetCancel.bind(this));
 		this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this));
 		this.#eventBus.subscribe('widget:dropped', this.onWidgetDropped.bind(this));
@@ -294,10 +296,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.grid.removeWidget(params.widget);
 		this.grid.forceUpdatePointerPosition(params.clientX, params.clientY);
 
-		return this.provider.onwidgetgrabbed({
-			...params,
-			target: this
-		});
+		// TODO: need to dispatch a widget:grabbed event if this is staying
+		return null;
 	}
 
 	restorePreGrabSnapshot() {
@@ -317,33 +317,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.grid.applyPostCompletionOperations();
 	}
 
-	startResizeWidget(params: WidgetStartResizeParams) {
-		// Remove the widget as it's now in a pseudo-floating state.
-		this.grid.removeWidget(params.widget);
-
-		const result = this.provider.onwidgetstartresize({
-			...params,
-			target: this
-		});
-
-		if (result) {
-			this.actionWidget = {
-				action: 'resize',
-				widget: params.widget
-			};
-
-			this.#createDropzoneWidget();
-		}
-
-		return result;
-	}
-
 	cancelDrop() {
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 	}
 
-	tryDropWidget(widget: FlexiWidgetController): boolean {
+	tryDropWidget(widget: InternalFlexiWidgetController): boolean {
 		const actionWidget = this.actionWidget;
 		if (!actionWidget) {
 			return false;
@@ -385,6 +364,18 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		this.actionWidget = {
 			action: 'grab',
+			widget: event.widget
+		};
+		this.#createDropzoneWidget();
+	}
+
+	onWidgetResizing(event: WidgetResizingEvent) {
+		if (event.target != this) {
+			return;
+		}
+
+		this.actionWidget = {
+			action: 'resize',
 			widget: event.widget
 		};
 		this.#createDropzoneWidget();
