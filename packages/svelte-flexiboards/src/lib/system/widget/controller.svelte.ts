@@ -1,4 +1,4 @@
-import type { FlexiEventBus } from '../shared/event-bus.js';
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import {
 	getElementMidpoint,
 	getPointerService,
@@ -170,7 +170,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			ctor
 		);
 
-		this.#eventBus = ctor.eventBus;
+		this.#eventBus = getFlexiEventBus();
 
 		if (ctor.type == 'adder') {
 			this.#initialX = ctor.clientX;

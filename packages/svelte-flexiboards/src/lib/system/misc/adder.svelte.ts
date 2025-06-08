@@ -1,13 +1,9 @@
-import { untrack } from 'svelte';
-import { getInternalFlexiboardCtx } from './board/index.js';
-
-import type { WidgetGrabbedParams } from './types.js';
-import type { PointerService } from './shared/utils.svelte.js';
-import { getPointerService } from './shared/utils.svelte.js';
 import type { ClassValue } from 'svelte/elements';
-import type { InternalFlexiBoardController } from './board/controller.svelte.js';
-import type { FlexiWidgetController, FlexiWidgetConfiguration } from './widget/index.js';
-import { InternalFlexiWidgetController } from './widget/controller.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
+import { getInternalFlexiboardCtx } from '../board/index.js';
+import type { WidgetGrabbedParams } from '../types.js';
+import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -97,63 +93,5 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
 		adder,
 		onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
 		onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
-	};
-}
-
-export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
-export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
-
-export class FlexiDeleteController {
-	#provider: InternalFlexiBoardController;
-	#pointerService: PointerService = getPointerService();
-	ref: HTMLElement | null = null;
-
-	#inside: boolean = $state(false);
-
-	constructor(provider: InternalFlexiBoardController) {
-		this.#provider = provider;
-
-		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
-		// make it universal with our keyboard pointer.
-		$effect(() => {
-			if (!this.ref) {
-				return;
-			}
-
-			const isPointerInside = this.#pointerService.isPointerInside(this.ref);
-
-			// Only check when keyboard controls are active
-			untrack(() => {
-				this.#updatePointerOverState(isPointerInside);
-			});
-		});
-	}
-
-	#updatePointerOverState(inside: boolean) {
-		const wasHovered = this.#inside;
-
-		if (inside && !wasHovered) {
-			this.#provider.onenterdeleter();
-		} else if (!inside && wasHovered) {
-			this.#provider.onleavedeleter();
-		}
-
-		this.#inside = inside;
-	}
-
-	get isHovered() {
-		return this.#inside;
-	}
-}
-
-export function flexidelete() {
-	const provider = getInternalFlexiboardCtx();
-	const deleter = new FlexiDeleteController(provider);
-
-	return {
-		deleter,
-		// TODO: remove in v0.4
-		onpointerenter: () => {},
-		onpointerleave: () => {}
 	};
 }

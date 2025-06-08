@@ -1,16 +1,21 @@
 import { getContext, setContext } from 'svelte';
 import type {
-	WidgetCancelEvent,
+	TargetEvent,
+	WidgetDroppedEvent,
+	WidgetEvent,
 	WidgetGrabbedEvent,
-	WidgetReleaseEvent,
 	WidgetResizingEvent
 } from '../types.js';
 
 export interface EventMap {
 	'widget:grabbed': WidgetGrabbedEvent;
 	'widget:resizing': WidgetResizingEvent;
-	'widget:release': WidgetReleaseEvent;
-	'widget:cancel': WidgetCancelEvent;
+	'widget:release': WidgetEvent;
+	'widget:cancel': WidgetEvent;
+	// Called when a release has been confirmed to be possible.
+	'widget:dropped': WidgetDroppedEvent;
+	'target:pointerenter': TargetEvent;
+	'target:pointerleave': TargetEvent;
 }
 
 // Event listener function type
@@ -57,8 +62,19 @@ export class FlexiEventBus {
 
 const contextKey = Symbol('flexieventbus');
 
+let flexiEventBusInstance: FlexiEventBus | undefined = undefined;
+
+export function getFlexiEventBus() {
+	// Define event bus at time of calling, so that effect context is assured.
+	if (!flexiEventBusInstance) {
+		flexiEventBusInstance = new FlexiEventBus();
+	}
+
+	return flexiEventBusInstance;
+}
+
 export function flexiEventBus() {
-	const eventBus = new FlexiEventBus();
+	const eventBus = getFlexiEventBus();
 
 	setContext(contextKey, eventBus);
 	return eventBus;

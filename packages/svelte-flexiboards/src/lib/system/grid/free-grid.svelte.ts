@@ -1,5 +1,6 @@
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/types.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import { FlexiGrid, type MoveOperation, type WidgetSnapshot } from './base.svelte.js';
 
 const MAX_COLUMNS = 32;
@@ -20,9 +21,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	#layoutConfig: DerivedFreeFormTargetLayout = $derived({
 		type: 'free',
-		// v0.3: Remove baseRows and baseColumns
-		minColumns: this.#rawLayoutConfig?.minColumns ?? this.#targetConfig.baseColumns ?? 1,
-		minRows: this.#rawLayoutConfig?.minRows ?? this.#targetConfig.baseRows ?? 1,
+		minColumns: this.#rawLayoutConfig?.minColumns ?? 1,
+		minRows: this.#rawLayoutConfig?.minRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
 		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? 'any'
@@ -44,7 +44,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		// $deriveds haven't run by this point, so we need to access the config directly.
 		const layout = targetConfig.layout as FreeFormTargetLayout;
 
-		// v0.3: Remove baseRows and baseColumns
 		this.#rows = layout.minRows ?? 1;
 		this.#columns = layout.minColumns ?? 1;
 

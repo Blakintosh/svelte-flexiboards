@@ -50,34 +50,16 @@ export type FlexiTargetDefaults = {
 	 * The layout algorithm and parameters to use for the target grid.
 	 */
 	layout?: TargetLayout;
-
-	/**
-	 * The number of rows to use for the target grid.
-	 * @deprecated This property will be removed in v0.3. Use `layout.minRows` instead.
-	 */
-	baseRows?: number;
-
-	/**
-	 * The number of columns to use for the target grid.
-	 * @deprecated This property will be removed in v0.3. Use `layout.minColumns` instead.
-	 */
-	baseColumns?: number;
 };
 
-// Exclude deprecated properties
-type RequiredFlexiTargetProperties = Omit<
-	Required<FlexiTargetDefaults>,
-	'baseRows' | 'baseColumns'
->;
+type RequiredFlexiTargetProperties = Required<FlexiTargetDefaults>;
 
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 
-export type FlexiTargetConfiguration = RequiredFlexiTargetProperties &
-	// Don't make these mandatory, as they're deprecatedß
-	Pick<FlexiTargetDefaults, 'baseRows' | 'baseColumns'> & {
-		widgetDefaults?: FlexiWidgetDefaults;
-	};
+export type FlexiTargetConfiguration = RequiredFlexiTargetProperties & {
+	widgetDefaults?: FlexiWidgetDefaults;
+};
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;

@@ -6,6 +6,8 @@ import type {
 	MouseGridCellMoveEvent,
 	Position,
 	ProxiedValue,
+	WidgetDroppedEvent,
+	WidgetEvent,
 	WidgetGrabbedEvent,
 	WidgetGrabbedParams,
 	WidgetStartResizeParams
@@ -13,8 +15,8 @@ import type {
 import { FlexiWidgetController } from '../widget/base.svelte.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
-import type { InternalFlexiBoardController } from '../provider.svelte.js';
-import type { FlexiEventBus } from '../shared/event-bus.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiTargetController } from './base.svelte.js';
 import { SvelteSet } from 'svelte/reactivity';
 import type {
@@ -81,22 +83,30 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#targetConfig?.columnSizing ??
 			this.#providerTargetDefaults?.columnSizing ??
 			'minmax(0, 1fr)',
-		widgetDefaults: this.#targetConfig?.widgetDefaults,
-		baseRows: this.#targetConfig?.baseRows ?? this.#providerTargetDefaults?.baseRows ?? 1,
-		baseColumns: this.#targetConfig?.baseColumns ?? this.#providerTargetDefaults?.baseColumns ?? 1
+		widgetDefaults: this.#targetConfig?.widgetDefaults
 	});
 
 	constructor(
 		provider: InternalFlexiBoardController,
-		eventBus: FlexiEventBus,
 		key: string,
 		config?: FlexiTargetPartialConfiguration
 	) {
 		this.provider = provider;
 		this.#targetConfig = config;
 		this.key = key;
-		this.#eventBus = eventBus;
+		this.#eventBus = getFlexiEventBus();
 
+		this.#trackPointerHover();
+
+		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.onWidgetCancel.bind(this));
+		this.#eventBus.subscribe('widget:dropped', this.onWidgetDropped.bind(this));
+
+		this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this));
+		this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this));
+	}
+
+	#trackPointerHover() {
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
 		$effect(() => {
@@ -111,8 +121,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				this.#updatePointerOverState(isPointerInside);
 			});
 		});
-
-		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
 	}
 
 	/**
@@ -123,10 +131,14 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		if (inside && !wasHovered) {
 			// Just entered
-			this.onpointerentertarget();
+			this.#eventBus.dispatch('target:pointerenter', {
+				target: this
+			});
 		} else if (!inside && wasHovered) {
 			// Just left
-			this.onpointerleavetarget();
+			this.#eventBus.dispatch('target:pointerleave', {
+				target: this
+			});
 		}
 	}
 
@@ -169,7 +181,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
 		const widget = new InternalFlexiWidgetController({
 			type: 'target',
-			eventBus: this.#eventBus,
 			target: this,
 			config
 		});
@@ -242,7 +253,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#createShadow(of: FlexiWidgetController) {
 		const shadow = new InternalFlexiWidgetController({
 			type: 'target',
-			eventBus: this.#eventBus,
 			target: this,
 			config: {
 				width: of.width,
@@ -261,7 +271,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	// Events
-	onpointerentertarget() {
+	onPointerEnterTarget() {
 		this.hovered = true;
 
 		this.provider.onpointerentertarget({
@@ -269,7 +279,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		});
 	}
 
-	onpointerleavetarget() {
+	onPointerLeaveTarget() {
 		this.hovered = false;
 
 		this.provider.onpointerleavetarget({
@@ -380,6 +390,24 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			widget: event.widget
 		};
 		this.#createDropzoneWidget();
+	}
+
+	onWidgetCancel(event: WidgetEvent) {
+		if (event.target != this) {
+			return;
+		}
+
+		this.actionWidget = null;
+
+		this.cancelDrop();
+		this.restorePreGrabSnapshot();
+		this.applyGridPostCompletionOperations();
+	}
+
+	onWidgetDropped(event: WidgetDroppedEvent) {
+		if (event.newTarget != this) {
+			return;
+		}
 	}
 
 	ongrabbedwidgetover(event: GrabbedWidgetMouseEvent) {

@@ -1,5 +1,5 @@
 import type { ClassValue } from 'svelte/elements';
-import type { FlexiEventBus } from '../shared/event-bus.js';
+
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { Component, Snippet } from 'svelte';
 import {
@@ -183,7 +183,6 @@ export type FlexiWidgetConstructor = (
 	| FlexiWidgetUnderAdderConstructor
 	| FlexiWidgetUnderTargetConstructor
 ) & {
-	eventBus: FlexiEventBus;
 	config: FlexiWidgetConfiguration;
 };
 

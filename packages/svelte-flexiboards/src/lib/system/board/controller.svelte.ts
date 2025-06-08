@@ -1,6 +1,6 @@
 import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
 import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.svelte.js';
-import { flexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiPortalController } from '../portal.js';
 import {
 	AutoScrollService,
@@ -15,10 +15,9 @@ import type {
 	HoveredTargetEvent,
 	ProxiedValue,
 	WidgetAction,
-	WidgetCancelEvent,
+	WidgetEvent,
 	WidgetGrabAction,
 	WidgetGrabbedEvent,
-	WidgetReleaseEvent,
 	WidgetResizeAction,
 	WidgetStartResizeEvent
 } from '../types.js';
@@ -53,10 +52,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#eventBus: FlexiEventBus;
 
-	constructor(props: FlexiBoardProps, eventBus: FlexiEventBus) {
+	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
-		this.#eventBus = eventBus;
+		this.#eventBus = getFlexiEventBus();
 
 		this.#eventBus.subscribe('widget:grabbed', this.onwidgetgrabbed.bind(this));
 		this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this));
@@ -101,7 +100,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return this.#targets.get(key)!;
 		}
 
-		const target = new InternalFlexiTargetController(this, this.#eventBus, key, config);
+		const target = new InternalFlexiTargetController(this, key, config);
 		this.#targets.set(key, target);
 		return target;
 	}
@@ -142,8 +141,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	onwidgetgrabbed(event: WidgetGrabbedEvent) {
-		if (this.#currentWidgetAction) {
-			return null;
+		if (this.#currentWidgetAction || event.board !== this) {
+			return;
 		}
 
 		if (event.clientX !== undefined && event.clientY !== undefined) {
@@ -152,7 +151,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		const action: WidgetGrabAction = {
 			action: 'grab',
-			target: event.target,
 			widget: event.widget,
 			adder: event.adder,
 			offsetX: event.xOffset,
@@ -162,17 +160,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		};
 		this.#currentWidgetAction = action;
 
-		if (this.portal) {
-			this.portal.moveWidgetToPortal(event.widget);
-		}
-
 		this.#lockViewport();
-		this.#autoScrollService.shouldAutoScroll = true;
-		this.#pointerService.keyboardControlsActive = true;
 
 		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
-
-		return action;
 	}
 
 	onwidgetstartresize(event: WidgetStartResizeEvent) {
@@ -196,14 +186,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.#currentWidgetAction = action;
 
-		if (this.portal) {
-			this.portal.moveWidgetToPortal(event.widget);
-		}
-
 		this.#lockViewport();
-		// TODO: re-evaluate this at a later point, as vertical sizing is a thing
-		this.#autoScrollService.shouldAutoScroll = false;
-		this.#pointerService.keyboardControlsActive = true;
 
 		this.announce(`You are resizing the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
 
@@ -227,7 +210,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
 	}
 
-	handleWidgetRelease(event: WidgetReleaseEvent) {
+	handleWidgetRelease(event: WidgetEvent) {
 		this.#unlockViewport();
 
 		const currentAction = this.#currentWidgetAction!;
@@ -242,10 +225,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 	}
 
-	handleWidgetCancel(event: WidgetCancelEvent) {
-		if (this.portal) {
-			this.portal.returnWidgetFromPortal(event.widget);
-		}
+	handleWidgetCancel(event: WidgetEvent) {
 		this.#unlockViewport();
 		this.#releaseCurrentWidgetAction();
 	}
@@ -330,10 +310,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	#handleResizingWidgetRelease(action: WidgetResizeAction) {
-		if (this.portal) {
-			this.portal.returnWidgetFromPortal(action.widget);
-		}
-
 		// Now that the widget has left the portal, apply an offset to its current position to account for the board's position.
 		// (Otherwise, the widget gains +board.left and +board.top to its position)
 		const boardRect = this.ref?.getBoundingClientRect();
@@ -356,10 +332,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		const widget = currentWidgetAction.widget;
 
-		if (this.portal) {
-			this.portal.returnWidgetFromPortal(widget);
-		}
-
 		// If the widget is still being grabbed, we'll need to release it.
 		if (widget.currentAction) {
 			widget.currentAction = null;
@@ -371,19 +343,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			currentWidgetAction.adder.onstopwidgetdragin();
 		}
 
-		// The widget wasn't placed successfully, so go back to the pre-grab state on the target.
-		if (!actionSucceeded && currentWidgetAction.target) {
-			currentWidgetAction.target.cancelDrop();
-			currentWidgetAction.target.restorePreGrabSnapshot();
-			// Apply deferred operations after restoring (in case the restore action affected the grid)
-			currentWidgetAction.target.applyGridPostCompletionOperations();
-		}
-
 		this.announce(`You have released the widget.`);
-
-		// Disable the focus trap and auto-scroll.
-		this.#autoScrollService.shouldAutoScroll = false;
-		this.#pointerService.keyboardControlsActive = false;
 
 		this.#currentWidgetAction = null;
 	}

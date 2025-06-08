@@ -1,3 +1,5 @@
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
+import { getFlexiboardCtx, type FlexiBoardController } from '../board/index.js';
 import { FlexiEventBus, getFlexiEventBusCtx } from '../shared/event-bus.js';
 import { getElementMidpoint } from '../shared/utils.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
@@ -6,10 +8,12 @@ import type { InternalFlexiWidgetController } from './controller.svelte.js';
 type WidgetEventSource = {
 	widget: InternalFlexiWidgetController;
 	target: InternalFlexiTargetController;
+	board: InternalFlexiBoardController;
 };
 
 export function widgetEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
+	const board = getFlexiboardCtx();
 
 	return {
 		onpointerdown: (event: PointerEvent) => {
@@ -18,7 +22,7 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 				return;
 			}
 
-			dispatchPointerDownGrab(eventBus, widget, event);
+			dispatchPointerDownGrab(eventBus, widget, board, event);
 		},
 		onkeydown: (event: KeyboardEvent) => {
 			// Grabbing the widget directly only works if the widget does not have grabbers.
@@ -26,26 +30,29 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 				return;
 			}
 
-			dispatchKeyDownGrab(eventBus, widget, event);
+			dispatchKeyDownGrab(eventBus, widget, board, event);
 		}
 	};
 }
 
 export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
+	const board = getFlexiboardCtx();
 
 	return {
-		onpointerdown: (event: PointerEvent) => dispatchPointerDownGrab(eventBus, widget, event),
-		onkeydown: (event: KeyboardEvent) => dispatchKeyDownGrab(eventBus, widget, event)
+		onpointerdown: (event: PointerEvent) => dispatchPointerDownGrab(eventBus, widget, board, event),
+		onkeydown: (event: KeyboardEvent) => dispatchKeyDownGrab(eventBus, widget, board, event)
 	};
 }
 
 export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
+	const board = getFlexiboardCtx();
 
 	return {
-		onpointerdown: (event: PointerEvent) => dispatchPointerDownResize(eventBus, widget, event),
-		onkeydown: (event: KeyboardEvent) => dispatchKeyDownResize(eventBus, widget, event)
+		onpointerdown: (event: PointerEvent) =>
+			dispatchPointerDownResize(eventBus, widget, board, event),
+		onkeydown: (event: KeyboardEvent) => dispatchKeyDownResize(eventBus, widget, board, event)
 	};
 }
 
@@ -58,6 +65,7 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 function dispatchPointerDownGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	event: PointerEvent
 ) {
 	if (!widget.draggable || !widget.ref) {
@@ -71,7 +79,7 @@ function dispatchPointerDownGrab(
 	// event.stopPropagation();
 	// event.preventDefault();
 
-	dispatchGrab(eventBus, widget, {
+	dispatchGrab(eventBus, widget, board, {
 		clientX: event.clientX,
 		clientY: event.clientY
 	});
@@ -86,6 +94,7 @@ function dispatchPointerDownGrab(
 function dispatchKeyDownGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	event: KeyboardEvent
 ) {
 	if (!widget.draggable || !widget.ref || event.key !== 'Enter') {
@@ -98,7 +107,7 @@ function dispatchKeyDownGrab(
 
 	const { x, y } = getElementMidpoint(event.target as HTMLElement);
 
-	dispatchGrab(eventBus, widget, {
+	dispatchGrab(eventBus, widget, board, {
 		clientX: x,
 		clientY: y
 	});
@@ -114,6 +123,7 @@ function dispatchKeyDownGrab(
 function dispatchGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
 	if (!widget.draggable || !widget.ref) {
@@ -127,6 +137,7 @@ function dispatchGrab(
 
 	eventBus.dispatch('widget:grabbed', {
 		widget,
+		board,
 		target: widget.target,
 		clientX,
 		clientY,
@@ -146,6 +157,7 @@ function dispatchGrab(
 function dispatchPointerDownResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	event: PointerEvent
 ) {
 	if (!widget.resizable || !widget.ref) {
@@ -158,7 +170,7 @@ function dispatchPointerDownResize(
 	// event.stopPropagation();
 	// event.preventDefault();
 
-	dispatchResize(eventBus, widget, {
+	dispatchResize(eventBus, widget, board, {
 		clientX: event.clientX,
 		clientY: event.clientY
 	});
@@ -173,6 +185,7 @@ function dispatchPointerDownResize(
 function dispatchKeyDownResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	event: KeyboardEvent
 ) {
 	if (!widget.resizable || !widget.ref || event.key !== 'Enter') {
@@ -184,7 +197,7 @@ function dispatchKeyDownResize(
 
 	const { x, y } = getElementMidpoint(event.target as HTMLElement);
 
-	dispatchResize(eventBus, widget, {
+	dispatchResize(eventBus, widget, board, {
 		clientX: x,
 		clientY: y
 	});
@@ -200,6 +213,7 @@ function dispatchKeyDownResize(
 function dispatchResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
+	board: FlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
 	if (!widget.resizable || !widget.ref) {
@@ -214,6 +228,7 @@ function dispatchResize(
 	// TODO: resizing event schema
 	eventBus.dispatch('widget:resizing', {
 		widget,
+		board,
 		target: widget.target,
 		offsetX: clientX - rect.left,
 		offsetY: clientY - rect.top,

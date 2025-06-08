@@ -1,4 +1,6 @@
 import { getInternalFlexiboardCtx } from './board/index.js';
+import { getFlexiEventBus, type FlexiEventBus } from './shared/event-bus.js';
+import type { WidgetGrabbedEvent, WidgetEvent, WidgetResizingEvent } from './types.js';
 import type { FlexiWidgetController } from './widget/index.js';
 
 /**
@@ -16,6 +18,11 @@ export class FlexiPortalController {
 	>();
 
 	#dependencyCount = 0;
+	#eventBus: FlexiEventBus;
+
+	constructor() {
+		this.#eventBus = getFlexiEventBus();
+	}
 
 	createPortal() {
 		// Create container element
@@ -31,6 +38,23 @@ export class FlexiPortalController {
 
 		// Append to body
 		document.body.appendChild(this.#containerElement);
+
+		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
+		this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this));
+	}
+
+	onWidgetGrabbed(event: WidgetGrabbedEvent) {
+		this.moveWidgetToPortal(event.widget);
+	}
+
+	onWidgetResizing(event: WidgetResizingEvent) {
+		this.moveWidgetToPortal(event.widget);
+	}
+
+	onWidgetRelease(event: WidgetEvent) {
+		this.returnWidgetFromPortal(event.widget);
 	}
 
 	/**
@@ -58,7 +82,9 @@ export class FlexiPortalController {
 	 * Returns a widget's DOM element to its original position
 	 */
 	returnWidgetFromPortal(widget: FlexiWidgetController) {
-		if (!widget.ref) return;
+		if (!widget.ref) {
+			return;
+		}
 
 		const originalPosition = this.#widgetRefs.get(widget);
 		if (originalPosition) {

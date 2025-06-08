@@ -1,9 +1,16 @@
-import type { Position, ProxiedValue, WidgetActionEvent } from '../types.js';
+import type {
+	Position,
+	ProxiedValue,
+	WidgetActionEvent,
+	WidgetGrabbedEvent,
+	WidgetEvent
+} from '../types.js';
 import type { FlexiGrid } from '../grid/base.svelte.js';
-import type { FlexiTargetConfiguration } from '../target.svelte.js';
-import type { FlexiWidgetTriggerConfiguration } from '../widget.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/types.js';
+import type { FlexiWidgetTriggerConfiguration } from '../widget/types.js';
 import { getContext, onMount, setContext, untrack } from 'svelte';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import { getFlexiEventBus, type FlexiEventBus } from './event-bus.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.
@@ -14,9 +21,11 @@ export class PointerService {
 		y: 0
 	});
 	#keyboardController: KeyboardPointerController;
+	#eventBus: FlexiEventBus;
 
 	constructor() {
 		this.#keyboardController = new KeyboardPointerController(this);
+		this.#eventBus = getFlexiEventBus();
 
 		if (typeof window === 'undefined') {
 			return;
@@ -31,11 +40,24 @@ export class PointerService {
 		// As this is singleton, we'll reuse it for the duration of the browser session
 		// (ie no disposal)
 		window.addEventListener('pointermove', onPointerMove);
+
+		this.#eventBus.subscribe('widget:grabbed', this.enableKeyboardControls.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.enableKeyboardControls.bind(this));
+		this.#eventBus.subscribe('widget:release', this.disableKeyboardControls.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.disableKeyboardControls.bind(this));
 	}
 
 	updatePosition(clientX: number, clientY: number) {
 		this.#position.x = clientX;
 		this.#position.y = clientY;
+	}
+
+	enableKeyboardControls() {
+		this.#keyboardController.active = true;
+	}
+
+	disableKeyboardControls() {
+		this.#keyboardController.active = false;
 	}
 
 	/**
@@ -92,7 +114,10 @@ export class AutoScrollService {
 
 	shouldAutoScroll: boolean = $state(false);
 
+	#eventBus: FlexiEventBus;
+
 	constructor(ref: ProxiedValue<HTMLElement | null>) {
+		this.#eventBus = getFlexiEventBus();
 		this.#ref = ref;
 
 		$effect(() => {
@@ -116,6 +141,19 @@ export class AutoScrollService {
 				this.#stopContinuousScroll();
 			};
 		});
+
+		this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this));
+		this.#eventBus.subscribe('widget:resizing', this.startAutoScroll.bind(this));
+		this.#eventBus.subscribe('widget:release', this.stopAutoScroll.bind(this));
+		this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this));
+	}
+
+	startAutoScroll(event: WidgetEvent) {
+		this.shouldAutoScroll = true;
+	}
+
+	stopAutoScroll(event: WidgetEvent) {
+		this.shouldAutoScroll = false;
 	}
 
 	#updateScrollableContainers() {
@@ -809,6 +847,7 @@ export class WidgetPointerEventWatcher {
 	);
 
 	constructor(widget: FlexiWidgetController, type: 'grab' | 'resize') {
+		// TODO: integrate into event bus architecture
 		this.#widget = widget;
 		this.#type = type;
 	}
