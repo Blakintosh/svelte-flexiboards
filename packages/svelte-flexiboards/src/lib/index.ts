@@ -29,12 +29,12 @@ import type {
 	AdderWidgetConfiguration,
 	FlexiAddController,
 	FlexiAddWidgetFn
-} from './system/manage.svelte.js';
+} from './system/misc/adder.svelte.js';
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	type PointerTriggerCondition
-} from './system/shared/utils.svelte.js';
+} from './system/widget/triggers.svelte.js';
 export * from './system/types.js';
 
 export {

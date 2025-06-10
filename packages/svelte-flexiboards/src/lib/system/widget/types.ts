@@ -6,9 +6,9 @@ import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	type PointerTriggerCondition
-} from '../shared/utils.svelte.js';
+} from './triggers.svelte.js';
 import type { Position, WidgetAction, WidgetResizability } from '../types.js';
-import type { FlexiAddController } from '../manage.svelte.js';
+import type { FlexiAddController } from '../misc/adder.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
