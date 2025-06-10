@@ -5,6 +5,7 @@ import type { InternalFlexiTargetController } from '../target/controller.svelte.
 import type { FlexiTargetConfiguration, TargetSizing } from '../target/types.js';
 import type { FlexiWidgetController } from '../widget/index.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 export type MoveOperation = {
 	widget: FlexiWidgetController;
@@ -15,7 +16,7 @@ export type MoveOperation = {
 };
 
 export type WidgetSnapshot = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	x: number;
 	y: number;
 	width: number;

@@ -1,5 +1,9 @@
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
-import { getFlexiboardCtx, type FlexiBoardController } from '../board/index.js';
+import {
+	getFlexiboardCtx,
+	getInternalFlexiboardCtx,
+	type FlexiBoardController
+} from '../board/index.js';
 import { FlexiEventBus, getFlexiEventBusCtx } from '../shared/event-bus.js';
 import { getElementMidpoint } from '../shared/utils.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
@@ -14,7 +18,7 @@ type WidgetEventSource = {
 
 export function widgetEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
-	const board = getFlexiboardCtx();
+	const board = getInternalFlexiboardCtx();
 	const eventWatcher = new WidgetPointerEventWatcher(widget, 'grab');
 
 	return {
@@ -39,7 +43,7 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 
 export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
-	const board = getFlexiboardCtx();
+	const board = getInternalFlexiboardCtx();
 
 	return {
 		onpointerdown: (event: PointerEvent) => dispatchPointerDownGrab(eventBus, widget, board, event),
@@ -67,7 +71,7 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 function dispatchPointerDownGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	event: PointerEvent
 ) {
 	if (!widget.draggable || !widget.ref) {
@@ -96,7 +100,7 @@ function dispatchPointerDownGrab(
 function dispatchKeyDownGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	event: KeyboardEvent
 ) {
 	if (!widget.draggable || !widget.ref || event.key !== 'Enter') {
@@ -125,7 +129,7 @@ function dispatchKeyDownGrab(
 function dispatchGrab(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
 	if (!widget.draggable || !widget.ref) {

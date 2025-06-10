@@ -2,7 +2,6 @@ import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import {
 	getElementMidpoint,
 	getPointerService,
-	WidgetPointerEventWatcher,
 	type PointerService
 } from '../shared/utils.svelte.js';
 import type {
@@ -16,6 +15,7 @@ import type {
 } from '../types.js';
 import { FlexiWidgetController } from './base.svelte.js';
 import { type WidgetMovementAnimation } from './interpolator.svelte.js';
+import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 import type { FlexiWidgetConstructor } from './types.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
