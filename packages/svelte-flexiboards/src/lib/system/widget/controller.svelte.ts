@@ -42,18 +42,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	#eventBus: FlexiEventBus;
 
-	#grabPointerEventWatcher: WidgetPointerEventWatcher = $state(
-		new WidgetPointerEventWatcher(this, 'grab')
-	);
-	#resizePointerEventWatcher: WidgetPointerEventWatcher = $state(
-		new WidgetPointerEventWatcher(this, 'resize')
-	);
-
-	#initialX: number | null = null;
-	#initialY: number | null = null;
-	#initialHeightPx: number | null = null;
-	#initialWidthPx: number | null = null;
-
 	/**
 	 * The styling to apply to the widget.
 	 */
@@ -173,13 +161,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		);
 
 		this.#eventBus = getFlexiEventBus();
-
-		if (ctor.type == 'adder') {
-			this.#initialX = ctor.clientX;
-			this.#initialY = ctor.clientY;
-			this.#initialHeightPx = ctor.heightPx;
-			this.#initialWidthPx = ctor.widthPx;
-		}
 
 		this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this));
 		this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this));
