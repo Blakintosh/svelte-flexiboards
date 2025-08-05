@@ -17,7 +17,7 @@ export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: stri
 	setContext(contextKey, target);
 
 	return {
-		target: target as FlexiTargetController
+		target: target
 	};
 }
 

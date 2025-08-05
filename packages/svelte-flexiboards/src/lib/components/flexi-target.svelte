@@ -71,7 +71,7 @@
 </script>
 
 <div class={containerClass}>
-	{@render header?.({ target })}
+	{@render header?.({ target: target as FlexiTargetController })}
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
 	<FlexiGrid class={className}>

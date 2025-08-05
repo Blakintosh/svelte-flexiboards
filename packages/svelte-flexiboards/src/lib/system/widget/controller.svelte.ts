@@ -345,6 +345,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	onDelete(event: WidgetDeleteEvent) {
+		console.log('onDelete: setting currentAction to null');
 		this.currentAction = null;
 	}
 }
