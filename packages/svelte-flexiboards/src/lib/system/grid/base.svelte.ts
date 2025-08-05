@@ -8,7 +8,7 @@ import { getInternalFlexitargetCtx } from '../target/index.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 export type MoveOperation = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	newX: number;
 	newY: number;
 	oldX: number;

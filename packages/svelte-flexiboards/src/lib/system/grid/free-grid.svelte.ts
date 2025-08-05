@@ -2,6 +2,7 @@ import type { FlexiTargetConfiguration } from '../target/types.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import { FlexiGrid, type MoveOperation, type WidgetSnapshot } from './base.svelte.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 const MAX_COLUMNS = 32;
 
@@ -12,7 +13,7 @@ const MAX_COLUMNS = 32;
  * A free grid can grow and shrink if required when enabled.
  */
 export class FreeFormFlexiGrid extends FlexiGrid {
-	#widgets: Set<FlexiWidgetController> = new Set();
+	#widgets: Set<InternalFlexiWidgetController> = new Set();
 
 	#targetConfig: FlexiTargetConfiguration = $state() as FlexiTargetConfiguration;
 	#rawLayoutConfig: FreeFormTargetLayout = $derived(
@@ -51,7 +52,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	tryPlaceWidget(
-		widget: FlexiWidgetController,
+		widget: InternalFlexiWidgetController,
 		inputX?: number,
 		inputY?: number,
 		inputWidth?: number,
@@ -66,6 +67,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
+		console.log('tryPlaceWidget: normalised', x, y, width, height);
+
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
@@ -73,7 +76,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		}
 
 		// Get proposed operations up-front, so we can cancel if needed.
-		const operations: Map<FlexiWidgetController, MoveOperation> = new Map();
+		const operations: Map<InternalFlexiWidgetController, MoveOperation> = new Map();
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
@@ -122,6 +125,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				if (!collidingWidget.draggable) {
 					return false;
 				}
+
+				console.log('widget at', j, i, 'is colliding with a widget at ', collidingWidget.x, collidingWidget.y);
 
 				// Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
 				this.#coordinateSystem.removeWidget(collidingWidget);
@@ -211,7 +216,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return true;
 	}
 
-	removeWidget(widget: FlexiWidgetController): boolean {
+	removeWidget(widget: InternalFlexiWidgetController): boolean {
 		// Delete it from the grid, incl the coordinate system.
 		this.#widgets.delete(widget);
 		this.#coordinateSystem.removeWidget(widget);
@@ -327,7 +332,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return [x, y, width ?? 1, height ?? 1];
 	}
 
-	#doMoveOperation(widget: FlexiWidgetController, operation: MoveOperation) {
+	#doMoveOperation(widget: InternalFlexiWidgetController, operation: MoveOperation) {
 		// TODO: Not sure yet whether we should be cleaning up a moved widget, we'll see.
 		// Pretty sure the thing that'll occupy its space always comes after, so this operation
 		// should be safe.
@@ -407,7 +412,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return this.#layoutConfig.minColumns;
 	}
 
-	public getWidgetsForModification(): FlexiWidgetController[] {
+	public getWidgetsForModification(): InternalFlexiWidgetController[] {
 		return Array.from(this.#widgets);
 	}
 }
@@ -433,7 +438,7 @@ class FreeFormGridCoordinateSystem {
 		);
 	}
 
-	addWidget(widget: FlexiWidgetController, x: number, y: number, width: number, height: number) {
+	addWidget(widget: InternalFlexiWidgetController, x: number, y: number, width: number, height: number) {
 		const widgetXBitmap = this.getBitmap(x, width);
 
 		for (let i = y; i < y + height; i++) {
@@ -447,7 +452,7 @@ class FreeFormGridCoordinateSystem {
 		this.layout = Array.from({ length: this.#rows }, () => new Array(this.#columns).fill(null));
 	}
 
-	removeWidget(widget: FlexiWidgetController) {
+	removeWidget(widget: InternalFlexiWidgetController) {
 		const { x, y, width, height } = widget;
 
 		const widgetXBitmap = this.getBitmap(x, width);
@@ -463,7 +468,7 @@ class FreeFormGridCoordinateSystem {
 		y: number,
 		width: number,
 		height: number,
-		value: FlexiWidgetController | null
+		value: InternalFlexiWidgetController | null
 	) {
 		for (let i = x; i < x + width; i++) {
 			for (let j = y; j < y + height; j++) {
@@ -484,7 +489,7 @@ class FreeFormGridCoordinateSystem {
 		return bitmap;
 	}
 
-	getCollidingWidgetIfAny(start: number, row: number): FlexiWidgetController | null {
+	getCollidingWidgetIfAny(start: number, row: number): InternalFlexiWidgetController | null {
 		const occupancy = this.bitmaps[row] & this.getBitmap(start, 1);
 
 		// No collision, good to go.
@@ -740,7 +745,7 @@ class FreeFormGridCoordinateSystem {
 	}
 }
 
-type FreeGridLayout = (FlexiWidgetController | null)[][];
+type FreeGridLayout = (InternalFlexiWidgetController | null)[][];
 
 type FreeGridCollapsibility = 'none' | 'leading' | 'trailing' | 'endings' | 'any';
 
@@ -764,7 +769,7 @@ type FreeFormGridSnapshot = {
 };
 
 type CollisionCheck = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	x: number;
 	y: number;
 	width: number;
