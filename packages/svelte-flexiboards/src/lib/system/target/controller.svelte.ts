@@ -287,19 +287,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.hovered = false;
 	}
 
-	grabWidget(params: WidgetGrabbedParams) {
-		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
-		// we can restore the grid to its original state.
-		this.#preGrabSnapshot = this.grid.takeSnapshot();
-
-		// Remove the widget from the grid as it's now in a floating state.
-		this.grid.removeWidget(params.widget);
-		this.grid.forceUpdatePointerPosition(params.clientX, params.clientY);
-
-		// TODO: need to dispatch a widget:grabbed event if this is staying
-		return null;
-	}
-
 	restorePreGrabSnapshot() {
 		if (!this.#preGrabSnapshot) {
 			return;
@@ -366,6 +353,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			action: 'grab',
 			widget: event.widget
 		};
+
+		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
+		// we can restore the grid to its original state.
+		this.#preGrabSnapshot = this.grid.takeSnapshot();
+
+		// Remove the widget from the grid as it's now in a floating state.
+		this.grid.removeWidget(event.widget);
+		this.grid.forceUpdatePointerPosition(event.clientX, event.clientY);
+		
 		this.#createDropzoneWidget();
 	}
 
