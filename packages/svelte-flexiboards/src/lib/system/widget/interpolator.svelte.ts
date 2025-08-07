@@ -88,8 +88,8 @@ export class WidgetMoveInterpolator {
 			widthPx: oldPosition.width
 		};
 
-		this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top;
-		this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left;
+		this.#interpolatedWidgetPosition.top = oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
+		this.#interpolatedWidgetPosition.left = oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
 		this.#interpolatedWidgetPosition.width = oldPosition.width;
 		this.#interpolatedWidgetPosition.height = oldPosition.height;
 
@@ -111,8 +111,8 @@ export class WidgetMoveInterpolator {
 				return;
 			}
 
-			this.#interpolatedWidgetPosition.top = rect.top - containerRect.top;
-			this.#interpolatedWidgetPosition.left = rect.left - containerRect.left;
+			this.#interpolatedWidgetPosition.top = rect.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
+			this.#interpolatedWidgetPosition.left = rect.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
 			this.#interpolatedWidgetPosition.width = rect.width;
 			this.#interpolatedWidgetPosition.height = rect.height;
 		});
