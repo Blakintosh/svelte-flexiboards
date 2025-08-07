@@ -79,7 +79,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each target.widgets as widget (widget)}
+			{#each target.internalWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}

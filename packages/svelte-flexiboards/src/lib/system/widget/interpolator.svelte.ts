@@ -1,4 +1,4 @@
-import type { InternalFlexiBoardController } from '../provider.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import type { Position } from '../types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { FlexiWidgetTransitionConfiguration } from './types.js';

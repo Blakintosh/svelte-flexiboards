@@ -6,11 +6,6 @@ import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/ty
 
 export interface FlexiTargetController {
 	/**
-	 * The widgets currently in this target.
-	 */
-	widgets: SvelteSet<FlexiWidgetController>;
-
-	/**
 	 * The reactive configuration of the target.
 	 */
 	config: FlexiTargetConfiguration;
@@ -93,4 +88,9 @@ export interface FlexiTargetController {
 	 * This value is readonly.
 	 */
 	get rows(): number;
+
+	/**
+	 * The widgets currently in this target.
+	 */
+	get widgets(): SvelteSet<FlexiWidgetController>;
 }

@@ -30,7 +30,7 @@ import type {
 import { getPointerService } from '../shared/utils.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
-	widgets: SvelteSet<FlexiWidgetController> = $state(new SvelteSet());
+	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
@@ -659,11 +659,20 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#dropzoneWidget.value = value;
 	}
 
+	get widgets() {
+		return this.#widgets as SvelteSet<FlexiWidgetController>;
+	}
+
+	get internalWidgets() {
+		return this.#widgets;
+	}
+
 	/**
 	 * Cleanup method to be called when the target is destroyed
 	 */
 	destroy() {
 		// Clean up all widgets
+		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
 		this.widgets.forEach(widget => {
 			if ('destroy' in widget) {
 				(widget as InternalFlexiWidgetController).destroy();
