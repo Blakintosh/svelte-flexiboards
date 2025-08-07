@@ -328,7 +328,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.announce(`You have released the widget.`);
-		console.log('releaseCurrentWidgetAction: setting currentAction to null');
 		this.#currentWidgetAction = null;
 	}
 

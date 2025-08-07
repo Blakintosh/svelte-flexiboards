@@ -172,7 +172,6 @@ export class AutoScrollService {
 	}
 
 	stopAutoScroll(event: WidgetEvent) {
-		console.log('stopAutoScroll', event);
 		this.shouldAutoScroll = false;
 	}
 

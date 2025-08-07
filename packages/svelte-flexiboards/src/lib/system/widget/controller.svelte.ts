@@ -344,7 +344,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	onDelete(event: WidgetDeleteEvent) {
-		console.log('onDelete: setting currentAction to null');
+		if(event.widget != this) {
+			return;
+		}
+		
 		this.currentAction = null;
 		
 		// Clean up event subscriptions when widget is deleted

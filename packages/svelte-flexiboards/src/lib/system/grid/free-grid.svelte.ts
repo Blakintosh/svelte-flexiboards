@@ -67,8 +67,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
-		console.log('tryPlaceWidget: normalised', x, y, width, height);
-
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
@@ -80,7 +78,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
-			console.log('[trace] tryPlaceWidget: failed to resolve collisions');
 			return false;
 		}
 
@@ -125,8 +122,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				if (!collidingWidget.draggable) {
 					return false;
 				}
-
-				console.log('widget at', j, i, 'is colliding with a widget at ', collidingWidget.x, collidingWidget.y);
 
 				// Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
 				this.#coordinateSystem.removeWidget(collidingWidget);
