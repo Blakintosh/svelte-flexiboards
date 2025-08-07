@@ -27,6 +27,13 @@
 	onfirstcreate?.(board);
 
 	let assistiveTextId = generateUniqueId();
+
+	// Cleanup board subscriptions when component is destroyed
+	$effect(() => {
+		return () => {
+			board.destroy();
+		};
+	});
 </script>
 
 <div

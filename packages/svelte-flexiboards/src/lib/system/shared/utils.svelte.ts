@@ -23,6 +23,7 @@ export class PointerService {
 	});
 	#keyboardController: KeyboardPointerController;
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	constructor() {
 		this.#keyboardController = new KeyboardPointerController(this);
@@ -42,10 +43,12 @@ export class PointerService {
 		// (ie no disposal)
 		window.addEventListener('pointermove', onPointerMove);
 
-		this.#eventBus.subscribe('widget:grabbed', this.enableKeyboardControls.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.enableKeyboardControls.bind(this));
-		this.#eventBus.subscribe('widget:release', this.disableKeyboardControls.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.disableKeyboardControls.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.enableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.enableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.disableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.disableKeyboardControls.bind(this))
+		);
 	}
 
 	updatePosition(clientX: number, clientY: number) {
@@ -88,6 +91,15 @@ export class PointerService {
 	set keyboardControlsActive(value: boolean) {
 		this.#keyboardController.active = value;
 	}
+
+	/**
+	 * Cleanup method to be called when the pointer service is destroyed
+	 */
+	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
+	}
 }
 
 let pointerService: PointerService | undefined = undefined;
@@ -116,6 +128,7 @@ export class AutoScrollService {
 	shouldAutoScroll: boolean = $state(false);
 
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	constructor(ref: ProxiedValue<HTMLElement | null>) {
 		this.#eventBus = getFlexiEventBus();
@@ -140,13 +153,18 @@ export class AutoScrollService {
 		$effect(() => {
 			return () => {
 				this.#stopContinuousScroll();
+				// Clean up event subscriptions
+				this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+				this.#unsubscribers = [];
 			};
 		});
 
-		this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.startAutoScroll.bind(this));
-		this.#eventBus.subscribe('widget:release', this.stopAutoScroll.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.startAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.stopAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this))
+		);
 	}
 
 	startAutoScroll(event: WidgetEvent) {

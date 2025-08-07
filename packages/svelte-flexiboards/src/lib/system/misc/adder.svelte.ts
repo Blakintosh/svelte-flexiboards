@@ -39,6 +39,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	#addWidget: FlexiAddWidgetFn;
 
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	newWidget?: InternalFlexiWidgetController = $state(undefined);
 
@@ -55,10 +56,11 @@ export class InternalFlexiAddController implements FlexiAddController {
 		this.onpointerdown = this.onpointerdown.bind(this);
 		this.onkeydown = this.onkeydown.bind(this);
 
-		this.#eventBus.subscribe('adder:widgetready', this.onWidgetReady.bind(this));
-
-		this.#eventBus.subscribe('widget:release', this.onWidgetDragInComplete.bind(this));
-		this.#eventBus.subscribe('widget:delete', this.onWidgetDragInComplete.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('adder:widgetready', this.onWidgetReady.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetDragInComplete.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onWidgetDragInComplete.bind(this))
+		);
 	}
 
 	onpointerdown(event: PointerEvent) {
@@ -133,6 +135,15 @@ export class InternalFlexiAddController implements FlexiAddController {
 	#clearWidget() {
 		this.newWidget = undefined;
 		this.toCreateParams = null;
+	}
+
+	/**
+	 * Cleanup method to be called when the adder is destroyed
+	 */
+	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
 	}
 }
 

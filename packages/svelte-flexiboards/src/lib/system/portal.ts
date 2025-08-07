@@ -19,6 +19,7 @@ export class FlexiPortalController {
 
 	#dependencyCount = 0;
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	constructor() {
 		this.#eventBus = getFlexiEventBus();
@@ -39,10 +40,12 @@ export class FlexiPortalController {
 		// Append to body
 		document.body.appendChild(this.#containerElement);
 
-		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
-		this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this))
+		);
 	}
 
 	onWidgetGrabbed(event: WidgetGrabbedEvent) {
@@ -97,6 +100,10 @@ export class FlexiPortalController {
 	 * Destroys the portal container and resets the singleton instance
 	 */
 	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
+
 		// First return any widgets still in the portal
 		this.#widgetRefs.forEach((position, widget) => {
 			if (widget.ref) {
@@ -124,6 +131,7 @@ export class FlexiPortalController {
 		this.#dependencyCount--;
 		if (this.#dependencyCount === 0 && this.#containerElement) {
 			this.destroy();
+			portal = null;
 		}
 	}
 }

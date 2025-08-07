@@ -57,6 +57,13 @@
 	});
 
 	let assistiveTextId = generateUniqueId();
+
+	// Cleanup adder subscriptions when component is destroyed
+	$effect(() => {
+		return () => {
+			adder.destroy();
+		};
+	});
 </script>
 
 <!-- TODO: will probably need a breaking change, because we need a ref to get the start widget position -->

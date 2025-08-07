@@ -53,19 +53,22 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#announcer: FlexiAnnouncerController | null = null;
 
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
 		this.#eventBus = getFlexiEventBus();
 
-		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
-		this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this));
-
-		this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this));
-		this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this)),
+			
+			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
+			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this))
+		);
 	}
 
 	style: string = $derived.by(() => {
@@ -364,5 +367,18 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	get currentWidgetAction() {
 		return this.#currentWidgetAction;
+	}
+
+	/**
+	 * Cleanup method to be called when the board is destroyed
+	 */
+	destroy() {
+		// Clean up all targets (which will clean up their widgets)
+		this.#targets.forEach(target => target.destroy());
+		this.#targets.clear();
+
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
 	}
 }

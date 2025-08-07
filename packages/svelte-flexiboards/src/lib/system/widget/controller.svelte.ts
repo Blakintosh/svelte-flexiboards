@@ -41,6 +41,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	mounted: boolean = $state(false);
 
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	/**
 	 * The styling to apply to the widget.
@@ -162,15 +163,13 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		this.#eventBus = getFlexiEventBus();
 
-		this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this));
-
-		this.#eventBus.subscribe('widget:release', this.onReleased.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this));
-
-		this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this));
-
-		// TODO: no unsubscribe method
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this))
+		);
 	}
 
 	onGrabbed(event: WidgetGrabbedEvent) {
@@ -347,5 +346,17 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	onDelete(event: WidgetDeleteEvent) {
 		console.log('onDelete: setting currentAction to null');
 		this.currentAction = null;
+		
+		// Clean up event subscriptions when widget is deleted
+		this.destroy();
+	}
+
+	/**
+	 * Cleanup method to be called when the widget is destroyed
+	 */
+	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
 	}
 }

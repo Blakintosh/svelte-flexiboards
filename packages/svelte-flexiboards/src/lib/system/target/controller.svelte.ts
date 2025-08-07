@@ -35,6 +35,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
 	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	#providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
 	providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
@@ -99,17 +100,17 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		this.#trackPointerHover();
 
-		this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this));
-		this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this));
-		this.#eventBus.subscribe('widget:cancel', this.onWidgetCancel.bind(this));
-		this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this));
-		this.#eventBus.subscribe('widget:dropped', this.onWidgetDropped.bind(this));
-
-		this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this));
-		this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this));
-
-		this.#eventBus.subscribe('widget:entertarget', this.onWidgetEnterTarget.bind(this));
-		this.#eventBus.subscribe('widget:leavetarget', this.onWidgetLeaveTarget.bind(this));
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetCancel.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this)),
+			this.#eventBus.subscribe('widget:dropped', this.onWidgetDropped.bind(this)),
+			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
+			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this)),
+			this.#eventBus.subscribe('widget:entertarget', this.onWidgetEnterTarget.bind(this)),
+			this.#eventBus.subscribe('widget:leavetarget', this.onWidgetLeaveTarget.bind(this))
+		);
 	}
 
 	#trackPointerHover() {
@@ -211,6 +212,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	deleteWidget(widget: FlexiWidgetController): boolean {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
+
+		// TODO: this might not be the best way to handle this. Check whether deleteWidget
+		// is still needed.
+		// Clean up the widget when it's removed from the target
+		if (deleted && 'destroy' in widget) {
+			(widget as InternalFlexiWidgetController).destroy();
+		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
@@ -649,5 +657,22 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	set dropzoneWidget(value: FlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
+	}
+
+	/**
+	 * Cleanup method to be called when the target is destroyed
+	 */
+	destroy() {
+		// Clean up all widgets
+		this.widgets.forEach(widget => {
+			if ('destroy' in widget) {
+				(widget as InternalFlexiWidgetController).destroy();
+			}
+		});
+		this.widgets.clear();
+
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers = [];
 	}
 }
