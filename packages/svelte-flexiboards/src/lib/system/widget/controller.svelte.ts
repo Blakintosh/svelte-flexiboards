@@ -14,6 +14,7 @@ import type {
 	WidgetResizingEvent
 } from '../types.js';
 import { FlexiWidgetController } from './base.svelte.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 import type { FlexiWidgetConstructor } from './types.js';
@@ -285,6 +286,13 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.#getMovementAnimation()
 		);
 		this.isBeingDropped = false;
+	}
+
+	/**
+	 * Internal-only: access the widget's target with internal controller typing.
+	 */
+	get internalTarget(): InternalFlexiTargetController | undefined {
+		return this.target as InternalFlexiTargetController | undefined;
 	}
 
 	/**

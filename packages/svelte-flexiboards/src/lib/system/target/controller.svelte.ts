@@ -6,6 +6,7 @@ import type {
 	MouseGridCellMoveEvent,
 	Position,
 	ProxiedValue,
+	TargetEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
 	WidgetGrabbedEvent,
@@ -287,11 +288,19 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	// Events
-	onPointerEnterTarget() {
+	onPointerEnterTarget(event: TargetEvent) {
+		if (event.target != this) {
+			return;
+		}
+
 		this.hovered = true;
 	}
 
-	onPointerLeaveTarget() {
+	onPointerLeaveTarget(event: TargetEvent) {
+		if (event.target != this) {
+			return;
+		}
+
 		this.hovered = false;
 	}
 
@@ -338,9 +347,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// the drop is possible.
 		const result = this.#tryAddWidget(widget, x, y, width, height);
 
+
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		if (result) {
 			this.applyGridPostCompletionOperations();
+			// Clear any pre-grab snapshot for same-target moves
+			this.forgetPreGrabSnapshot();
 		}
 
 		return result;
@@ -404,6 +416,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		const actionWidget = this.actionWidget;
 
+		// Capture the original source target BEFORE tryDropWidget updates the widget target
+		const originalSourceTarget = actionWidget.widget.internalTarget;
+
 		// We're trying to drop it on our target, so check this is possible.
 		const succeeded = this.tryDropWidget(actionWidget.widget);
 
@@ -413,19 +428,28 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#eventBus.dispatch('widget:dropped', {
 			widget: actionWidget.widget,
 			board: this.provider,
-			oldTarget: event.target,
+			oldTarget: originalSourceTarget,
 			newTarget: this
 		});
 	}
 
 	onWidgetDropped(event: WidgetDroppedEvent) {
+		// Only act if this target was the source of the move
 		if (event.oldTarget != this) {
 			return;
 		}
 
+		// No-op if the widget was dropped back onto the same target
 		if (event.newTarget == event.oldTarget) {
 			return;
 		}
+
+		// Ensure the widget is no longer tracked by this (source) target
+		this.widgets.delete(event.widget);
+		// Clear any pre-grab snapshot now that the operation completed successfully
+		this.forgetPreGrabSnapshot();
+		// Apply any deferred grid operations (e.g., row/column collapsing)
+		this.applyGridPostCompletionOperations();
 	}
 
 	onWidgetEnterTarget(event: WidgetEvent) {
@@ -477,6 +501,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		if (added) {
 			this.widgets.add(this.dropzoneWidget);
+			this.#isDropzoneWidgetAdded = true;
 		}
 
 		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
