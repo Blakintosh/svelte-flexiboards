@@ -47,7 +47,7 @@ export class WidgetMoveInterpolator {
 	});
 
 	placeholderStyle: string = $derived.by(() => {
-		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; width: ${this.#placeholderPosition.widthPx}px; height: ${this.#placeholderPosition.heightPx}px; visibility: hidden;`;
+		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; visibility: hidden;`;
 	});
 
 	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
@@ -78,6 +78,7 @@ export class WidgetMoveInterpolator {
 		}
 
 		this.active = true;
+		this.#animation = animation;
 
 		this.#placeholderPosition = {
 			x: newDimensions.x,
@@ -92,13 +93,14 @@ export class WidgetMoveInterpolator {
 			oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
 		this.#interpolatedWidgetPosition.left =
 			oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
+
 		this.#interpolatedWidgetPosition.width = oldPosition.width;
 		this.#interpolatedWidgetPosition.height = oldPosition.height;
 
 		requestAnimationFrame(() => {
 			this.#timeout = setTimeout(() => {
 				this.active = false;
-				this.#animation = animation;
+				this.#animation = 'move';
 			}, transitionConfig.duration);
 		});
 	}
@@ -158,7 +160,7 @@ export class WidgetMoveInterpolator {
 	}
 }
 
-export type WidgetMovementAnimation = 'move' | 'drop';
+export type WidgetMovementAnimation = 'move' | 'drop' | 'resize';
 
 type Dimensions = Position & {
 	width: number;

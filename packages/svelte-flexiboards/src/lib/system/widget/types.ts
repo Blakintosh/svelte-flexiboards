@@ -27,7 +27,7 @@ export type FlexiWidgetTransitionTypeConfiguration = {
 export type FlexiWidgetTransitionConfiguration = {
 	move?: FlexiWidgetTransitionTypeConfiguration;
 	drop?: FlexiWidgetTransitionTypeConfiguration;
-	// resize?: FlexiWidgetTransitionTypeConfiguration;
+	resize?: FlexiWidgetTransitionTypeConfiguration;
 };
 
 export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondition>;

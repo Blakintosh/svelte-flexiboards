@@ -265,7 +265,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			case 'grab':
 				return 'drop';
 			case 'resize':
-				return 'drop';
+				return 'resize';
 			default:
 				return 'move';
 		}

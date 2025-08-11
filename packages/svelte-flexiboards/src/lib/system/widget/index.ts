@@ -151,6 +151,10 @@ function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 		drop: {
 			duration: 150,
 			easing: 'ease-out'
+		},
+		resize: {
+			duration: 150,
+			easing: 'ease-out'
 		}
 	};
 }

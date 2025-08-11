@@ -21,6 +21,8 @@ export class FlexiPortalController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
+	#hasPortalledWidget = false;
+
 	constructor() {
 		this.#eventBus = getFlexiEventBus();
 	}
@@ -49,11 +51,16 @@ export class FlexiPortalController {
 
 	onWidgetGrabbed(event: WidgetGrabbedEvent) {
 		this.moveWidgetToPortal(event.widget);
+		this.#hasPortalledWidget = true;
 	}
 
 	onWidgetRelease(event: WidgetEvent) {
-		// TODO: fires on both grab and resize, even though resize isn't portalled.
+		if (!this.#hasPortalledWidget) {
+			return;
+		}
+
 		this.returnWidgetFromPortal(event.widget);
+		this.#hasPortalledWidget = false;
 	}
 
 	/**
