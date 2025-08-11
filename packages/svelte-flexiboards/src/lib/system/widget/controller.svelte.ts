@@ -352,12 +352,12 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	onDelete(event: WidgetDeleteEvent) {
-		if(event.widget != this) {
+		if (event.widget != this) {
 			return;
 		}
-		
+
 		this.currentAction = null;
-		
+
 		// Clean up event subscriptions when widget is deleted
 		this.destroy();
 	}
@@ -367,7 +367,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	destroy() {
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
 }

@@ -65,7 +65,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this)),
 			this.#eventBus.subscribe('widget:release', this.handleWidgetRelease.bind(this)),
 			this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this)),
-			
+
 			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
 			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this))
 		);
@@ -211,24 +211,28 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#originalOverscrollBehaviorY: string | null = null;
 	#originalTouchAction: string | null = null;
+	#originalUserSelect: string | null = null;
 
 	#lockViewport() {
 		this.#originalOverscrollBehaviorY = document.documentElement.style.overscrollBehaviorY;
 		this.#originalTouchAction = document.documentElement.style.touchAction;
+		this.#originalUserSelect = document.documentElement.style.userSelect;
 
 		document.documentElement.style.overscrollBehaviorY = 'contain';
 		document.documentElement.style.touchAction = 'none';
+		document.documentElement.style.userSelect = 'none';
 	}
 
 	#unlockViewport() {
 		document.documentElement.style.overscrollBehaviorY =
 			this.#originalOverscrollBehaviorY ?? 'auto';
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
+		document.documentElement.style.userSelect = this.#originalUserSelect ?? 'auto';
 	}
 
 	handleWidgetRelease(event: WidgetEvent) {
 		// Not our event.
-		if(event.board !== this) {
+		if (event.board !== this) {
 			return;
 		}
 
@@ -373,11 +377,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 */
 	destroy() {
 		// Clean up all targets (which will clean up their widgets)
-		this.#targets.forEach(target => target.destroy());
+		this.#targets.forEach((target) => target.destroy());
 		this.#targets.clear();
 
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
 }
