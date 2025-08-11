@@ -42,7 +42,6 @@ export class FlexiPortalController {
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
-			this.#eventBus.subscribe('widget:resizing', this.onWidgetResizing.bind(this)),
 			this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this)),
 			this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this))
 		);
@@ -52,11 +51,8 @@ export class FlexiPortalController {
 		this.moveWidgetToPortal(event.widget);
 	}
 
-	onWidgetResizing(event: WidgetResizingEvent) {
-		this.moveWidgetToPortal(event.widget);
-	}
-
 	onWidgetRelease(event: WidgetEvent) {
+		// TODO: fires on both grab and resize, even though resize isn't portalled.
 		this.returnWidgetFromPortal(event.widget);
 	}
 
@@ -101,7 +97,7 @@ export class FlexiPortalController {
 	 */
 	destroy() {
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 
 		// First return any widgets still in the portal

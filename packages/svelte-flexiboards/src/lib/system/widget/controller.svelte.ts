@@ -30,6 +30,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#hasGrabbers: boolean = $derived(this.#grabbers > 0);
 	#hasResizers: boolean = $derived(this.#resizers > 0);
 
+	internalTarget?: InternalFlexiTargetController = undefined;
+
 	get hasGrabbers() {
 		return this.#hasGrabbers;
 	}
@@ -113,9 +115,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	#getResizingWidgetStyle(action: WidgetResizeAction) {
 		// Calculate size of one grid unit in pixels
-		const unitSizeY = action.heightPx / action.initialHeightUnits;
+		const unitSizeY = action.capturedHeightPx / action.initialHeightUnits;
 		// Guard against division by zero if initial width is somehow 0
-		const unitSizeX = action.initialWidthUnits > 0 ? action.widthPx / action.initialWidthUnits : 1;
+		const unitSizeX =
+			action.initialWidthUnits > 0 ? action.capturedWidthPx / action.initialWidthUnits : 1;
 
 		const deltaX = this.#pointerService.position.x - action.offsetX;
 		const deltaY = this.#pointerService.position.y - action.offsetY;
@@ -125,22 +128,22 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		const left = action.left;
 
 		// Calculate new dimensions based on resizability
-		let height = action.heightPx;
-		let width = action.widthPx;
+		let height = action.capturedHeightPx;
+		let width = action.capturedWidthPx;
 
 		switch (this.resizability) {
 			case 'horizontal':
 				// NOTE: Use the pre-calculated deltaX here
-				width = Math.max(action.widthPx + deltaX, unitSizeX);
+				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
 				break;
 			case 'vertical':
 				// NOTE: Use the pre-calculated deltaY here
-				height = Math.max(action.heightPx + deltaY, unitSizeY);
+				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
 				break;
 			case 'both':
 				// NOTE: Use the pre-calculated deltaX and deltaY here
-				height = Math.max(action.heightPx + deltaY, unitSizeY);
-				width = Math.max(action.widthPx + deltaX, unitSizeX);
+				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
+				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
 				break;
 		}
 
@@ -161,6 +164,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			},
 			ctor
 		);
+
+		if (ctor.type == 'target') {
+			this.internalTarget = ctor.target;
+		}
 
 		this.#eventBus = getFlexiEventBus();
 
@@ -210,10 +217,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			offsetY: event.offsetY,
 			left: event.left,
 			top: event.top,
-			heightPx: event.capturedHeightPx,
-			widthPx: event.capturedWidthPx,
-			initialHeightUnits: event.capturedHeightPx,
-			initialWidthUnits: event.capturedWidthPx
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx,
+			initialHeightUnits: this.height,
+			initialWidthUnits: this.width
 		};
 	}
 
@@ -286,13 +293,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.#getMovementAnimation()
 		);
 		this.isBeingDropped = false;
-	}
-
-	/**
-	 * Internal-only: access the widget's target with internal controller typing.
-	 */
-	get internalTarget(): InternalFlexiTargetController | undefined {
-		return this.target as InternalFlexiTargetController | undefined;
 	}
 
 	/**

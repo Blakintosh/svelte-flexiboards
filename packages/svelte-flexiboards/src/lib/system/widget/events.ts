@@ -53,7 +53,7 @@ export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 
 export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
-	const board = getFlexiboardCtx();
+	const board = getInternalFlexiboardCtx();
 
 	return {
 		onpointerdown: (event: PointerEvent) =>
@@ -144,7 +144,7 @@ function dispatchGrab(
 	eventBus.dispatch('widget:grabbed', {
 		widget,
 		board,
-		target: widget.target,
+		target: widget.internalTarget,
 		clientX,
 		clientY,
 		capturedHeightPx: rect.height,
@@ -163,7 +163,7 @@ function dispatchGrab(
 function dispatchPointerDownResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	event: PointerEvent
 ) {
 	if (!widget.resizable || !widget.ref) {
@@ -191,7 +191,7 @@ function dispatchPointerDownResize(
 function dispatchKeyDownResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	event: KeyboardEvent
 ) {
 	if (!widget.resizable || !widget.ref || event.key !== 'Enter') {
@@ -219,7 +219,7 @@ function dispatchKeyDownResize(
 function dispatchResize(
 	eventBus: FlexiEventBus,
 	widget: InternalFlexiWidgetController,
-	board: FlexiBoardController,
+	board: InternalFlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
 	if (!widget.resizable || !widget.ref) {
@@ -231,14 +231,26 @@ function dispatchResize(
 		return;
 	}
 
+	const boardRect = board.ref?.getBoundingClientRect();
+	if (!boardRect) {
+		return;
+	}
+
+	const left = rect.left - boardRect.left;
+	const top = rect.top - boardRect.top;
+
 	// TODO: resizing event schema
 	eventBus.dispatch('widget:resizing', {
 		widget,
 		board,
-		target: widget.target,
-		offsetX: clientX - rect.left,
-		offsetY: clientY - rect.top,
-		left: rect.left,
-		top: rect.top
+		target: widget.internalTarget!,
+		offsetX: clientX - left,
+		offsetY: clientY - top,
+		clientX,
+		clientY,
+		left,
+		top,
+		capturedHeightPx: rect.height,
+		capturedWidthPx: rect.width
 	});
 }

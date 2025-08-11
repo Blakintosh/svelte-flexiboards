@@ -139,6 +139,8 @@ export class WidgetPointerEventWatcher {
 				target: this.#widget.target as any,
 				offsetX: event.clientX - rect.left,
 				offsetY: event.clientY - rect.top,
+				clientX: event.clientX,
+				clientY: event.clientY,
 				left: rect.left,
 				top: rect.top,
 				capturedHeightPx: rect.height,

@@ -199,8 +199,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			offsetY: event.offsetY,
 			left: event.left,
 			top: event.top,
-			heightPx: event.capturedHeightPx,
-			widthPx: event.capturedWidthPx,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx,
 			initialHeightUnits: event.widget.height,
 			initialWidthUnits: event.widget.width
 		};

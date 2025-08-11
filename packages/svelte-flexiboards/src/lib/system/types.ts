@@ -40,8 +40,8 @@ export type WidgetResizeAction = {
 	offsetY: number;
 	left: number;
 	top: number;
-	heightPx: number;
-	widthPx: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
 	initialHeightUnits: number;
 	initialWidthUnits: number;
 };
@@ -99,6 +99,8 @@ export type WidgetResizingEvent = WidgetEvent & {
 	target: InternalFlexiTargetController;
 	offsetX: number;
 	offsetY: number;
+	clientX: number;
+	clientY: number;
 	left: number;
 	top: number;
 	capturedHeightPx: number;

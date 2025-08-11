@@ -334,10 +334,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
 
-		// Ensure width and height are at least 1 grid unit.
-		width = Math.max(1, width);
-		height = Math.max(1, height);
-
 		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 
@@ -346,7 +342,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
 		const result = this.#tryAddWidget(widget, x, y, width, height);
-
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		if (result) {
@@ -381,7 +376,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Remove the widget from the grid as it's now in a floating state.
 		this.grid.removeWidget(event.widget);
 		this.grid.forceUpdatePointerPosition(event.clientX, event.clientY);
-		
+
 		this.#createDropzoneWidget();
 	}
 
@@ -394,6 +389,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			action: 'resize',
 			widget: event.widget
 		};
+
+		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
+		// we can restore the grid to its original state.
+		this.#preGrabSnapshot = this.grid.takeSnapshot();
+
+		// Remove the widget from the grid as it's now in a floating state.
+		this.grid.removeWidget(event.widget);
+		this.grid.forceUpdatePointerPosition(event.clientX, event.clientY);
+
 		this.#createDropzoneWidget();
 	}
 
@@ -577,8 +581,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
 		const grid = this.grid;
 
-		let newWidth = mouseCellPosition.x - widget.x;
-		let newHeight = mouseCellPosition.y - widget.y;
+		let newWidth = Math.max(1, mouseCellPosition.x - widget.x);
+		let newHeight = Math.max(1, mouseCellPosition.y - widget.y);
 
 		// If the widget is in a flow layout, then they can't change their flow axis dimensions.
 		// NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.
@@ -698,7 +702,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	destroy() {
 		// Clean up all widgets
 		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
-		this.widgets.forEach(widget => {
+		this.widgets.forEach((widget) => {
 			if ('destroy' in widget) {
 				(widget as InternalFlexiWidgetController).destroy();
 			}
@@ -706,7 +710,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.widgets.clear();
 
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
 }
