@@ -97,7 +97,7 @@ export class PointerService {
 	 */
 	destroy() {
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
 }
@@ -154,7 +154,7 @@ export class AutoScrollService {
 			return () => {
 				this.#stopContinuousScroll();
 				// Clean up event subscriptions
-				this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+				this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 				this.#unsubscribers = [];
 			};
 		});
@@ -858,4 +858,13 @@ export function getElementMidpoint(element: HTMLElement) {
 		x: rect.left + rect.width / 2,
 		y: rect.top + rect.height / 2
 	};
+}
+
+export function isGrabPointerEvent(event: PointerEvent) {
+	if (event.pointerType !== 'mouse') {
+		return true;
+	}
+
+	// 0 = left click
+	return event.button === 0;
 }

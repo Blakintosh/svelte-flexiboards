@@ -5,7 +5,7 @@ import {
 	type FlexiBoardController
 } from '../board/index.js';
 import { FlexiEventBus, getFlexiEventBusCtx } from '../shared/event-bus.js';
-import { getElementMidpoint } from '../shared/utils.svelte.js';
+import { getElementMidpoint, isGrabPointerEvent } from '../shared/utils.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
@@ -74,7 +74,7 @@ function dispatchPointerDownGrab(
 	board: InternalFlexiBoardController,
 	event: PointerEvent
 ) {
-	if (!widget.draggable || !widget.ref) {
+	if (!widget.draggable || !widget.ref || !isGrabPointerEvent(event)) {
 		return;
 	}
 

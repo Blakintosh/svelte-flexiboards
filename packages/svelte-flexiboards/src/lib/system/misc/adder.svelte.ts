@@ -11,6 +11,7 @@ import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getContext, hasContext, onMount, setContext } from 'svelte';
+import { isGrabPointerEvent } from '../shared/utils.svelte.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -64,6 +65,10 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 
 	onpointerdown(event: PointerEvent) {
+		if (!isGrabPointerEvent(event)) {
+			return;
+		}
+
 		this.#initiateWidgetDragIn(event.clientX, event.clientY);
 
 		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
@@ -142,7 +147,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	 */
 	destroy() {
 		// Clean up event subscriptions
-		this.#unsubscribers.forEach(unsubscribe => unsubscribe());
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
 }

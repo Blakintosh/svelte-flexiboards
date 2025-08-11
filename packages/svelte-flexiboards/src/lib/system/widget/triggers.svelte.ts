@@ -3,6 +3,7 @@ import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { WidgetActionEvent } from '../types.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
+import { isGrabPointerEvent } from '../shared/utils.svelte.js';
 
 interface PointerDownTriggerCondition {
 	type: 'immediate';
@@ -46,6 +47,10 @@ export class WidgetPointerEventWatcher {
 	}
 
 	onstartpointerdown(event: PointerEvent) {
+		if (!isGrabPointerEvent(event)) {
+			return;
+		}
+
 		const pointerType = event.pointerType;
 
 		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
