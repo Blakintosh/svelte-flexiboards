@@ -366,7 +366,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		// this.currentAction = null;
 	}
 
-	onDelete(event: WidgetDeleteEvent) {
+	onDelete(event: WidgetEvent) {
 		if (event.widget != this) {
 			return;
 		}
