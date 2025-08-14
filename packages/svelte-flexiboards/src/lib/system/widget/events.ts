@@ -236,8 +236,8 @@ function dispatchResize(
 		return;
 	}
 
-	const left = rect.left - boardRect.left;
-	const top = rect.top - boardRect.top;
+	const left = rect.left - boardRect.left + board.ref!.scrollLeft;
+	const top = rect.top - boardRect.top + board.ref!.scrollTop;
 
 	// TODO: resizing event schema
 	eventBus.dispatch('widget:resizing', {
