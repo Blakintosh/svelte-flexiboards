@@ -120,8 +120,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		const unitSizeX =
 			action.initialWidthUnits > 0 ? action.capturedWidthPx / action.initialWidthUnits : 1;
 
-		const deltaX = this.#pointerService.position.x - action.offsetX;
-		const deltaY = this.#pointerService.position.y - action.offsetY;
+		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
+		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
 
 		// For resizing, top and left should remain fixed at their initial positions.
 		const top = action.top;
