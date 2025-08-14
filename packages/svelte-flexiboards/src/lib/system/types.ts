@@ -80,10 +80,6 @@ export type WidgetEvent = {
 	widget: InternalFlexiWidgetController;
 };
 
-export type WidgetDeleteEvent = {
-	widget: InternalFlexiWidgetController;
-};
-
 // Event objects
 export type WidgetGrabbedEvent = WidgetEvent & {
 	adder?: FlexiAddController;

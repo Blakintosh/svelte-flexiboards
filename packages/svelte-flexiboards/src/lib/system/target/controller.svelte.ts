@@ -110,7 +110,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
 			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this)),
 			this.#eventBus.subscribe('widget:entertarget', this.onWidgetEnterTarget.bind(this)),
-			this.#eventBus.subscribe('widget:leavetarget', this.onWidgetLeaveTarget.bind(this))
+			this.#eventBus.subscribe('widget:leavetarget', this.onWidgetLeaveTarget.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onWidgetDelete.bind(this))
 		);
 	}
 
@@ -204,6 +205,14 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		return widget;
+	}
+
+	onWidgetDelete(event: WidgetDeleteEvent) {
+		if (event.target != this) {
+			return;
+		}
+
+		this.deleteWidget(event.widget);
 	}
 
 	/**

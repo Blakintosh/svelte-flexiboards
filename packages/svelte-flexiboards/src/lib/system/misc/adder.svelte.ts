@@ -3,7 +3,6 @@ import type { InternalFlexiBoardController } from '../board/controller.svelte.js
 import { getInternalFlexiboardCtx } from '../board/index.js';
 import type {
 	AdderWidgetReadyEvent,
-	WidgetDeleteEvent,
 	WidgetEvent,
 	WidgetGrabbedParams
 } from '../types.js';
@@ -104,11 +103,20 @@ export class InternalFlexiAddController implements FlexiAddController {
 			clientX,
 			clientY
 		});
+
+		this.toCreateParams = {
+			clientX,
+			clientY,
+			capturedHeightPx: config.heightPx ?? 100,
+			capturedWidthPx: config.widthPx ?? 100
+		};
 		// When the widget mounts, it'll automatically trigger the drag in event.
 	}
 
 	onWidgetReady(event: AdderWidgetReadyEvent) {
+		console.log('[adder] onWidgetReady', event);
 		if (event.adder !== this || !this.toCreateParams) {
+			console.log('[adder] onWidgetReady: not this adder or no toCreateParams');
 			return;
 		}
 

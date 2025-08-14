@@ -329,8 +329,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Deletes this widget from its target and board.
 	 */
 	delete() {
+		if(!this.internalTarget) {
+			return;
+		}
+		
 		this.#eventBus.dispatch('widget:delete', {
-			widget: this
+			board: this.internalTarget!.provider,
+			widget: this,
+			target: this.internalTarget
 		});
 
 		// // If the widget hasn't been assigned to a target yet, then we just need to take it off the adder that
