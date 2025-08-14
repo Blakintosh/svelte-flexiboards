@@ -461,8 +461,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			// Apply any deferred grid operations (e.g., row/column collapsing)
 			this.applyGridPostCompletionOperations();
 		}
-
-		// If it's the destination, then we need to re-point the widget to this target.
 	}
 
 	onWidgetEnterTarget(event: WidgetEvent) {
