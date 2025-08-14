@@ -207,7 +207,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return widget;
 	}
 
-	onWidgetDelete(event: WidgetDeleteEvent) {
+	onWidgetDelete(event: WidgetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -447,22 +447,22 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	onWidgetDropped(event: WidgetDroppedEvent) {
-		// Only act if this target was the source of the move
-		if (event.oldTarget != this) {
-			return;
-		}
-
 		// No-op if the widget was dropped back onto the same target
 		if (event.newTarget == event.oldTarget) {
 			return;
 		}
 
-		// Ensure the widget is no longer tracked by this (source) target
-		this.widgets.delete(event.widget);
-		// Clear any pre-grab snapshot now that the operation completed successfully
-		this.forgetPreGrabSnapshot();
-		// Apply any deferred grid operations (e.g., row/column collapsing)
-		this.applyGridPostCompletionOperations();
+		// If this was the source target, then we need to remove the widget from it.
+		if(event.oldTarget == this) {
+			// Ensure the widget is no longer tracked by this (source) target
+			this.widgets.delete(event.widget);
+			// Clear any pre-grab snapshot now that the operation completed successfully
+			this.forgetPreGrabSnapshot();
+			// Apply any deferred grid operations (e.g., row/column collapsing)
+			this.applyGridPostCompletionOperations();
+		}
+
+		// If it's the destination, then we need to re-point the widget to this target.
 	}
 
 	onWidgetEnterTarget(event: WidgetEvent) {

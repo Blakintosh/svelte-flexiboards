@@ -6,7 +6,7 @@ import {
 } from '../shared/utils.svelte.js';
 import type {
 	WidgetActionEvent,
-	WidgetDeleteEvent,
+	WidgetDroppedEvent,
 	WidgetEvent,
 	WidgetGrabAction,
 	WidgetGrabbedEvent,
@@ -176,8 +176,17 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this)),
 			this.#eventBus.subscribe('widget:release', this.onReleased.bind(this)),
 			this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this)),
-			this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this))
+			this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this)),
+			this.#eventBus.subscribe('widget:dropped', this.onDropped.bind(this))
 		);
+	}
+
+	onDropped(event: WidgetDroppedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.internalTarget = event.newTarget;
 	}
 
 	onGrabbed(event: WidgetGrabbedEvent) {
@@ -332,7 +341,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		if(!this.internalTarget) {
 			return;
 		}
-		
+
 		this.#eventBus.dispatch('widget:delete', {
 			board: this.internalTarget!.provider,
 			widget: this,
