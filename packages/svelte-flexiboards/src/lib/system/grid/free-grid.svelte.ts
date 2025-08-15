@@ -433,7 +433,13 @@ class FreeFormGridCoordinateSystem {
 		);
 	}
 
-	addWidget(widget: InternalFlexiWidgetController, x: number, y: number, width: number, height: number) {
+	addWidget(
+		widget: InternalFlexiWidgetController,
+		x: number,
+		y: number,
+		width: number,
+		height: number
+	) {
 		const widgetXBitmap = this.getBitmap(x, width);
 
 		for (let i = y; i < y + height; i++) {

@@ -65,7 +65,7 @@
 						type: 'free',
 						minColumns: 3,
 						maxColumns: 3,
-						minRows: 4,
+						minRows: 3,
 						maxRows: 4,
 						colllapsibility: 'any'
 					},
