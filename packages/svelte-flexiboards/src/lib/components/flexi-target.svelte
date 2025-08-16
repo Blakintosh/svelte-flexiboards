@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import { flexitarget } from '$lib/system/target/index.js';
 	import type { FlexiTargetController } from '$lib/system/target/base.svelte.js';
 	import type { FlexiTargetPartialConfiguration } from '$lib/system/target/types.js';
@@ -50,6 +50,7 @@
 	import FlexiGrid from './flexi-grid.svelte';
 	import FlexiTargetLoader from './flexi-target-loader.svelte';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
+	import type { InternalFlexiWidgetController } from '$lib/system/widget/controller.svelte.js';
 
 	let {
 		children,
@@ -68,6 +69,20 @@
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
+
+	let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
+		if (!target.prepared) {
+			return [];
+		}
+
+		return [...target.internalWidgets].toSorted((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
+	});
 </script>
 
 <div class={containerClass}>
@@ -79,7 +94,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each target.internalWidgets as widget (widget)}
+			{#each orderedWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
