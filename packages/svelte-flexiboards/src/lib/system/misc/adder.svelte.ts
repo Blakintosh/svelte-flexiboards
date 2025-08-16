@@ -1,11 +1,7 @@
 import type { ClassValue } from 'svelte/elements';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
-import type {
-	AdderWidgetReadyEvent,
-	WidgetEvent,
-	WidgetGrabbedParams
-} from '../types.js';
+import type { AdderWidgetReadyEvent, WidgetEvent, WidgetGrabbedParams } from '../types.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
@@ -58,6 +54,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('adder:widgetready', this.onWidgetReady.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetDragInCancel.bind(this)),
 			this.#eventBus.subscribe('widget:release', this.onWidgetDragInComplete.bind(this)),
 			this.#eventBus.subscribe('widget:delete', this.onWidgetDragInComplete.bind(this))
 		);
@@ -130,18 +127,18 @@ export class InternalFlexiAddController implements FlexiAddController {
 		});
 	}
 
-	onstartwidgetdragin(event: WidgetGrabbedParams) {
-		// return this.provider.onwidgetgrabbed({
-		// 	...event,
-		// 	adder: this
-		// });
-	}
-
 	onWidgetDragInComplete(event: { widget: InternalFlexiWidgetController }) {
 		if (event.widget !== this.newWidget) {
 			return;
 		}
 
+		this.#clearWidget();
+	}
+
+	onWidgetDragInCancel(event: { widget: InternalFlexiWidgetController }) {
+		if (event.widget !== this.newWidget) {
+			return;
+		}
 		this.#clearWidget();
 	}
 

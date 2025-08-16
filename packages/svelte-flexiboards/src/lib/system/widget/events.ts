@@ -107,7 +107,13 @@ function dispatchKeyDownGrab(
 		return;
 	}
 
-	// so that the board's listener doesn't interfere
+	// If an action is already active, do not intercept Enter.
+	// Let it bubble to the board so it can confirm (release) the action.
+	if (board.currentWidgetAction) {
+		return;
+	}
+
+	// No action active; start a grab from keyboard and prevent the board from also handling it.
 	event.stopPropagation();
 	event.preventDefault();
 
@@ -195,6 +201,12 @@ function dispatchKeyDownResize(
 	event: KeyboardEvent
 ) {
 	if (!widget.resizable || !widget.ref || event.key !== 'Enter') {
+		return;
+	}
+
+	// If an action is already active, do not intercept Enter.
+	// Let it bubble to the board so it can confirm (release) the action.
+	if (board.currentWidgetAction) {
 		return;
 	}
 
