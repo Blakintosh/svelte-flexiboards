@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), examples],
+	build: {
+		minify: false
+	},
 	server: {
 		fs: {
 			strict: false
