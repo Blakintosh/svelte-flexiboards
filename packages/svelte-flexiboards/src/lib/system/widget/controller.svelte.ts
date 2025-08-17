@@ -1,5 +1,6 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import {
+	generateUniqueId,
 	getElementMidpoint,
 	getPointerService,
 	type PointerService
@@ -338,7 +339,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Deletes this widget from its target and board.
 	 */
 	delete() {
-		if(!this.internalTarget) {
+		if (!this.internalTarget) {
 			return;
 		}
 

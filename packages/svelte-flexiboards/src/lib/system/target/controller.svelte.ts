@@ -1,4 +1,4 @@
-import { untrack } from 'svelte';
+import { tick, untrack } from 'svelte';
 import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
 import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
 import type {
@@ -29,14 +29,11 @@ import type {
 	FlexiTargetState
 } from './types.js';
 import { getPointerService } from '../shared/utils.svelte.js';
-import { OrderedWidgetList } from './ordered-widgets.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
 
 	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
-
-	#orderedList!: OrderedWidgetList;
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
@@ -104,8 +101,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.key = key;
 		this.#eventBus = getFlexiEventBus();
 
-		this.#orderedList = new OrderedWidgetList(this.#orderedWidgets);
-
 		this.#trackPointerHover();
 
 		this.#unsubscribers.push(
@@ -160,11 +155,21 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 	}
 
-	#reorderAllWidgets() {
-		this.#orderedList.clear();
+	#rebuildOrderedWidgets() {
+		// Preserve array identity to avoid proxy/ref churn confusing the renderer:
+		// clear, repopulate, then sort in place.
+		this.#orderedWidgets.length = 0;
 		for (const widget of this.#widgets) {
-			this.#orderedList.insert(widget as InternalFlexiWidgetController);
+			this.#orderedWidgets.push(widget);
 		}
+
+		this.#orderedWidgets.sort((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
 	}
 
 	#tryAddWidget(
@@ -177,14 +182,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = this.grid.tryPlaceWidget(widget, x, y, width, height);
 
 		if (added) {
-			const wasPresent = this.widgets.has(widget);
 			this.widgets.add(widget);
 			widget.target = this;
-			if (wasPresent) {
-				this.#orderedList.relocate(widget as InternalFlexiWidgetController);
-			} else {
-				this.#orderedList.insert(widget as InternalFlexiWidgetController);
-			}
+			this.#rebuildOrderedWidgets();
 		}
 		return added;
 	}
@@ -250,13 +250,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
-		// Keep ordered list in sync immediately
-		if (deleted) {
-			this.#orderedList.remove(widget as InternalFlexiWidgetController);
-		}
-
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
+		this.#rebuildOrderedWidgets();
 
 		return deleted;
 	}
@@ -268,13 +264,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	importLayout(layout: FlexiWidgetConfiguration[]) {
 		this.widgets.clear();
 		this.grid.clear();
-		this.#orderedList.clear();
 
 		for (const config of layout) {
 			this.createWidget(config);
 		}
 
-		// Final order maintained incrementally by #tryAddWidget
+		this.#rebuildOrderedWidgets();
 	}
 
 	/**
@@ -356,8 +351,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	applyGridPostCompletionOperations(): void {
 		this.grid.applyPostCompletionOperations();
-		// Grid operations may adjust coordinates; conservatively rebuild the ordered list
-		this.#reorderAllWidgets();
+		this.#rebuildOrderedWidgets();
 	}
 
 	cancelDrop() {
@@ -384,11 +378,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		if (result) {
-			// Coordinates changed; keep ordered list in sync before post ops
-			this.#orderedList.relocate(widget);
 			this.applyGridPostCompletionOperations();
 			// Clear any pre-grab snapshot for same-target moves
 			this.forgetPreGrabSnapshot();
+			this.#rebuildOrderedWidgets();
 		}
 
 		return result;
@@ -488,11 +481,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (event.oldTarget == this) {
 			// Ensure the widget is no longer tracked by this (source) target
 			this.widgets.delete(event.widget);
-			this.#orderedList.remove(event.widget as InternalFlexiWidgetController);
 			// Clear any pre-grab snapshot now that the operation completed successfully
 			this.forgetPreGrabSnapshot();
 			// Apply any deferred grid operations (e.g., row/column collapsing)
 			this.applyGridPostCompletionOperations();
+			this.#rebuildOrderedWidgets();
 		}
 	}
 
@@ -546,7 +539,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (added) {
 			this.widgets.add(this.dropzoneWidget);
 			this.#isDropzoneWidgetAdded = true;
-			this.#orderedList.insert(this.dropzoneWidget as InternalFlexiWidgetController);
 		}
 
 		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
@@ -579,21 +571,19 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		grid.removeWidget(dropzoneWidget);
-		grid.restoreFromSnapshot(this.#gridSnapshot!);
+		// grid.restoreFromSnapshot(this.#gridSnapshot!);
 
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
+		console.log('added? ', added);
 
 		if (!added && this.#isDropzoneWidgetAdded) {
 			this.widgets.delete(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = false;
-			this.#orderedList.remove(this.dropzoneWidget as InternalFlexiWidgetController);
 		} else if (added && !this.#isDropzoneWidgetAdded) {
 			this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
-			this.#orderedList.insert(this.dropzoneWidget as InternalFlexiWidgetController);
-		} else if (added && this.#isDropzoneWidgetAdded) {
-			this.#orderedList.relocate(this.dropzoneWidget as InternalFlexiWidgetController);
 		}
+		this.#rebuildOrderedWidgets();
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
@@ -659,7 +649,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.removeWidget(this.dropzoneWidget);
 		if (this.#isDropzoneWidgetAdded) {
 			this.widgets.delete(this.dropzoneWidget);
-			this.#orderedList.remove(this.dropzoneWidget as InternalFlexiWidgetController);
 			this.#isDropzoneWidgetAdded = false;
 		}
 
@@ -667,6 +656,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;
+
+		this.#rebuildOrderedWidgets();
 	}
 
 	// State-related getters and setters
@@ -758,7 +749,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			}
 		});
 		this.widgets.clear();
-		this.#orderedList.clear();
+		this.#rebuildOrderedWidgets();
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
