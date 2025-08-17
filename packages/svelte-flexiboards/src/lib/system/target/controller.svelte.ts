@@ -156,7 +156,14 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#rebuildOrderedWidgets() {
-		this.#orderedWidgets = Array.from(this.#widgets).sort((a, b) => {
+		// Preserve array identity to avoid proxy/ref churn confusing the renderer:
+		// clear, repopulate, then sort in place.
+		this.#orderedWidgets.length = 0;
+		for (const widget of this.#widgets) {
+			this.#orderedWidgets.push(widget);
+		}
+
+		this.#orderedWidgets.sort((a, b) => {
 			if (a.y !== b.y) {
 				return a.y - b.y;
 			}
