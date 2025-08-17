@@ -33,6 +33,8 @@ import { getPointerService } from '../shared/utils.svelte.js';
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
 
+	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
+
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
 	#eventBus: FlexiEventBus;
@@ -153,6 +155,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 	}
 
+	#rebuildOrderedWidgets() {
+		this.#orderedWidgets = Array.from(this.#widgets).sort((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
+	}
+
 	#tryAddWidget(
 		widget: FlexiWidgetController,
 		x?: number,
@@ -165,6 +177,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (added) {
 			this.widgets.add(widget);
 			widget.target = this;
+			this.#rebuildOrderedWidgets();
 		}
 		return added;
 	}
@@ -232,6 +245,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
+		this.#rebuildOrderedWidgets();
 
 		return deleted;
 	}
@@ -247,6 +261,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		for (const config of layout) {
 			this.createWidget(config);
 		}
+
+		this.#rebuildOrderedWidgets();
 	}
 
 	/**
@@ -328,6 +344,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	applyGridPostCompletionOperations(): void {
 		this.grid.applyPostCompletionOperations();
+		this.#rebuildOrderedWidgets();
 	}
 
 	cancelDrop() {
@@ -357,6 +374,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.applyGridPostCompletionOperations();
 			// Clear any pre-grab snapshot for same-target moves
 			this.forgetPreGrabSnapshot();
+			this.#rebuildOrderedWidgets();
 		}
 
 		return result;
@@ -420,6 +438,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.cancelDrop();
 		this.restorePreGrabSnapshot();
 		this.applyGridPostCompletionOperations();
+		this.#rebuildOrderedWidgets();
 	}
 
 	onWidgetRelease(event: WidgetEvent) {
@@ -453,13 +472,14 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		// If this was the source target, then we need to remove the widget from it.
-		if(event.oldTarget == this) {
+		if (event.oldTarget == this) {
 			// Ensure the widget is no longer tracked by this (source) target
 			this.widgets.delete(event.widget);
 			// Clear any pre-grab snapshot now that the operation completed successfully
 			this.forgetPreGrabSnapshot();
 			// Apply any deferred grid operations (e.g., row/column collapsing)
 			this.applyGridPostCompletionOperations();
+			this.#rebuildOrderedWidgets();
 		}
 	}
 
@@ -515,6 +535,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#isDropzoneWidgetAdded = true;
 		}
 
+		this.#rebuildOrderedWidgets();
+
 		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
 		// if (added) {
 		// 	this.widgets.add(this.dropzoneWidget);
@@ -556,6 +578,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
 		}
+
+		this.#rebuildOrderedWidgets();
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
@@ -628,6 +652,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;
+
+		this.#rebuildOrderedWidgets();
 	}
 
 	// State-related getters and setters
@@ -701,6 +727,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	get internalWidgets() {
 		return this.#widgets;
+	}
+
+	get orderedWidgets() {
+		return this.#orderedWidgets;
 	}
 
 	/**

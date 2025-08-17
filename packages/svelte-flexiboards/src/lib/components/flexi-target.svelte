@@ -79,8 +79,8 @@
 		{#if !target.prepared && children}
 			{@render children()}
 		{:else if target.prepared}
-			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each target.internalWidgets as widget (widget)}
+			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
+			{#each target.orderedWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
