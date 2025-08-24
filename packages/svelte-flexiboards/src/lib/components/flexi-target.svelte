@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { untrack, type Snippet } from 'svelte';
+	import { tick, untrack, type Snippet } from 'svelte';
 	import { flexitarget } from '$lib/system/target/index.js';
 	import type { FlexiTargetController } from '$lib/system/target/base.svelte.js';
 	import type { FlexiTargetPartialConfiguration } from '$lib/system/target/types.js';
@@ -69,6 +69,18 @@
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
+
+	let orderedWidgets: InternalFlexiWidgetController[] = $state([]);
+
+	$effect(() => {
+		orderedWidgets = Array.from(target.internalWidgets).toSorted((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
+	});
 </script>
 
 <div class={containerClass}>
@@ -80,7 +92,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
-			{#each target.orderedWidgets as widget (widget)}
+			{#each orderedWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}

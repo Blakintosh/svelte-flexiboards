@@ -33,8 +33,6 @@ import { getPointerService } from '../shared/utils.svelte.js';
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
 
-	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
-
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
 	#eventBus: FlexiEventBus;
@@ -155,23 +153,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 	}
 
-	#rebuildOrderedWidgets() {
-		// Preserve array identity to avoid proxy/ref churn confusing the renderer:
-		// clear, repopulate, then sort in place.
-		this.#orderedWidgets.length = 0;
-		for (const widget of this.#widgets) {
-			this.#orderedWidgets.push(widget);
-		}
-
-		this.#orderedWidgets.sort((a, b) => {
-			if (a.y !== b.y) {
-				return a.y - b.y;
-			}
-
-			return a.x - b.x;
-		});
-	}
-
 	#tryAddWidget(
 		widget: FlexiWidgetController,
 		x?: number,
@@ -184,7 +165,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (added) {
 			this.widgets.add(widget);
 			widget.target = this;
-			this.#rebuildOrderedWidgets();
 		}
 		return added;
 	}
@@ -252,7 +232,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
-		this.#rebuildOrderedWidgets();
 
 		return deleted;
 	}
@@ -268,8 +247,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		for (const config of layout) {
 			this.createWidget(config);
 		}
-
-		this.#rebuildOrderedWidgets();
 	}
 
 	/**
@@ -351,7 +328,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	applyGridPostCompletionOperations(): void {
 		this.grid.applyPostCompletionOperations();
-		this.#rebuildOrderedWidgets();
 	}
 
 	cancelDrop() {
@@ -381,7 +357,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.applyGridPostCompletionOperations();
 			// Clear any pre-grab snapshot for same-target moves
 			this.forgetPreGrabSnapshot();
-			this.#rebuildOrderedWidgets();
 		}
 
 		return result;
@@ -485,7 +460,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.forgetPreGrabSnapshot();
 			// Apply any deferred grid operations (e.g., row/column collapsing)
 			this.applyGridPostCompletionOperations();
-			this.#rebuildOrderedWidgets();
 		}
 	}
 
@@ -571,7 +545,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		grid.removeWidget(dropzoneWidget);
-		// grid.restoreFromSnapshot(this.#gridSnapshot!);
+		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
 		console.log('added? ', added);
@@ -583,7 +557,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
 		}
-		this.#rebuildOrderedWidgets();
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
@@ -656,8 +629,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;
-
-		this.#rebuildOrderedWidgets();
 	}
 
 	// State-related getters and setters
@@ -733,10 +704,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return this.#widgets;
 	}
 
-	get orderedWidgets() {
-		return this.#orderedWidgets;
-	}
-
 	/**
 	 * Cleanup method to be called when the target is destroyed
 	 */
@@ -749,7 +716,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			}
 		});
 		this.widgets.clear();
-		this.#rebuildOrderedWidgets();
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
