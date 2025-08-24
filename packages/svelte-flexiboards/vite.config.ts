@@ -5,7 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	resolve: process.env.VITEST
 		? {
-			conditions: ['browser']
-		}
+				conditions: ['browser']
+			}
 		: undefined
 });

@@ -11,6 +11,7 @@
 		"dev:host": "pnpm -r --parallel dev:host",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"preview": "pnpm -r --parallel preview",
 		"lint:fix": "eslint --fix .",
 		"test": "pnpm -r --parallel test"
 	},

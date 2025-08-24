@@ -1,5 +1,7 @@
-import { getInternalFlexiboardCtx } from './provider.svelte.js';
-import type { FlexiWidgetController } from './widget.svelte.js';
+import { getInternalFlexiboardCtx } from './board/index.js';
+import { getFlexiEventBus, type FlexiEventBus } from './shared/event-bus.js';
+import type { WidgetGrabbedEvent, WidgetEvent, WidgetResizingEvent } from './types.js';
+import type { FlexiWidgetController } from './widget/index.js';
 
 /**
  * GrabbedPortal manages a single container in the DOM where grabbed/resizing
@@ -16,6 +18,14 @@ export class FlexiPortalController {
 	>();
 
 	#dependencyCount = 0;
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+
+	#hasPortalledWidget = false;
+
+	constructor() {
+		this.#eventBus = getFlexiEventBus();
+	}
 
 	createPortal() {
 		// Create container element
@@ -31,6 +41,26 @@ export class FlexiPortalController {
 
 		// Append to body
 		document.body.appendChild(this.#containerElement);
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this))
+		);
+	}
+
+	onWidgetGrabbed(event: WidgetGrabbedEvent) {
+		this.moveWidgetToPortal(event.widget);
+		this.#hasPortalledWidget = true;
+	}
+
+	onWidgetRelease(event: WidgetEvent) {
+		if (!this.#hasPortalledWidget) {
+			return;
+		}
+
+		this.returnWidgetFromPortal(event.widget);
+		this.#hasPortalledWidget = false;
 	}
 
 	/**
@@ -58,7 +88,9 @@ export class FlexiPortalController {
 	 * Returns a widget's DOM element to its original position
 	 */
 	returnWidgetFromPortal(widget: FlexiWidgetController) {
-		if (!widget.ref) return;
+		if (!widget.ref) {
+			return;
+		}
 
 		const originalPosition = this.#widgetRefs.get(widget);
 		if (originalPosition) {
@@ -71,6 +103,10 @@ export class FlexiPortalController {
 	 * Destroys the portal container and resets the singleton instance
 	 */
 	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+
 		// First return any widgets still in the portal
 		this.#widgetRefs.forEach((position, widget) => {
 			if (widget.ref) {
@@ -98,6 +134,7 @@ export class FlexiPortalController {
 		this.#dependencyCount--;
 		if (this.#dependencyCount === 0 && this.#containerElement) {
 			this.destroy();
+			portal = null;
 		}
 	}
 }

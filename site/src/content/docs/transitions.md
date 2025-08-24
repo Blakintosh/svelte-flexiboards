@@ -88,10 +88,11 @@ The `simpleTransitionConfig()` is just a wrapper that returns a default configur
 export type FlexiWidgetTransitionConfiguration = {
 	move?: FlexiWidgetTransitionTypeConfiguration;
 	drop?: FlexiWidgetTransitionTypeConfiguration;
+	resize?: FlexiWidgetTransitionTypeConfiguration;
 };
 ```
 
-where `move` determines the transition that plays when a widget moves across cells of a board, and `drop` determines the transition that plays when a widget is released.
+where `move` determines the transition that plays when a widget moves across cells of a board, `drop` determines the transition that plays when a widget is released from a grab action, and `resize` determines the transition that plays when a widget is released from a resize action.
 
 Within, the parameters are:
 

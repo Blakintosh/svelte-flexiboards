@@ -1,13 +1,17 @@
-/*
-    This MousePosition utility class is inspired by the MousePositionState class from Joy of Code's
-    'Creating Reactive Browser APIs In Svelte' video, found at https://youtu.be/BKyENJQ6KdQ.
-*/
-
-import type { Position, ProxiedValue, WidgetActionEvent } from './types.js';
-import type { FlexiGrid } from './grid/base.svelte.js';
-import type { FlexiTargetConfiguration } from './target.svelte.js';
-import type { FlexiWidgetController, FlexiWidgetTriggerConfiguration } from './widget.svelte.js';
+import type {
+	Position,
+	ProxiedValue,
+	WidgetActionEvent,
+	WidgetGrabbedEvent,
+	WidgetEvent
+} from '../types.js';
+import type { FlexiGrid } from '../grid/base.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/types.js';
+import type { FlexiWidgetTriggerConfiguration } from '../widget/types.js';
 import { getContext, onMount, setContext, untrack } from 'svelte';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import { getFlexiEventBus, type FlexiEventBus } from './event-bus.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.
@@ -18,9 +22,12 @@ export class PointerService {
 		y: 0
 	});
 	#keyboardController: KeyboardPointerController;
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
 
 	constructor() {
 		this.#keyboardController = new KeyboardPointerController(this);
+		this.#eventBus = getFlexiEventBus();
 
 		if (typeof window === 'undefined') {
 			return;
@@ -35,11 +42,26 @@ export class PointerService {
 		// As this is singleton, we'll reuse it for the duration of the browser session
 		// (ie no disposal)
 		window.addEventListener('pointermove', onPointerMove);
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.enableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.enableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.disableKeyboardControls.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.disableKeyboardControls.bind(this))
+		);
 	}
 
 	updatePosition(clientX: number, clientY: number) {
 		this.#position.x = clientX;
 		this.#position.y = clientY;
+	}
+
+	enableKeyboardControls() {
+		this.#keyboardController.active = true;
+	}
+
+	disableKeyboardControls() {
+		this.#keyboardController.active = false;
 	}
 
 	/**
@@ -69,6 +91,15 @@ export class PointerService {
 	set keyboardControlsActive(value: boolean) {
 		this.#keyboardController.active = value;
 	}
+
+	/**
+	 * Cleanup method to be called when the pointer service is destroyed
+	 */
+	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
 }
 
 let pointerService: PointerService | undefined = undefined;
@@ -96,7 +127,11 @@ export class AutoScrollService {
 
 	shouldAutoScroll: boolean = $state(false);
 
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+
 	constructor(ref: ProxiedValue<HTMLElement | null>) {
+		this.#eventBus = getFlexiEventBus();
 		this.#ref = ref;
 
 		$effect(() => {
@@ -118,8 +153,26 @@ export class AutoScrollService {
 		$effect(() => {
 			return () => {
 				this.#stopContinuousScroll();
+				// Clean up event subscriptions
+				this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+				this.#unsubscribers = [];
 			};
 		});
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.startAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.stopAutoScroll.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this))
+		);
+	}
+
+	startAutoScroll(event: WidgetEvent) {
+		this.shouldAutoScroll = true;
+	}
+
+	stopAutoScroll(event: WidgetEvent) {
+		this.shouldAutoScroll = false;
 	}
 
 	#updateScrollableContainers() {
@@ -781,119 +834,6 @@ export class GridDimensionTracker {
 	}
 }
 
-interface PointerDownTriggerCondition {
-	type: 'immediate';
-}
-
-interface PointerLongPressTriggerCondition {
-	type: 'longPress';
-	duration: number;
-}
-
-export const immediateTriggerConfig = (): PointerDownTriggerCondition => ({ type: 'immediate' });
-export const longPressTriggerConfig = (duration?: number): PointerLongPressTriggerCondition => ({
-	type: 'longPress',
-	duration: duration ?? 300
-});
-
-export type PointerTriggerCondition =
-	| PointerDownTriggerCondition
-	| PointerLongPressTriggerCondition;
-
-/**
- * Watches pointer events on a widget, issuing a grab event to the widget if the event satisfies the configured behaviour.
- * (e.g. long press for touch)
- */
-export class WidgetPointerEventWatcher {
-	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
-	#type: 'grab' | 'resize' = $state('grab');
-
-	#triggerConfig: FlexiWidgetTriggerConfiguration = $derived(
-		this.#type == 'resize' ? this.#widget.resizeTrigger : this.#widget.grabTrigger
-	);
-
-	constructor(widget: FlexiWidgetController, type: 'grab' | 'resize') {
-		this.#widget = widget;
-		this.#type = type;
-	}
-
-	onstartpointerdown(event: PointerEvent) {
-		const pointerType = event.pointerType;
-
-		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
-
-		event.preventDefault();
-
-		if (triggerForType.type == 'longPress') {
-			return this.#handleLongPress(event, triggerForType);
-		}
-		return this.#triggerWidgetEvent(event);
-	}
-
-	#eventTimeout: ReturnType<typeof setTimeout> | null = null;
-
-	#handleLongPress(event: PointerEvent, trigger: PointerLongPressTriggerCondition) {
-		if (this.#eventTimeout) {
-			clearTimeout(this.#eventTimeout);
-		}
-
-		const startX = event.clientX;
-		const startY = event.clientY;
-		const pointerId = event.pointerId;
-
-		const moveThreshold = 16; // 16px movement threshold
-		let isPointerDown = true;
-		let currentX = startX;
-		let currentY = startY;
-
-		// Track if pointer is still down and its position
-		const pointerUpHandler = (e: PointerEvent) => {
-			if (e.pointerId === pointerId) {
-				isPointerDown = false;
-				document.removeEventListener('pointerup', pointerUpHandler);
-				document.removeEventListener('pointercancel', pointerUpHandler);
-				document.removeEventListener('pointermove', pointerMoveHandler);
-			}
-		};
-
-		// Track pointer movement
-		const pointerMoveHandler = (e: PointerEvent) => {
-			if (e.pointerId === pointerId) {
-				e.preventDefault();
-				currentX = e.clientX;
-				currentY = e.clientY;
-			}
-		};
-
-		document.addEventListener('pointerup', pointerUpHandler);
-		document.addEventListener('pointercancel', pointerUpHandler);
-		document.addEventListener('pointermove', pointerMoveHandler);
-
-		this.#eventTimeout = setTimeout(() => {
-			// Only trigger if pointer is still down and hasn't moved too much
-			if (isPointerDown) {
-				const distance = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
-
-				if (distance <= moveThreshold) {
-					this.#triggerWidgetEvent(event);
-				}
-			}
-
-			document.removeEventListener('pointerup', pointerUpHandler);
-			document.removeEventListener('pointercancel', pointerUpHandler);
-			document.removeEventListener('pointermove', pointerMoveHandler);
-		}, trigger.duration);
-	}
-
-	#triggerWidgetEvent(event: WidgetActionEvent) {
-		if (this.#type == 'resize') {
-			this.#widget.onresize(event);
-			return;
-		}
-		this.#widget.ongrab(event);
-	}
-}
-
 let uniqueIdIndex = 0;
 export function generateUniqueId(prefix: string = 'flexi-') {
 	return prefix + uniqueIdIndex++;
@@ -911,3 +851,20 @@ export const assistiveTextStyle = `
 	white-space: nowrap;
 	border-width: 0;
 `;
+
+export function getElementMidpoint(element: HTMLElement) {
+	const rect = element.getBoundingClientRect();
+	return {
+		x: rect.left + rect.width / 2,
+		y: rect.top + rect.height / 2
+	};
+}
+
+export function isGrabPointerEvent(event: PointerEvent) {
+	if (event.pointerType !== 'mouse') {
+		return true;
+	}
+
+	// 0 = left click
+	return event.button === 0;
+}

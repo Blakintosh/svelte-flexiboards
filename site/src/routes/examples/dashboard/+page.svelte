@@ -52,20 +52,20 @@
 		</h1>
 
 		<FlexiBoard
-			class={'min-h-0 grow overflow-y-auto'}
+			class={'min-h-0 grow overflow-x-clip overflow-y-auto'}
 			config={boardConfig}
 			onfirstcreate={onBoardReady}
 		>
 			<FlexiTarget
 				key="left"
-				class={'h-full gap-2 lg:gap-4'}
+				class={'h-full gap-2 overflow-x-clip lg:gap-4'}
 				config={{
-					rowSizing: 'minmax(0, 1fr)',
+					rowSizing: 'minmax(0, 180px)',
 					layout: {
 						type: 'free',
 						minColumns: 3,
 						maxColumns: 3,
-						minRows: 4,
+						minRows: 3,
 						maxRows: 4,
 						colllapsibility: 'any'
 					},

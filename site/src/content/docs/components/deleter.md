@@ -46,6 +46,6 @@ The `FlexiDeleteController` allows you to access state information on the delete
 {
 name: "isHovered",
 type: "boolean",
-description: "Whether the deleter is currently being hovered by the pointer. You should prefer the use of this to CSS hover, because it is more accessible."
+description: "Whether the deleter is currently being hovered by the pointer. You should prefer the use of this to CSS hover, because it accounts for Flexiboards' keyboard-based pointer."
 }
 ]} />

@@ -101,16 +101,6 @@ type: "string | ({ target, grid }: { target: FlexiTargetController, grid: FlexiG
 description: "Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target. Defaults to 'minmax(0, 1fr)'. Reactive."
 },
 {
-name: "baseColumns",
-type: "number",
-description: "The base number of columns for the target's grid. Defaults to 1. Not reactive."
-},
-{
-name: "baseRows",
-type: "number",
-description: "The base number of rows for the target's grid. Defaults to 1. Not reactive."
-},
-{
 name: "layout",
 type: "TargetLayout",
 description: "The layout algorithm and parameters to use for the target grid. Reactive."

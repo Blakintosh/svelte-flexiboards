@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FlexiGrid } from './base.svelte.js';
 import { FreeFormFlexiGrid } from './free-grid.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte';
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/index.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 
 // TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
 vi.mock('./base.svelte.js', () => ({

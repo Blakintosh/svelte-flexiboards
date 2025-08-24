@@ -5,8 +5,8 @@
 		flexidelete,
 		FlexiDeleteController,
 		type FlexiDeleteClasses
-	} from '$lib/system/manage.svelte.js';
-	import { assistiveTextStyle, generateUniqueId } from '$lib/system/utils.svelte.js';
+	} from '$lib/system/misc/deleter.svelte.js';
+	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
 
 	/** @deprecated FlexiDelete's children props are now redundant and will be removed in v0.4. */
 	type FlexiDeleteChildrenProps = {

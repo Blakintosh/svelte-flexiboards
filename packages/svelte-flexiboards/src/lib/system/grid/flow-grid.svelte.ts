@@ -1,7 +1,9 @@
 import { untrack } from 'svelte';
 import { FlexiGrid, type WidgetSnapshot } from './base.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte.js';
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/index.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 /**
  * The layout configuration for a flow layout based grid.
@@ -53,7 +55,7 @@ export type FlowTargetLayout = {
 type DerivedFlowTargetLayout = Required<FlowTargetLayout>;
 
 type FlowMoveOperation = {
-	widget: FlexiWidgetController;
+	widget: InternalFlexiWidgetController;
 	newPosition: number;
 };
 
@@ -97,7 +99,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 	}
 
 	tryPlaceWidget(
-		widget: FlexiWidgetController,
+		widget: InternalFlexiWidgetController,
 		cellX?: number,
 		cellY?: number,
 		width: number = 1,
@@ -174,7 +176,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 		return true;
 	}
 
-	#placeWidgetAt(widget: FlexiWidgetController, position: number, index: number) {
+	#placeWidgetAt(widget: InternalFlexiWidgetController, position: number, index: number) {
 		const operations: FlowMoveOperation[] = [];
 
 		this.#widgets.splice(index, 0, widget);
@@ -372,13 +374,13 @@ export class FlowFlexiGrid extends FlexiGrid {
 		this.#state.columns = value;
 	}
 
-	get widgets(): FlexiWidgetController[] {
+	get widgets(): InternalFlexiWidgetController[] {
 		return this.#state.widgets;
 	}
-	get #widgets(): FlexiWidgetController[] {
+	get #widgets(): InternalFlexiWidgetController[] {
 		return this.#state.widgets;
 	}
-	set #widgets(value: FlexiWidgetController[]) {
+	set #widgets(value: InternalFlexiWidgetController[]) {
 		this.#state.widgets = value;
 	}
 
@@ -567,7 +569,7 @@ class FlowGridCoordinateSystem {
 type FlexiFlowGridState = {
 	rows: number;
 	columns: number;
-	widgets: FlexiWidgetController[];
+	widgets: InternalFlexiWidgetController[];
 };
 
 type FlowGridSnapshot = {

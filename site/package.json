@@ -33,14 +33,14 @@
 		}
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "^5.0.0",
+		"@sveltejs/kit": "^2.17.2"
 	},
 	"devDependencies": {
 		"@lucide/svelte": "^0.482.0",
 		"@melt-ui/pp": "^0.3.2",
 		"@sveltejs/adapter-auto": "^3.3.1",
 		"@sveltejs/adapter-vercel": "^5.6.2",
-		"@sveltejs/kit": "^2.17.2",
 		"@sveltejs/package": "^2.3.10",
 		"@sveltejs/vite-plugin-svelte": "^4.0.4",
 		"@tailwindcss/typography": "^0.5.16",

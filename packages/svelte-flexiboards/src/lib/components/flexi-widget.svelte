@@ -1,14 +1,13 @@
 <script module lang="ts">
-	import {
-		type FlexiWidgetController,
-		flexiwidget,
-		type FlexiWidgetConfiguration,
-		type FlexiWidgetChildrenSnippet,
-		type FlexiWidgetClasses
-	} from '$lib/system/widget.svelte.js';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
-	import { assistiveTextStyle, generateUniqueId } from '$lib/system/utils.svelte.js';
-	import { onMount } from 'svelte';
+	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
+	import type {
+		FlexiWidgetChildrenSnippet,
+		FlexiWidgetClasses,
+		FlexiWidgetConfiguration
+	} from '$lib/system/widget/types.js';
+	import type { FlexiWidgetController } from '$lib/system/widget/base.svelte.js';
+	import { flexiwidget } from '$lib/system/widget/index.js';
 
 	export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
 		Exclude<FlexiWidgetConfiguration, 'className' | 'snippet'> & {

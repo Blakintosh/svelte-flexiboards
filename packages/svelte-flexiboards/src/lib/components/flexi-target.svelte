@@ -1,10 +1,9 @@
 <script module lang="ts">
-	import type { Snippet } from 'svelte';
-	import {
-		flexitarget,
-		type FlexiTargetController,
-		type FlexiTargetPartialConfiguration
-	} from '$lib/system/target.svelte.js';
+	import { tick, untrack, type Snippet } from 'svelte';
+	import { flexitarget } from '$lib/system/target/index.js';
+	import type { FlexiTargetController } from '$lib/system/target/base.svelte.js';
+	import type { FlexiTargetPartialConfiguration } from '$lib/system/target/types.js';
+
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 
 	export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
@@ -51,6 +50,7 @@
 	import FlexiGrid from './flexi-grid.svelte';
 	import FlexiTargetLoader from './flexi-target-loader.svelte';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
+	import type { InternalFlexiWidgetController } from '$lib/system/widget/controller.svelte.js';
 
 	let {
 		children,
@@ -69,18 +69,32 @@
 	// Target created, allow the caller to access it.
 	controller = target;
 	onfirstcreate?.(target);
+
+	// TODO: probable Svelte bug, causes browser freeze on production builds.
+	// Haven't been able to repro on REPL as yet.
+	// let orderedWidgets: InternalFlexiWidgetController[] = $state([]);
+
+	// $effect(() => {
+	// 	orderedWidgets = Array.from(target.internalWidgets).toSorted((a, b) => {
+	// 		if (a.y !== b.y) {
+	// 			return a.y - b.y;
+	// 		}
+
+	// 		return a.x - b.x;
+	// 	});
+	// });
 </script>
 
 <div class={containerClass}>
-	{@render header?.({ target })}
+	{@render header?.({ target: target as FlexiTargetController })}
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
 	<FlexiGrid class={className}>
 		{#if !target.prepared && children}
 			{@render children()}
 		{:else if target.prepared}
-			<!-- Sort the widgets, so that they appear in correct tab order for keyboard navigation -->
-			{#each target.widgets as widget (widget)}
+			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
+			{#each target.internalWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
