@@ -33,7 +33,7 @@ export class FlexiEventBus {
 
 	dispatch<K extends keyof EventMap>(eventName: K, data: EventMap[K]): void {
 		// Notify event listeners that the event happened.
-		console.log('[event-bus] dispatching event', eventName, data);
+		// console.log('[event-bus] dispatching event', eventName, data);
 		const eventListeners = this.listeners[eventName];
 		if (eventListeners) {
 			eventListeners.forEach((listener) => listener(data));
