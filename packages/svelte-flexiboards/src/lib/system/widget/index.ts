@@ -138,15 +138,15 @@ export function getFlexiwidgetInterpolatorCtx() {
 function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	return {
 		move: {
-			duration: 150,
+			duration: 1500,
 			easing: 'ease-in-out'
 		},
 		drop: {
-			duration: 150,
+			duration: 1500,
 			easing: 'ease-out'
 		},
 		resize: {
-			duration: 150,
+			duration: 1500,
 			easing: 'ease-out'
 		}
 	};
