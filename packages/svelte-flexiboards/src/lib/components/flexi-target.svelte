@@ -70,17 +70,19 @@
 	controller = target;
 	onfirstcreate?.(target);
 
-	let orderedWidgets: InternalFlexiWidgetController[] = $state([]);
+	// TODO: probable Svelte bug, causes browser freeze on production builds.
+	// Haven't been able to repro on REPL as yet.
+	// let orderedWidgets: InternalFlexiWidgetController[] = $state([]);
 
-	$effect(() => {
-		orderedWidgets = Array.from(target.internalWidgets).toSorted((a, b) => {
-			if (a.y !== b.y) {
-				return a.y - b.y;
-			}
+	// $effect(() => {
+	// 	orderedWidgets = Array.from(target.internalWidgets).toSorted((a, b) => {
+	// 		if (a.y !== b.y) {
+	// 			return a.y - b.y;
+	// 		}
 
-			return a.x - b.x;
-		});
-	});
+	// 		return a.x - b.x;
+	// 	});
+	// });
 </script>
 
 <div class={containerClass}>
@@ -92,7 +94,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
-			{#each orderedWidgets as widget (widget)}
+			{#each target.internalWidgets as widget (widget)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}
