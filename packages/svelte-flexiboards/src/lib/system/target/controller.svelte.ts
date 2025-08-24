@@ -548,7 +548,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
-		console.log('added? ', added);
 
 		if (!added && this.#isDropzoneWidgetAdded) {
 			this.widgets.delete(this.dropzoneWidget!);

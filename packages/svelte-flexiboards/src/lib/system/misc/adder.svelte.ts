@@ -111,9 +111,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 
 	onWidgetReady(event: AdderWidgetReadyEvent) {
-		console.log('[adder] onWidgetReady', event);
 		if (event.adder !== this || !this.toCreateParams) {
-			console.log('[adder] onWidgetReady: not this adder or no toCreateParams');
 			return;
 		}
 
