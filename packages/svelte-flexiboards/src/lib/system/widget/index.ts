@@ -39,14 +39,7 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 }
 
 export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
-	// TODO: There's a weird edge case where this is causing a call stack size exceeded error, when a widget is being dragged in from an adder
-	// for the first time. I have no idea why, so this will just suppress the error and cause problems for anyone accessing the context.
-	// TODO: figure out why this is happening and fix it.
-	try {
-		setContext(contextKey, widget);
-	} catch (error) {
-		// console.warn('Error setting context', error);
-	}
+	setContext(contextKey, widget);
 
 	if (hasInternalFlexiaddCtx()) {
 		dragInOnceMounted(widget);
