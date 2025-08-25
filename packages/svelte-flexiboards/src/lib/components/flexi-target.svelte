@@ -72,18 +72,18 @@
 
 	// TODO: probable Svelte bug, causes browser freeze on production builds.
 	// Haven't been able to repro on REPL as yet.
-	let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
-		return Array.from(target.internalWidgets).toSorted((a, b) => {
-			if (a.y !== b.y) {
-				return a.y - b.y;
-			}
+	// let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
+	// 	return Array.from(target.internalWidgets).toSorted((a, b) => {
+	// 		if (a.y !== b.y) {
+	// 			return a.y - b.y;
+	// 		}
 
-			if (a.x == b.x) {
-				console.warn('[warning] collision detected between widgets ', a.id, ' and ', b.id);
-			}
-			return a.x - b.x;
-		});
-	});
+	// 		if (a.x == b.x) {
+	// 			console.warn('[warning] collision detected between widgets ', a.id, ' and ', b.id);
+	// 		}
+	// 		return a.x - b.x;
+	// 	});
+	// });
 
 	// Cleanup target subscriptions when component is destroyed
 	onDestroy(() => {
@@ -100,7 +100,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
-			{#each orderedWidgets as widget (widget.id)}
+			{#each target.internalWidgets as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}

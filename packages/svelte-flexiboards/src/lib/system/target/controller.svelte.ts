@@ -504,6 +504,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
 
+		// TODO: not sure why, but effect root needs to be here to make the dropzone widget work properly.
 		this.#dropzoneEffectDestroy = $effect.root(() => {
 			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
 		});
@@ -513,7 +514,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height, true);
 
 		if (added) {
-			// this.widgets.add(this.dropzoneWidget);
+			this.widgets.add(this.dropzoneWidget);
 			this.#isDropzoneWidgetAdded = true;
 		}
 
@@ -552,10 +553,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
 
 		if (!added && this.#isDropzoneWidgetAdded) {
-			// this.widgets.delete(this.dropzoneWidget!);
+			this.widgets.delete(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = false;
 		} else if (added && !this.#isDropzoneWidgetAdded) {
-			// this.widgets.add(this.dropzoneWidget!);
+			this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
 		}
 	}
@@ -622,7 +623,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		grid.removeWidget(this.dropzoneWidget);
 		if (this.#isDropzoneWidgetAdded) {
-			// this.widgets.delete(this.dropzoneWidget);
+			this.widgets.delete(this.dropzoneWidget);
 			this.#isDropzoneWidgetAdded = false;
 		}
 

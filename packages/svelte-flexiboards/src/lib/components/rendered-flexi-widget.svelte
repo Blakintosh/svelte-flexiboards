@@ -49,7 +49,6 @@
 	tabindex={widget.draggable && !widget.hasGrabbers ? 0 : undefined}
 	bind:this={widget.ref}
 >
-	ID: {widget.id}
 	{#if widget.snippet}
 		{@render widget.snippet({
 			widget
