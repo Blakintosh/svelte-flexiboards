@@ -19,6 +19,7 @@ export class FlexiDeleteController {
 
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
+		// TODO: migrate this to an event
 		$effect(() => {
 			if (!this.ref) {
 				return;

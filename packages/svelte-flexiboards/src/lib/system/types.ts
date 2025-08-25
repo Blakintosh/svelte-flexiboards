@@ -69,6 +69,11 @@ export type WidgetStartResizeParams = {
 	widthPx: number;
 };
 
+export type PointerMovedEvent = {
+	x: number;
+	y: number;
+};
+
 export type AdderWidgetReadyEvent = {
 	adder: InternalFlexiAddController;
 	widget: InternalFlexiWidgetController;

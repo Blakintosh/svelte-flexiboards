@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import type { Position } from '../types.js';
 import type { FlexiWidgetController } from './base.svelte.js';

@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { InternalFlexiWidgetController } from '$lib/system/widget/controller.svelte.js';
-	import { renderedflexiwidget, type FlexiWidgetController } from '$lib/system/widget/index.js';
+	import { renderedflexiwidget } from '$lib/system/widget/index.js';
 	import WidgetTransitionPlaceholder from './widget-transition-placeholder.svelte';
 
 	export type RenderedFlexiWidgetProps = {

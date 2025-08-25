@@ -7,11 +7,8 @@ import type {
 } from '../types.js';
 import type { FlexiGrid } from '../grid/base.svelte.js';
 import type { FlexiTargetConfiguration } from '../target/types.js';
-import type { FlexiWidgetTriggerConfiguration } from '../widget/types.js';
-import { getContext, onMount, setContext, untrack } from 'svelte';
-import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import { onMount, untrack } from 'svelte';
 import { getFlexiEventBus, type FlexiEventBus } from './event-bus.js';
-import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.
@@ -54,6 +51,11 @@ export class PointerService {
 	updatePosition(clientX: number, clientY: number) {
 		this.#position.x = clientX;
 		this.#position.y = clientY;
+
+		this.#eventBus.dispatch('pointer:moved', {
+			x: clientX,
+			y: clientY
+		});
 	}
 
 	enableKeyboardControls() {
@@ -77,19 +79,16 @@ export class PointerService {
 		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 	}
 
-	/**
-	 * The current position of the pointer.
-	 */
-	get position() {
-		return this.#position;
-	}
-
 	get keyboardControlsActive() {
 		return this.#keyboardController.active;
 	}
 
 	set keyboardControlsActive(value: boolean) {
 		this.#keyboardController.active = value;
+	}
+
+	get position() {
+		return this.#position;
 	}
 
 	/**
@@ -134,14 +133,6 @@ export class AutoScrollService {
 		this.#eventBus = getFlexiEventBus();
 		this.#ref = ref;
 
-		$effect(() => {
-			const { x, y } = this.#pointerService.position;
-
-			untrack(() => {
-				this.#checkScrollConditions(x, y);
-			});
-		});
-
 		// Update scrollable containers when ref changes
 		$effect(() => {
 			if (this.ref) {
@@ -163,7 +154,10 @@ export class AutoScrollService {
 			this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this)),
 			this.#eventBus.subscribe('widget:resizing', this.startAutoScroll.bind(this)),
 			this.#eventBus.subscribe('widget:release', this.stopAutoScroll.bind(this)),
-			this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this))
+			this.#eventBus.subscribe('widget:cancel', this.stopAutoScroll.bind(this)),
+			this.#eventBus.subscribe('pointer:moved', (event) => {
+				this.#checkScrollConditions(event.x, event.y);
+			})
 		);
 	}
 
@@ -594,6 +588,7 @@ export class GridDimensionTracker {
 
 	watchGrid() {
 		// Whenever a change occurs to the grid's dimensions or the underlying widgets, update the sizes.
+		// TODO: need to consider how to do this without the use of an effect.
 		$effect(() => {
 			// Which through reactivity will also look at the descendants (eg rows and columns)
 			const grid = this.#grid!;
