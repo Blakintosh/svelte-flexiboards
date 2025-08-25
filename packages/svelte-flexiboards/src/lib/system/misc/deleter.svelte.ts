@@ -3,6 +3,8 @@ import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getPointerService, type PointerService } from '../shared/utils.svelte.js';
 import type { ClassValue } from 'svelte/elements';
+import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
+import type { PointerMovedEvent } from '../types.js';
 
 export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
 export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
@@ -10,6 +12,8 @@ export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
 export class FlexiDeleteController {
 	#provider: InternalFlexiBoardController;
 	#pointerService: PointerService = getPointerService();
+	#eventBus: FlexiEventBus = getFlexiEventBus();
+	#unsubscribers: (() => void)[] = [];
 	ref: HTMLElement | null = null;
 
 	#inside: boolean = $state(false);
@@ -32,6 +36,18 @@ export class FlexiDeleteController {
 				this.#updatePointerOverState(isPointerInside);
 			});
 		});
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('pointer:moved', this.#onPointerMoved.bind(this))
+		);
+	}
+
+	#onPointerMoved(event: PointerMovedEvent) {
+		if (!this.ref) {
+			return;
+		}
+
+		this.#updatePointerOverState(this.#pointerService.isPointerInside(this.ref));
 	}
 
 	#updatePointerOverState(inside: boolean) {

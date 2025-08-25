@@ -155,7 +155,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#tryAddWidget(
-		widget: FlexiWidgetController,
+		widget: InternalFlexiWidgetController,
 		x?: number,
 		y?: number,
 		width?: number,
@@ -167,6 +167,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.widgets.add(widget);
 			this.#updateOrderedWidgets();
 			widget.target = this;
+			widget.internalTarget = this;
 		}
 		return added;
 	}
@@ -224,6 +225,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	deleteWidget(widget: FlexiWidgetController): boolean {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
+
+		// Update the ordered widgets list to reflect the deletion
+		if (deleted) {
+			this.#updateOrderedWidgets();
+		}
 
 		// TODO: this might not be the best way to handle this. Check whether deleteWidget
 		// is still needed.
@@ -458,6 +464,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (event.oldTarget == this) {
 			// Ensure the widget is no longer tracked by this (source) target
 			this.widgets.delete(event.widget);
+			// Update the ordered widgets list to reflect the removal
+			this.#updateOrderedWidgets();
 			// Clear any pre-grab snapshot now that the operation completed successfully
 			this.forgetPreGrabSnapshot();
 			// Apply any deferred grid operations (e.g., row/column collapsing)

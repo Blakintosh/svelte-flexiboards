@@ -91,7 +91,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	#getPlacedWidgetStyle() {
-		// TODO: need a provision to handle when interpolator is initialised from a dragged in widget, as it doesn't seem to exist
 		if (!this.interpolator?.active) {
 			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
 		}
