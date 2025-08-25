@@ -5,7 +5,7 @@
 		type FlexiAddClasses,
 		type FlexiAddWidgetFn
 	} from '$lib/system/misc/adder.svelte.js';
-	import type { Snippet } from 'svelte';
+	import { onDestroy, type Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
 	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
@@ -59,10 +59,8 @@
 	let assistiveTextId = generateUniqueId();
 
 	// Cleanup adder subscriptions when component is destroyed
-	$effect(() => {
-		return () => {
-			adder.destroy();
-		};
+	onDestroy(() => {
+		adder.destroy();
 	});
 </script>
 

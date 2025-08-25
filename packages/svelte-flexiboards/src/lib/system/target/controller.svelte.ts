@@ -513,7 +513,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height, true);
 
 		if (added) {
-			this.widgets.add(this.dropzoneWidget);
+			// this.widgets.add(this.dropzoneWidget);
 			this.#isDropzoneWidgetAdded = true;
 		}
 
@@ -552,10 +552,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
 
 		if (!added && this.#isDropzoneWidgetAdded) {
-			this.widgets.delete(this.dropzoneWidget!);
+			// this.widgets.delete(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = false;
 		} else if (added && !this.#isDropzoneWidgetAdded) {
-			this.widgets.add(this.dropzoneWidget!);
+			// this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
 		}
 	}
@@ -622,7 +622,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		grid.removeWidget(this.dropzoneWidget);
 		if (this.#isDropzoneWidgetAdded) {
-			this.widgets.delete(this.dropzoneWidget);
+			// this.widgets.delete(this.dropzoneWidget);
 			this.#isDropzoneWidgetAdded = false;
 		}
 

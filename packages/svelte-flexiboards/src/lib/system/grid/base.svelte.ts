@@ -6,6 +6,7 @@ import type { FlexiTargetConfiguration, TargetSizing } from '../target/types.js'
 import type { FlexiWidgetController } from '../widget/index.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
 
 export type MoveOperation = {
 	widget: InternalFlexiWidgetController;
@@ -52,6 +53,9 @@ export abstract class FlexiGrid {
 
 	#ref: { ref: HTMLElement | null } = $state({ ref: null });
 	#pointerService: PointerService = getPointerService();
+	#eventBus: FlexiEventBus = getFlexiEventBus();
+
+	#unsubscribers: (() => void)[] = [];
 
 	_dimensionTracker: GridDimensionTracker;
 
@@ -61,13 +65,11 @@ export abstract class FlexiGrid {
 
 		this._dimensionTracker = new GridDimensionTracker(this, targetConfig);
 
-		$effect(() => {
-			const { x, y } = this.#pointerService.position;
-
-			untrack(() => {
-				this.#updatePointerPosition(x, y);
-			});
-		});
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('pointer:moved', (event) => {
+				this.#updatePointerPosition(event.x, event.y);
+			})
+		);
 	}
 
 	style: string = $derived.by(() => {
@@ -120,7 +122,10 @@ export abstract class FlexiGrid {
 	abstract clear(): void;
 
 	forceUpdatePointerPosition(clientX: number, clientY: number) {
-		this.#updatePointerPosition(clientX, clientY);
+		// TODO: just a test, don't think this does anything.
+		untrack(() => {
+			this.#updatePointerPosition(clientX, clientY);
+		});
 	}
 
 	// Getters

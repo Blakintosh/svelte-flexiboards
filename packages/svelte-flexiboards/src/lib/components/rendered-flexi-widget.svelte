@@ -1,7 +1,6 @@
 <script module lang="ts">
 	import { InternalFlexiWidgetController } from '$lib/system/widget/controller.svelte.js';
-	import { renderedflexiwidget, type FlexiWidgetController } from '$lib/system/widget/index.js';
-	import { onDestroy, onMount } from 'svelte';
+	import { renderedflexiwidget } from '$lib/system/widget/index.js';
 	import WidgetTransitionPlaceholder from './widget-transition-placeholder.svelte';
 
 	export type RenderedFlexiWidgetProps = {
@@ -50,6 +49,7 @@
 	tabindex={widget.draggable && !widget.hasGrabbers ? 0 : undefined}
 	bind:this={widget.ref}
 >
+	ID: {widget.id}
 	{#if widget.snippet}
 		{@render widget.snippet({
 			widget

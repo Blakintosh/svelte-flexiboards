@@ -59,6 +59,18 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		inputHeight?: number,
 		isGrabbedWidget: boolean = false
 	): boolean {
+		console.log(
+			'tryPlaceWidget: ongoing with: ',
+			widget.id,
+			'dimensions: ',
+			inputX,
+			inputY,
+			inputWidth,
+			inputHeight,
+			'isGrabbedWidget: ',
+			isGrabbedWidget
+		);
+
 		let [x, y, width, height] = this.#normalisePlacementDimensions(
 			inputX,
 			inputY,
@@ -67,22 +79,29 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
+		console.log('tryPlaceWidget: normalised dimensions', x, y, width, height);
+
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
+			console.log('tryPlaceWidget: failed to adjust grid dimensions');
 			return false;
 		}
+
+		console.log('tryPlaceWidget: adjusted grid dimensions');
 
 		// Get proposed operations up-front, so we can cancel if needed.
 		const operations: Map<InternalFlexiWidgetController, MoveOperation> = new Map();
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
+			console.log('tryPlaceWidget: failed to resolve collisions');
 			return false;
 		}
 
 		// Apply the moves.
 		for (const operation of operations.values()) {
+			console.log('tryPlaceWidget: applying move operation', operation.widget.id);
 			this.#doMoveOperation(operation.widget, operation);
 		}
 
@@ -90,6 +109,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#coordinateSystem.addWidget(widget, x, y, width, height);
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
+
+		console.log('tryPlaceWidget: widget placed');
 
 		return true;
 	}
@@ -101,6 +122,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		displaceY: boolean = true
 	): boolean {
 		const { x: newX, y: newY, width, height } = move;
+
+		// console.log('resolveCollisions: ongoing');
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
@@ -122,6 +145,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				if (!collidingWidget.draggable) {
 					return false;
 				}
+
+				// console.log('resolveCollisions: colliding widget found', collidingWidget.id);
 
 				// Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
 				this.#coordinateSystem.removeWidget(collidingWidget);
@@ -158,6 +183,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 						collidingWidget.width,
 						collidingWidget.height
 					);
+					// console.log('resolveCollisions: xMove successful');
 					continue;
 				}
 
@@ -193,6 +219,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 						collidingWidget.width,
 						collidingWidget.height
 					);
+					// console.log('resolveCollisions: yMove successful');
 					continue;
 				}
 
@@ -205,9 +232,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					collidingWidget.width,
 					collidingWidget.height
 				);
+				// console.log('resolveCollisions: no move possible');
 				return false;
 			}
 		}
+		// console.log('resolveCollisions: all collisions resolved.');
 		return true;
 	}
 
@@ -308,21 +337,28 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		height?: number,
 		isGrabbedWidget?: boolean
 	) {
+		console.log('normalisePlacementDimensions: ongoing');
 		if (x === undefined || y === undefined) {
+			console.log('normalisePlacementDimensions: missing x and y fields');
 			throw new Error(
 				'Missing required x and y fields for a widget in a sparse target layout. The x- and y- coordinates of a widget cannot be automatically inferred in this context.'
 			);
 		}
 
 		// Make sure the grabbed widget can only expand the grid relative from its current dimensions.
+		console.log('normalisePlacementDimensions: isGrabbedWidget', isGrabbedWidget);
 		if (isGrabbedWidget) {
 			if (x >= this.#columns) {
+				console.log('normalisePlacementDimensions: x out of bounds', x, this.#columns);
 				x = this.#columns - 1;
 			}
 			if (y >= this.#rows) {
+				console.log('normalisePlacementDimensions: y out of bounds', y, this.#rows);
 				y = this.#rows - 1;
 			}
 		}
+
+		console.log('normalisePlacementDimensions: normalised dimensions', x, y, width, height);
 
 		return [x, y, width ?? 1, height ?? 1];
 	}
