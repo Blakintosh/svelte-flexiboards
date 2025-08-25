@@ -187,8 +187,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		console.log('onDropped', event);
-
 		this.internalTarget = event.newTarget;
 	}
 

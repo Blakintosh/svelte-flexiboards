@@ -147,8 +147,6 @@ function dispatchGrab(
 		return;
 	}
 
-	console.log('dispatchGrab', clientX, clientY, widget.internalTarget);
-
 	eventBus.dispatch('widget:grabbed', {
 		widget,
 		board,
