@@ -61,6 +61,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
 	});
 
+	readonly id = generateUniqueId('flexiwidget-');
+
 	#getCursorStyle() {
 		if (!this.mounted) {
 			return '';

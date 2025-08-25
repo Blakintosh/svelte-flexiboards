@@ -1,6 +1,7 @@
 import { getContext, setContext } from 'svelte';
 import type {
 	AdderWidgetReadyEvent,
+	PointerMovedEvent,
 	TargetEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
@@ -21,6 +22,7 @@ export interface EventMap {
 	'widget:entertarget': WidgetEvent;
 	'widget:leavetarget': WidgetEvent;
 	'adder:widgetready': AdderWidgetReadyEvent;
+	'pointer:moved': PointerMovedEvent;
 }
 
 // Event listener function type

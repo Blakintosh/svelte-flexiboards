@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { tick, untrack, type Snippet } from 'svelte';
+	import { onDestroy, tick, untrack, type Snippet } from 'svelte';
 	import { flexitarget } from '$lib/system/target/index.js';
 	import type { FlexiTargetController } from '$lib/system/target/base.svelte.js';
 	import type { FlexiTargetPartialConfiguration } from '$lib/system/target/types.js';
@@ -72,17 +72,23 @@
 
 	// TODO: probable Svelte bug, causes browser freeze on production builds.
 	// Haven't been able to repro on REPL as yet.
-	// let orderedWidgets: InternalFlexiWidgetController[] = $state([]);
-
-	// $effect(() => {
-	// 	orderedWidgets = Array.from(target.internalWidgets).toSorted((a, b) => {
+	// let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
+	// 	return Array.from(target.internalWidgets).toSorted((a, b) => {
 	// 		if (a.y !== b.y) {
 	// 			return a.y - b.y;
 	// 		}
 
+	// 		if (a.x == b.x) {
+	// 			console.warn('[warning] collision detected between widgets ', a.id, ' and ', b.id);
+	// 		}
 	// 		return a.x - b.x;
 	// 	});
 	// });
+
+	// Cleanup target subscriptions when component is destroyed
+	onDestroy(() => {
+		target.destroy();
+	});
 </script>
 
 <div class={containerClass}>
@@ -94,7 +100,7 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
-			{#each target.internalWidgets as widget (widget)}
+			{#each target.internalWidgets as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 		{/if}

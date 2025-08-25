@@ -2,7 +2,7 @@
 	import { flexiboard } from '$lib/system/board/index.js';
 	import type { FlexiBoardController } from '$lib/system/board/base.svelte.js';
 	import type { FlexiBoardConfiguration } from '$lib/system/board/types.js';
-	import type { Snippet } from 'svelte';
+	import { onDestroy, type Snippet } from 'svelte';
 	import type { FlexiCommonProps } from '$lib/system/types.js';
 	import FlexiLayoutLoader from './flexi-layout-loader.svelte';
 
@@ -29,10 +29,8 @@
 	let assistiveTextId = generateUniqueId();
 
 	// Cleanup board subscriptions when component is destroyed
-	$effect(() => {
-		return () => {
-			board.destroy();
-		};
+	onDestroy(() => {
+		board.destroy();
 	});
 </script>
 
