@@ -12,8 +12,9 @@ import {
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
+import type { WidgetState } from './state.svelte.js';
 
-export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState> {
+export abstract class FlexiWidgetController {
 	/**
 	 * The target this widget is under, if any.
 	 */
@@ -97,8 +98,11 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 */
 	#interpolator?: WidgetMoveInterpolator;
 
-	constructor(state: FlexiWidgetState, ctor: FlexiWidgetConstructor) {
-		super(state);
+	protected stateContainer?: WidgetState;
+	protected backingState: WidgetStateData;
+
+	constructor(state: WidgetStateData, ctor: FlexiWidgetConstructor) {
+		this.backingState = state;
 
 		this.#rawConfig = ctor.config;
 
@@ -126,11 +130,17 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * When this is null, the widget is not being grabbed.
 	 */
 	get currentAction() {
-		return this.state.currentAction;
+		if (this.stateContainer) {
+			return this.stateContainer.data.currentAction;
+		}
+		return this.backingState.currentAction;
 	}
 
 	set currentAction(value: WidgetAction | null) {
-		this.state.currentAction = value;
+		this.backingState.currentAction = value;
+		if (this.stateContainer) {
+			this.stateContainer.data.currentAction = value;
+		}
 	}
 
 	/**
@@ -166,14 +176,20 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * The width in units of the widget.
 	 */
 	get width() {
-		return this.state.width;
+		if (this.stateContainer) {
+			return this.stateContainer.data.width;
+		}
+		return this.backingState.width;
 	}
 
 	/**
 	 * The height in units of the widget.
 	 */
 	get height() {
-		return this.state.height;
+		if (this.stateContainer) {
+			return this.stateContainer.data.height;
+		}
+		return this.backingState.height;
 	}
 
 	/**
@@ -224,14 +240,20 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get x() {
-		return this.state.x;
+		if (this.stateContainer) {
+			return this.stateContainer.data.x;
+		}
+		return this.backingState.x;
 	}
 
 	/**
 	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get y() {
-		return this.state.y;
+		if (this.stateContainer) {
+			return this.stateContainer.data.y;
+		}
+		return this.backingState.y;
 	}
 
 	/**
@@ -285,10 +307,13 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	abstract get hasResizers(): boolean;
 }
 
-export type FlexiWidgetState = {
+export type WidgetStateData = {
 	currentAction: WidgetAction | null;
 	width: number;
 	height: number;
 	x: number;
 	y: number;
+	isBeingDropped: boolean;
+	hasGrabbers: boolean;
+	hasResizers: boolean;
 };
