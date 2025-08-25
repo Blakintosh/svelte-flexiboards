@@ -34,7 +34,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	// hasGrabbers and hasResizers are now implemented in the base class
 
-	// TODO: try make this internal.
+	// TODO: the "state-subclass" system is quite hacky, and isn't really achieving what we want right now anyway.
+
 	mounted: boolean = $state(false);
 
 	#eventBus: FlexiEventBus;

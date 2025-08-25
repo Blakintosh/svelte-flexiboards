@@ -53,7 +53,11 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 
 	const events = widgetEvents(widget);
 
-	widget.createReactiveState();
+	// Only create reactive state if it doesn't already exist
+	// (it may have been created earlier when widget was added to target)
+	if (!widget.interpolator) {
+		widget.createReactiveState();
+	}
 	return {
 		widget,
 		...events

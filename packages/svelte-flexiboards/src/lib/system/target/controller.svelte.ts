@@ -168,6 +168,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#updateOrderedWidgets();
 			widget.target = this;
 			widget.internalTarget = this;
+
+			// Ensure reactive state is created immediately for proper grid integration
+			// This is especially important for adder widgets that weren't created via target.createWidget()
+			if (!widget.interpolator) {
+				widget.createReactiveState();
+			}
 		}
 		return added;
 	}
