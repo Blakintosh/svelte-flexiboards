@@ -8,7 +8,7 @@ import {
 	type PointerTriggerCondition
 } from './triggers.svelte.js';
 import type { Position, WidgetAction, WidgetResizability } from '../types.js';
-import type { FlexiAddController } from '../misc/adder.svelte.js';
+import type { InternalFlexiAddController } from '../misc/adder.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
@@ -166,7 +166,7 @@ export type FlexiWidgetDerivedConfiguration = {
 
 export type FlexiWidgetUnderAdderConstructor = {
 	type: 'adder';
-	adder: FlexiAddController;
+	adder: InternalFlexiAddController;
 	widthPx: number;
 	heightPx: number;
 	clientX: number;

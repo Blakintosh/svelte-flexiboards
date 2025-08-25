@@ -33,6 +33,8 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 	}
 
 	setContext(contextKey, widget);
+
+	widget.createReactiveState();
 	return {
 		widget
 	};
@@ -51,6 +53,7 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 
 	const events = widgetEvents(widget);
 
+	widget.createReactiveState();
 	return {
 		widget,
 		...events
