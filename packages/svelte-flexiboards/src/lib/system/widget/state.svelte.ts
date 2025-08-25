@@ -1,5 +1,4 @@
-import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
-import type { WidgetAction, WidgetGrabAction, WidgetResizeAction } from '../types.js';
+import type { WidgetAction } from '../types.js';
 import type { WidgetStateData } from './base.svelte.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
