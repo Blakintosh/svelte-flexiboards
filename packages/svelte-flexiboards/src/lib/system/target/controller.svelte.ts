@@ -32,6 +32,7 @@ import { getPointerService } from '../shared/utils.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
+	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
@@ -50,7 +51,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		prepared: false
 	});
 
-	#dropzoneWidget: ProxiedValue<FlexiWidgetController | null> = $state({
+	#dropzoneWidget: ProxiedValue<InternalFlexiWidgetController | null> = $state({
 		value: null
 	});
 	#isDropzoneWidgetAdded: boolean = $state(false);
@@ -164,6 +165,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		if (added) {
 			this.widgets.add(widget);
+			this.#updateOrderedWidgets();
 			widget.target = this;
 		}
 		return added;
@@ -489,6 +491,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#state.prepared = true;
 	}
 
+	#updateOrderedWidgets() {
+		this.#orderedWidgets = Array.from(this.internalWidgets).toSorted((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
+	}
+
 	#updateMouseCellPosition(x: number, y: number) {
 		this.#mouseCellPosition.x = x;
 		this.#mouseCellPosition.y = y;
@@ -690,7 +702,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return this.#dropzoneWidget.value;
 	}
 
-	set dropzoneWidget(value: FlexiWidgetController | null) {
+	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
 	}
 
@@ -700,6 +712,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	get internalWidgets() {
 		return this.#widgets;
+	}
+	get orderedWidgets() {
+		return this.#orderedWidgets;
 	}
 
 	/**
