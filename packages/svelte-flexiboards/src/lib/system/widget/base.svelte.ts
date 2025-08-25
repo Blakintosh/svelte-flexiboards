@@ -7,13 +7,14 @@ import {
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetClasses,
 	type FlexiWidgetConfiguration,
-	type FlexiWidgetConstructor,
+	type FlexiWidgetConstructorParams,
 	type FlexiWidgetDefaults,
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
+import type { WidgetReactiveState } from './state.svelte.js';
 
-export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWidgetState> {
+export class FlexiWidgetController {
 	/**
 	 * The target this widget is under, if any.
 	 */
@@ -92,30 +93,17 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 			defaultTriggerConfig
 	});
 
-	/**
-	 * Manages transitions between widget positions and dimensions.
-	 */
-	#interpolator?: WidgetMoveInterpolator;
+	protected reactiveState?: WidgetReactiveState;
+	backingState: WidgetStateData;
 
-	constructor(state: FlexiWidgetState, ctor: FlexiWidgetConstructor) {
-		super(state);
+	constructor(state: WidgetStateData, params: FlexiWidgetConstructorParams) {
+		this.backingState = state;
 
-		this.#rawConfig = ctor.config;
+		this.#rawConfig = params.config;
 
-		// TODO: needing to differentiate between target and adder is dumb if it's just for grabbing the board context.
-
-		if (ctor.type == 'target') {
-			this.target = ctor.target as FlexiTargetController;
-			this.isShadow = ctor.isShadow ?? false;
-
-			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider, this);
-		} else if (ctor.type == 'adder') {
-			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider, this);
-
-			// this.#initialX = ctor.clientX;
-			// this.#initialY = ctor.clientY;
-			// this.#initialHeightPx = ctor.heightPx;
-			// this.#initialWidthPx = ctor.widthPx;
+		if (params.target) {
+			this.target = params.target as FlexiTargetController;
+			this.isShadow = params.isShadow ?? false;
 		}
 	}
 
@@ -126,11 +114,17 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * When this is null, the widget is not being grabbed.
 	 */
 	get currentAction() {
-		return this.state.currentAction;
+		if (this.reactiveState) {
+			return this.reactiveState.currentAction;
+		}
+		return this.backingState.currentAction;
 	}
 
 	set currentAction(value: WidgetAction | null) {
-		this.state.currentAction = value;
+		if (this.reactiveState) {
+			this.reactiveState.currentAction = value;
+		}
+		this.backingState.currentAction = value;
 	}
 
 	/**
@@ -166,14 +160,34 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * The width in units of the widget.
 	 */
 	get width() {
-		return this.state.width;
+		if (this.reactiveState) {
+			return this.reactiveState.width;
+		}
+		return this.backingState.width;
+	}
+
+	set width(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.width = value;
+		}
+		this.backingState.width = value;
 	}
 
 	/**
 	 * The height in units of the widget.
 	 */
 	get height() {
-		return this.state.height;
+		if (this.reactiveState) {
+			return this.reactiveState.height;
+		}
+		return this.backingState.height;
+	}
+
+	set height(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.height = value;
+		}
+		this.backingState.height = value;
 	}
 
 	/**
@@ -224,14 +238,34 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get x() {
-		return this.state.x;
+		if (this.reactiveState) {
+			return this.reactiveState.x;
+		}
+		return this.backingState.x;
+	}
+
+	set x(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.x = value;
+		}
+		this.backingState.x = value;
 	}
 
 	/**
 	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get y() {
-		return this.state.y;
+		if (this.reactiveState) {
+			return this.reactiveState.y;
+		}
+		return this.backingState.y;
+	}
+
+	set y(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.y = value;
+		}
+		this.backingState.y = value;
 	}
 
 	/**
@@ -249,7 +283,10 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * Whether the widget should draw a placeholder widget in the DOM.
 	 */
 	get shouldDrawPlaceholder() {
-		return this.#interpolator?.active ?? false;
+		if (this.reactiveState) {
+			return this.reactiveState.interpolator?.active ?? false;
+		}
+		return this.interpolator?.active ?? false;
 	}
 
 	/**
@@ -271,7 +308,7 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 	 * Gets the widget's interpolator for transitions.
 	 */
 	get interpolator() {
-		return this.#interpolator;
+		return this.reactiveState?.interpolator;
 	}
 
 	/**
@@ -281,14 +318,62 @@ export abstract class FlexiWidgetController extends FlexiControllerBase<FlexiWid
 		return this.#config.transition;
 	}
 
-	abstract get hasGrabbers(): boolean;
-	abstract get hasResizers(): boolean;
+	/**
+	 * Whether the widget has any grabbers attached
+	 */
+	get hasGrabbers(): boolean {
+		if (this.reactiveState) {
+			return this.reactiveState.hasGrabbers;
+		}
+		return this.backingState.hasGrabbers;
+	}
+
+	/**
+	 * Whether the widget has any resizers attached
+	 */
+	get hasResizers(): boolean {
+		if (this.reactiveState) {
+			return this.reactiveState.hasResizers;
+		}
+		return this.backingState.hasResizers;
+	}
+
+	/**
+	 * Whether the widget is currently being dropped after a drag operation
+	 */
+	get isBeingDropped(): boolean {
+		if (this.reactiveState) {
+			return this.reactiveState.isBeingDropped;
+		}
+		return this.backingState.isBeingDropped;
+	}
+
+	set isBeingDropped(value: boolean) {
+		if (this.reactiveState) {
+			this.reactiveState.isBeingDropped = value;
+		}
+		this.backingState.isBeingDropped = value;
+	}
+
+	/**
+	 * Destroys the reactive state container when the widget component unmounts.
+	 * This should be called from the component's onDestroy lifecycle.
+	 */
+	destroyReactiveState(): void {
+		if (this.reactiveState) {
+			this.reactiveState.destroy();
+			this.reactiveState = undefined;
+		}
+	}
 }
 
-export type FlexiWidgetState = {
+export type WidgetStateData = {
 	currentAction: WidgetAction | null;
 	width: number;
 	height: number;
 	x: number;
 	y: number;
+	isBeingDropped: boolean;
+	hasGrabbers: boolean;
+	hasResizers: boolean;
 };

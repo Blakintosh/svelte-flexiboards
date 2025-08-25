@@ -32,6 +32,7 @@ import { getPointerService } from '../shared/utils.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
+	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
@@ -50,11 +51,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		prepared: false
 	});
 
-	#dropzoneWidget: ProxiedValue<FlexiWidgetController | null> = $state({
+	#dropzoneWidget: ProxiedValue<InternalFlexiWidgetController | null> = $state({
 		value: null
 	});
 	#isDropzoneWidgetAdded: boolean = $state(false);
-	#dropzoneEffectDestroy: (() => void) | null = null;
 
 	#mouseCellPosition: Position = $state({
 		x: 0,
@@ -155,7 +155,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#tryAddWidget(
-		widget: FlexiWidgetController,
+		widget: InternalFlexiWidgetController,
 		x?: number,
 		y?: number,
 		width?: number,
@@ -165,7 +165,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		if (added) {
 			this.widgets.add(widget);
+			this.#updateOrderedWidgets();
 			widget.target = this;
+			widget.internalTarget = this;
+
+			// Ensure reactive state is created immediately for proper grid integration
+			// This is especially important for adder widgets that weren't created via target.createWidget()
+			if (!widget.interpolator) {
+				widget.createReactiveState();
+			}
 		}
 		return added;
 	}
@@ -192,9 +200,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
 		const widget = new InternalFlexiWidgetController({
-			type: 'target',
-			target: this,
-			config
+			config,
+			provider: this.provider,
+			target: this
 		});
 
 		// If the widget can't be added, it's probably a collision.
@@ -223,6 +231,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	deleteWidget(widget: FlexiWidgetController): boolean {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
+
+		// Update the ordered widgets list to reflect the deletion
+		if (deleted) {
+			this.#updateOrderedWidgets();
+		}
 
 		// TODO: this might not be the best way to handle this. Check whether deleteWidget
 		// is still needed.
@@ -279,8 +292,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	#createShadow(of: FlexiWidgetController) {
 		const shadow = new InternalFlexiWidgetController({
-			type: 'target',
-			target: this,
 			config: {
 				width: of.width,
 				height: of.height,
@@ -291,6 +302,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				className: of.className,
 				componentProps: of.componentProps
 			},
+			provider: this.provider,
+			target: this,
 			isShadow: true
 		});
 
@@ -457,6 +470,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if (event.oldTarget == this) {
 			// Ensure the widget is no longer tracked by this (source) target
 			this.widgets.delete(event.widget);
+			// Update the ordered widgets list to reflect the removal
+			this.#updateOrderedWidgets();
 			// Clear any pre-grab snapshot now that the operation completed successfully
 			this.forgetPreGrabSnapshot();
 			// Apply any deferred grid operations (e.g., row/column collapsing)
@@ -490,6 +505,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#state.prepared = true;
 	}
 
+	#updateOrderedWidgets() {
+		this.#orderedWidgets = Array.from(this.internalWidgets).toSorted((a, b) => {
+			if (a.y !== b.y) {
+				return a.y - b.y;
+			}
+
+			return a.x - b.x;
+		});
+	}
+
 	#updateMouseCellPosition(x: number, y: number) {
 		this.#mouseCellPosition.x = x;
 		this.#mouseCellPosition.y = y;
@@ -504,10 +529,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
 
-		// TODO: not sure why, but effect root needs to be here to make the dropzone widget work properly.
-		this.#dropzoneEffectDestroy = $effect.root(() => {
-			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
-		});
+		this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
@@ -630,10 +652,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 		this.#gridSnapshot = null;
 
-		this.#dropzoneEffectDestroy?.();
-
 		this.dropzoneWidget = null;
-		this.#dropzoneEffectDestroy = null;
 	}
 
 	// State-related getters and setters
@@ -697,7 +716,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return this.#dropzoneWidget.value;
 	}
 
-	set dropzoneWidget(value: FlexiWidgetController | null) {
+	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
 	}
 
@@ -707,6 +726,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	get internalWidgets() {
 		return this.#widgets;
+	}
+	get orderedWidgets() {
+		return this.#orderedWidgets;
 	}
 
 	/**

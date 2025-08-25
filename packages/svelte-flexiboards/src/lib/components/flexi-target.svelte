@@ -100,9 +100,13 @@
 			{@render children()}
 		{:else if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
-			{#each target.internalWidgets as widget (widget.id)}
+			{#each target.orderedWidgets as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
+
+			{#if target.dropzoneWidget}
+				<RenderedFlexiWidget widget={target.dropzoneWidget} />
+			{/if}
 		{/if}
 	</FlexiGrid>
 	{@render footer?.({ target })}

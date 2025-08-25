@@ -18,30 +18,24 @@ import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
-import type { FlexiWidgetConstructor } from './types.js';
+import type { FlexiWidgetConstructorParams } from './types.js';
+import { WidgetReactiveState } from './state.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
 
-	isBeingDropped: boolean = $state(false);
-
-	#grabbers: number = $state(0);
-	#resizers: number = $state(0);
-
-	#hasGrabbers: boolean = $derived(this.#grabbers > 0);
-	#hasResizers: boolean = $derived(this.#resizers > 0);
+	// Legacy non-reactive state tracking (for when reactive state is not available)
+	#grabbersCount: number = 0;
+	#resizersCount: number = 0;
 
 	internalTarget?: InternalFlexiTargetController = undefined;
+	provider: InternalFlexiBoardController;
 
-	get hasGrabbers() {
-		return this.#hasGrabbers;
-	}
+	// hasGrabbers and hasResizers are now implemented in the base class
 
-	get hasResizers() {
-		return this.#hasResizers;
-	}
+	// TODO: the "state-subclass" system is quite hacky, and isn't really achieving what we want right now anyway.
 
-	// TODO: try make this internal.
 	mounted: boolean = $state(false);
 
 	#eventBus: FlexiEventBus;
@@ -89,7 +83,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
 		}
 
-		if (this.#grabbers == 0) {
+		const grabberCount = this.reactiveState?.grabberCount ?? this.#grabbersCount;
+		if (grabberCount == 0) {
 			return 'user-select: none; cursor: grab; touch-action: none;';
 		}
 
@@ -97,7 +92,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	#getPlacedWidgetStyle() {
-		// TODO: need a provision to handle when interpolator is initialised from a dragged in widget, as it doesn't seem to exist
 		if (!this.interpolator?.active) {
 			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
 		}
@@ -154,23 +148,27 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
 	}
 
-	// Constructor for widget creation directly under a FlexiTarget
-	constructor(ctor: FlexiWidgetConstructor) {
+	constructor(params: FlexiWidgetConstructorParams) {
 		// Initialise the state proxy.
 		super(
 			{
 				currentAction: null,
-				width: ctor.config.width ?? 1,
-				height: ctor.config.height ?? 1,
+				width: params.config.width ?? 1,
+				height: params.config.height ?? 1,
 				x: 0,
-				y: 0
+				y: 0,
+				hasGrabbers: false,
+				hasResizers: false,
+				isBeingDropped: false
 			},
-			ctor
+			params
 		);
 
-		if (ctor.type == 'target') {
-			this.internalTarget = ctor.target;
+		if (params.target) {
+			this.internalTarget = params.target;
 		}
+
+		this.provider = params.provider;
 
 		this.#eventBus = getFlexiEventBus();
 
@@ -253,19 +251,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * @param height The height of the widget.
 	 */
 	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
-		if (
-			this.state.x == x &&
-			this.state.y == y &&
-			this.state.width == width &&
-			this.state.height == height
-		) {
+		if (this.x == x && this.y == y && this.width == width && this.height == height) {
 			return;
 		}
 
-		this.state.x = x;
-		this.state.y = y;
-		this.state.width = width;
-		this.state.height = height;
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
 
 		if (interpolate) {
 			this.#interpolateMove(x, y, width, height);
@@ -308,33 +301,51 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	/**
-	 * Registers a grabber to the widget and returns an object with an `onpointerdown` event handler.
-	 * @returns An object with an `onpointerdown` event handler.
+	 * Registers a grabber to the widget.
 	 */
 	addGrabber() {
-		this.#grabbers++;
+		if (this.reactiveState) {
+			this.reactiveState.addGrabber();
+		} else {
+			this.#grabbersCount++;
+			this.backingState.hasGrabbers = this.#grabbersCount > 0;
+		}
 	}
 
 	/**
 	 * Unregisters a grabber from the widget.
 	 */
 	removeGrabber() {
-		this.#grabbers--;
+		if (this.reactiveState) {
+			this.reactiveState.removeGrabber();
+		} else {
+			this.#grabbersCount--;
+			this.backingState.hasGrabbers = this.#grabbersCount > 0;
+		}
 	}
 
 	/**
-	 * Registers a resizer to the widget and returns an object with an `onpointerdown` event handler.
-	 * @returns An object with an `onpointerdown` event handler.
+	 * Registers a resizer to the widget.
 	 */
 	addResizer() {
-		this.#resizers++;
+		if (this.reactiveState) {
+			this.reactiveState.addResizer();
+		} else {
+			this.#resizersCount++;
+			this.backingState.hasResizers = this.#resizersCount > 0;
+		}
 	}
 
 	/**
 	 * Unregisters a resizer from the widget.
 	 */
 	removeResizer() {
-		this.#resizers--;
+		if (this.reactiveState) {
+			this.reactiveState.removeResizer();
+		} else {
+			this.#resizersCount--;
+			this.backingState.hasResizers = this.#resizersCount > 0;
+		}
 	}
 
 	/**
@@ -381,9 +392,29 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	/**
+	 * Creates the reactive state container when the widget component mounts.
+	 * This should be called from the component's onMount lifecycle.
+	 */
+	createReactiveState(): void {
+		// Create the reactive state with current backing state
+		this.reactiveState = new WidgetReactiveState(this, this.backingState);
+
+		// Transfer current grabber/resizer counts to reactive state
+		for (let i = 0; i < this.#grabbersCount; i++) {
+			this.reactiveState!.addGrabber();
+		}
+		for (let i = 0; i < this.#resizersCount; i++) {
+			this.reactiveState!.addResizer();
+		}
+	}
+
+	/**
 	 * Cleanup method to be called when the widget is destroyed
 	 */
 	destroy() {
+		// Clean up reactive state first
+		this.destroyReactiveState();
+
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];

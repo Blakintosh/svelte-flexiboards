@@ -92,13 +92,8 @@ export class InternalFlexiAddController implements FlexiAddController {
 
 		// Create a widget under this FlexiAdd.
 		this.newWidget = new InternalFlexiWidgetController({
-			type: 'adder',
-			adder: this,
 			config: config.widget,
-			widthPx: config.widthPx ?? 100,
-			heightPx: config.heightPx ?? 100,
-			clientX,
-			clientY
+			provider: this.provider
 		});
 
 		this.toCreateParams = {
