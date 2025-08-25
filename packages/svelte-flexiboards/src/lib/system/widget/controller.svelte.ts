@@ -168,8 +168,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			ctor
 		);
 
-		console.log('new widget, its called ', this.id);
-
 		if (ctor.type == 'target') {
 			this.internalTarget = ctor.target;
 		}
@@ -263,8 +261,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		) {
 			return;
 		}
-
-		console.log('setting bounds for ', this.id, ' to ', x, y, width, height);
 
 		this.state.x = x;
 		this.state.y = y;
