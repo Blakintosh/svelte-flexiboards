@@ -18,8 +18,9 @@ import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
-import type { FlexiWidgetConstructor } from './types.js';
+import type { FlexiWidgetConstructorParams } from './types.js';
 import { WidgetReactiveState } from './state.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
@@ -29,6 +30,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#resizersCount: number = 0;
 
 	internalTarget?: InternalFlexiTargetController = undefined;
+	provider: InternalFlexiBoardController;
 
 	// hasGrabbers and hasResizers are now implemented in the base class
 
@@ -146,26 +148,27 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
 	}
 
-	// Constructor for widget creation directly under a FlexiTarget
-	constructor(ctor: FlexiWidgetConstructor) {
+	constructor(params: FlexiWidgetConstructorParams) {
 		// Initialise the state proxy.
 		super(
 			{
 				currentAction: null,
-				width: ctor.config.width ?? 1,
-				height: ctor.config.height ?? 1,
+				width: params.config.width ?? 1,
+				height: params.config.height ?? 1,
 				x: 0,
 				y: 0,
 				hasGrabbers: false,
 				hasResizers: false,
 				isBeingDropped: false
 			},
-			ctor
+			params
 		);
 
-		if (ctor.type == 'target') {
-			this.internalTarget = ctor.target;
+		if (params.target) {
+			this.internalTarget = params.target;
 		}
+
+		this.provider = params.provider;
 
 		this.#eventBus = getFlexiEventBus();
 
@@ -183,6 +186,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		if (event.widget !== this) {
 			return;
 		}
+
+		console.log('onDropped', event);
 
 		this.internalTarget = event.newTarget;
 	}

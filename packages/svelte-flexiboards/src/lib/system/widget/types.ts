@@ -10,6 +10,7 @@ import {
 import type { Position, WidgetAction, WidgetResizability } from '../types.js';
 import type { InternalFlexiAddController } from '../misc/adder.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 export type FlexiWidgetChildrenSnippetParameters = {
 	widget: FlexiWidgetController;
@@ -164,26 +165,11 @@ export type FlexiWidgetDerivedConfiguration = {
 	transition: FlexiWidgetTransitionConfiguration;
 };
 
-export type FlexiWidgetUnderAdderConstructor = {
-	type: 'adder';
-	adder: InternalFlexiAddController;
-	widthPx: number;
-	heightPx: number;
-	clientX: number;
-	clientY: number;
-};
-
-export type FlexiWidgetUnderTargetConstructor = {
-	type: 'target';
-	target: InternalFlexiTargetController;
-	isShadow?: boolean;
-};
-
-export type FlexiWidgetConstructor = (
-	| FlexiWidgetUnderAdderConstructor
-	| FlexiWidgetUnderTargetConstructor
-) & {
+export type FlexiWidgetConstructorParams = {
 	config: FlexiWidgetConfiguration;
+	provider: InternalFlexiBoardController;
+	target?: InternalFlexiTargetController;
+	isShadow?: boolean;
 };
 
 export const defaultTriggerConfig: FlexiWidgetTriggerConfiguration = {

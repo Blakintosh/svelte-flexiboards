@@ -5,9 +5,9 @@ import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
 
 /**
- * Reactive state container for widget properties that require Svelte runes.
- * This class is created when a widget component mounts and destroyed when it unmounts,
- * ensuring proper effect context for reactivity.
+ * Reactive state container for FlexiWidgets.
+ * Constructed separately from the widget controller, as each state container
+ * is bound to the lifecycle of a widget component.
  */
 export class WidgetReactiveState {
 	// Core state data
@@ -43,14 +43,8 @@ export class WidgetReactiveState {
 		this.y = initialState.y;
 		this.isBeingDropped = initialState.isBeingDropped;
 
-		// Create interpolator with proper context
-		const provider = widget.internalTarget?.provider;
-		if (provider) {
-			this.interpolator = new WidgetMoveInterpolator(provider, widget);
-		} else {
-			// Create a placeholder interpolator or handle null case
-			this.interpolator = null as any;
-		}
+		// Create the widget's interpolator.
+		this.interpolator = new WidgetMoveInterpolator(widget.provider, widget);
 	}
 
 	/**
@@ -96,10 +90,11 @@ export class WidgetReactiveState {
 	}
 
 	/**
-	 * Syncs this reactive state back to the backing state
+	 * Syncs this reactive state back to the widget's backing state.
 	 */
 	syncToBackingState(): void {
-		const backing = (this.#widget as any).backingState;
+		const backing = this.#widget.backingState;
+
 		backing.currentAction = this.currentAction;
 		backing.width = this.width;
 		backing.height = this.height;

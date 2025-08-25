@@ -193,9 +193,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
 		const widget = new InternalFlexiWidgetController({
-			type: 'target',
-			target: this,
-			config
+			config,
+			provider: this.provider,
+			target: this
 		});
 
 		// If the widget can't be added, it's probably a collision.
@@ -280,8 +280,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	#createShadow(of: FlexiWidgetController) {
 		const shadow = new InternalFlexiWidgetController({
-			type: 'target',
-			target: this,
 			config: {
 				width: of.width,
 				height: of.height,
@@ -292,6 +290,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				className: of.className,
 				componentProps: of.componentProps
 			},
+			provider: this.provider,
+			target: this,
 			isShadow: true
 		});
 

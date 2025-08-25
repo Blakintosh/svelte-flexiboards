@@ -7,7 +7,7 @@ import {
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetClasses,
 	type FlexiWidgetConfiguration,
-	type FlexiWidgetConstructor,
+	type FlexiWidgetConstructorParams,
 	type FlexiWidgetDefaults,
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
@@ -93,33 +93,17 @@ export class FlexiWidgetController {
 			defaultTriggerConfig
 	});
 
-	/**
-	 * Manages transitions between widget positions and dimensions.
-	 */
-	#interpolator?: WidgetMoveInterpolator;
-
 	protected reactiveState?: WidgetReactiveState;
-	protected backingState: WidgetStateData;
+	backingState: WidgetStateData;
 
-	constructor(state: WidgetStateData, ctor: FlexiWidgetConstructor) {
+	constructor(state: WidgetStateData, params: FlexiWidgetConstructorParams) {
 		this.backingState = state;
 
-		this.#rawConfig = ctor.config;
+		this.#rawConfig = params.config;
 
-		// TODO: needing to differentiate between target and adder is dumb if it's just for grabbing the board context.
-
-		if (ctor.type == 'target') {
-			this.target = ctor.target as FlexiTargetController;
-			this.isShadow = ctor.isShadow ?? false;
-
-			this.#interpolator = new WidgetMoveInterpolator(ctor.target.provider, this);
-		} else if (ctor.type == 'adder') {
-			this.#interpolator = new WidgetMoveInterpolator(ctor.adder.provider, this);
-
-			// this.#initialX = ctor.clientX;
-			// this.#initialY = ctor.clientY;
-			// this.#initialHeightPx = ctor.heightPx;
-			// this.#initialWidthPx = ctor.widthPx;
+		if (params.target) {
+			this.target = params.target as FlexiTargetController;
+			this.isShadow = params.isShadow ?? false;
 		}
 	}
 
@@ -302,7 +286,7 @@ export class FlexiWidgetController {
 		if (this.reactiveState) {
 			return this.reactiveState.interpolator?.active ?? false;
 		}
-		return this.#interpolator?.active ?? false;
+		return this.interpolator?.active ?? false;
 	}
 
 	/**
@@ -324,10 +308,7 @@ export class FlexiWidgetController {
 	 * Gets the widget's interpolator for transitions.
 	 */
 	get interpolator() {
-		if (this.reactiveState) {
-			return this.reactiveState.interpolator;
-		}
-		return this.#interpolator;
+		return this.reactiveState?.interpolator;
 	}
 
 	/**
