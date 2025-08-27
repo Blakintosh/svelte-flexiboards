@@ -85,6 +85,16 @@ description: "The reactive default widget configuration passed through from the 
 name: "prepared",
 type: "boolean",
 description: "Whether the target is prepared and ready to render widgets."
+},
+{
+name: "columns",
+type: "number",
+description: "The number of columns currently being used in the target grid."
+},
+{
+name: "rows",
+type: "number",
+description: "The number of rows currently being used in the target grid."
 }
 ]} />
 
@@ -93,28 +103,10 @@ description: "Whether the target is prepared and ready to render widgets."
 name: "createWidget",
 type: "(config: FlexiWidgetConfiguration) => FlexiWidgetController | undefined",
 description: "Creates a new widget under this target."
-},
-{
-name: "deleteWidget",
-type: "(widget: FlexiWidgetController) => boolean",
-description: "Deletes the given widget from this target, if it exists."
-},
-{
-name: "dropWidget",
-type: "(widget: FlexiWidgetController) => boolean",
-description: "Attempts to drop a widget into this target."
-},
-{
-name: "grabWidget",
-type: "(params: WidgetGrabbedParams) => WidgetAction | null",
-description: "Grabs a widget."
-},
-{
-name: "startResizeWidget",
-type: "(params: WidgetStartResizeParams) => WidgetAction | null",
-description: "Starts resizing a widget."
 }
 ]} />
+
+More methods will be added in a future version.
 
 ## FlexiTargetConfiguration
 
@@ -136,7 +128,7 @@ description: "Allows the specifying of the value inside the `repeat()` function 
 {
 name: "layout",
 type: "TargetLayout",
-description: "The layout algorithm and parameters to use for the target grid. Reactive."
+description: "The layout algorithm and parameters to use for the target grid."
 },
 {
 name: "widgetDefaults",
@@ -189,5 +181,20 @@ description: "The props applied to the component rendered, if it has one. Reacti
 name: "className",
 type: "ClassValue",
 description: "The class names to apply to this widget. Reactive."
+},
+{
+name: "grabTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+},
+{
+name: "resizeTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+},
+{
+name: "transitionConfig",
+type: "FlexiWidgetTransitionConfiguration",
+description: "Gets the transition configuration for this widget."
 }
 ]} />

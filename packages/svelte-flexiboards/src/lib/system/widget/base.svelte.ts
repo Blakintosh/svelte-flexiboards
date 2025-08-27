@@ -16,7 +16,7 @@ import type { WidgetReactiveState } from './state.svelte.js';
 
 export class FlexiWidgetController {
 	/**
-	 * The target this widget is under, if any.
+	 * The target this widget is under. This is not defined if the widget has not yet been dropped in the board.
 	 */
 	target?: FlexiTargetController = $state(undefined);
 
@@ -166,13 +166,6 @@ export class FlexiWidgetController {
 		return this.backingState.width;
 	}
 
-	set width(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.width = value;
-		}
-		this.backingState.width = value;
-	}
-
 	/**
 	 * The height in units of the widget.
 	 */
@@ -181,13 +174,6 @@ export class FlexiWidgetController {
 			return this.reactiveState.height;
 		}
 		return this.backingState.height;
-	}
-
-	set height(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.height = value;
-		}
-		this.backingState.height = value;
 	}
 
 	/**
@@ -244,13 +230,6 @@ export class FlexiWidgetController {
 		return this.backingState.x;
 	}
 
-	set x(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.x = value;
-		}
-		this.backingState.x = value;
-	}
-
 	/**
 	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
@@ -259,13 +238,6 @@ export class FlexiWidgetController {
 			return this.reactiveState.y;
 		}
 		return this.backingState.y;
-	}
-
-	set y(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.y = value;
-		}
-		this.backingState.y = value;
 	}
 
 	/**
@@ -277,16 +249,6 @@ export class FlexiWidgetController {
 
 	set metadata(value: Record<string, any> | undefined) {
 		this.#rawConfig.metadata = value;
-	}
-
-	/**
-	 * Whether the widget should draw a placeholder widget in the DOM.
-	 */
-	get shouldDrawPlaceholder() {
-		if (this.reactiveState) {
-			return this.reactiveState.interpolator?.active ?? false;
-		}
-		return this.interpolator?.active ?? false;
 	}
 
 	/**
@@ -305,13 +267,6 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * Gets the widget's interpolator for transitions.
-	 */
-	get interpolator() {
-		return this.reactiveState?.interpolator;
-	}
-
-	/**
 	 * Gets the transition configuration for this widget.
 	 */
 	get transitionConfig() {
@@ -319,7 +274,7 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * Whether the widget has any grabbers attached
+	 * Whether the widget has any grabbers attached.
 	 */
 	get hasGrabbers(): boolean {
 		if (this.reactiveState) {
@@ -339,31 +294,13 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * Whether the widget is currently being dropped after a drag operation
+	 * Whether the widget is currently being dropped after a drag operation.
 	 */
 	get isBeingDropped(): boolean {
 		if (this.reactiveState) {
 			return this.reactiveState.isBeingDropped;
 		}
 		return this.backingState.isBeingDropped;
-	}
-
-	set isBeingDropped(value: boolean) {
-		if (this.reactiveState) {
-			this.reactiveState.isBeingDropped = value;
-		}
-		this.backingState.isBeingDropped = value;
-	}
-
-	/**
-	 * Destroys the reactive state container when the widget component unmounts.
-	 * This should be called from the component's onDestroy lifecycle.
-	 */
-	destroyReactiveState(): void {
-		if (this.reactiveState) {
-			this.reactiveState.destroy();
-			this.reactiveState = undefined;
-		}
 	}
 }
 

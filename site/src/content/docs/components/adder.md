@@ -55,13 +55,11 @@ description: "A callback that fires when the adder's controller is first created
 
 `FlexiAdd` uses a [controller](/docs/controllers) to manage its state and behaviour. You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
 
-The `FlexiAddController` allows you to manage the board directly and carry out actions.
-
 <ApiReference title="Properties" api={[
 {
-name: "newWidget",
-type: "FlexiWidgetController | undefined",
-description: "The widget that is currently being dragged in."
+name: "ref",
+type: "HTMLElement | undefined",
+description: ""
 }
 ]} />
 

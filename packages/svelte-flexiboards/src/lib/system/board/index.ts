@@ -12,7 +12,7 @@ export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController
 	// Create the event bus context for this board at the same time.
 	const eventBus = flexiEventBus();
 
-	const board = new InternalFlexiBoardController(props, eventBus);
+	const board = new InternalFlexiBoardController(props);
 
 	setContext(contextKey, board);
 	boardEvents(board);

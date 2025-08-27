@@ -23,19 +23,6 @@ export class FlexiDeleteController {
 
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
-		// TODO: migrate this to an event
-		$effect(() => {
-			if (!this.ref) {
-				return;
-			}
-
-			const isPointerInside = this.#pointerService.isPointerInside(this.ref);
-
-			// Only check when keyboard controls are active
-			untrack(() => {
-				this.#updatePointerOverState(isPointerInside);
-			});
-		});
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('pointer:moved', this.#onPointerMoved.bind(this))

@@ -27,3 +27,7 @@ For the same reason, the [FlexiAdd](/docs/component/adder) has also been adjuste
 - The contents of your `children` snippet no longer needs to be a button.
 
 The [Numbers](/examples/numbers) example has been updated to reflect this change.
+
+## 3. Internal Controller Changes
+
+Earlier releases saw controllers, especially the `FlexiWidgetController`, expose methods and properties that were never intended for external use. In v0.3, these methods are no longer available.

@@ -127,7 +127,7 @@ function getFlexiwidgetCtx() {
 }
 
 export function getFlexiwidgetInterpolatorCtx() {
-	const widget = getFlexiwidgetCtx();
+	const widget = getInternalFlexiwidgetCtx();
 
 	if (!widget.interpolator) {
 		throw new Error(

@@ -419,4 +419,107 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
+
+	/**
+	 * Destroys the reactive state container when the widget component unmounts.
+	 * This should be called from the component's onDestroy lifecycle.
+	 */
+	destroyReactiveState(): void {
+		if (this.reactiveState) {
+			this.reactiveState.destroy();
+			this.reactiveState = undefined;
+		}
+	}
+
+	/**
+	 * The width in units of the widget.
+	 */
+	get width() {
+		if (this.reactiveState) {
+			return this.reactiveState.width;
+		}
+		return this.backingState.width;
+	}
+
+	/**
+	 * The height in units of the widget.
+	 */
+	get height() {
+		if (this.reactiveState) {
+			return this.reactiveState.height;
+		}
+		return this.backingState.height;
+	}
+
+	set width(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.width = value;
+		}
+		this.backingState.width = value;
+	}
+
+	set height(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.height = value;
+		}
+		this.backingState.height = value;
+	}
+
+	/**
+	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	get x() {
+		if (this.reactiveState) {
+			return this.reactiveState.x;
+		}
+		return this.backingState.x;
+	}
+
+	/**
+	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	get y() {
+		if (this.reactiveState) {
+			return this.reactiveState.y;
+		}
+		return this.backingState.y;
+	}
+
+	set x(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.x = value;
+		}
+		this.backingState.x = value;
+	}
+
+	set y(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.y = value;
+		}
+		this.backingState.y = value;
+	}
+
+	/**
+	 * Gets the widget's interpolator for transitions.
+	 */
+	get interpolator() {
+		return this.reactiveState?.interpolator;
+	}
+
+	/**
+	 * Whether the widget should draw a placeholder widget in the DOM.
+	 */
+	get shouldDrawPlaceholder() {
+		if (this.reactiveState) {
+			return this.reactiveState.interpolator?.active ?? false;
+		}
+		return this.interpolator?.active ?? false;
+	}
+
+	set isBeingDropped(value: boolean) {
+		if (this.reactiveState) {
+			this.reactiveState.isBeingDropped = value;
+		}
+		this.backingState.isBeingDropped = value;
+	}
 }

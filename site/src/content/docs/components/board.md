@@ -103,7 +103,7 @@ description: "Allows the specifying of the value inside the `repeat()` function 
 {
 name: "layout",
 type: "TargetLayout",
-description: "The layout algorithm and parameters to use for the target grid. Reactive."
+description: "The layout algorithm and parameters to use for the target grid."
 }
 ]} />
 
@@ -151,5 +151,20 @@ description: "The props applied to the component rendered, if it has one. Reacti
 name: "className",
 type: "ClassValue",
 description: "The class names to apply to this widget. Reactive."
+},
+{
+name: "grabTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+},
+{
+name: "resizeTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+},
+{
+name: "transitionConfig",
+type: "FlexiWidgetTransitionConfiguration",
+description: "Gets the transition configuration for this widget."
 }
 ]} />
