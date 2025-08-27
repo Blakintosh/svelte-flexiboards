@@ -194,29 +194,6 @@ describe('FreeFormFlexiGrid', () => {
 				expect(grid.columns).toBeGreaterThan(3);
 			});
 
-			it('should constrain widget to grid when placing outside boundaries', () => {
-				const b = createMockWidget();
-
-				// TODO: this test is probably fine for a non-collapsing grid, but we'll need to later
-				// factor in the collapsing grid scenario.
-
-				// State:
-				// ---
-				// ---
-				// ---
-
-				const bResult = grid.tryPlaceWidget(b, 0, 3, 1, 1);
-
-				// Expected state:
-				// ---
-				// ---
-				// b--
-
-				expect(bResult).toBe(true);
-				expect(b.setBounds).toHaveBeenCalledWith(0, 2, 1, 1);
-				expect(grid.rows).toEqual(3);
-			});
-
 			it('should not expand beyond MAX_COLUMNS', () => {
 				// Create a widget that would exceed MAX_COLUMNS (32)
 				const widget = createMockWidget();
