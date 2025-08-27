@@ -66,20 +66,16 @@
 		config={boardConfig}
 		bind:controller={boardController}
 	>
-		<FlexiAdd {addWidget}>
-			{#snippet children({ props })}
-				<button
-					class="flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"
-					{...props}
-				>
-					<Plus class="mb-2 size-8 lg:size-12" />
-					Add a random number
-				</button>
-			{/snippet}
+		<FlexiAdd 
+			{addWidget} 
+			class={"flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"}
+		>
+			<Plus class="mb-2 size-8 lg:size-12" />
+			Add a random number
 		</FlexiAdd>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-[16rem] gap-2 rounded-lg border p-4 lg:h-[32rem] lg:gap-6'}
+			class={'aspect-square h-64 gap-2 rounded-lg border p-4 lg:h-128 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 1fr)',
 				layout: {
@@ -106,16 +102,14 @@
 				y={2}
 			/>
 		</FlexiTarget>
-		<FlexiDelete>
-			{#snippet children({ props })}
-				<div
-					class="flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"
-					{...props}
-				>
-					<Trash2 class="mb-2 size-8 lg:size-12" />
-					Delete
-				</div>
-			{/snippet}
+		<FlexiDelete class={(deleter) => [
+			"flex size-32 flex-col duration-150 items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base",
+			deleter.isHovered && 'border-red-800 bg-red-400/20'
+		]}>
+			<Trash2 class="mb-2 size-8 lg:size-12" />
+			Delete
+
+			<span class="sr-only">Drag a widget here to delete it</span>
 		</FlexiDelete>
 	</FlexiBoard>
 </main>

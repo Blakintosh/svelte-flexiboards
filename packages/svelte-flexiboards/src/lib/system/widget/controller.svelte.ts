@@ -1,0 +1,525 @@
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import {
+	generateUniqueId,
+	getElementMidpoint,
+	getPointerService,
+	type PointerService
+} from '../shared/utils.svelte.js';
+import type {
+	WidgetActionEvent,
+	WidgetDroppedEvent,
+	WidgetEvent,
+	WidgetGrabAction,
+	WidgetGrabbedEvent,
+	WidgetResizeAction,
+	WidgetResizingEvent
+} from '../types.js';
+import { FlexiWidgetController } from './base.svelte.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import { type WidgetMovementAnimation } from './interpolator.svelte.js';
+import { WidgetPointerEventWatcher } from './triggers.svelte.js';
+import type { FlexiWidgetConstructorParams } from './types.js';
+import { WidgetReactiveState } from './state.svelte.js';
+import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
+
+export class InternalFlexiWidgetController extends FlexiWidgetController {
+	#pointerService: PointerService = getPointerService();
+
+	// Legacy non-reactive state tracking (for when reactive state is not available)
+	#grabbersCount: number = 0;
+	#resizersCount: number = 0;
+
+	internalTarget?: InternalFlexiTargetController = undefined;
+	provider: InternalFlexiBoardController;
+
+	// hasGrabbers and hasResizers are now implemented in the base class
+
+	// TODO: the "state-subclass" system is quite hacky, and isn't really achieving what we want right now anyway.
+
+	mounted: boolean = $state(false);
+
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+
+	/**
+	 * The styling to apply to the widget.
+	 */
+	style: string = $derived.by(() => {
+		const currentAction = this.currentAction;
+
+		if (!currentAction) {
+			return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
+		}
+
+		// Grab action
+		if (currentAction.action == 'grab') {
+			return this.#getGrabbedWidgetStyle(currentAction);
+		}
+
+		// Resize action
+		if (currentAction.action == 'resize') {
+			return this.#getResizingWidgetStyle(currentAction);
+		}
+
+		return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
+	});
+
+	readonly id = generateUniqueId('flexiwidget-');
+
+	#getCursorStyle() {
+		if (!this.mounted) {
+			return '';
+		}
+
+		if (!this.draggable) {
+			return '';
+		}
+
+		if (this.isGrabbed) {
+			return 'pointer-events: none; user-select: none; cursor: grabbing;';
+		}
+
+		if (this.isResizing) {
+			return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
+		}
+
+		const grabberCount = this.reactiveState?.grabberCount ?? this.#grabbersCount;
+		if (grabberCount == 0) {
+			return 'user-select: none; cursor: grab; touch-action: none;';
+		}
+
+		return '';
+	}
+
+	#getPlacedWidgetStyle() {
+		if (!this.interpolator?.active) {
+			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
+		}
+
+		return this.interpolator.widgetStyle;
+	}
+
+	#getGrabbedWidgetStyle(action: WidgetGrabAction) {
+		const locationOffsetX = this.#pointerService.position.x - action.offsetX;
+		const locationOffsetY = this.#pointerService.position.y - action.offsetY;
+
+		// Fixed when it's a grabbed widget.
+		const height = action.capturedHeightPx;
+		const width = action.capturedWidthPx;
+
+		return `pointer-events: none; user-select: none; cursor: grabbing; position: absolute; top: ${locationOffsetY}px; left: ${locationOffsetX}px; height: ${height}px; width: ${width}px;`;
+	}
+
+	#getResizingWidgetStyle(action: WidgetResizeAction) {
+		// Calculate size of one grid unit in pixels
+		const unitSizeY = action.capturedHeightPx / action.initialHeightUnits;
+		// Guard against division by zero if initial width is somehow 0
+		const unitSizeX =
+			action.initialWidthUnits > 0 ? action.capturedWidthPx / action.initialWidthUnits : 1;
+
+		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
+		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
+
+		// For resizing, top and left should remain fixed at their initial positions.
+		const top = action.top;
+		const left = action.left;
+
+		// Calculate new dimensions based on resizability
+		let height = action.capturedHeightPx;
+		let width = action.capturedWidthPx;
+
+		switch (this.resizability) {
+			case 'horizontal':
+				// NOTE: Use the pre-calculated deltaX here
+				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				break;
+			case 'vertical':
+				// NOTE: Use the pre-calculated deltaY here
+				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
+				break;
+			case 'both':
+				// NOTE: Use the pre-calculated deltaX and deltaY here
+				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
+				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				break;
+		}
+
+		// Return the style string for the absolutely positioned widget
+		return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
+	}
+
+	constructor(params: FlexiWidgetConstructorParams) {
+		// Initialise the state proxy.
+		super(
+			{
+				currentAction: null,
+				width: params.config.width ?? 1,
+				height: params.config.height ?? 1,
+				x: 0,
+				y: 0,
+				hasGrabbers: false,
+				hasResizers: false,
+				isBeingDropped: false
+			},
+			params
+		);
+
+		if (params.target) {
+			this.internalTarget = params.target;
+		}
+
+		this.provider = params.provider;
+
+		this.#eventBus = getFlexiEventBus();
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this)),
+			this.#eventBus.subscribe('widget:dropped', this.onDropped.bind(this))
+		);
+	}
+
+	onDropped(event: WidgetDroppedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.internalTarget = event.newTarget;
+	}
+
+	onGrabbed(event: WidgetGrabbedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		setTimeout(() => {
+			this.ref?.focus();
+		}, 0);
+
+		this.currentAction = {
+			action: 'grab',
+			widget: this,
+			offsetX: event.xOffset,
+			offsetY: event.yOffset,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx
+		};
+	}
+
+	onResizing(event: WidgetResizingEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		setTimeout(() => {
+			this.ref?.focus();
+		}, 0);
+
+		this.currentAction = {
+			action: 'resize',
+			widget: this,
+			offsetX: event.offsetX,
+			offsetY: event.offsetY,
+			left: event.left,
+			top: event.top,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx,
+			initialHeightUnits: this.height,
+			initialWidthUnits: this.width
+		};
+	}
+
+	onReleased(event: WidgetEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.currentAction = null;
+	}
+
+	/**
+	 * Sets the bounds of the widget.
+	 * @internal
+	 * @param x The x-coordinate of the widget.
+	 * @param y The y-coordinate of the widget.
+	 * @param width The width of the widget.
+	 * @param height The height of the widget.
+	 */
+	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
+		if (this.x == x && this.y == y && this.width == width && this.height == height) {
+			return;
+		}
+
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+
+		if (interpolate) {
+			this.#interpolateMove(x, y, width, height);
+		}
+	}
+
+	#getMovementAnimation(): WidgetMovementAnimation {
+		switch (this.currentAction?.action) {
+			case 'grab':
+				return 'drop';
+			case 'resize':
+				return 'resize';
+			default:
+				return 'move';
+		}
+	}
+
+	#interpolateMove(x: number, y: number, width: number, height: number) {
+		const rect = this.ref?.getBoundingClientRect();
+		if (!rect || !this.interpolator) {
+			return;
+		}
+
+		this.interpolator.interpolateMove(
+			{
+				x,
+				y,
+				width,
+				height
+			},
+			{
+				left: rect.left,
+				top: rect.top,
+				width: rect.width,
+				height: rect.height
+			},
+			this.#getMovementAnimation()
+		);
+		this.isBeingDropped = false;
+	}
+
+	/**
+	 * Registers a grabber to the widget.
+	 */
+	addGrabber() {
+		if (this.reactiveState) {
+			this.reactiveState.addGrabber();
+		} else {
+			this.#grabbersCount++;
+			this.backingState.hasGrabbers = this.#grabbersCount > 0;
+		}
+	}
+
+	/**
+	 * Unregisters a grabber from the widget.
+	 */
+	removeGrabber() {
+		if (this.reactiveState) {
+			this.reactiveState.removeGrabber();
+		} else {
+			this.#grabbersCount--;
+			this.backingState.hasGrabbers = this.#grabbersCount > 0;
+		}
+	}
+
+	/**
+	 * Registers a resizer to the widget.
+	 */
+	addResizer() {
+		if (this.reactiveState) {
+			this.reactiveState.addResizer();
+		} else {
+			this.#resizersCount++;
+			this.backingState.hasResizers = this.#resizersCount > 0;
+		}
+	}
+
+	/**
+	 * Unregisters a resizer from the widget.
+	 */
+	removeResizer() {
+		if (this.reactiveState) {
+			this.reactiveState.removeResizer();
+		} else {
+			this.#resizersCount--;
+			this.backingState.hasResizers = this.#resizersCount > 0;
+		}
+	}
+
+	/**
+	 * Deletes this widget from its target and board.
+	 */
+	delete() {
+		if (!this.internalTarget) {
+			return;
+		}
+
+		this.#eventBus.dispatch('widget:delete', {
+			board: this.internalTarget!.provider,
+			widget: this,
+			target: this.internalTarget
+		});
+
+		// // If the widget hasn't been assigned to a target yet, then we just need to take it off the adder that
+		// // created it.
+		// if (this.adder) {
+		// 	this.adder.onstopwidgetdragin();
+		// 	return;
+		// }
+
+		// // Otherwise it should have a target.
+		// if (!this.target) {
+		// 	throw new Error(
+		// 		'A FlexiWidget was deleted without a bound target. This is likely a Flexiboards bug.'
+		// 	);
+		// }
+
+		// this.target.deleteWidget(this);
+		// this.currentAction = null;
+	}
+
+	onDelete(event: WidgetEvent) {
+		if (event.widget != this) {
+			return;
+		}
+
+		this.currentAction = null;
+
+		// Clean up event subscriptions when widget is deleted
+		this.destroy();
+	}
+
+	/**
+	 * Creates the reactive state container when the widget component mounts.
+	 * This should be called from the component's onMount lifecycle.
+	 */
+	createReactiveState(): void {
+		// Create the reactive state with current backing state
+		this.reactiveState = new WidgetReactiveState(this, this.backingState);
+
+		// Transfer current grabber/resizer counts to reactive state
+		for (let i = 0; i < this.#grabbersCount; i++) {
+			this.reactiveState!.addGrabber();
+		}
+		for (let i = 0; i < this.#resizersCount; i++) {
+			this.reactiveState!.addResizer();
+		}
+	}
+
+	/**
+	 * Cleanup method to be called when the widget is destroyed
+	 */
+	destroy() {
+		// Clean up reactive state first
+		this.destroyReactiveState();
+
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
+
+	/**
+	 * Destroys the reactive state container when the widget component unmounts.
+	 * This should be called from the component's onDestroy lifecycle.
+	 */
+	destroyReactiveState(): void {
+		if (this.reactiveState) {
+			this.reactiveState.destroy();
+			this.reactiveState = undefined;
+		}
+	}
+
+	/**
+	 * The width in units of the widget.
+	 */
+	get width() {
+		if (this.reactiveState) {
+			return this.reactiveState.width;
+		}
+		return this.backingState.width;
+	}
+
+	/**
+	 * The height in units of the widget.
+	 */
+	get height() {
+		if (this.reactiveState) {
+			return this.reactiveState.height;
+		}
+		return this.backingState.height;
+	}
+
+	set width(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.width = value;
+		}
+		this.backingState.width = value;
+	}
+
+	set height(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.height = value;
+		}
+		this.backingState.height = value;
+	}
+
+	/**
+	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	get x() {
+		if (this.reactiveState) {
+			return this.reactiveState.x;
+		}
+		return this.backingState.x;
+	}
+
+	/**
+	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	get y() {
+		if (this.reactiveState) {
+			return this.reactiveState.y;
+		}
+		return this.backingState.y;
+	}
+
+	set x(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.x = value;
+		}
+		this.backingState.x = value;
+	}
+
+	set y(value: number) {
+		if (this.reactiveState) {
+			this.reactiveState.y = value;
+		}
+		this.backingState.y = value;
+	}
+
+	/**
+	 * Gets the widget's interpolator for transitions.
+	 */
+	get interpolator() {
+		return this.reactiveState?.interpolator;
+	}
+
+	/**
+	 * Whether the widget should draw a placeholder widget in the DOM.
+	 */
+	get shouldDrawPlaceholder() {
+		if (this.reactiveState) {
+			return this.reactiveState.interpolator?.active ?? false;
+		}
+		return this.interpolator?.active ?? false;
+	}
+
+	set isBeingDropped(value: boolean) {
+		if (this.reactiveState) {
+			this.reactiveState.isBeingDropped = value;
+		}
+		this.backingState.isBeingDropped = value;
+	}
+}

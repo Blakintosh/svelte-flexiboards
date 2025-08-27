@@ -68,18 +68,13 @@ description: "A callback that fires when the widget's controller is first create
 
 `FlexiWidgetController` uses a [controller](/docs/controllers) to manage its state and behaviour. You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
 
-The `FlexiWidgetController` allows you to manage the widget directly and carry out actions.
+The `FlexiWidgetController` allows you to access widget state directly.
 
 <ApiReference title="Properties" api={[
 {
 name: "target",
 type: "FlexiTargetController | undefined",
-description: "The target this widget is under, if any."
-},
-{
-name: "adder",
-type: "FlexiAddController | undefined",
-description: "The adder this widget is currently being created under, if any."
+description: "The target this widget is under. This is not defined if the widget has not yet been dropped in the board."
 },
 {
 name: "ref",
@@ -105,11 +100,6 @@ description: "Whether this widget is grabbed."
 name: "isResizing",
 type: "boolean",
 description: "Whether this widget is being resized."
-},
-{
-name: "style",
-type: "string",
-description: "The styling to apply to the widget."
 },
 {
 name: "currentAction",
@@ -177,54 +167,33 @@ type: "FlexiWidgetTriggerConfiguration",
 description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
 },
 {
+name: "transitionConfig",
+type: "FlexiWidgetTransitionConfiguration",
+description: "Gets the transition configuration for this widget."
+},
+{
+name: "hasGrabbers",
+type: "boolean",
+description: "Whether the widget has any grabbers attached."
+},
+{
+name: "hasResizers",
+type: "boolean",
+description: "Whether the widget has any resizers attached."
+},
+{
+name: "isBeingDropped",
+type: "boolean",
+description: "Whether the widget is currently being dropped after a drag operation."
+},
+{
 name: "metadata",
 type: "Record<string, any> | undefined",
 description: "The metadata associated with this widget, if any."
 }
 ]} />
 
-<ApiReference title="Methods" api={[
-{
-name: "onpointerdown",
-type: "(event: PointerEvent) => void",
-description: "Event handler for when the widget receives a pointerdown event."
-},
-{
-name: "ongrabberpointerdown",
-type: "(event: PointerEvent) => void",
-description: "Event handler for when one of the widget's grabbers receives a pointerdown event."
-},
-{
-name: "onresizerpointerdown",
-type: "(event: PointerEvent) => void",
-description: "Event handler for when one of the widget's resizers receives a pointerdown event."
-},
-{
-name: "addGrabber",
-type: "() => { onpointerdown: (event: PointerEvent) => void }",
-description: "Registers a grabber to the widget and returns an object with an `onpointerdown` event handler."
-},
-{
-name: "removeGrabber",
-type: "() => void",
-description: "Unregisters a grabber from the widget."
-},
-{
-name: "addResizer",
-type: "() => { onpointerdown: (event: PointerEvent) => void }",
-description: "Registers a resizer to the widget and returns an object with an `onpointerdown` event handler."
-},
-{
-name: "removeResizer",
-type: "() => void",
-description: "Unregisters a resizer from the widget."
-},
-{
-name: "delete",
-type: "() => void",
-description: "Deletes this widget from its target and board."
-}
-]} />
+`FlexiWidgetController` does not expose any methods.
 
 ## FlexiWidgetConfiguration
 
@@ -285,5 +254,20 @@ description: "The row (y-coordinate) of the widget. Not reactive."
 name: "metadata",
 type: "Record<string, any>",
 description: "The metadata associated with this widget, if any. Reactive property."
+},
+{
+name: "transition",
+type: "FlexiWidgetTransitionConfiguration",
+description: "The transition configuration for this widget. Reactive property."
+},
+{
+name: "grabTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+},
+{
+name: "resizeTrigger",
+type: "FlexiWidgetTriggerConfiguration",
+description: "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
 }
 ]} />

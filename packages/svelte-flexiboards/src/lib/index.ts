@@ -1,4 +1,6 @@
 // Reexport your entry components here
+
+// Components
 import FlexiBoard, { type FlexiBoardProps } from './components/flexi-board.svelte';
 import FlexiTarget, { type FlexiTargetProps } from './components/flexi-target.svelte';
 import FlexiWidget, { type FlexiWidgetProps } from './components/flexi-widget.svelte';
@@ -6,28 +8,33 @@ import FlexiGrab from './components/flexi-grab.svelte';
 import FlexiResize from './components/flexi-resize.svelte';
 import FlexiAdd from './components/flexi-add.svelte';
 import FlexiDelete from './components/flexi-delete.svelte';
-import type { FlexiBoardConfiguration } from './system/provider.svelte.js';
-import type { FlexiTargetConfiguration } from './system/target.svelte.js';
+
+// System
+import type { FlexiBoardConfiguration, FlexiBoardController } from './system/board/index.js';
+import type { FlexiTargetConfiguration, FlexiTargetController } from './system/target/index.js';
+
 import {
+	type FlexiWidgetController,
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetChildrenSnippetParameters,
 	type FlexiWidgetConfiguration,
+	type FlexiWidgetTransitionConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
 	type FlexiWidgetTriggerConfiguration,
+	simpleTransitionConfig,
 	getFlexiwidgetCtx
-} from './system/widget.svelte.js';
-import type { FlexiBoardController } from './system/provider.svelte.js';
-import type { FlexiTargetController } from './system/target.svelte.js';
-import type { FlexiWidgetController } from './system/widget.svelte.js';
+} from './system/widget/index.js';
+
 import type {
 	AdderWidgetConfiguration,
 	FlexiAddController,
 	FlexiAddWidgetFn
-} from './system/manage.svelte.js';
+} from './system/misc/adder.svelte.js';
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	type PointerTriggerCondition
-} from './system/utils.svelte.js';
+} from './system/widget/triggers.svelte.js';
 export * from './system/types.js';
 
 export {
@@ -54,7 +61,10 @@ export {
 	type FlexiWidgetChildrenSnippetParameters,
 	type PointerTriggerCondition,
 	type FlexiWidgetTriggerConfiguration,
+	type FlexiWidgetTransitionTypeConfiguration,
+	type FlexiWidgetTransitionConfiguration,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	getFlexiwidgetCtx
+	getFlexiwidgetCtx,
+	simpleTransitionConfig
 };

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getInternalFlexiboardCtx } from '$lib/system/provider.svelte.js';
+	import { getInternalFlexiboardCtx } from '$lib/system/board/index.js';
 
 	// This is a simple component that triggers the initial layout load.
 	// We must do this after instantiating all other components, otherwise we won't have established

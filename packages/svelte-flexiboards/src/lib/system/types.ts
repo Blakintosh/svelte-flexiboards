@@ -1,114 +1,153 @@
-import type { FlexiWidgetController, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration } from "./widget.svelte.js";
-import type { FlexiTargetController, InternalFlexiTargetController } from "./target.svelte.js";
-import type { PointerPositionWatcher } from "./utils.svelte.js";
-import type { Component } from "svelte";
-import type { FlexiAddController } from "./manage.svelte.js";
+import type { FlexiTargetController } from './target/index.js';
+import type { InternalFlexiTargetController } from './target/controller.svelte.js';
+import type { PointerService } from './shared/utils.svelte.js';
+import type { Component } from 'svelte';
+import type { FlexiAddController, InternalFlexiAddController } from './misc/adder.svelte.js';
+import type { FlexiWidgetController } from './widget/base.svelte.js';
+import type { FlexiWidgetConfiguration } from './widget/types.js';
+import type { FlexiBoardController } from './board/base.svelte.js';
+import type { InternalFlexiBoardController } from './board/controller.svelte.js';
+import type { InternalFlexiWidgetController } from './widget/controller.svelte.js';
 
 export type ProxiedValue<T> = {
-    value: T;
-}
-
-export type SvelteClassValue = string | import('clsx').ClassArray | import('clsx').ClassDictionary | undefined | null;
-
+	value: T;
+};
 export type Position = {
-    x: number;
-    y: number;
-}
+	x: number;
+	y: number;
+};
 
 export type FlexiCommonProps<T> = {
-    controller?: T;
-    onfirstcreate?: (instance: T) => void;
-}
+	controller?: T;
+	onfirstcreate?: (instance: T) => void;
+};
 
-export type WidgetResizability = "none" | "horizontal" | "vertical" | "both";
+export type WidgetResizability = 'none' | 'horizontal' | 'vertical' | 'both';
 
 export type WidgetGrabAction = {
-    action: 'grab';
-    widget: FlexiWidgetController;
-    target?: FlexiTargetController;
-    adder?: FlexiAddController;
-    offsetX: number;
-    offsetY: number;
-    positionWatcher: PointerPositionWatcher;
-    capturedHeightPx: number;
-    capturedWidthPx: number;
-}
+	action: 'grab';
+	widget: InternalFlexiWidgetController;
+	offsetX: number;
+	offsetY: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+};
 
 export type WidgetResizeAction = {
-    action: 'resize';
-    widget: FlexiWidgetController;
-    target: FlexiTargetController;
-    offsetX: number;
-    offsetY: number;
-    left: number;
-    top: number;
-    heightPx: number;
-    widthPx: number;
-    initialHeightUnits: number;
-    initialWidthUnits: number;
-    positionWatcher: PointerPositionWatcher;
-}   
+	action: 'resize';
+	widget: InternalFlexiWidgetController;
+	offsetX: number;
+	offsetY: number;
+	left: number;
+	top: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+	initialHeightUnits: number;
+	initialWidthUnits: number;
+};
 
 export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
 export type WidgetGrabbedParams = {
-    widget: FlexiWidgetController;
-    xOffset: number;
-    yOffset: number;
-    clientX: number;
-    clientY: number;
-    capturedHeight: number;
-    capturedWidth: number;
-}
+	widget: InternalFlexiWidgetController;
+	ref: HTMLElement;
+	xOffset: number;
+	yOffset: number;
+	clientX: number;
+	clientY: number;
+	capturedHeight: number;
+	capturedWidth: number;
+};
 
 export type WidgetStartResizeParams = {
-    widget: FlexiWidgetController;
-    xOffset: number;
-    yOffset: number;
-    left: number;
-    top: number;
-    heightPx: number;
-    widthPx: number;
-}
+	widget: InternalFlexiWidgetController;
+	xOffset: number;
+	yOffset: number;
+	left: number;
+	top: number;
+	heightPx: number;
+	widthPx: number;
+};
+
+export type PointerMovedEvent = {
+	x: number;
+	y: number;
+};
+
+export type AdderWidgetReadyEvent = {
+	adder: InternalFlexiAddController;
+	widget: InternalFlexiWidgetController;
+};
+
+export type WidgetEvent = {
+	target?: InternalFlexiTargetController;
+	board: InternalFlexiBoardController;
+	widget: InternalFlexiWidgetController;
+};
 
 // Event objects
-export type WidgetGrabbedEvent = WidgetGrabbedParams & {
-    target?: InternalFlexiTargetController;
-    adder?: FlexiAddController;
+export type WidgetGrabbedEvent = WidgetEvent & {
+	adder?: FlexiAddController;
+	clientX: number;
+	clientY: number;
+	xOffset: number;
+	yOffset: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+};
+
+export type WidgetResizingEvent = WidgetEvent & {
+	target: InternalFlexiTargetController;
+	offsetX: number;
+	offsetY: number;
+	clientX: number;
+	clientY: number;
+	left: number;
+	top: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+};
+
+export type WidgetDroppedEvent = {
+	widget: InternalFlexiWidgetController;
+	board: InternalFlexiBoardController;
+	oldTarget?: InternalFlexiTargetController;
+	newTarget?: InternalFlexiTargetController;
 };
 
 export type WidgetStartResizeEvent = WidgetStartResizeParams & {
-    target: InternalFlexiTargetController;
+	target: InternalFlexiTargetController;
 };
 
-/**
- * Event object that captures widget grabbed event data.
- */
-export type WidgetDroppedEvent = {
-    widget: FlexiWidgetController;
-    preventDefault: () => void;
-}
-
 export type WidgetOverEvent = {
-    widget: FlexiWidgetController;
-    mousePosition: Position;
-}
+	widget: InternalFlexiWidgetController;
+	mousePosition: Position;
+};
 
 export type WidgetOutEvent = {
-    widget: FlexiWidgetController;
-}
+	widget: InternalFlexiWidgetController;
+};
+
+export type TargetEvent = {
+	board: InternalFlexiBoardController;
+	target: InternalFlexiTargetController;
+};
 
 export type MouseGridCellMoveEvent = {
-    cellX: number;
-    cellY: number;
-}
+	cellX: number;
+	cellY: number;
+};
 
 export type GrabbedWidgetMouseEvent = {
-    widget: FlexiWidgetController;
-}
+	widget: FlexiWidgetController;
+};
 
 export type HoveredTargetEvent = {
-    target: InternalFlexiTargetController;
-}
+	target: InternalFlexiTargetController;
+};
 
 export type FlexiSavedLayout = Record<string, FlexiWidgetConfiguration[]>;
+
+export type WidgetActionEvent =
+	| (PointerEvent & { isKeyboard?: undefined })
+	| (KeyboardEvent & { isKeyboard: true; clientX: number; clientY: number });

@@ -1,8 +1,8 @@
 {
 	"name": "svelte-flexiboards",
 	"licence": "MIT",
-	"version": "0.2.1",
-	"description": "Headless, reactive drag-and-drop components for Svelte 5.",
+	"version": "0.3.0",
+	"description": "The headless drag-and-drop toolkit for Svelte.",
 	"scripts": {
 		"dev": "pnpm watch",
 		"dev:host": "pnpm dev",
@@ -35,7 +35,7 @@
 		}
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "^5.16.0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.0.0",
