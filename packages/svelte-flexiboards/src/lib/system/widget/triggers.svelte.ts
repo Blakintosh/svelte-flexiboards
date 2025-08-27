@@ -133,16 +133,25 @@ export class WidgetPointerEventWatcher {
 				return;
 			}
 
+			// For resize, calculate position relative to board container.
+			const boardRect = this.#board.ref?.getBoundingClientRect();
+			if (!boardRect) {
+				return;
+			}
+
+			const left = rect.left - boardRect.left + this.#board.ref!.scrollLeft;
+			const top = rect.top - boardRect.top + this.#board.ref!.scrollTop;
+
 			this.#eventBus.dispatch('widget:resizing', {
 				widget: this.#widget,
 				board: this.#board,
 				target: this.#widget.target as any,
-				offsetX: event.clientX - rect.left,
-				offsetY: event.clientY - rect.top,
+				offsetX: event.clientX - left,
+				offsetY: event.clientY - top,
 				clientX: event.clientX,
 				clientY: event.clientY,
-				left: rect.left,
-				top: rect.top,
+				left,
+				top,
 				capturedHeightPx: rect.height,
 				capturedWidthPx: rect.width
 			});
