@@ -4,6 +4,7 @@ import { FreeFormFlexiGrid } from './free-grid.svelte.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiTargetConfiguration } from '../target/index.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 // TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
 vi.mock('./base.svelte.js', () => ({
@@ -19,7 +20,7 @@ const createMockWidget = (
 	width = 1,
 	height = 1,
 	draggable = true
-): FlexiWidgetController => {
+): InternalFlexiWidgetController => {
 	const widget = {
 		x,
 		y,
@@ -40,7 +41,7 @@ const createMockWidget = (
 		id: `widget-${Math.random().toString(36).substring(2, 9)}`
 	};
 
-	return widget as unknown as FlexiWidgetController;
+	return widget as unknown as InternalFlexiWidgetController;
 };
 
 describe('FreeFormFlexiGrid', () => {
