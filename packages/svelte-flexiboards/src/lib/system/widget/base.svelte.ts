@@ -12,9 +12,9 @@ import {
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
-import type { WidgetReactiveState } from './state.svelte.js';
 
-export class FlexiWidgetController {
+
+export abstract class FlexiWidgetController {
 	/**
 	 * The target this widget is under. This is not defined if the widget has not yet been dropped in the board.
 	 */
@@ -32,17 +32,7 @@ export class FlexiWidgetController {
 	/**
 	 * Whether this widget is a shadow dropzone widget.
 	 */
-	isShadow: boolean = $state(false);
-
-	/**
-	 * Whether this widget is grabbed.
-	 */
-	isGrabbed: boolean = $derived(this.currentAction?.action == 'grab');
-
-	/**
-	 * Whether this widget is being resized.
-	 */
-	isResizing: boolean = $derived(this.currentAction?.action == 'resize');
+	abstract get isShadow(): boolean;
 
 	/**
 	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
@@ -93,39 +83,37 @@ export class FlexiWidgetController {
 			defaultTriggerConfig
 	});
 
-	protected reactiveState?: WidgetReactiveState;
-	backingState: WidgetStateData;
+	// Abstract getters for internal state (implemented by controller)
+	abstract get currentAction(): WidgetAction | null;
+	abstract get width(): number;
+	abstract get height(): number;
+	abstract get x(): number;
+	abstract get y(): number;
+	abstract get isBeingDropped(): boolean;
+	abstract get hasGrabbers(): boolean;
+	abstract get hasResizers(): boolean;
 
-	constructor(state: WidgetStateData, params: FlexiWidgetConstructorParams) {
-		this.backingState = state;
+	/**
+	 * Whether this widget is grabbed.
+	 */
+	abstract get isGrabbed(): boolean;
 
+	/**
+	 * Whether this widget is being resized.
+	 */
+	abstract get isResizing(): boolean;
+
+	constructor(params: FlexiWidgetConstructorParams) {
 		this.#rawConfig = params.config;
 
 		if (params.target) {
 			this.target = params.target as FlexiTargetController;
-			this.isShadow = params.isShadow ?? false;
 		}
 	}
 
 	// Getters and setters
 
-	/**
-	 * When the widget is being grabbed, this contains information that includes its position, size and offset.
-	 * When this is null, the widget is not being grabbed.
-	 */
-	get currentAction() {
-		if (this.reactiveState) {
-			return this.reactiveState.currentAction;
-		}
-		return this.backingState.currentAction;
-	}
 
-	set currentAction(value: WidgetAction | null) {
-		if (this.reactiveState) {
-			this.reactiveState.currentAction = value;
-		}
-		this.backingState.currentAction = value;
-	}
 
 	/**
 	 * Whether the widget is draggable.
@@ -156,25 +144,7 @@ export class FlexiWidgetController {
 		return this.resizability !== 'none';
 	}
 
-	/**
-	 * The width in units of the widget.
-	 */
-	get width() {
-		if (this.reactiveState) {
-			return this.reactiveState.width;
-		}
-		return this.backingState.width;
-	}
 
-	/**
-	 * The height in units of the widget.
-	 */
-	get height() {
-		if (this.reactiveState) {
-			return this.reactiveState.height;
-		}
-		return this.backingState.height;
-	}
 
 	/**
 	 * The component that is rendered by this widget.
@@ -220,25 +190,7 @@ export class FlexiWidgetController {
 		this.#rawConfig.className = value;
 	}
 
-	/**
-	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get x() {
-		if (this.reactiveState) {
-			return this.reactiveState.x;
-		}
-		return this.backingState.x;
-	}
 
-	/**
-	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get y() {
-		if (this.reactiveState) {
-			return this.reactiveState.y;
-		}
-		return this.backingState.y;
-	}
 
 	/**
 	 * The metadata associated with this widget, if any.
@@ -273,35 +225,9 @@ export class FlexiWidgetController {
 		return this.#config.transition;
 	}
 
-	/**
-	 * Whether the widget has any grabbers attached.
-	 */
-	get hasGrabbers(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.hasGrabbers;
-		}
-		return this.backingState.hasGrabbers;
-	}
 
-	/**
-	 * Whether the widget has any resizers attached
-	 */
-	get hasResizers(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.hasResizers;
-		}
-		return this.backingState.hasResizers;
-	}
 
-	/**
-	 * Whether the widget is currently being dropped after a drag operation.
-	 */
-	get isBeingDropped(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.isBeingDropped;
-		}
-		return this.backingState.isBeingDropped;
-	}
+
 }
 
 export type WidgetStateData = {

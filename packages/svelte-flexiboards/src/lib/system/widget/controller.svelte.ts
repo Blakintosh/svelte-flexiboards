@@ -6,6 +6,7 @@ import {
 	type PointerService
 } from '../shared/utils.svelte.js';
 import type {
+	WidgetAction,
 	WidgetActionEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
@@ -16,27 +17,39 @@ import type {
 } from '../types.js';
 import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
-import { type WidgetMovementAnimation } from './interpolator.svelte.js';
+import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 import type { FlexiWidgetConstructorParams } from './types.js';
-import { WidgetReactiveState } from './state.svelte.js';
+
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
 
-	// Legacy non-reactive state tracking (for when reactive state is not available)
-	#grabbersCount: number = 0;
-	#resizersCount: number = 0;
+
 
 	internalTarget?: InternalFlexiTargetController = undefined;
 	provider: InternalFlexiBoardController;
 
-	// hasGrabbers and hasResizers are now implemented in the base class
+	// Private reactive state properties
+	#currentAction: WidgetAction | null = $state(null);
+	#width: number = $state(1);
+	#height: number = $state(1);
+	#x: number = $state(0);
+	#y: number = $state(0);
+	#isBeingDropped: boolean = $state(false);
+	#hasGrabbers: boolean = $state(false);
+	#hasResizers: boolean = $state(false);
+	#isShadow: boolean = $state(false);
 
-	// TODO: the "state-subclass" system is quite hacky, and isn't really achieving what we want right now anyway.
+	// Movement interpolation
+	interpolator: WidgetMoveInterpolator;
 
 	mounted: boolean = $state(false);
+
+	// Grabber and resizer tracking
+	#grabbersCount: number = 0;
+	#resizersCount: number = 0;
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
@@ -83,7 +96,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
 		}
 
-		const grabberCount = this.reactiveState?.grabberCount ?? this.#grabbersCount;
+		const grabberCount = this.#grabbersCount;
 		if (grabberCount == 0) {
 			return 'user-select: none; cursor: grab; touch-action: none;';
 		}
@@ -149,26 +162,22 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	constructor(params: FlexiWidgetConstructorParams) {
-		// Initialise the state proxy.
-		super(
-			{
-				currentAction: null,
-				width: params.config.width ?? 1,
-				height: params.config.height ?? 1,
-				x: 0,
-				y: 0,
-				hasGrabbers: false,
-				hasResizers: false,
-				isBeingDropped: false
-			},
-			params
-		);
+		// Initialize base class
+		super(params);
+
+		// Initialize private state with config values
+		this.#width = params.config.width ?? 1;
+		this.#height = params.config.height ?? 1;
 
 		if (params.target) {
 			this.internalTarget = params.target;
+			this.#isShadow = params.isShadow ?? false;
 		}
 
 		this.provider = params.provider;
+
+		// Create the widget's interpolator.
+		this.interpolator = new WidgetMoveInterpolator(params.provider, this);
 
 		this.#eventBus = getFlexiEventBus();
 
@@ -200,7 +209,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.currentAction = {
+		this.#currentAction = {
 			action: 'grab',
 			widget: this,
 			offsetX: event.xOffset,
@@ -220,7 +229,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.currentAction = {
+		this.#currentAction = {
 			action: 'resize',
 			widget: this,
 			offsetX: event.offsetX,
@@ -239,7 +248,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.currentAction = null;
+		this.#currentAction = null;
 	}
 
 	/**
@@ -255,10 +264,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
+		this.#x = x;
+		this.#y = y;
+		this.#width = width;
+		this.#height = height;
 
 		if (interpolate) {
 			this.#interpolateMove(x, y, width, height);
@@ -297,55 +306,39 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			},
 			this.#getMovementAnimation()
 		);
-		this.isBeingDropped = false;
+		this.#isBeingDropped = false;
 	}
 
 	/**
 	 * Registers a grabber to the widget.
 	 */
 	addGrabber() {
-		if (this.reactiveState) {
-			this.reactiveState.addGrabber();
-		} else {
-			this.#grabbersCount++;
-			this.backingState.hasGrabbers = this.#grabbersCount > 0;
-		}
+		this.#grabbersCount++;
+		this.#hasGrabbers = this.#grabbersCount > 0;
 	}
 
 	/**
 	 * Unregisters a grabber from the widget.
 	 */
 	removeGrabber() {
-		if (this.reactiveState) {
-			this.reactiveState.removeGrabber();
-		} else {
-			this.#grabbersCount--;
-			this.backingState.hasGrabbers = this.#grabbersCount > 0;
-		}
+		this.#grabbersCount--;
+		this.#hasGrabbers = this.#grabbersCount > 0;
 	}
 
 	/**
 	 * Registers a resizer to the widget.
 	 */
 	addResizer() {
-		if (this.reactiveState) {
-			this.reactiveState.addResizer();
-		} else {
-			this.#resizersCount++;
-			this.backingState.hasResizers = this.#resizersCount > 0;
-		}
+		this.#resizersCount++;
+		this.#hasResizers = this.#resizersCount > 0;
 	}
 
 	/**
 	 * Unregisters a resizer from the widget.
 	 */
 	removeResizer() {
-		if (this.reactiveState) {
-			this.reactiveState.removeResizer();
-		} else {
-			this.#resizersCount--;
-			this.backingState.hasResizers = this.#resizersCount > 0;
-		}
+		this.#resizersCount--;
+		this.#hasResizers = this.#resizersCount > 0;
 	}
 
 	/**
@@ -385,141 +378,85 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.currentAction = null;
+		this.#currentAction = null;
 
 		// Clean up event subscriptions when widget is deleted
 		this.destroy();
 	}
 
-	/**
-	 * Creates the reactive state container when the widget component mounts.
-	 * This should be called from the component's onMount lifecycle.
-	 */
-	createReactiveState(): void {
-		// Create the reactive state with current backing state
-		this.reactiveState = new WidgetReactiveState(this, this.backingState);
 
-		// Transfer current grabber/resizer counts to reactive state
-		for (let i = 0; i < this.#grabbersCount; i++) {
-			this.reactiveState!.addGrabber();
-		}
-		for (let i = 0; i < this.#resizersCount; i++) {
-			this.reactiveState!.addResizer();
-		}
-	}
 
 	/**
 	 * Cleanup method to be called when the widget is destroyed
 	 */
 	destroy() {
-		// Clean up reactive state first
-		this.destroyReactiveState();
-
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
+
+		// Reset counters
+		this.#grabbersCount = 0;
+		this.#resizersCount = 0;
 	}
 
-	/**
-	 * Destroys the reactive state container when the widget component unmounts.
-	 * This should be called from the component's onDestroy lifecycle.
-	 */
-	destroyReactiveState(): void {
-		if (this.reactiveState) {
-			this.reactiveState.destroy();
-			this.reactiveState = undefined;
-		}
+	// Implement abstract getters from base class
+	get currentAction(): WidgetAction | null {
+		return this.#currentAction;
 	}
 
-	/**
-	 * The width in units of the widget.
-	 */
-	get width() {
-		if (this.reactiveState) {
-			return this.reactiveState.width;
-		}
-		return this.backingState.width;
+	get width(): number {
+		return this.#width;
 	}
 
-	/**
-	 * The height in units of the widget.
-	 */
-	get height() {
-		if (this.reactiveState) {
-			return this.reactiveState.height;
-		}
-		return this.backingState.height;
+	get height(): number {
+		return this.#height;
 	}
 
-	set width(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.width = value;
-		}
-		this.backingState.width = value;
+	get x(): number {
+		return this.#x;
 	}
 
-	set height(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.height = value;
-		}
-		this.backingState.height = value;
+	get y(): number {
+		return this.#y;
 	}
 
-	/**
-	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get x() {
-		if (this.reactiveState) {
-			return this.reactiveState.x;
-		}
-		return this.backingState.x;
+	get isBeingDropped(): boolean {
+		return this.#isBeingDropped;
 	}
 
-	/**
-	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get y() {
-		if (this.reactiveState) {
-			return this.reactiveState.y;
-		}
-		return this.backingState.y;
+	get hasGrabbers(): boolean {
+		return this.#hasGrabbers;
 	}
 
-	set x(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.x = value;
-		}
-		this.backingState.x = value;
+	get hasResizers(): boolean {
+		return this.#hasResizers;
 	}
 
-	set y(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.y = value;
-		}
-		this.backingState.y = value;
+	get isShadow(): boolean {
+		return this.#isShadow;
 	}
 
-	/**
-	 * Gets the widget's interpolator for transitions.
-	 */
-	get interpolator() {
-		return this.reactiveState?.interpolator;
+	get isGrabbed(): boolean {
+		return this.#currentAction?.action == 'grab';
+	}
+
+	get isResizing(): boolean {
+		return this.#currentAction?.action == 'resize';
+	}
+
+	// Internal setters for these properties
+	set currentAction(value: WidgetAction | null) {
+		this.#currentAction = value;
+	}
+
+	set isBeingDropped(value: boolean) {
+		this.#isBeingDropped = value;
 	}
 
 	/**
 	 * Whether the widget should draw a placeholder widget in the DOM.
 	 */
 	get shouldDrawPlaceholder() {
-		if (this.reactiveState) {
-			return this.reactiveState.interpolator?.active ?? false;
-		}
 		return this.interpolator?.active ?? false;
-	}
-
-	set isBeingDropped(value: boolean) {
-		if (this.reactiveState) {
-			this.reactiveState.isBeingDropped = value;
-		}
-		this.backingState.isBeingDropped = value;
 	}
 }
