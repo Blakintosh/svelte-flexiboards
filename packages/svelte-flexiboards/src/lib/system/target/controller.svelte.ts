@@ -729,16 +729,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#dropzoneWidget.value = value;
 	}
 
-	get widgets() {
-		return this.#widgets as SvelteSet<FlexiWidgetController>;
-	}
-
-	get internalWidgets() {
-		return this.#widgets;
-	}
-	get orderedWidgets() {
-		return this.#orderedWidgets;
-	}
+	widgets = $derived(this.#widgets as SvelteSet<FlexiWidgetController>);
+	internalWidgets = $derived(this.#widgets);
+	orderedWidgets = $derived(this.#orderedWidgets);
 
 	/**
 	 * Cleanup method to be called when the target is destroyed
