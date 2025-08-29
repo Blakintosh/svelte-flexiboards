@@ -8,7 +8,6 @@ import type {
 	FlexiWidgetTriggerConfiguration
 } from './types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
-import type { FlexiWidgetController } from './controller.svelte.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
 import { widgetEvents, widgetGrabberEvents, widgetResizerEvents } from './events.js';
 import { dragInOnceMounted, hasInternalFlexiaddCtx } from '../misc/adder.svelte.js';
