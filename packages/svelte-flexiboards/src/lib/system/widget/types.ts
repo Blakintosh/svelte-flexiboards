@@ -104,6 +104,10 @@ export type FlexiWidgetState = {
 	height: number;
 	x: number;
 	y: number;
+	isBeingDropped: boolean;
+	hasGrabbers: boolean;
+	hasResizers: boolean;
+	isShadow: boolean;
 };
 
 export type FlexiWidgetDerivedConfiguration = {

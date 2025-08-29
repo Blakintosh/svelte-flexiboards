@@ -9,7 +9,8 @@ import {
 	type FlexiWidgetConfiguration,
 	type FlexiWidgetConstructorParams,
 	type FlexiWidgetDefaults,
-	type FlexiWidgetDerivedConfiguration
+	type FlexiWidgetDerivedConfiguration,
+	type FlexiWidgetState
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
 
@@ -30,9 +31,20 @@ export abstract class FlexiWidgetController {
 	#rawConfig: FlexiWidgetConfiguration = $state() as FlexiWidgetConfiguration;
 
 	/**
-	 * Whether this widget is a shadow dropzone widget.
+	 * Stores the underlying state of the widget. This differs to the derived config above, because it contains configuration items that
+	 * are only written to once when the widget is created. Properties stored in here do not react to changes in the config.
 	 */
-	abstract get isShadow(): boolean;
+	protected _state: FlexiWidgetState = $state({
+		currentAction: null,
+		width: 1,
+		height: 1,
+		x: 0,
+		y: 0,
+		isBeingDropped: false,
+		hasGrabbers: false,
+		hasResizers: false,
+		isShadow: false
+	});
 
 	/**
 	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
@@ -83,31 +95,63 @@ export abstract class FlexiWidgetController {
 			defaultTriggerConfig
 	});
 
-	// Abstract getters for internal state (implemented by controller)
-	abstract get currentAction(): WidgetAction | null;
-	abstract get width(): number;
-	abstract get height(): number;
-	abstract get x(): number;
-	abstract get y(): number;
-	abstract get isBeingDropped(): boolean;
-	abstract get hasGrabbers(): boolean;
-	abstract get hasResizers(): boolean;
+	/**
+	 * Whether this widget is a shadow dropzone widget.
+	 */
+	isShadow = $derived(this._state.isShadow);
+
+	/**
+	 * When the widget is being grabbed, this contains information that includes its position, size and offset.
+	 * When this is null, the widget is not being grabbed.
+	 */
+	currentAction = $derived(this._state.currentAction);
+
+	/**
+	 * The width in units of the widget.
+	 */
+	width = $derived(this._state.width);
+
+	/**
+	 * The height in units of the widget.
+	 */
+	height = $derived(this._state.height);
+
+	/**
+	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	x = $derived(this._state.x);
+
+	/**
+	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
+	 */
+	y = $derived(this._state.y);
+
+	isBeingDropped = $derived(this._state.isBeingDropped);
+
+	hasGrabbers = $derived(this._state.hasGrabbers);
+
+	hasResizers = $derived(this._state.hasResizers);
 
 	/**
 	 * Whether this widget is grabbed.
 	 */
-	abstract get isGrabbed(): boolean;
+	isGrabbed = $derived(this._state.currentAction?.action == 'grab');
 
 	/**
 	 * Whether this widget is being resized.
 	 */
-	abstract get isResizing(): boolean;
+	isResizing = $derived(this._state.currentAction?.action == 'resize');
 
 	constructor(params: FlexiWidgetConstructorParams) {
 		this.#rawConfig = params.config;
 
+		// Initialize state with config values
+		this._state.width = params.config.width ?? 1;
+		this._state.height = params.config.height ?? 1;
+
 		if (params.target) {
 			this.target = params.target as FlexiTargetController;
+			this._state.isShadow = params.isShadow ?? false;
 		}
 	}
 
@@ -229,14 +273,3 @@ export abstract class FlexiWidgetController {
 
 
 }
-
-export type WidgetStateData = {
-	currentAction: WidgetAction | null;
-	width: number;
-	height: number;
-	x: number;
-	y: number;
-	isBeingDropped: boolean;
-	hasGrabbers: boolean;
-	hasResizers: boolean;
-};

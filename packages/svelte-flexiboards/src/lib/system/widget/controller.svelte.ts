@@ -19,7 +19,7 @@ import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
-import type { FlexiWidgetConstructorParams } from './types.js';
+import type { FlexiWidgetConstructorParams, FlexiWidgetState } from './types.js';
 
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
@@ -30,17 +30,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	internalTarget?: InternalFlexiTargetController = undefined;
 	provider: InternalFlexiBoardController;
-
-	// Private reactive state properties
-	#currentAction: WidgetAction | null = $state(null);
-	#width: number = $state(1);
-	#height: number = $state(1);
-	#x: number = $state(0);
-	#y: number = $state(0);
-	#isBeingDropped: boolean = $state(false);
-	#hasGrabbers: boolean = $state(false);
-	#hasResizers: boolean = $state(false);
-	#isShadow: boolean = $state(false);
 
 	// Movement interpolation
 	interpolator: WidgetMoveInterpolator;
@@ -165,13 +154,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		// Initialize base class
 		super(params);
 
-		// Initialize private state with config values
-		this.#width = params.config.width ?? 1;
-		this.#height = params.config.height ?? 1;
-
 		if (params.target) {
 			this.internalTarget = params.target;
-			this.#isShadow = params.isShadow ?? false;
 		}
 
 		this.provider = params.provider;
@@ -209,7 +193,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.#currentAction = {
+		this._state.currentAction = {
 			action: 'grab',
 			widget: this,
 			offsetX: event.xOffset,
@@ -229,7 +213,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.#currentAction = {
+		this._state.currentAction = {
 			action: 'resize',
 			widget: this,
 			offsetX: event.offsetX,
@@ -248,7 +232,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.#currentAction = null;
+		this._state.currentAction = null;
 	}
 
 	/**
@@ -264,10 +248,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.#x = x;
-		this.#y = y;
-		this.#width = width;
-		this.#height = height;
+		this._state.x = x;
+		this._state.y = y;
+		this._state.width = width;
+		this._state.height = height;
 
 		if (interpolate) {
 			this.#interpolateMove(x, y, width, height);
@@ -306,7 +290,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			},
 			this.#getMovementAnimation()
 		);
-		this.#isBeingDropped = false;
+		this._state.isBeingDropped = false;
 	}
 
 	/**
@@ -314,7 +298,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	addGrabber() {
 		this.#grabbersCount++;
-		this.#hasGrabbers = this.#grabbersCount > 0;
+		this._state.hasGrabbers = this.#grabbersCount > 0;
 	}
 
 	/**
@@ -322,7 +306,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	removeGrabber() {
 		this.#grabbersCount--;
-		this.#hasGrabbers = this.#grabbersCount > 0;
+		this._state.hasGrabbers = this.#grabbersCount > 0;
 	}
 
 	/**
@@ -330,7 +314,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	addResizer() {
 		this.#resizersCount++;
-		this.#hasResizers = this.#resizersCount > 0;
+		this._state.hasResizers = this.#resizersCount > 0;
 	}
 
 	/**
@@ -338,7 +322,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	removeResizer() {
 		this.#resizersCount--;
-		this.#hasResizers = this.#resizersCount > 0;
+		this._state.hasResizers = this.#resizersCount > 0;
 	}
 
 	/**
@@ -378,7 +362,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.#currentAction = null;
+		this._state.currentAction = null;
 
 		// Clean up event subscriptions when widget is deleted
 		this.destroy();
@@ -399,59 +383,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.#resizersCount = 0;
 	}
 
-	// Implement abstract getters from base class
-	get currentAction(): WidgetAction | null {
-		return this.#currentAction;
+	setIsBeingDropped(value: boolean) {
+		this._state.isBeingDropped = value;
 	}
 
-	get width(): number {
-		return this.#width;
-	}
-
-	get height(): number {
-		return this.#height;
-	}
-
-	get x(): number {
-		return this.#x;
-	}
-
-	get y(): number {
-		return this.#y;
-	}
-
-	get isBeingDropped(): boolean {
-		return this.#isBeingDropped;
-	}
-
-	get hasGrabbers(): boolean {
-		return this.#hasGrabbers;
-	}
-
-	get hasResizers(): boolean {
-		return this.#hasResizers;
-	}
-
-	get isShadow(): boolean {
-		return this.#isShadow;
-	}
-
-	get isGrabbed(): boolean {
-		return this.#currentAction?.action == 'grab';
-	}
-
-	get isResizing(): boolean {
-		return this.#currentAction?.action == 'resize';
-	}
-
-	// Internal setters for these properties
-	set currentAction(value: WidgetAction | null) {
-		this.#currentAction = value;
-	}
-
-	set isBeingDropped(value: boolean) {
-		this.#isBeingDropped = value;
-	}
 
 	/**
 	 * Whether the widget should draw a placeholder widget in the DOM.
