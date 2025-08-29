@@ -55,6 +55,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		value: null
 	});
 	#isDropzoneWidgetAdded: boolean = $state(false);
+	#dropzoneWidgetEffectCleanup: (() => void) | null = null;
 
 	#mouseCellPosition: Position = $state({
 		x: 0,
@@ -525,7 +526,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
 
-		this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
+		// Wrap only the widget creation in $effect.root to ensure proper reactivity context
+		let shadowWidget!: InternalFlexiWidgetController;
+		this.#dropzoneWidgetEffectCleanup = $effect.root(() => {
+			shadowWidget = this.#createShadow(this.actionWidget!.widget);
+		});
+
+		this.dropzoneWidget = shadowWidget;
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
@@ -648,6 +655,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 		this.#gridSnapshot = null;
 
+		// Cleanup the effect root
+		if (this.#dropzoneWidgetEffectCleanup) {
+			this.#dropzoneWidgetEffectCleanup();
+			this.#dropzoneWidgetEffectCleanup = null;
+		}
+
 		this.dropzoneWidget = null;
 	}
 
@@ -739,6 +752,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			}
 		});
 		this.widgets.clear();
+
+		// Clean up dropzone widget effect
+		if (this.#dropzoneWidgetEffectCleanup) {
+			this.#dropzoneWidgetEffectCleanup();
+			this.#dropzoneWidgetEffectCleanup = null;
+		}
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
