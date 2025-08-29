@@ -5,11 +5,11 @@ import type { InternalFlexiTargetController } from '../target/controller.svelte.
 import type { FlexiTargetConfiguration, TargetSizing } from '../target/types.js';
 import type { FlexiWidgetController } from '../widget/index.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
-import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
 
 export type MoveOperation = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	newX: number;
 	newY: number;
 	oldX: number;
@@ -17,7 +17,7 @@ export type MoveOperation = {
 };
 
 export type WidgetSnapshot = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	x: number;
 	y: number;
 	width: number;

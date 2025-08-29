@@ -2,7 +2,7 @@ import type { ClassValue } from 'svelte/elements';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { AdderWidgetReadyEvent, WidgetEvent, WidgetGrabbedParams } from '../types.js';
-import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getContext, hasContext, onMount, setContext } from 'svelte';
@@ -37,7 +37,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
-	newWidget?: InternalFlexiWidgetController = $state(undefined);
+	newWidget?: FlexiWidgetController = $state(undefined);
 
 	toCreateParams: NewWidgetDragInParams | null = $state(null);
 
@@ -91,7 +91,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 		}
 
 		// Create a widget under this FlexiAdd.
-		this.newWidget = new InternalFlexiWidgetController({
+		this.newWidget = new FlexiWidgetController({
 			config: config.widget,
 			provider: this.provider
 		});
@@ -120,7 +120,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 		});
 	}
 
-	onWidgetDragInComplete(event: { widget: InternalFlexiWidgetController }) {
+	onWidgetDragInComplete(event: { widget: FlexiWidgetController }) {
 		if (event.widget !== this.newWidget) {
 			return;
 		}
@@ -128,7 +128,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 		this.#clearWidget();
 	}
 
-	onWidgetDragInCancel(event: { widget: InternalFlexiWidgetController }) {
+	onWidgetDragInCancel(event: { widget: FlexiWidgetController }) {
 		if (event.widget !== this.newWidget) {
 			return;
 		}
@@ -188,7 +188,7 @@ export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
 	};
 }
 
-export function dragInOnceMounted(widget: InternalFlexiWidgetController) {
+export function dragInOnceMounted(widget: FlexiWidgetController) {
 	const adder = getInternalFlexiaddCtx();
 	const eventBus = getFlexiEventBus();
 

@@ -1,7 +1,7 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { WidgetActionEvent } from '../types.js';
-import type { InternalFlexiWidgetController } from './controller.svelte.js';
+import type { FlexiWidgetController } from './controller.svelte.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
 import { isGrabPointerEvent } from '../shared/utils.svelte.js';
 
@@ -29,7 +29,7 @@ export type PointerTriggerCondition =
  * (e.g. long press for touch)
  */
 export class WidgetPointerEventWatcher {
-	#widget: InternalFlexiWidgetController = $state() as InternalFlexiWidgetController;
+	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
 	#type: 'grab' | 'resize' = $state('grab');
 
 	#triggerConfig: FlexiWidgetTriggerConfiguration = $derived(
@@ -39,7 +39,7 @@ export class WidgetPointerEventWatcher {
 	#eventBus: FlexiEventBus;
 	#board = getInternalFlexiboardCtx();
 
-	constructor(widget: InternalFlexiWidgetController, type: 'grab' | 'resize') {
+	constructor(widget: FlexiWidgetController, type: 'grab' | 'resize') {
 		this.#widget = widget;
 		this.#type = type;
 

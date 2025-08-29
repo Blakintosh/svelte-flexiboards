@@ -7,7 +7,7 @@ import type { FlexiWidgetController } from './widget/base.svelte.js';
 import type { FlexiWidgetConfiguration } from './widget/types.js';
 import type { FlexiBoardController } from './board/base.svelte.js';
 import type { InternalFlexiBoardController } from './board/controller.svelte.js';
-import type { InternalFlexiWidgetController } from './widget/controller.svelte.js';
+import type { FlexiWidgetController } from './widget/base.svelte.js';
 
 export type ProxiedValue<T> = {
 	value: T;
@@ -26,7 +26,7 @@ export type WidgetResizability = 'none' | 'horizontal' | 'vertical' | 'both';
 
 export type WidgetGrabAction = {
 	action: 'grab';
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	offsetX: number;
 	offsetY: number;
 	capturedHeightPx: number;
@@ -35,7 +35,7 @@ export type WidgetGrabAction = {
 
 export type WidgetResizeAction = {
 	action: 'resize';
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	offsetX: number;
 	offsetY: number;
 	left: number;
@@ -49,7 +49,7 @@ export type WidgetResizeAction = {
 export type WidgetAction = WidgetGrabAction | WidgetResizeAction;
 
 export type WidgetGrabbedParams = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	ref: HTMLElement;
 	xOffset: number;
 	yOffset: number;
@@ -60,7 +60,7 @@ export type WidgetGrabbedParams = {
 };
 
 export type WidgetStartResizeParams = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	xOffset: number;
 	yOffset: number;
 	left: number;
@@ -76,13 +76,13 @@ export type PointerMovedEvent = {
 
 export type AdderWidgetReadyEvent = {
 	adder: InternalFlexiAddController;
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 };
 
 export type WidgetEvent = {
 	target?: InternalFlexiTargetController;
 	board: InternalFlexiBoardController;
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 };
 
 // Event objects
@@ -109,7 +109,7 @@ export type WidgetResizingEvent = WidgetEvent & {
 };
 
 export type WidgetDroppedEvent = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	board: InternalFlexiBoardController;
 	oldTarget?: InternalFlexiTargetController;
 	newTarget?: InternalFlexiTargetController;
@@ -120,12 +120,12 @@ export type WidgetStartResizeEvent = WidgetStartResizeParams & {
 };
 
 export type WidgetOverEvent = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	mousePosition: Position;
 };
 
 export type WidgetOutEvent = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 };
 
 export type TargetEvent = {

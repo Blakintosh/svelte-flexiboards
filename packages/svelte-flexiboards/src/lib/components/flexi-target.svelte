@@ -50,7 +50,7 @@
 	import FlexiGrid from './flexi-grid.svelte';
 	import FlexiTargetLoader from './flexi-target-loader.svelte';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
-	import type { InternalFlexiWidgetController } from '$lib/system/widget/controller.svelte.js';
+	import type { FlexiWidgetController } from '$lib/system/widget/base.svelte.js';
 
 	let {
 		children,
@@ -72,7 +72,7 @@
 
 	// TODO: probable Svelte bug, causes browser freeze on production builds.
 	// Haven't been able to repro on REPL as yet.
-	// let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
+	// let orderedWidgets: FlexiWidgetController[] = $derived.by(() => {
 	// 	return Array.from(target.internalWidgets).toSorted((a, b) => {
 	// 		if (a.y !== b.y) {
 	// 			return a.y - b.y;

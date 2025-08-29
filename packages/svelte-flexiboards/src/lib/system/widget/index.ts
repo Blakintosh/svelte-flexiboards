@@ -8,7 +8,7 @@ import type {
 	FlexiWidgetTriggerConfiguration
 } from './types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
-import type { InternalFlexiWidgetController } from './controller.svelte.js';
+import type { FlexiWidgetController } from './controller.svelte.js';
 import { getInternalFlexitargetCtx } from '../target/index.js';
 import { widgetEvents, widgetGrabberEvents, widgetResizerEvents } from './events.js';
 import { dragInOnceMounted, hasInternalFlexiaddCtx } from '../misc/adder.svelte.js';
@@ -39,7 +39,7 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 	};
 }
 
-export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
+export function renderedflexiwidget(widget: FlexiWidgetController) {
 	setContext(contextKey, widget);
 
 	if (hasInternalFlexiaddCtx()) {
@@ -98,7 +98,7 @@ export function flexiresize() {
 }
 
 export function getInternalFlexiwidgetCtx() {
-	const widget = getContext<InternalFlexiWidgetController>(contextKey);
+	const widget = getContext<FlexiWidgetController>(contextKey);
 
 	if (!widget) {
 		throw new Error(

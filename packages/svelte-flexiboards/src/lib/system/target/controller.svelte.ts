@@ -15,7 +15,6 @@ import type {
 	WidgetStartResizeParams
 } from '../types.js';
 import { FlexiWidgetController } from '../widget/base.svelte.js';
-import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
@@ -31,8 +30,8 @@ import type {
 import { getPointerService } from '../shared/utils.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
-	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
-	#orderedWidgets: InternalFlexiWidgetController[] = $state([]);
+	#widgets: SvelteSet<FlexiWidgetController> = $state(new SvelteSet());
+	#orderedWidgets: FlexiWidgetController[] = $state([]);
 
 	provider: InternalFlexiBoardController = $state() as InternalFlexiBoardController;
 
@@ -51,7 +50,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		prepared: false
 	});
 
-	#dropzoneWidget: ProxiedValue<InternalFlexiWidgetController | null> = $state({
+	#dropzoneWidget: ProxiedValue<FlexiWidgetController | null> = $state({
 		value: null
 	});
 	#isDropzoneWidgetAdded: boolean = $state(false);
@@ -156,7 +155,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#tryAddWidget(
-		widget: InternalFlexiWidgetController,
+		widget: FlexiWidgetController,
 		x?: number,
 		y?: number,
 		width?: number,
@@ -196,7 +195,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
-		const widget = new InternalFlexiWidgetController({
+		const widget = new FlexiWidgetController({
 			config,
 			provider: this.provider,
 			target: this
@@ -238,7 +237,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// is still needed.
 		// Clean up the widget when it's removed from the target
 		if (deleted && 'destroy' in widget) {
-			(widget as InternalFlexiWidgetController).destroy();
+			(widget as FlexiWidgetController).destroy();
 		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
@@ -288,7 +287,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#createShadow(of: FlexiWidgetController) {
-		const shadow = new InternalFlexiWidgetController({
+		const shadow = new FlexiWidgetController({
 			config: {
 				width: of.width,
 				height: of.height,
@@ -346,7 +345,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#removeDropzoneWidget();
 	}
 
-	tryDropWidget(widget: InternalFlexiWidgetController): boolean {
+	tryDropWidget(widget: FlexiWidgetController): boolean {
 		const actionWidget = this.actionWidget;
 		if (!actionWidget) {
 			return false;
@@ -527,7 +526,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#gridSnapshot = grid.takeSnapshot();
 
 		// Wrap only the widget creation in $effect.root to ensure proper reactivity context
-		let shadowWidget!: InternalFlexiWidgetController;
+		let shadowWidget!: FlexiWidgetController;
 		this.#dropzoneWidgetEffectCleanup = $effect.root(() => {
 			shadowWidget = this.#createShadow(this.actionWidget!.widget);
 		});
@@ -725,7 +724,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return this.#dropzoneWidget.value;
 	}
 
-	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
+	set dropzoneWidget(value: FlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
 	}
 
@@ -738,10 +737,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 */
 	destroy() {
 		// Clean up all widgets
-		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
+		// TODO: this.widgets should be internally accessible as a set of FlexiWidgetController
 		this.widgets.forEach((widget) => {
 			if ('destroy' in widget) {
-				(widget as InternalFlexiWidgetController).destroy();
+				(widget as FlexiWidgetController).destroy();
 			}
 		});
 		this.widgets.clear();

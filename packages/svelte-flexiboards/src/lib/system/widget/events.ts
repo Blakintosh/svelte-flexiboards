@@ -7,16 +7,16 @@ import {
 import { FlexiEventBus, getFlexiEventBusCtx } from '../shared/event-bus.js';
 import { getElementMidpoint, isGrabPointerEvent } from '../shared/utils.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
-import type { InternalFlexiWidgetController } from './controller.svelte.js';
+import type { FlexiWidgetController } from './controller.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 
 type WidgetEventSource = {
-	widget: InternalFlexiWidgetController;
+	widget: FlexiWidgetController;
 	target: InternalFlexiTargetController;
 	board: InternalFlexiBoardController;
 };
 
-export function widgetEvents(widget: InternalFlexiWidgetController) {
+export function widgetEvents(widget: FlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
 	const board = getInternalFlexiboardCtx();
 	const grabWatcher = new WidgetPointerEventWatcher(widget, 'grab');
@@ -42,7 +42,7 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 	};
 }
 
-export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
+export function widgetGrabberEvents(widget: FlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
 	const board = getInternalFlexiboardCtx();
 	const grabWatcher = new WidgetPointerEventWatcher(widget, 'grab');
@@ -56,7 +56,7 @@ export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 	};
 }
 
-export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
+export function widgetResizerEvents(widget: FlexiWidgetController) {
 	const eventBus = getFlexiEventBusCtx();
 	const board = getInternalFlexiboardCtx();
 	const resizeWatcher = new WidgetPointerEventWatcher(widget, 'resize');
@@ -78,7 +78,7 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
  */
 function dispatchKeyDownGrab(
 	eventBus: FlexiEventBus,
-	widget: InternalFlexiWidgetController,
+	widget: FlexiWidgetController,
 	board: InternalFlexiBoardController,
 	event: KeyboardEvent
 ) {
@@ -113,7 +113,7 @@ function dispatchKeyDownGrab(
  */
 function dispatchGrab(
 	eventBus: FlexiEventBus,
-	widget: InternalFlexiWidgetController,
+	widget: FlexiWidgetController,
 	board: InternalFlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
@@ -147,7 +147,7 @@ function dispatchGrab(
  */
 function dispatchKeyDownResize(
 	eventBus: FlexiEventBus,
-	widget: InternalFlexiWidgetController,
+	widget: FlexiWidgetController,
 	board: InternalFlexiBoardController,
 	event: KeyboardEvent
 ) {
