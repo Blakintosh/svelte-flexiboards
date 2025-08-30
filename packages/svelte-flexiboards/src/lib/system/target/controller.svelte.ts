@@ -54,6 +54,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#dropzoneWidget: ProxiedValue<InternalFlexiWidgetController | null> = $state({
 		value: null
 	});
+	#dropzoneWidgetDestroy: (() => void) | null = null;
 	#isDropzoneWidgetAdded: boolean = $state(false);
 
 	#mouseCellPosition: Position = $state({
@@ -168,12 +169,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#updateOrderedWidgets();
 			widget.target = this;
 			widget.internalTarget = this;
-
-			// Ensure reactive state is created immediately for proper grid integration
-			// This is especially important for adder widgets that weren't created via target.createWidget()
-			if (!widget.interpolator) {
-				widget.createReactiveState();
-			}
 		}
 		return added;
 	}
@@ -529,7 +524,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
 
-		this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
+		// TODO: Not sure why the $effect.root is needed, but it is.
+		this.#dropzoneWidgetDestroy = $effect.root(() => {
+			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
+		});
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
@@ -653,6 +651,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;
+		this.#dropzoneWidgetDestroy?.();
+		this.#dropzoneWidgetDestroy = null;
 	}
 
 	// State-related getters and setters

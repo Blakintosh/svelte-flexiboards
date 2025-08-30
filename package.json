@@ -33,7 +33,7 @@
 		}
 	},
 	"peerDependencies": {
-		"svelte": "^5.0.0"
+		"svelte": "^5.0.0 <= 5.35.7"
 	},
 	"devDependencies": {
 		"@types/eslint": "^9.6.0",
