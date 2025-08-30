@@ -1,7 +1,7 @@
 {
 	"name": "svelte-flexiboards",
 	"licence": "MIT",
-	"version": "0.3.1",
+	"version": "0.3.2-alpha.5",
 	"description": "The headless drag-and-drop toolkit for Svelte.",
 	"scripts": {
 		"dev": "pnpm watch",
@@ -35,7 +35,7 @@
 		}
 	},
 	"peerDependencies": {
-		"svelte": "^5.16.0 <= 5.35.7"
+		"svelte": "^5.16.0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.0.0",
