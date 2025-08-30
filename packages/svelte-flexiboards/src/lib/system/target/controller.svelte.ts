@@ -42,6 +42,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
 	providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
 
+	#initialWidgetRegistrations: FlexiWidgetConfiguration[] = [];
+
 	/**
 	 * Stores the underlying state of the target.
 	 */
@@ -209,6 +211,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		return widget;
+	}
+
+	registerWidget(config: FlexiWidgetConfiguration) {
+		this.#initialWidgetRegistrations.push(config);
 	}
 
 	onWidgetDelete(event: WidgetEvent) {
@@ -497,6 +503,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	oninitialloadcomplete() {
+		for (const config of this.#initialWidgetRegistrations) {
+			this.createWidget(config);
+		}
+
 		this.#state.prepared = true;
 	}
 
@@ -531,10 +541,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
-		const added = this.grid.tryPlaceWidget(this.dropzoneWidget, x, y, width, height, true);
+		const added = this.grid.tryPlaceWidget(this.dropzoneWidget!, x, y, width, height, true);
 
 		if (added) {
-			this.widgets.add(this.dropzoneWidget);
+			this.widgets.add(this.dropzoneWidget!);
 			this.#isDropzoneWidgetAdded = true;
 		}
 

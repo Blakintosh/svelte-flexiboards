@@ -24,19 +24,21 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 		);
 	}
 
-	const widget = target.createWidget(config);
+	target.registerWidget(config);
 
-	if (!widget) {
-		throw new Error(
-			"Failed to create widget. Check that the widget's x and y coordinates do not lead to an unresolvable collision."
-		);
-	}
+	// const widget = target.registerWidget(config);
 
-	setContext(contextKey, widget);
+	// if (!widget) {
+	// 	throw new Error(
+	// 		"Failed to create widget. Check that the widget's x and y coordinates do not lead to an unresolvable collision."
+	// 	);
+	// }
 
-	return {
-		widget
-	};
+	// setContext(contextKey, widget);
+
+	// return {
+	// 	widget
+	// };
 }
 
 export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
