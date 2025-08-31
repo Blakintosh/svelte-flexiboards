@@ -34,7 +34,7 @@
 		flexspressive: {
 			title: 'Flexspressive',
 			slug: 'flexspressive',
-			description: 'Inspired by a new mobile OS UI.',
+			description: 'All your quick settings.',
 			href: '/examples/flexspressive'
 		}
 	};

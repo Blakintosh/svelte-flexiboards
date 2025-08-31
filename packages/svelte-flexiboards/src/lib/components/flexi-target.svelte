@@ -96,9 +96,13 @@
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
 	<FlexiGrid class={className}>
-		{#if !target.prepared && children}
-			{@render children()}
-		{:else if target.prepared}
+		{#if children}
+			<!-- Keep the initial widgets 'rendered' so that state inside children snippet doesn't get lost -->
+			<div style={target.prepared ? 'visibility: hidden;' : ''}>
+				{@render children()}
+			</div>
+		{/if}
+		{#if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
 			{#each target.orderedWidgets as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
