@@ -30,6 +30,12 @@
 			slug: 'flow',
 			description: 'A 2D flow layout.',
 			href: '/examples/flow'
+		},
+		flexspressive: {
+			title: 'Flexspressive',
+			slug: 'flexspressive',
+			description: 'Inspired by a new mobile OS UI.',
+			href: '/examples/flexspressive'
 		}
 	};
 </script>
