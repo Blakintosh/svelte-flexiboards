@@ -15,7 +15,7 @@ import { dragInOnceMounted, hasInternalFlexiaddCtx } from '../misc/adder.svelte.
 
 const contextKey = Symbol('flexiwidget');
 
-export function flexiwidget(config: FlexiWidgetConfiguration) {
+export function flexiwidget(config: FlexiWidgetConfiguration, onWidgetCreated?: (widget: FlexiWidgetController) => void) {
 	const target = getInternalFlexitargetCtx();
 
 	if (!target) {
@@ -24,7 +24,7 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 		);
 	}
 
-	target.registerWidget(config);
+	target.registerWidget(config, onWidgetCreated);
 
 	// const widget = target.registerWidget(config);
 
