@@ -84,7 +84,8 @@
                 minColumns: 4,
                 maxColumns: 4,
                 minRows: 4,
-                maxRows: 4
+                maxRows: 4,
+                packing: 'horizontal'
             },
             rowSizing: 'minmax(0, 1fr)'
         }} class="gap-2">
