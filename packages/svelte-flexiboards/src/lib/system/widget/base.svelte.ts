@@ -11,7 +11,6 @@ import {
 	type FlexiWidgetDefaults,
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
-import { WidgetMoveInterpolator } from './interpolator.svelte.js';
 
 export class FlexiWidgetController {
 	/**
@@ -98,7 +97,27 @@ export class FlexiWidgetController {
 			this.#rawConfig.resizeTrigger ??
 			this.#targetWidgetDefaults?.resizeTrigger ??
 			this.#providerWidgetDefaults?.resizeTrigger ??
-			defaultTriggerConfig
+			defaultTriggerConfig,
+		minWidth:
+			this.#rawConfig.minWidth ??
+			this.#targetWidgetDefaults?.minWidth ??
+			this.#providerWidgetDefaults?.minWidth ??
+			1,
+		minHeight:
+			this.#rawConfig.minHeight ??
+			this.#targetWidgetDefaults?.minHeight ??
+			this.#providerWidgetDefaults?.minHeight ??
+			1,
+		maxWidth:
+			this.#rawConfig.maxWidth ??
+			this.#targetWidgetDefaults?.maxWidth ??
+			this.#providerWidgetDefaults?.maxWidth ??
+			Infinity,
+		maxHeight:
+			this.#rawConfig.maxHeight ??
+			this.#targetWidgetDefaults?.maxHeight ??
+			this.#providerWidgetDefaults?.maxHeight ??
+			Infinity,
 	});
 
 	// Reactive state properties - single source of truth
@@ -331,6 +350,34 @@ export class FlexiWidgetController {
 
 	set isBeingDropped(value: boolean) {
 		this.backingState.isBeingDropped = value;
+	}
+
+	/**
+	 * The minimum width of the widget in units.
+	 */
+	get minWidth() {
+		return this.#config.minWidth;
+	}
+
+	/**
+	 * The minimum height of the widget in units.
+	 */
+	get minHeight() {
+		return this.#config.minHeight;
+	}
+
+	/**
+	 * The maximum width of the widget in units.
+	 */
+	get maxWidth() {
+		return this.#config.maxWidth;
+	}
+
+	/**
+	 * The maximum height of the widget in units.
+	 */
+	get maxHeight() {
+		return this.#config.maxHeight;
 	}
 }
 

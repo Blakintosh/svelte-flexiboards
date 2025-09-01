@@ -256,13 +256,16 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
+		const constrainedWidth = Math.max(this.minWidth, Math.min(this.maxWidth, width));
+		const constrainedHeight = Math.max(this.minHeight, Math.min(this.maxHeight, height));
+
 		this.backingState.x = x;
 		this.backingState.y = y;
-		this.backingState.width = width;
-		this.backingState.height = height;
+		this.backingState.width = constrainedWidth;
+		this.backingState.height = constrainedHeight;
 
 		if (interpolate) {
-			this.#interpolateMove(x, y, width, height);
+			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight);
 		}
 	}
 

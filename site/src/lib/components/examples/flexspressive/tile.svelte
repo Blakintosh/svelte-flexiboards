@@ -19,6 +19,8 @@
 <FlexiWidget {...props} 
     draggable={false} 
     resizability={'none'} 
+    maxWidth={2}
+    maxHeight={1}
     component={TileContents}
     componentProps={{
         title,

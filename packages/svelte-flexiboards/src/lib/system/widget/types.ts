@@ -96,6 +96,26 @@ export type FlexiWidgetDefaults = {
 	 * on the widget. E.g. a long press.
 	 */
 	resizeTrigger?: FlexiWidgetTriggerConfiguration;
+
+	/**
+	 * The minimum width of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minWidth?: number;
+
+	/**
+	 * The minimum height of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minHeight?: number;
+
+	/**
+	 * The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxWidth?: number;
+
+	/**
+	 * The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxHeight?: number;
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
@@ -175,6 +195,26 @@ export type FlexiWidgetDerivedConfiguration = {
 	 * The transition configuration for this widget.
 	 */
 	transition: FlexiWidgetTransitionConfiguration;
+
+	/**
+	 * The minimum width of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minWidth: number;
+
+	/**
+	 * The minimum height of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minHeight: number;
+
+	/**
+	 * The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxWidth: number;
+
+	/**
+	 * The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxHeight: number;
 };
 
 export type FlexiWidgetConstructorParams = {
