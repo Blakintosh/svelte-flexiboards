@@ -12,7 +12,6 @@ import {
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
 import { WidgetMoveInterpolator } from './interpolator.svelte.js';
-import type { WidgetReactiveState } from './state.svelte.js';
 
 export class FlexiWidgetController {
 	/**
@@ -93,11 +92,30 @@ export class FlexiWidgetController {
 			defaultTriggerConfig
 	});
 
-	protected reactiveState?: WidgetReactiveState;
-	backingState: WidgetStateData;
+	// Reactive state properties - single source of truth
+	backingState: {
+		currentAction: WidgetAction | null;
+		width: number;
+		height: number;
+		x: number;
+		y: number;
+		isBeingDropped: boolean;
+		hasGrabbers: boolean;
+		hasResizers: boolean;
+	} = $state() as any;
 
 	constructor(state: WidgetStateData, params: FlexiWidgetConstructorParams) {
-		this.backingState = state;
+		// Initialize reactive backing state
+		this.backingState = {
+			currentAction: state.currentAction,
+			width: state.width,
+			height: state.height,
+			x: state.x,
+			y: state.y,
+			isBeingDropped: state.isBeingDropped,
+			hasGrabbers: state.hasGrabbers,
+			hasResizers: state.hasResizers
+		};
 
 		this.#rawConfig = params.config;
 
@@ -114,16 +132,10 @@ export class FlexiWidgetController {
 	 * When this is null, the widget is not being grabbed.
 	 */
 	get currentAction() {
-		if (this.reactiveState) {
-			return this.reactiveState.currentAction;
-		}
 		return this.backingState.currentAction;
 	}
 
 	set currentAction(value: WidgetAction | null) {
-		if (this.reactiveState) {
-			this.reactiveState.currentAction = value;
-		}
 		this.backingState.currentAction = value;
 	}
 
@@ -160,9 +172,6 @@ export class FlexiWidgetController {
 	 * The width in units of the widget.
 	 */
 	get width() {
-		if (this.reactiveState) {
-			return this.reactiveState.width;
-		}
 		return this.backingState.width;
 	}
 
@@ -170,9 +179,6 @@ export class FlexiWidgetController {
 	 * The height in units of the widget.
 	 */
 	get height() {
-		if (this.reactiveState) {
-			return this.reactiveState.height;
-		}
 		return this.backingState.height;
 	}
 
@@ -224,9 +230,6 @@ export class FlexiWidgetController {
 	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get x() {
-		if (this.reactiveState) {
-			return this.reactiveState.x;
-		}
 		return this.backingState.x;
 	}
 
@@ -234,9 +237,6 @@ export class FlexiWidgetController {
 	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
 	 */
 	get y() {
-		if (this.reactiveState) {
-			return this.reactiveState.y;
-		}
 		return this.backingState.y;
 	}
 
@@ -277,9 +277,6 @@ export class FlexiWidgetController {
 	 * Whether the widget has any grabbers attached.
 	 */
 	get hasGrabbers(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.hasGrabbers;
-		}
 		return this.backingState.hasGrabbers;
 	}
 
@@ -287,9 +284,6 @@ export class FlexiWidgetController {
 	 * Whether the widget has any resizers attached
 	 */
 	get hasResizers(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.hasResizers;
-		}
 		return this.backingState.hasResizers;
 	}
 
@@ -297,10 +291,11 @@ export class FlexiWidgetController {
 	 * Whether the widget is currently being dropped after a drag operation.
 	 */
 	get isBeingDropped(): boolean {
-		if (this.reactiveState) {
-			return this.reactiveState.isBeingDropped;
-		}
 		return this.backingState.isBeingDropped;
+	}
+
+	set isBeingDropped(value: boolean) {
+		this.backingState.isBeingDropped = value;
 	}
 }
 

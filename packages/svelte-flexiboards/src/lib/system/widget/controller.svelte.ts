@@ -6,6 +6,7 @@ import {
 	type PointerService
 } from '../shared/utils.svelte.js';
 import type {
+	WidgetAction,
 	WidgetActionEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
@@ -16,25 +17,23 @@ import type {
 } from '../types.js';
 import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
-import { type WidgetMovementAnimation } from './interpolator.svelte.js';
+import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.svelte.js';
 import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 import type { FlexiWidgetConstructorParams } from './types.js';
-import { WidgetReactiveState } from './state.svelte.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
 
-	// Legacy non-reactive state tracking (for when reactive state is not available)
-	#grabbersCount: number = 0;
-	#resizersCount: number = 0;
+	// Grabber and resizer tracking
+	#grabbers: number = $state(0);
+	#resizers: number = $state(0);
+
+	// Movement interpolation
+	interpolator: WidgetMoveInterpolator;
 
 	internalTarget?: InternalFlexiTargetController = undefined;
 	provider: InternalFlexiBoardController;
-
-	// hasGrabbers and hasResizers are now implemented in the base class
-
-	// TODO: the "state-subclass" system is quite hacky, and isn't really achieving what we want right now anyway.
 
 	mounted: boolean = $state(false);
 
@@ -83,8 +82,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
 		}
 
-		const grabberCount = this.reactiveState?.grabberCount ?? this.#grabbersCount;
-		if (grabberCount == 0) {
+		if (this.#grabbers == 0) {
 			return 'user-select: none; cursor: grab; touch-action: none;';
 		}
 
@@ -170,6 +168,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		this.provider = params.provider;
 
+		// Create the widget's interpolator
+		this.interpolator = new WidgetMoveInterpolator(this.provider, this);
+
 		this.#eventBus = getFlexiEventBus();
 
 		this.#unsubscribers.push(
@@ -200,7 +201,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.currentAction = {
+		this.backingState.currentAction = {
 			action: 'grab',
 			widget: this,
 			offsetX: event.xOffset,
@@ -220,7 +221,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.ref?.focus();
 		}, 0);
 
-		this.currentAction = {
+		this.backingState.currentAction = {
 			action: 'resize',
 			widget: this,
 			offsetX: event.offsetX,
@@ -239,7 +240,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.currentAction = null;
+		this.backingState.currentAction = null;
 	}
 
 	/**
@@ -255,10 +256,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
+		this.backingState.x = x;
+		this.backingState.y = y;
+		this.backingState.width = width;
+		this.backingState.height = height;
 
 		if (interpolate) {
 			this.#interpolateMove(x, y, width, height);
@@ -266,7 +267,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	#getMovementAnimation(): WidgetMovementAnimation {
-		switch (this.currentAction?.action) {
+		switch (this.backingState.currentAction?.action) {
 			case 'grab':
 				return 'drop';
 			case 'resize':
@@ -297,55 +298,57 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			},
 			this.#getMovementAnimation()
 		);
-		this.isBeingDropped = false;
+		this.backingState.isBeingDropped = false;
 	}
 
 	/**
 	 * Registers a grabber to the widget.
 	 */
-	addGrabber() {
-		if (this.reactiveState) {
-			this.reactiveState.addGrabber();
-		} else {
-			this.#grabbersCount++;
-			this.backingState.hasGrabbers = this.#grabbersCount > 0;
-		}
+	addGrabber(): number {
+		this.#grabbers++;
+		this.backingState.hasGrabbers = this.#grabbers > 0;
+		return this.#grabbers;
 	}
 
 	/**
 	 * Unregisters a grabber from the widget.
 	 */
-	removeGrabber() {
-		if (this.reactiveState) {
-			this.reactiveState.removeGrabber();
-		} else {
-			this.#grabbersCount--;
-			this.backingState.hasGrabbers = this.#grabbersCount > 0;
-		}
+	removeGrabber(): number {
+		this.#grabbers--;
+		this.backingState.hasGrabbers = this.#grabbers > 0;
+		return this.#grabbers;
 	}
 
 	/**
 	 * Registers a resizer to the widget.
 	 */
-	addResizer() {
-		if (this.reactiveState) {
-			this.reactiveState.addResizer();
-		} else {
-			this.#resizersCount++;
-			this.backingState.hasResizers = this.#resizersCount > 0;
-		}
+	addResizer(): number {
+		this.#resizers++;
+		this.backingState.hasResizers = this.#resizers > 0;
+		return this.#resizers;
 	}
 
 	/**
 	 * Unregisters a resizer from the widget.
 	 */
-	removeResizer() {
-		if (this.reactiveState) {
-			this.reactiveState.removeResizer();
-		} else {
-			this.#resizersCount--;
-			this.backingState.hasResizers = this.#resizersCount > 0;
-		}
+	removeResizer(): number {
+		this.#resizers--;
+		this.backingState.hasResizers = this.#resizers > 0;
+		return this.#resizers;
+	}
+
+	/**
+	 * Gets the current grabber count
+	 */
+	get grabberCount(): number {
+		return this.#grabbers;
+	}
+
+	/**
+	 * Gets the current resizer count
+	 */
+	get resizerCount(): number {
+		return this.#resizers;
 	}
 
 	/**
@@ -385,35 +388,19 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
-		this.currentAction = null;
+		this.backingState.currentAction = null;
 
 		// Clean up event subscriptions when widget is deleted
 		this.destroy();
 	}
 
 	/**
-	 * Creates the reactive state container when the widget component mounts.
-	 * This should be called from the component's onMount lifecycle.
-	 */
-	createReactiveState(): void {
-		// Create the reactive state with current backing state
-		this.reactiveState = new WidgetReactiveState(this, this.backingState);
-
-		// Transfer current grabber/resizer counts to reactive state
-		for (let i = 0; i < this.#grabbersCount; i++) {
-			this.reactiveState!.addGrabber();
-		}
-		for (let i = 0; i < this.#resizersCount; i++) {
-			this.reactiveState!.addResizer();
-		}
-	}
-
-	/**
 	 * Cleanup method to be called when the widget is destroyed
 	 */
 	destroy() {
-		// Clean up reactive state first
-		this.destroyReactiveState();
+		// Reset counters
+		this.#grabbers = 0;
+		this.#resizers = 0;
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -421,105 +408,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	/**
-	 * Destroys the reactive state container when the widget component unmounts.
-	 * This should be called from the component's onDestroy lifecycle.
-	 */
-	destroyReactiveState(): void {
-		if (this.reactiveState) {
-			this.reactiveState.destroy();
-			this.reactiveState = undefined;
-		}
-	}
-
-	/**
-	 * The width in units of the widget.
-	 */
-	get width() {
-		if (this.reactiveState) {
-			return this.reactiveState.width;
-		}
-		return this.backingState.width;
-	}
-
-	/**
-	 * The height in units of the widget.
-	 */
-	get height() {
-		if (this.reactiveState) {
-			return this.reactiveState.height;
-		}
-		return this.backingState.height;
-	}
-
-	set width(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.width = value;
-		}
-		this.backingState.width = value;
-	}
-
-	set height(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.height = value;
-		}
-		this.backingState.height = value;
-	}
-
-	/**
-	 * Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get x() {
-		if (this.reactiveState) {
-			return this.reactiveState.x;
-		}
-		return this.backingState.x;
-	}
-
-	/**
-	 * Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.
-	 */
-	get y() {
-		if (this.reactiveState) {
-			return this.reactiveState.y;
-		}
-		return this.backingState.y;
-	}
-
-	set x(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.x = value;
-		}
-		this.backingState.x = value;
-	}
-
-	set y(value: number) {
-		if (this.reactiveState) {
-			this.reactiveState.y = value;
-		}
-		this.backingState.y = value;
-	}
-
-	/**
-	 * Gets the widget's interpolator for transitions.
-	 */
-	get interpolator() {
-		return this.reactiveState?.interpolator;
-	}
-
-	/**
 	 * Whether the widget should draw a placeholder widget in the DOM.
 	 */
 	get shouldDrawPlaceholder() {
-		if (this.reactiveState) {
-			return this.reactiveState.interpolator?.active ?? false;
-		}
 		return this.interpolator?.active ?? false;
-	}
-
-	set isBeingDropped(value: boolean) {
-		if (this.reactiveState) {
-			this.reactiveState.isBeingDropped = value;
-		}
-		this.backingState.isBeingDropped = value;
 	}
 }

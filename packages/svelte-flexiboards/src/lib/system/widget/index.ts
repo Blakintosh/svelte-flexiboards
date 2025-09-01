@@ -15,7 +15,7 @@ import { dragInOnceMounted, hasInternalFlexiaddCtx } from '../misc/adder.svelte.
 
 const contextKey = Symbol('flexiwidget');
 
-export function flexiwidget(config: FlexiWidgetConfiguration) {
+export function flexiwidget(config: FlexiWidgetConfiguration, onWidgetCreated?: (widget: FlexiWidgetController) => void) {
 	const target = getInternalFlexitargetCtx();
 
 	if (!target) {
@@ -24,20 +24,21 @@ export function flexiwidget(config: FlexiWidgetConfiguration) {
 		);
 	}
 
-	const widget = target.createWidget(config);
+	target.registerWidget(config, onWidgetCreated);
 
-	if (!widget) {
-		throw new Error(
-			"Failed to create widget. Check that the widget's x and y coordinates do not lead to an unresolvable collision."
-		);
-	}
+	// const widget = target.registerWidget(config);
 
-	setContext(contextKey, widget);
+	// if (!widget) {
+	// 	throw new Error(
+	// 		"Failed to create widget. Check that the widget's x and y coordinates do not lead to an unresolvable collision."
+	// 	);
+	// }
 
-	widget.createReactiveState();
-	return {
-		widget
-	};
+	// setContext(contextKey, widget);
+
+	// return {
+	// 	widget
+	// };
 }
 
 export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
@@ -53,11 +54,6 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 
 	const events = widgetEvents(widget);
 
-	// Only create reactive state if it doesn't already exist
-	// (it may have been created earlier when widget was added to target)
-	if (!widget.interpolator) {
-		widget.createReactiveState();
-	}
 	return {
 		widget,
 		...events

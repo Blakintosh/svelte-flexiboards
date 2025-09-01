@@ -32,24 +32,27 @@
 		snippet: children
 	});
 
-	const { widget } = flexiwidget(config);
+	// Callback so that we still fulfil these props.
+	function onWidgetCreated(widget: FlexiWidgetController) {
+		controller = widget;
+		onfirstcreate?.(widget);
+	}
 
-	controller = widget;
-	onfirstcreate?.(widget);
+	flexiwidget(config, onWidgetCreated);
 
-	let derivedClassName = $derived.by(() => {
-		if (typeof widget.className === 'function') {
-			return widget.className(widget);
-		}
+	// let derivedClassName = $derived.by(() => {
+	// 	if (typeof widget.className === 'function') {
+	// 		return widget.className(widget);
+	// 	}
 
-		return widget.className;
-	});
+	// 	return widget.className;
+	// });
 
-	let assistiveTextId = generateUniqueId();
+	// let assistiveTextId = generateUniqueId();
 </script>
 
 <!-- Only use noscript as an SSR fallback, because it won't look the same as the hydrated version. -->
-<noscript style="display: contents;">
+<!-- <noscript style="display: contents;">
 	<div
 		class={derivedClassName}
 		aria-grabbed={widget.isGrabbed}
@@ -75,4 +78,4 @@
 			<widget.component {...widget.componentProps ?? {}} />
 		{/if}
 	</div>
-</noscript>
+</noscript> -->
