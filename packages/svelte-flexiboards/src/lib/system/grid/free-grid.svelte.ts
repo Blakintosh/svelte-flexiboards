@@ -587,9 +587,9 @@ class FreeFormGridCoordinateSystem {
 			this.applyHorizontalPacking();
 		}
 
-		// if (this.#grid.packing === 'vertical') {
-		// 	this.applyVerticalPacking();
-		// }
+		if (this.#grid.packing === 'vertical') {
+			this.applyVerticalPacking();
+		}
 	}
 
 	applyHorizontalPacking(): void {
@@ -636,6 +636,54 @@ class FreeFormGridCoordinateSystem {
 			this.removeWidget(widget);
 
 			widget.setBounds(widget.x - minimumAvailableShift, widget.y, widget.width, widget.height);
+			this.addWidget(widget, widget.x, widget.y, widget.width, widget.height);
+		}
+	}
+
+	applyVerticalPacking(): void {
+		// Pack the widgets that are closest to the left first.
+		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).toSorted((a, b) => {
+			if(a.y == b.y) {
+				return a.x - b.x;
+			}
+			return a.y - b.y;
+		});
+
+		for(const widget of sortedWidgets) {
+			// We can already automatically eliminate any widget that's at y = 0.
+			if(widget.y === 0) {
+				continue;
+			}
+
+			const x = widget.x;
+			const y = widget.y;
+
+			let minimumAvailableShift = 0;
+
+			// Compute the best shift to the left we can achieve for this widget.
+			let blocked = false;
+			for(let i = y - 1; i >= 0; i--) {
+				for(let j = x; j < x + widget.width; j++) {
+					if(this.layout[i][j] !== null) {
+						blocked = true;
+						break;
+					}
+				}
+				
+				if(blocked) {
+					break;
+				}
+				minimumAvailableShift++;
+			}
+
+			if(minimumAvailableShift == 0) {
+				continue;
+			}
+
+			// Remove and re-add the widget so the bitmaps are updated correctly.
+			this.removeWidget(widget);
+
+			widget.setBounds(widget.x, widget.y - minimumAvailableShift, widget.width, widget.height);
 			this.addWidget(widget, widget.x, widget.y, widget.width, widget.height);
 		}
 	}
@@ -825,7 +873,7 @@ class FreeFormGridCoordinateSystem {
 type FreeGridLayout = (InternalFlexiWidgetController | null)[][];
 
 type FreeGridCollapsibility = 'none' | 'leading' | 'trailing' | 'endings' | 'any';
-type FreeGridPacking = 'none' | 'horizontal';
+type FreeGridPacking = 'none' | 'horizontal' | 'vertical';
 
 export type FreeFormTargetLayout = {
 	type: 'free';
