@@ -32,10 +32,13 @@
 		snippet: children
 	});
 
-	flexiwidget(config);
+	// Callback so that we still fulfil these props.
+	function onWidgetCreated(widget: FlexiWidgetController) {
+		controller = widget;
+		onfirstcreate?.(widget);
+	}
 
-	// controller = widget;
-	// onfirstcreate?.(widget);
+	flexiwidget(config, onWidgetCreated);
 
 	// let derivedClassName = $derived.by(() => {
 	// 	if (typeof widget.className === 'function') {

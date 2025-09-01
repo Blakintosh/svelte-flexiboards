@@ -42,7 +42,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#providerTargetDefaults?: FlexiTargetDefaults = $derived(this.provider?.config?.targetDefaults);
 	providerWidgetDefaults?: FlexiWidgetDefaults = $derived(this.provider?.config?.widgetDefaults);
 
-	#initialWidgetRegistrations: FlexiWidgetConfiguration[] = [];
+	#initialWidgetRegistrations: Array<{
+		config: FlexiWidgetConfiguration;
+		onCreated?: (widget: FlexiWidgetController) => void;
+	}> = [];
 
 	/**
 	 * Stores the underlying state of the target.
@@ -213,8 +216,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return widget;
 	}
 
-	registerWidget(config: FlexiWidgetConfiguration) {
-		this.#initialWidgetRegistrations.push(config);
+	registerWidget(config: FlexiWidgetConfiguration, onCreated?: (widget: FlexiWidgetController) => void) {
+		this.#initialWidgetRegistrations.push({ config, onCreated });
 	}
 
 	onWidgetDelete(event: WidgetEvent) {
@@ -503,8 +506,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	oninitialloadcomplete() {
-		for (const config of this.#initialWidgetRegistrations) {
-			this.createWidget(config);
+		for (const registration of this.#initialWidgetRegistrations) {
+			const widget = this.createWidget(registration.config);
+			if (widget && registration.onCreated) {
+				registration.onCreated(widget);
+			}
 		}
 
 		this.#state.prepared = true;
