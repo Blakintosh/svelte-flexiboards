@@ -282,6 +282,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				x: widget.x,
 				y: widget.y,
 				draggable: widget.draggable,
+				draggability: widget.draggability,
 				resizability: widget.resizability,
 				className: widget.className,
 				metadata: widget.metadata
@@ -298,6 +299,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				height: of.height,
 				component: of.component,
 				draggable: of.draggable,
+				draggability: of.draggability,
 				resizability: of.resizability,
 				snippet: of.snippet,
 				className: of.className,

@@ -119,7 +119,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					continue;
 				}
 
-				if (!collidingWidget.draggable) {
+				if (!collidingWidget.isMovable) {
 					return false;
 				}
 

@@ -61,12 +61,17 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 	const board = getInternalFlexiboardCtx();
 	const resizeWatcher = new WidgetPointerEventWatcher(widget, 'resize');
 
+	// Don't propagate events upwards, so that it never also triggers a grab action.
 	return {
 		onpointerdown: (event: PointerEvent) => {
+			event.stopPropagation();
 			// Invoke the trigger watcher which respects trigger configuration (immediate vs long press).
 			resizeWatcher.onstartpointerdown(event);
 		},
-		onkeydown: (event: KeyboardEvent) => dispatchKeyDownResize(eventBus, widget, board, event)
+		onkeydown: (event: KeyboardEvent) => {
+			event.stopPropagation();
+			dispatchKeyDownResize(eventBus, widget, board, event);
+		}
 	};
 }
 
@@ -82,7 +87,7 @@ function dispatchKeyDownGrab(
 	board: InternalFlexiBoardController,
 	event: KeyboardEvent
 ) {
-	if (!widget.draggable || !widget.ref || event.key !== 'Enter') {
+	if (!widget.isGrabbable || !widget.ref || event.key !== 'Enter') {
 		return;
 	}
 
@@ -117,7 +122,7 @@ function dispatchGrab(
 	board: InternalFlexiBoardController,
 	{ clientX, clientY }: { clientX: number; clientY: number }
 ) {
-	if (!widget.draggable || !widget.ref) {
+	if (!widget.isGrabbable || !widget.ref) {
 		return;
 	}
 

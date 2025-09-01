@@ -19,14 +19,14 @@ const createMockWidget = (
 	y = 0,
 	width = 1,
 	height = 1,
-	draggable = true
+	draggability = 'full'
 ): InternalFlexiWidgetController => {
 	const widget = {
 		x,
 		y,
 		width,
 		height,
-		draggable,
+		draggability,
 		setBounds: vi.fn().mockImplementation(function (
 			newX: number,
 			newY: number,
@@ -132,7 +132,7 @@ describe('FreeFormFlexiGrid', () => {
 
 			it('should fail when colliding with a non-draggable widget', () => {
 				// Create a non-draggable widget at (1,1)
-				const widget1 = createMockWidget(0, 0, 0, 0, false);
+				const widget1 = createMockWidget(0, 0, 0, 0, 'none');
 				grid.tryPlaceWidget(widget1, 1, 1, 2, 2);
 
 				// State:
@@ -474,7 +474,7 @@ describe('FreeFormFlexiGrid', () => {
 
 		it('should maintain state during an unsuccessful placement', () => {
 			// a is not draggable
-			const a = createMockWidget(undefined, undefined, undefined, undefined, false);
+			const a = createMockWidget(undefined, undefined, undefined, undefined, 'none');
 			const b = createMockWidget();
 			const c = createMockWidget();
 			const d = createMockWidget();

@@ -23,6 +23,7 @@ export type FlexiCommonProps<T> = {
 };
 
 export type WidgetResizability = 'none' | 'horizontal' | 'vertical' | 'both';
+export type WidgetDraggability = 'none' | 'movable' | 'full';
 
 export type WidgetGrabAction = {
 	action: 'grab';

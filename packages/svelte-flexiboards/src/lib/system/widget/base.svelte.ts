@@ -1,7 +1,7 @@
 import type { Component } from 'svelte';
 import { FlexiControllerBase } from '../base.svelte.js';
 import type { FlexiTargetController } from '../target/index.js';
-import type { WidgetAction, WidgetResizability } from '../types.js';
+import type { WidgetAction, WidgetDraggability, WidgetResizability } from '../types.js';
 import {
 	defaultTriggerConfig,
 	type FlexiWidgetChildrenSnippet,
@@ -70,6 +70,15 @@ export class FlexiWidgetController {
 			this.#targetWidgetDefaults?.draggable ??
 			this.#providerWidgetDefaults?.draggable ??
 			true,
+		draggability:
+			this.#rawConfig.draggability ??
+			this.#targetWidgetDefaults?.draggability ??
+			this.#providerWidgetDefaults?.draggability ??
+			// This is not pretty but will ensure backwards compatibility with the old `draggable` property.
+			(this.#rawConfig.draggable !== undefined ? (this.#rawConfig.draggable ? 'full' : 'none') : undefined) ??
+			(this.#targetWidgetDefaults?.draggable !== undefined ? (this.#targetWidgetDefaults?.draggable ? 'full' : 'none') : undefined) ??
+			(this.#providerWidgetDefaults?.draggable !== undefined ? (this.#providerWidgetDefaults?.draggable ? 'full' : 'none') : undefined) ??
+			'full',
 		className:
 			this.#rawConfig.className ??
 			this.#targetWidgetDefaults?.className ??
@@ -141,6 +150,7 @@ export class FlexiWidgetController {
 
 	/**
 	 * Whether the widget is draggable.
+	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
 	 */
 	get draggable() {
 		return this.#config.draggable;
@@ -148,6 +158,31 @@ export class FlexiWidgetController {
 
 	set draggable(value: boolean) {
 		this.#rawConfig.draggable = value;
+	}
+
+	/**
+	 * The draggability of the widget.
+	 */
+	get draggability() {
+		return this.#config.draggability;
+	}
+	
+	set draggability(value: WidgetDraggability) {
+		this.#rawConfig.draggability = value;
+	}
+
+	/**
+	 * Whether the widget can be grabbed.
+	 */
+	get isGrabbable() {
+		return this.#config.draggability == 'full';
+	}
+
+	/**
+	 * Whether the widget can be moved.
+	 */
+	get isMovable() {
+		return this.#config.draggability == 'movable' || this.#config.draggability == 'full';
 	}
 
 	/**

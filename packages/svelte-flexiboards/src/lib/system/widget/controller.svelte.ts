@@ -70,7 +70,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return '';
 		}
 
-		if (!this.draggable) {
+		if (!this.isGrabbable) {
 			return '';
 		}
 

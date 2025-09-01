@@ -33,8 +33,9 @@
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
-			draggable: editMode,
-			resizability: 'horizontal'
+			draggable: false,
+			resizability: 'none',
+            transition: simpleTransitionConfig()
 		}
 	});
 
