@@ -641,7 +641,7 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	applyVerticalPacking(): void {
-		// Pack the widgets that are closest to the left first.
+		// Pack the widgets that are closest to the top first.
 		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).toSorted((a, b) => {
 			if(a.y == b.y) {
 				return a.x - b.x;
@@ -660,7 +660,7 @@ class FreeFormGridCoordinateSystem {
 
 			let minimumAvailableShift = 0;
 
-			// Compute the best shift to the left we can achieve for this widget.
+			// Compute the best shift to the top we can achieve for this widget.
 			let blocked = false;
 			for(let i = y - 1; i >= 0; i--) {
 				for(let j = x; j < x + widget.width; j++) {
