@@ -68,6 +68,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
+		// Constrain the width/height of the widget to the min/max values.
+		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
+		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
+
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
