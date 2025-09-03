@@ -593,8 +593,7 @@ describe('FreeFormFlexiGrid', () => {
 			});
 		});
 
-		// TODO: grid collapsibility tests - which needs a fix to how positions
-		// are normalised.
+		// TODO: grid collapsibility tests - which need a way to flag applyPostCompletionOperations
 	});
 
 	describe('Min/max widget dimensions', () => {
@@ -705,7 +704,7 @@ describe('FreeFormFlexiGrid', () => {
 			return new FreeFormFlexiGrid(mockTarget, targetConfig);
 		};
 
-		describe('No Packing Strategy (packing: "none")', () => {
+		describe('no packing', () => {
 			let grid: FreeFormFlexiGrid;
 
 			beforeEach(() => {
@@ -734,77 +733,150 @@ describe('FreeFormFlexiGrid', () => {
 			});
 		});
 
-		describe('Horizontal Packing Strategy (packing: "horizontal")', () => {
+		describe('horizontal packing', () => {
 			let grid: FreeFormFlexiGrid;
 
 			beforeEach(() => {
 				grid = createPackingGrid('horizontal');
 			});
-
-			// TODO: Implement tests for horizontal packing behavior
-			// - Widgets should be packed toward the left
-			// - Empty columns on the left should be eliminated when possible
-			// - Order preservation during packing
-			// - Collision handling during packing operations
 			
-			it.todo('should pack widgets toward the left');
-			it.todo('should eliminate empty columns on the left when possible');
-			it.todo('should preserve widget order during packing');
-			it.todo('should handle collisions during packing operations');
-			it.todo('should respect widget constraints during packing');
+			it('should pack widgets toward the left', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 1, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
+
+				// Placement:
+				// -a-
+				// -b-
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// a--
+				// b--
+				// ---
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 1, 1);
+			});
+
+			it('should collapse gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 2, 0, 1, 1);
+
+				// Placement:
+				// a-b
+				// ---
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 1);
+			});
+
+			it('should collapse multi-row gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 2, 0, 1, 2);
+
+				// Placement:
+				// a-b
+				// --b
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+				// -b-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 2);
+			});
 		});
 
-		describe('Vertical Packing Strategy (packing: "vertical")', () => {
+		describe('vertical packing', () => {
 			let grid: FreeFormFlexiGrid;
 
 			beforeEach(() => {
 				grid = createPackingGrid('vertical');
 			});
 
-			// TODO: Implement tests for vertical packing behavior
-			// - Widgets should be packed toward the top
-			// - Empty rows at the top should be eliminated when possible
-			// - Order preservation during packing
-			// - Collision handling during packing operations
-			
-			it.todo('should pack widgets toward the top');
-			it.todo('should eliminate empty rows at the top when possible');
-			it.todo('should preserve widget order during packing');
-			it.todo('should handle collisions during packing operations');
-			it.todo('should respect widget constraints during packing');
-		});
+			it('should pack widgets toward the top', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
 
-		describe('Packing Strategy Comparison Tests', () => {
-			// TODO: Implement comparative tests between different packing strategies
-			// - Same widget placement with different packing strategies
-			// - Performance comparisons
-			// - Edge case handling across strategies
-			
-			it.todo('should produce different layouts with different packing strategies');
-			it.todo('should handle edge cases consistently across packing strategies');
-			it.todo('should maintain grid validity regardless of packing strategy');
-		});
+				grid.tryPlaceWidget(widget1, 0, 2, 1, 1);
+				grid.tryPlaceWidget(widget2, 1, 2, 1, 1);
 
-		describe('Packing with Grid Constraints', () => {
-			// TODO: Test packing behavior with various grid constraints
-			// - Fixed size grids
-			// - Column-constrained grids  
-			// - Row-constrained grids
-			// - Minimum/maximum dimension constraints
-			
-			describe('Fixed Size Grid Packing', () => {
-				it.todo('should pack widgets within fixed grid boundaries');
-				it.todo('should handle packing when grid cannot expand');
+				// Placement:
+				// ---
+				// ---
+				// ab-
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 1);
 			});
 
-			describe('Column-Constrained Packing', () => {
-				it.todo('should pack widgets with column expansion limits');
-				it.todo('should prioritize vertical packing when columns are constrained');
+			it('should collapse gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 0, 2, 1, 1);
+
+				// Placement:
+				// a--
+				// ---
+				// b--
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// a--
+				// b--
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 1, 1);
 			});
 
-			describe('Row-Constrained Packing', () => {
-				it.todo('should pack widgets with row expansion limits');
-				it.todo('should prioritize horizontal packing when rows are constrained');
+			it('should collapse multi-column gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 0, 2, 2, 1);
+
+				// Placement:
+				// a--
+				// ---
+				// bb-
+	
+				grid.applyPostCompletionOperations();
+	
+				// Expected state:
+				// a--
+				// bb-
+	
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 2, 1);
 			});
 		});
 	});

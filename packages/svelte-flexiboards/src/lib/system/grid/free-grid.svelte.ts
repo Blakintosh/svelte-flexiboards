@@ -96,6 +96,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
 
+		this.#needsPostEditOperations = true;
+
 		return true;
 	}
 
