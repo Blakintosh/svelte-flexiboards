@@ -39,7 +39,7 @@
 			<div>
 				<Card.Header class="px-2 lg:px-4">
 					<Card.Title class="flex items-center gap-2 text-sm font-semibold lg:text-lg truncate">
-						{#if widget.draggable}
+						{#if widget.draggability == 'full'}
 							<Grabber size={grabberSize} class="text-muted-foreground" />
 						{/if}
 						{title}
