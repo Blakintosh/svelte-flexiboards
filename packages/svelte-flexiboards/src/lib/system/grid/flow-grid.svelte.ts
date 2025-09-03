@@ -123,6 +123,10 @@ export class FlowFlexiGrid extends FlexiGrid {
 			height = this.rows;
 		}
 
+		// Additionally, constrain the width/height of the widget to the min/max values.
+		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
+		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
+
 		// Find the nearest widget to the proposed position, and determine the precise location based on it.
 		const [index, nearestWidget] = this.#coordinateSystem.findNearestWidget(
 			cellPosition,

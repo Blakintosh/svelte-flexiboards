@@ -26,7 +26,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		minRows: this.#rawLayoutConfig?.minRows ?? 1,
 		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
-		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? 'any'
+		colllapsibility: this.#rawLayoutConfig?.colllapsibility ?? 'any',
+		packing: this.#rawLayoutConfig?.packing ?? 'none'
 	});
 
 	#rows: number = $state() as number;
@@ -35,7 +36,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	#coordinateSystem: FreeFormGridCoordinateSystem = $state() as FreeFormGridCoordinateSystem;
 
 	// Track whether collapsing is needed to defer it until operations complete
-	#needsCollapsing: boolean = false;
+	#needsPostEditOperations: boolean = false;
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		super(target, targetConfig);
@@ -67,6 +68,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
+		// Constrain the width/height of the widget to the min/max values.
+		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
+		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
+
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
@@ -90,6 +95,8 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#coordinateSystem.addWidget(widget, x, y, width, height);
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
+
+		this.#needsPostEditOperations = true;
 
 		return true;
 	}
@@ -119,7 +126,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					continue;
 				}
 
-				if (!collidingWidget.draggable) {
+				if (!collidingWidget.isMovable) {
 					return false;
 				}
 
@@ -217,16 +224,24 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#coordinateSystem.removeWidget(widget);
 
 		// Mark that collapsing is needed, but don't apply it immediately
-		this.#needsCollapsing = true;
+		this.#needsPostEditOperations = true;
 
 		return true;
+	}
+
+	applyPackingIfNeeded(): void {
+		if (!this.#needsPostEditOperations) {
+			return;
+		}
+		
+		this.#coordinateSystem.applyPacking();
 	}
 
 	/**
 	 * Applies row and column collapsing, if needed.
 	 */
 	applyCollapsingIfNeeded(): void {
-		if (!this.#needsCollapsing) {
+		if (!this.#needsPostEditOperations) {
 			return;
 		}
 
@@ -235,15 +250,16 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		const newColumns = this.#coordinateSystem.applyColumnCollapsibility();
 		this.#setColumns(newColumns);
-
-		this.#needsCollapsing = false;
 	}
 
 	/**
 	 * Collapse rows and columns if needed.
 	 */
 	applyPostCompletionOperations(): void {
+		this.applyPackingIfNeeded();
 		this.applyCollapsingIfNeeded();
+
+		this.#needsPostEditOperations = false;
 	}
 
 	takeSnapshot(): FreeFormGridSnapshot {
@@ -259,7 +275,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				width: widget.width,
 				height: widget.height
 			})),
-			needsCollapsing: this.#needsCollapsing
+			needsPostEditOperations: this.#needsPostEditOperations
 		};
 	}
 
@@ -273,7 +289,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		this.#columns = this.#layoutConfig.minColumns;
 
 		this.#coordinateSystem.clear();
-		this.#needsCollapsing = false;
+		this.#needsPostEditOperations = false;
 	}
 
 	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
@@ -294,7 +310,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		}
 
 		// Restore the collapsing flag
-		this.#needsCollapsing = snapshot.needsCollapsing;
+		this.#needsPostEditOperations = snapshot.needsPostEditOperations;
 	}
 
 	mapRawCellToFinalCell(x: number, y: number): [number, number] {
@@ -397,6 +413,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	get collapsibility() {
 		return this.#layoutConfig.colllapsibility;
+	}
+
+	get packing() {
+		return this.#layoutConfig.packing;
 	}
 
 	get minRows() {
@@ -562,6 +582,116 @@ class FreeFormGridCoordinateSystem {
 
 	#isRowEmpty(row: number) {
 		return this.bitmaps[row] === 0;
+	}
+
+	applyPacking(): void {
+		if (this.#grid.packing === 'none') {
+			return;
+		}
+
+		if (this.#grid.packing === 'horizontal') {
+			this.applyHorizontalPacking();
+		}
+
+		if (this.#grid.packing === 'vertical') {
+			this.applyVerticalPacking();
+		}
+	}
+
+	applyHorizontalPacking(): void {
+		// Pack the widgets that are closest to the left first.
+		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).toSorted((a, b) => {
+			if(a.x == b.x) {
+				return a.y - b.y;
+			}
+			return a.x - b.x;
+		});
+
+		for(const widget of sortedWidgets) {
+			// We can already automatically eliminate any widget that's at x = 0.
+			if(widget.x === 0) {
+				continue;
+			}
+
+			const x = widget.x;
+			const y = widget.y;
+
+			let minimumAvailableShift = 0;
+
+			// Compute the best shift to the left we can achieve for this widget.
+			let blocked = false;
+			for(let j = x - 1; j >= 0; j--) {
+				for(let i = y; i < y + widget.height; i++) {
+					if(this.layout[i][j] !== null) {
+						blocked = true;
+						break;
+					}
+				}
+				
+				if(blocked) {
+					break;
+				}
+				minimumAvailableShift++;
+			}
+
+			if(minimumAvailableShift == 0) {
+				continue;
+			}
+
+			// Remove and re-add the widget so the bitmaps are updated correctly.
+			this.removeWidget(widget);
+
+			widget.setBounds(widget.x - minimumAvailableShift, widget.y, widget.width, widget.height);
+			this.addWidget(widget, widget.x, widget.y, widget.width, widget.height);
+		}
+	}
+
+	applyVerticalPacking(): void {
+		// Pack the widgets that are closest to the top first.
+		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).toSorted((a, b) => {
+			if(a.y == b.y) {
+				return a.x - b.x;
+			}
+			return a.y - b.y;
+		});
+
+		for(const widget of sortedWidgets) {
+			// We can already automatically eliminate any widget that's at y = 0.
+			if(widget.y === 0) {
+				continue;
+			}
+
+			const x = widget.x;
+			const y = widget.y;
+
+			let minimumAvailableShift = 0;
+
+			// Compute the best shift to the top we can achieve for this widget.
+			let blocked = false;
+			for(let i = y - 1; i >= 0; i--) {
+				for(let j = x; j < x + widget.width; j++) {
+					if(this.layout[i][j] !== null) {
+						blocked = true;
+						break;
+					}
+				}
+				
+				if(blocked) {
+					break;
+				}
+				minimumAvailableShift++;
+			}
+
+			if(minimumAvailableShift == 0) {
+				continue;
+			}
+
+			// Remove and re-add the widget so the bitmaps are updated correctly.
+			this.removeWidget(widget);
+
+			widget.setBounds(widget.x, widget.y - minimumAvailableShift, widget.width, widget.height);
+			this.addWidget(widget, widget.x, widget.y, widget.width, widget.height);
+		}
 	}
 
 	applyRowCollapsibility(): number {
@@ -749,6 +879,7 @@ class FreeFormGridCoordinateSystem {
 type FreeGridLayout = (InternalFlexiWidgetController | null)[][];
 
 type FreeGridCollapsibility = 'none' | 'leading' | 'trailing' | 'endings' | 'any';
+type FreeGridPacking = 'none' | 'horizontal' | 'vertical';
 
 export type FreeFormTargetLayout = {
 	type: 'free';
@@ -757,6 +888,7 @@ export type FreeFormTargetLayout = {
 	maxRows?: number;
 	maxColumns?: number;
 	colllapsibility?: FreeGridCollapsibility;
+	packing?: FreeGridPacking;
 };
 type DerivedFreeFormTargetLayout = Required<FreeFormTargetLayout>;
 
@@ -766,7 +898,7 @@ type FreeFormGridSnapshot = {
 	rows: number;
 	columns: number;
 	widgets: WidgetSnapshot[];
-	needsCollapsing: boolean;
+	needsPostEditOperations: boolean;
 };
 
 type CollisionCheck = {

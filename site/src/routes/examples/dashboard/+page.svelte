@@ -67,7 +67,8 @@
 						maxColumns: 3,
 						minRows: 3,
 						maxRows: 4,
-						colllapsibility: 'any'
+						colllapsibility: 'any',
+						packing: 'vertical'
 					},
 					widgetDefaults: {
 						transition: simpleTransitionConfig()

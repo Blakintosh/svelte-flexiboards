@@ -158,7 +158,7 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
-		if (!this.#widget.draggable) {
+		if (!this.#widget.isGrabbable) {
 			return;
 		}
 

@@ -1,7 +1,7 @@
 import type { Component } from 'svelte';
 import { FlexiControllerBase } from '../base.svelte.js';
 import type { FlexiTargetController } from '../target/index.js';
-import type { WidgetAction, WidgetResizability } from '../types.js';
+import type { WidgetAction, WidgetDraggability, WidgetResizability } from '../types.js';
 import {
 	defaultTriggerConfig,
 	type FlexiWidgetChildrenSnippet,
@@ -11,7 +11,6 @@ import {
 	type FlexiWidgetDefaults,
 	type FlexiWidgetDerivedConfiguration
 } from './types.js';
-import { WidgetMoveInterpolator } from './interpolator.svelte.js';
 
 export class FlexiWidgetController {
 	/**
@@ -70,6 +69,15 @@ export class FlexiWidgetController {
 			this.#targetWidgetDefaults?.draggable ??
 			this.#providerWidgetDefaults?.draggable ??
 			true,
+		draggability:
+			this.#rawConfig.draggability ??
+			this.#targetWidgetDefaults?.draggability ??
+			this.#providerWidgetDefaults?.draggability ??
+			// This is not pretty but will ensure backwards compatibility with the old `draggable` property.
+			(this.#rawConfig.draggable !== undefined ? (this.#rawConfig.draggable ? 'full' : 'none') : undefined) ??
+			(this.#targetWidgetDefaults?.draggable !== undefined ? (this.#targetWidgetDefaults?.draggable ? 'full' : 'none') : undefined) ??
+			(this.#providerWidgetDefaults?.draggable !== undefined ? (this.#providerWidgetDefaults?.draggable ? 'full' : 'none') : undefined) ??
+			'full',
 		className:
 			this.#rawConfig.className ??
 			this.#targetWidgetDefaults?.className ??
@@ -89,7 +97,27 @@ export class FlexiWidgetController {
 			this.#rawConfig.resizeTrigger ??
 			this.#targetWidgetDefaults?.resizeTrigger ??
 			this.#providerWidgetDefaults?.resizeTrigger ??
-			defaultTriggerConfig
+			defaultTriggerConfig,
+		minWidth:
+			this.#rawConfig.minWidth ??
+			this.#targetWidgetDefaults?.minWidth ??
+			this.#providerWidgetDefaults?.minWidth ??
+			1,
+		minHeight:
+			this.#rawConfig.minHeight ??
+			this.#targetWidgetDefaults?.minHeight ??
+			this.#providerWidgetDefaults?.minHeight ??
+			1,
+		maxWidth:
+			this.#rawConfig.maxWidth ??
+			this.#targetWidgetDefaults?.maxWidth ??
+			this.#providerWidgetDefaults?.maxWidth ??
+			Infinity,
+		maxHeight:
+			this.#rawConfig.maxHeight ??
+			this.#targetWidgetDefaults?.maxHeight ??
+			this.#providerWidgetDefaults?.maxHeight ??
+			Infinity,
 	});
 
 	// Reactive state properties - single source of truth
@@ -141,6 +169,7 @@ export class FlexiWidgetController {
 
 	/**
 	 * Whether the widget is draggable.
+	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
 	 */
 	get draggable() {
 		return this.#config.draggable;
@@ -148,6 +177,31 @@ export class FlexiWidgetController {
 
 	set draggable(value: boolean) {
 		this.#rawConfig.draggable = value;
+	}
+
+	/**
+	 * The draggability of the widget.
+	 */
+	get draggability() {
+		return this.#config.draggability;
+	}
+	
+	set draggability(value: WidgetDraggability) {
+		this.#rawConfig.draggability = value;
+	}
+
+	/**
+	 * Whether the widget can be grabbed.
+	 */
+	get isGrabbable() {
+		return this.#config.draggability == 'full';
+	}
+
+	/**
+	 * Whether the widget can be moved.
+	 */
+	get isMovable() {
+		return this.#config.draggability == 'movable' || this.#config.draggability == 'full';
 	}
 
 	/**
@@ -296,6 +350,34 @@ export class FlexiWidgetController {
 
 	set isBeingDropped(value: boolean) {
 		this.backingState.isBeingDropped = value;
+	}
+
+	/**
+	 * The minimum width of the widget in units.
+	 */
+	get minWidth() {
+		return this.#config.minWidth;
+	}
+
+	/**
+	 * The minimum height of the widget in units.
+	 */
+	get minHeight() {
+		return this.#config.minHeight;
+	}
+
+	/**
+	 * The maximum width of the widget in units.
+	 */
+	get maxWidth() {
+		return this.#config.maxWidth;
+	}
+
+	/**
+	 * The maximum height of the widget in units.
+	 */
+	get maxHeight() {
+		return this.#config.maxHeight;
 	}
 }
 

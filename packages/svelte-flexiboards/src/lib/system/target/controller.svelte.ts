@@ -285,6 +285,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				x: widget.x,
 				y: widget.y,
 				draggable: widget.draggable,
+				draggability: widget.draggability,
 				resizability: widget.resizability,
 				className: widget.className,
 				metadata: widget.metadata
@@ -301,6 +302,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				height: of.height,
 				component: of.component,
 				draggable: of.draggable,
+				draggability: of.draggability,
 				resizability: of.resizability,
 				snippet: of.snippet,
 				className: of.className,
@@ -627,8 +629,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
 		const grid = this.grid;
 
-		let newWidth = Math.max(1, mouseCellPosition.x - widget.x);
-		let newHeight = Math.max(1, mouseCellPosition.y - widget.y);
+		let newWidth = Math.max(1, Math.min(widget.maxWidth, Math.max(mouseCellPosition.x - widget.x, widget.minWidth)));
+		let newHeight = Math.max(1, Math.min(widget.maxHeight, Math.max(mouseCellPosition.y - widget.y, widget.minHeight)));
 
 		// If the widget is in a flow layout, then they can't change their flow axis dimensions.
 		// NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.
