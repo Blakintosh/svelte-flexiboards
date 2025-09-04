@@ -52,11 +52,13 @@ export type FlexiWidgetDefaults = {
 
 	/**
 	 * The width of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	width?: number;
 
 	/**
 	 * The height of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	height?: number;
 
@@ -121,6 +123,8 @@ export type FlexiWidgetDefaults = {
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
 	x?: number;
 	y?: number;
+	width?: number;
+	height?: number;
 	metadata?: Record<string, any>;
 };
 

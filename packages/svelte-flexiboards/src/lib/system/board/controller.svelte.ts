@@ -26,6 +26,7 @@ import type {
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiBoardController } from './base.svelte.js';
 import type { FlexiBoardConfiguration } from './types.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
@@ -335,9 +336,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * @param to The target to move the widget to.
 	 */
 	moveWidget(
-		widget: FlexiWidgetController,
-		from: FlexiTargetController | undefined,
-		to: FlexiTargetController
+		widget: InternalFlexiWidgetController,
+		from: InternalFlexiTargetController | undefined,
+		to: InternalFlexiTargetController
 	): boolean {
 		const dropSuccessful = to.tryDropWidget(widget);
 
