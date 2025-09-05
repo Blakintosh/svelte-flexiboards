@@ -1,5 +1,6 @@
 import type { FlexiTargetController } from '../target/base.svelte.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiLayout } from './types.js';
 
 export interface FlexiBoardController {
 	/**
@@ -24,16 +25,15 @@ export interface FlexiBoardController {
 		to: FlexiTargetController
 	): void;
 
-	// NEXT: Add import/export layout.
 	/**
 	 * Imports a widget layout into the board.
 	 * @param layout The widget layout to import.
 	 */
-	// importLayout(layout: FlexiSavedLayout): void;
+	importLayout(layout: FlexiLayout): void;
 
 	/**
 	 * Exports the current widget layout of the board.
 	 * @returns The current widget layout of the board.
 	 */
-	// exportLayout(): FlexiSavedLayout;
+	exportLayout(): FlexiLayout;
 }

@@ -1,9 +1,3 @@
-<script module lang="ts">
-	type DashboardRegistryItem = {
-		component: Component;
-		componentProps: Record<string, unknown>;
-	};
-</script>
 
 <script lang="ts">
 	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
@@ -11,16 +5,30 @@
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
-	import type { FlexiBoardConfiguration, FlexiBoardController } from 'svelte-flexiboards';
+	import type { FlexiBoardConfiguration, FlexiBoardController, FlexiWidgetController } from 'svelte-flexiboards';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
-	import type { Component } from 'svelte';
+	
 
 	let editMode = $state(true);
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
-			draggable: true,
+			draggability: 'full',
 			resizability: 'horizontal'
+		},
+		registry: {
+			default: {
+				component: DashboardTile,
+				className: (widget: FlexiWidgetController) => [
+					widget.isGrabbed && 'animate-pulse opacity-50',
+					widget.isShadow && 'opacity-50'
+				]
+			},
+			immovable: {
+				component: DashboardTile,
+				draggability: 'none',
+				resizability: 'none'
+			}
 		}
 	});
 
@@ -42,7 +50,7 @@
 					bind:checked={editMode}
 					onCheckedChange={() => {
 						boardConfig.widgetDefaults = {
-							draggable: editMode,
+							draggability: editMode ? 'full' : 'none',
 							resizability: editMode ? 'horizontal' : 'none'
 						};
 					}}
@@ -75,26 +83,37 @@
 					}
 				}}
 			>
-				<DashboardTile title="Overall Score" x={0} y={0} draggable={false} resizability={'none'}>
-					<div class="text-lg font-bold lg:text-2xl">87</div>
-					<p class="text-muted-foreground text-xs">+8 from last month</p>
-				</DashboardTile>
-				<DashboardTile title="Total Revenue" x={1} y={0}>
-					<div class="text-lg font-bold lg:text-2xl">$45,231.89</div>
-					<p class="text-muted-foreground text-xs">+20.1% from last month</p>
-				</DashboardTile>
-				<DashboardTile title="Subscriptions" x={2} y={0}>
-					<div class="text-lg font-bold lg:text-2xl">+2350</div>
-					<p class="text-muted-foreground text-xs">-30.4% from last month</p>
-				</DashboardTile>
-				<DashboardTile title="Sales" x={0} y={1} width={3}>
-					<div class="text-lg font-bold lg:text-2xl">+12,234</div>
-					<p class="text-muted-foreground text-xs">+19.1% from last month</p>
-				</DashboardTile>
-				<DashboardTile title="Active Now" x={0} y={1}>
-					<div class="text-lg font-bold lg:text-2xl">+573</div>
-					<p class="text-muted-foreground text-xs">+201 since last hour</p>
-				</DashboardTile>
+				<FlexiWidget
+					registryKey="immovable"
+					metadata={{ type: "score" }}
+					x={0}
+					y={0}
+				/>
+				<FlexiWidget
+					registryKey="default"
+					metadata={{ type: "revenue" }}
+					x={1}
+					y={0}
+				/>
+				<FlexiWidget
+					registryKey="default"
+					metadata={{ type: "subscriptions" }}
+					x={2}
+					y={0}
+				/>
+				<FlexiWidget
+					registryKey="default"
+					metadata={{ type: "sales" }}
+					x={0}
+					y={1}
+					width={3}
+				/>
+				<FlexiWidget
+					registryKey="default"
+					metadata={{ type: "active" }}
+					x={0}
+					y={1}
+				/>
 			</FlexiTarget>
 		</FlexiBoard>
 	</main>

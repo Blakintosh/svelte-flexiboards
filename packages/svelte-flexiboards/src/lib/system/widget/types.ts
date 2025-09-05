@@ -121,6 +121,7 @@ export type FlexiWidgetDefaults = {
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+	registryKey?: string;
 	x?: number;
 	y?: number;
 	width?: number;
@@ -137,11 +138,6 @@ export type FlexiWidgetState = {
 };
 
 export type FlexiWidgetDerivedConfiguration = {
-	/**
-	 * The name of the widget, which can be used to identify it in exported layouts.
-	 */
-	name?: string;
-
 	/**
 	 * The component that is rendered by this item. This is optional if a snippet is provided.
 	 */
@@ -225,6 +221,7 @@ export type FlexiWidgetConstructorParams = {
 	config: FlexiWidgetConfiguration;
 	provider: InternalFlexiBoardController;
 	target?: InternalFlexiTargetController;
+	registryKey?: string;
 	isShadow?: boolean;
 };
 

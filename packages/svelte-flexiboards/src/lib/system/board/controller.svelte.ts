@@ -11,7 +11,6 @@ import type { FlexiTargetController } from '../target/base.svelte.js';
 import { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
-	FlexiSavedLayout,
 	HoveredTargetEvent,
 	ProxiedValue,
 	TargetEvent,
@@ -25,8 +24,9 @@ import type {
 } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiBoardController } from './base.svelte.js';
-import type { FlexiBoardConfiguration } from './types.js';
+import type { FlexiBoardConfiguration, FlexiRegistryEntry } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiLayout } from '../../../../dist/index.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
@@ -44,9 +44,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#rawProps?: FlexiBoardProps = $state(undefined);
 	config?: FlexiBoardConfiguration = $derived(this.#rawProps?.config);
 
+	registry?: Record<string, FlexiRegistryEntry> = $derived(this.#rawProps?.config?.registry);
+
 	#nextTargetIndex = 0;
 
-	#storedLoadLayout: FlexiSavedLayout | null = null;
 	#ready: boolean = false;
 
 	portal: FlexiPortalController | null = null;
@@ -274,30 +275,29 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// }
 	}
 
-	// NEXT: Add import/export layout.
-	// importLayout(layout: FlexiSavedLayout) {
-	// 	// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
-	// 	if(!this.#ready) {
-	// 		this.#storedLoadLayout = layout;
-	// 		return;
-	// 	}
+	importLayout(layout: FlexiLayout) {
+		// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
+		if(!this.#ready) {
+			// this.#storedLoadLayout = layout;
+			return;
+		}
 
-	// 	// Good to go - import the widgets into their respective targets.
-	// 	this.#targets.forEach(target => {
-	// 		target.importLayout(layout[target.key]);
-	// 	});
-	// }
+		// Good to go - import the widgets into their respective targets.
+		this.#targets.forEach(target => {
+			target.importLayout(layout[target.key]);
+		});
+	}
 
-	// exportLayout(): FlexiSavedLayout {
-	// 	const result: FlexiSavedLayout = {};
+	exportLayout(): FlexiLayout {
+		const result: FlexiLayout = {};
 
-	// 	// Grab the current layout of each target.
-	// 	this.#targets.forEach(target => {
-	// 		result[target.key] = target.exportLayout();
-	// 	});
+		// Grab the current layout of each target.
+		this.#targets.forEach(target => {
+			result[target.key] = target.exportLayout();
+		});
 
-	// 	return result;
-	// }
+		return result;
+	}
 
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
 		// If a deleter is hovered, then we'll delete the widget.

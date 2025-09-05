@@ -8,7 +8,7 @@ export type FlexiBoardConfiguration = {
 	registry?: Record<string, FlexiRegistryEntry>;
 };
 
-export type FlexiRegistryEntry = FlexiWidgetDefaults;
+export type FlexiRegistryEntry = Omit<FlexiWidgetDefaults, 'width' | 'height' | 'draggable'>;
 
 export type FlexiWidgetLayoutEntry = {
 	registryKey: string;
@@ -16,6 +16,7 @@ export type FlexiWidgetLayoutEntry = {
 	y: number;
 	width: number;
 	height: number;
-	name?: string;
 	metadata?: Record<string, any>;
 };
+
+export type FlexiLayout = Record<string, FlexiWidgetLayoutEntry[]>;

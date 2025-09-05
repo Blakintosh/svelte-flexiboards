@@ -29,6 +29,7 @@ import type {
 	FlexiTargetState
 } from './types.js';
 import { getPointerService } from '../shared/utils.svelte.js';
+import type { FlexiRegistryEntry, FlexiWidgetLayoutEntry } from '../board/types.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
@@ -73,6 +74,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	#preGrabSnapshot: unknown | null = null;
 	#gridSnapshot: unknown | null = null;
+
+	registry?: Record<string, FlexiRegistryEntry> = $derived(this.provider?.registry);
 
 	#targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
@@ -199,8 +202,18 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
+
+		let widgetConfig = {};
+
+		if(config.registryKey) {
+			if(!this.registry?.[config.registryKey]) {
+				console.warn('createWidget(): widget with registryKey ', config.registryKey, ' not found in registry, it will be missing settings.');
+			}
+			widgetConfig = {...this.registry![config.registryKey]};
+		}
+
 		const widget = new InternalFlexiWidgetController({
-			config,
+			config: {...widgetConfig, ...config},
 			provider: this.provider,
 			target: this
 		});
@@ -258,12 +271,21 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * Imports a layout of widgets into this target, replacing any existing widgets.
 	 * @param layout The layout to import.
 	 */
-	importLayout(layout: FlexiWidgetConfiguration[]) {
+	importLayout(layout: FlexiWidgetLayoutEntry[]) {
+		if(!this.registry) {
+			throw new Error('importLayout(): cannot import a layout when no registry is given.');
+		}
 		this.widgets.clear();
 		this.grid.clear();
 
-		for (const config of layout) {
-			this.createWidget(config);
+		for (const entry of layout) {
+			this.createWidget({
+				x: entry.x,
+				y: entry.y,
+				width: entry.width,
+				height: entry.height,
+				metadata: entry.metadata
+			});
 		}
 	}
 
@@ -271,23 +293,22 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * Exports the current layout of widgets from this target.
 	 * @returns The layout of widgets.
 	 */
-	exportLayout(): FlexiWidgetConfiguration[] {
-		const result: FlexiWidgetConfiguration[] = [];
+	exportLayout(): FlexiWidgetLayoutEntry[] {
+		const result: FlexiWidgetLayoutEntry[] = [];
 
 		// Likely much more information than needed, but we've got it.
-		for (const widget of this.widgets) {
+		for (const widget of this.internalWidgets) {
+			if(!widget.registryKey) {
+				console.warn('exportLayout(): widget has no registryKey, it will be skipped.');
+				continue;
+			}
+
 			result.push({
-				component: widget.component,
-				componentProps: widget.componentProps,
-				snippet: widget.snippet,
+				registryKey: widget.registryKey,
 				width: widget.width,
 				height: widget.height,
 				x: widget.x,
 				y: widget.y,
-				draggable: widget.draggable,
-				draggability: widget.draggability,
-				resizability: widget.resizability,
-				className: widget.className,
 				metadata: widget.metadata
 			});
 		}
@@ -306,7 +327,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				resizability: of.resizability,
 				snippet: of.snippet,
 				className: of.className,
-				componentProps: of.componentProps
+				componentProps: of.componentProps,
+				metadata: of.metadata
 			},
 			provider: this.provider,
 			target: this,

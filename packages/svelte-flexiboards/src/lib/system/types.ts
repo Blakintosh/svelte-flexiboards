@@ -147,8 +147,6 @@ export type HoveredTargetEvent = {
 	target: InternalFlexiTargetController;
 };
 
-export type FlexiSavedLayout = Record<string, FlexiWidgetConfiguration[]>;
-
 export type WidgetActionEvent =
 	| (PointerEvent & { isKeyboard?: undefined })
 	| (KeyboardEvent & { isKeyboard: true; clientX: number; clientY: number });

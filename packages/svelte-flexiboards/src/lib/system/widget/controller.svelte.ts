@@ -40,6 +40,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
+	registryKey?: string;
+
 	/**
 	 * The styling to apply to the widget.
 	 */
