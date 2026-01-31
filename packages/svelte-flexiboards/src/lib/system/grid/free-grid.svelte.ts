@@ -746,15 +746,25 @@ class FreeFormGridCoordinateSystem {
 
 		// Remove rows and update widget positions
 		for (const rowIndex of rowsToRemove) {
+			// Collect widgets to shift BEFORE modifying arrays
+			const widgetsToShift = this.#grid.getWidgetsForModification().filter(
+				(widget) => widget.y > rowIndex
+			);
+
+			// Remove widgets from coordinate system BEFORE splicing
+			for (const widget of widgetsToShift) {
+				this.removeWidget(widget);
+			}
+
+			// Splice the row from layout and bitmaps
 			this.layout.splice(rowIndex, 1);
 			this.bitmaps.splice(rowIndex, 1);
 
-			// Update widget positions for all widgets that were below the removed row
-			const widgetsToShift = this.#grid.getWidgetsForModification();
+			// Update widget positions and re-add to coordinate system
 			for (const widget of widgetsToShift) {
-				if (widget.y > rowIndex) {
-					widget.setBounds(widget.x, widget.y - 1, widget.width, widget.height);
-				}
+				const newY = widget.y - 1;
+				widget.setBounds(widget.x, newY, widget.width, widget.height);
+				this.addWidget(widget, widget.x, newY, widget.width, widget.height);
 			}
 		}
 
@@ -825,6 +835,16 @@ class FreeFormGridCoordinateSystem {
 
 		// Remove columns and update widget positions
 		for (const columnIndex of columnsToRemove) {
+			// Collect widgets to shift BEFORE modifying arrays
+			const widgetsToShift = this.#grid.getWidgetsForModification().filter(
+				(widget) => widget.x > columnIndex
+			);
+
+			// Remove widgets from coordinate system BEFORE splicing
+			for (const widget of widgetsToShift) {
+				this.removeWidget(widget);
+			}
+
 			// Remove the column from the layout
 			this.layout.forEach((row) => row.splice(columnIndex, 1));
 
@@ -833,12 +853,11 @@ class FreeFormGridCoordinateSystem {
 				this.bitmaps[rowIndex] = this.#removeColumnFromBitmap(this.bitmaps[rowIndex], columnIndex);
 			}
 
-			// Update widget positions for all widgets that were to the right of the removed column
-			const widgetsToShift = this.#grid.getWidgetsForModification();
+			// Update widget positions and re-add to coordinate system
 			for (const widget of widgetsToShift) {
-				if (widget.x > columnIndex) {
-					widget.setBounds(widget.x - 1, widget.y, widget.width, widget.height);
-				}
+				const newX = widget.x - 1;
+				widget.setBounds(newX, widget.y, widget.width, widget.height);
+				this.addWidget(widget, newX, widget.y, widget.width, widget.height);
 			}
 		}
 

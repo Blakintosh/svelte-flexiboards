@@ -29,10 +29,10 @@
 		{
 			section: 'Guides',
 			pages: [
-				// {
-				// 	title: 'Export & Import Boards',
-				// 	href: '/docs/guides/exporting-importing-boards'
-				// },
+				{
+					title: 'Exporting & Importing Layouts',
+					href: '/docs/guides/exporting-importing-boards'
+				},
 				{
 					title: 'Transitions',
 					href: '/docs/transitions'

@@ -205,17 +205,18 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let widgetConfig = {};
 
-		if(config.registryKey) {
-			if(!this.registry?.[config.registryKey]) {
-				console.warn('createWidget(): widget with registryKey ', config.registryKey, ' not found in registry, it will be missing settings.');
+		if(config.type) {
+			if(!this.registry?.[config.type]) {
+				console.warn('createWidget(): widget with type ', config.type, ' not found in registry, it will be missing settings.');
 			}
-			widgetConfig = {...this.registry![config.registryKey]};
+			widgetConfig = {...this.registry![config.type]};
 		}
 
 		const widget = new InternalFlexiWidgetController({
 			config: {...widgetConfig, ...config},
 			provider: this.provider,
-			target: this
+			target: this,
+			type: config.type
 		});
 
 		// If the widget can't be added, it's probably a collision.
@@ -280,6 +281,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		for (const entry of layout) {
 			this.createWidget({
+				id: entry.id,
+				type: entry.type,
 				x: entry.x,
 				y: entry.y,
 				width: entry.width,
@@ -298,19 +301,26 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Likely much more information than needed, but we've got it.
 		for (const widget of this.internalWidgets) {
-			if(!widget.registryKey) {
-				console.warn('exportLayout(): widget has no registryKey, it will be skipped.');
+			if(!widget.type) {
+				console.warn('exportLayout(): widget has no type, it will be skipped.');
 				continue;
 			}
 
-			result.push({
-				registryKey: widget.registryKey,
+			const entry: FlexiWidgetLayoutEntry = {
+				type: widget.type,
 				width: widget.width,
 				height: widget.height,
 				x: widget.x,
 				y: widget.y,
 				metadata: widget.metadata
-			});
+			};
+
+			// Only include id if user provided one
+			if (widget.userProvidedId) {
+				entry.id = widget.userProvidedId;
+			}
+
+			result.push(entry);
 		}
 
 		return result;

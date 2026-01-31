@@ -121,7 +121,8 @@ export type FlexiWidgetDefaults = {
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
-	registryKey?: string;
+	id?: string;
+	type?: string;
 	x?: number;
 	y?: number;
 	width?: number;
@@ -221,7 +222,7 @@ export type FlexiWidgetConstructorParams = {
 	config: FlexiWidgetConfiguration;
 	provider: InternalFlexiBoardController;
 	target?: InternalFlexiTargetController;
-	registryKey?: string;
+	type?: string;
 	isShadow?: boolean;
 };
 

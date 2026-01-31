@@ -35,7 +35,7 @@ import {
 	longPressTriggerConfig,
 	type PointerTriggerCondition
 } from './system/widget/triggers.svelte.js';
-import type { FlexiLayout, FlexiRegistryEntry, FlexiWidgetLayoutEntry } from './system/board/types.js';
+import type { FlexiLayout, FlexiRegistryEntry, FlexiWidgetLayoutEntry, FlexiLoadLayoutFn, FlexiLayoutChangeFn } from './system/board/types.js';
 export * from './system/types.js';
 
 export {
@@ -45,6 +45,8 @@ export {
 	type FlexiLayout,
 	type FlexiWidgetLayoutEntry,
 	type FlexiRegistryEntry,
+	type FlexiLoadLayoutFn,
+	type FlexiLayoutChangeFn,
 	FlexiTarget,
 	type FlexiTargetConfiguration,
 	type FlexiTargetProps,

@@ -40,7 +40,16 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
-	registryKey?: string;
+	#type?: string;
+	#userProvidedId?: string;
+
+	override get type(): string | undefined {
+		return this.#type;
+	}
+
+	override get userProvidedId(): string | undefined {
+		return this.#userProvidedId;
+	}
 
 	/**
 	 * The styling to apply to the widget.
@@ -169,6 +178,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		this.provider = params.provider;
+		this.#type = params.type;
+		this.#userProvidedId = params.config.id;
 
 		// Create the widget's interpolator
 		this.interpolator = new WidgetMoveInterpolator(this.provider, this);

@@ -24,9 +24,8 @@ import type {
 } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiBoardController } from './base.svelte.js';
-import type { FlexiBoardConfiguration, FlexiRegistryEntry } from './types.js';
+import type { FlexiBoardConfiguration, FlexiRegistryEntry, FlexiLayout, FlexiWidgetLayoutEntry } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
-import type { FlexiLayout } from '../../../../dist/index.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
@@ -49,6 +48,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#nextTargetIndex = 0;
 
 	#ready: boolean = false;
+	#storedLoadLayout?: FlexiLayout;
 
 	portal: FlexiPortalController | null = null;
 
@@ -56,6 +56,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
+
+	#layoutChangeTimeout: ReturnType<typeof setTimeout> | null = null;
+	#layoutChangeDebounceMs = 150;
 
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
@@ -69,8 +72,32 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this)),
 
 			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
-			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this))
+			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this)),
+
+			// Layout change events
+			this.#eventBus.subscribe('widget:dropped', this.#onLayoutChange.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.#onLayoutChange.bind(this))
 		);
+	}
+
+	#onLayoutChange(event: { board: InternalFlexiBoardController }) {
+		// Not our event
+		if (event.board !== this) {
+			return;
+		}
+
+		// Debounce the callback
+		if (this.#layoutChangeTimeout) {
+			clearTimeout(this.#layoutChangeTimeout);
+		}
+
+		this.#layoutChangeTimeout = setTimeout(() => {
+			this.#layoutChangeTimeout = null;
+			const callback = this.config?.onLayoutChange;
+			if (callback) {
+				callback(this.exportLayout());
+			}
+		}, this.#layoutChangeDebounceMs);
 	}
 
 	style: string = $derived.by(() => {
@@ -270,22 +297,49 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	oninitialloadcomplete() {
 		this.#ready = true;
 
-		// if(this.#storedLoadLayout) {
-		// 	this.importLayout(this.#storedLoadLayout);
-		// }
+		// Check for stored layout from early import attempt
+		if (this.#storedLoadLayout) {
+			this.importLayout(this.#storedLoadLayout);
+			this.#storedLoadLayout = undefined;
+			return;
+		}
+
+		// Check for loadLayout in config
+		const loadLayoutFn = this.config?.loadLayout;
+		if (loadLayoutFn) {
+			const layout = loadLayoutFn();
+			if (layout) {
+				this.importLayout(this.#normalizeLayout(layout));
+			}
+		}
 	}
 
 	importLayout(layout: FlexiLayout) {
 		// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
 		if(!this.#ready) {
-			// this.#storedLoadLayout = layout;
+			this.#storedLoadLayout = layout;
 			return;
 		}
 
 		// Good to go - import the widgets into their respective targets.
 		this.#targets.forEach(target => {
-			target.importLayout(layout[target.key]);
+			const targetLayout = layout[target.key];
+			if (targetLayout) {
+				target.importLayout(targetLayout);
+			}
 		});
+	}
+
+	#normalizeLayout(layout: FlexiLayout | FlexiWidgetLayoutEntry[]): FlexiLayout {
+		// If it's an array, assume single target (first one)
+		if (Array.isArray(layout)) {
+			const firstTargetKey = this.#targets.keys().next().value;
+			if (firstTargetKey) {
+				return { [firstTargetKey]: layout };
+			}
+			return {};
+		}
+		return layout;
 	}
 
 	exportLayout(): FlexiLayout {
@@ -377,5 +431,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
+
+		// Clean up any pending layout change timeout
+		if (this.#layoutChangeTimeout) {
+			clearTimeout(this.#layoutChangeTimeout);
+			this.#layoutChangeTimeout = null;
+		}
 	}
 }

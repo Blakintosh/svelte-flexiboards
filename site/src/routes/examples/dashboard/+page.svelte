@@ -1,15 +1,29 @@
 
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, simpleTransitionConfig } from 'svelte-flexiboards';
+	import type { FlexiBoardConfiguration, FlexiBoardController, FlexiLayout, FlexiWidgetController } from 'svelte-flexiboards';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
-	import type { FlexiBoardConfiguration, FlexiBoardController, FlexiWidgetController } from 'svelte-flexiboards';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
-	
+	import { browser } from '$app/environment';
+
+	const STORAGE_KEY = 'flexiboards-dashboard-layout';
+
+	const DEFAULT_LAYOUT: FlexiLayout = {
+		left: [
+			{ type: 'immovable', x: 0, y: 0, width: 1, height: 1, metadata: { type: 'score' } },
+			{ type: 'default', x: 1, y: 0, width: 1, height: 1, metadata: { type: 'revenue' } },
+			{ type: 'default', x: 2, y: 0, width: 1, height: 1, metadata: { type: 'subscriptions' } },
+			{ type: 'default', x: 0, y: 1, width: 3, height: 1, metadata: { type: 'sales' } },
+			{ type: 'default', x: 0, y: 2, width: 1, height: 1, metadata: { type: 'active' } }
+		]
+	};
 
 	let editMode = $state(true);
+	let board: FlexiBoardController | undefined = $state();
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
@@ -29,10 +43,32 @@
 				draggability: 'none',
 				resizability: 'none'
 			}
+		},
+		loadLayout: () => {
+			if (!browser) return DEFAULT_LAYOUT;
+			const saved = localStorage.getItem(STORAGE_KEY);
+			if (saved) {
+				try {
+					return JSON.parse(saved) as FlexiLayout;
+				} catch {
+					return DEFAULT_LAYOUT;
+				}
+			}
+			return DEFAULT_LAYOUT;
+		},
+		onLayoutChange: (layout) => {
+			if (browser) {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+			}
 		}
 	});
 
-	let onBoardReady = (board: FlexiBoardController) => {};
+	function resetLayout() {
+		if (browser) {
+			localStorage.removeItem(STORAGE_KEY);
+		}
+		board?.importLayout(DEFAULT_LAYOUT);
+	}
 </script>
 
 <svelte:head>
@@ -45,6 +81,9 @@
 		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
 			Dashboard
 			<div class="flex items-center gap-2">
+				<Button variant="outline" size="sm" onclick={resetLayout}>
+					Reset Layout
+				</Button>
 				<Switch
 					id="edit-mode"
 					bind:checked={editMode}
@@ -62,7 +101,7 @@
 		<FlexiBoard
 			class={'min-h-0 grow overflow-x-clip overflow-y-auto'}
 			config={boardConfig}
-			onfirstcreate={onBoardReady}
+			bind:controller={board}
 		>
 			<FlexiTarget
 				key="left"
@@ -82,39 +121,7 @@
 						transition: simpleTransitionConfig()
 					}
 				}}
-			>
-				<FlexiWidget
-					registryKey="immovable"
-					metadata={{ type: "score" }}
-					x={0}
-					y={0}
-				/>
-				<FlexiWidget
-					registryKey="default"
-					metadata={{ type: "revenue" }}
-					x={1}
-					y={0}
-				/>
-				<FlexiWidget
-					registryKey="default"
-					metadata={{ type: "subscriptions" }}
-					x={2}
-					y={0}
-				/>
-				<FlexiWidget
-					registryKey="default"
-					metadata={{ type: "sales" }}
-					x={0}
-					y={1}
-					width={3}
-				/>
-				<FlexiWidget
-					registryKey="default"
-					metadata={{ type: "active" }}
-					x={0}
-					y={1}
-				/>
-			</FlexiTarget>
+			/>
 		</FlexiBoard>
 	</main>
 </Sidebar.Provider>
