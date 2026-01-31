@@ -6,9 +6,11 @@ export type FlexiBoardConfiguration = {
 	widgetDefaults?: FlexiWidgetDefaults;
 	targetDefaults?: FlexiTargetDefaults;
 	registry?: Record<string, FlexiRegistryEntry>;
+	loadLayout?: FlexiLoadLayoutFn;
 };
 
 export type FlexiRegistryEntry = Omit<FlexiWidgetDefaults, 'width' | 'height' | 'draggable'>;
+
 
 export type FlexiWidgetLayoutEntry = {
 	registryKey: string;
@@ -20,3 +22,5 @@ export type FlexiWidgetLayoutEntry = {
 };
 
 export type FlexiLayout = Record<string, FlexiWidgetLayoutEntry[]>;
+
+export type FlexiLoadLayoutFn = () => FlexiLayout | FlexiWidgetLayoutEntry[] | undefined;

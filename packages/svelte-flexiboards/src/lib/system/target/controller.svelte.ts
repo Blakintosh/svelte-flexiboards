@@ -1,5 +1,4 @@
 import { tick, untrack } from 'svelte';
-import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
 import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
 import type {
 	GrabbedWidgetMouseEvent,
@@ -30,6 +29,7 @@ import type {
 } from './types.js';
 import { getPointerService } from '../shared/utils.svelte.js';
 import type { FlexiRegistryEntry, FlexiWidgetLayoutEntry } from '../board/types.js';
+import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
