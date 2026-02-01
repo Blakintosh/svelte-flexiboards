@@ -8,6 +8,7 @@ import type { FlexiWidgetConfiguration } from './widget/types.js';
 import type { FlexiBoardController } from './board/base.svelte.js';
 import type { InternalFlexiBoardController } from './board/controller.svelte.js';
 import type { InternalFlexiWidgetController } from './widget/controller.svelte.js';
+import type { FlexiLayout } from './board/types.js';
 
 export type ProxiedValue<T> = {
 	value: T;
@@ -150,3 +151,9 @@ export type HoveredTargetEvent = {
 export type WidgetActionEvent =
 	| (PointerEvent & { isKeyboard?: undefined })
 	| (KeyboardEvent & { isKeyboard: true; clientX: number; clientY: number });
+
+export type BoardLayoutChangeEvent = {
+	board: InternalFlexiBoardController;
+	layout: FlexiLayout;
+	breakpoint?: string;
+};

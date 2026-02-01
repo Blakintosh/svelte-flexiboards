@@ -26,6 +26,8 @@ import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiBoardController } from './base.svelte.js';
 import type { FlexiBoardConfiguration, FlexiRegistryEntry, FlexiLayout, FlexiWidgetLayoutEntry } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import { getInternalResponsiveFlexiboardCtx, hasInternalResponsiveFlexiboardCtx } from '../responsive/index.js';
+import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.svelte.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
@@ -60,10 +62,30 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#layoutChangeTimeout: ReturnType<typeof setTimeout> | null = null;
 	#layoutChangeDebounceMs = 150;
 
+	readonly breakpoint?: string;
+
+	/**
+	 * Reference to the parent responsive controller, if this board is within a ResponsiveFlexiBoard.
+	 */
+	#responsiveController: InternalResponsiveFlexiBoardController | null = null;
+
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
 		this.#eventBus = getFlexiEventBus();
+
+		// Check if we're inside a responsive context
+		if (hasInternalResponsiveFlexiboardCtx()) {
+			this.#responsiveController = getInternalResponsiveFlexiboardCtx();
+			// Infer breakpoint from responsive controller's current state
+			this.breakpoint = this.#responsiveController.currentBreakpoint;
+		} else {
+			// Not in responsive context - use config breakpoint if provided (with warning)
+			this.breakpoint = this.#rawProps?.config?.breakpoint;
+			if (this.breakpoint) {
+				console.warn('Breakpoint is set for a non-responsive board. Ignoring breakpoint.');
+			}
+		}
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
@@ -93,10 +115,18 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.#layoutChangeTimeout = setTimeout(() => {
 			this.#layoutChangeTimeout = null;
-			const callback = this.config?.onLayoutChange;
-			if (callback) {
-				callback(this.exportLayout());
-			}
+
+			const layout = this.#exportLayoutInternal();
+
+			// Emit event for responsive controller (and any other listeners)
+			this.#eventBus.dispatch('board:layoutchange', {
+				board: this,
+				layout,
+				breakpoint: this.breakpoint
+			});
+
+			// Also call local callback if provided
+			this.config?.onLayoutChange?.(layout);
 		}, this.#layoutChangeDebounceMs);
 	}
 
@@ -299,24 +329,53 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// Check for stored layout from early import attempt
 		if (this.#storedLoadLayout) {
-			this.importLayout(this.#storedLoadLayout);
+			this.#importLayoutInternal(this.#storedLoadLayout);
 			this.#storedLoadLayout = undefined;
 			return;
 		}
 
-		// Check for loadLayout in config
+		// If in responsive context, load from responsive controller
+		if (this.#responsiveController && this.breakpoint) {
+			const layout = this.#responsiveController.getLayoutForBreakpoint(this.breakpoint);
+			if (layout) {
+				this.#importLayoutInternal(layout);
+				return;
+			}
+			// Fall through to loadLayout callback if no stored layout for this breakpoint
+		}
+
+		// Check for loadLayout in config (for non-responsive boards OR first-time breakpoint)
 		const loadLayoutFn = this.config?.loadLayout;
 		if (loadLayoutFn) {
 			const layout = loadLayoutFn();
 			if (layout) {
-				this.importLayout(this.#normalizeLayout(layout));
+				this.#importLayoutInternal(this.#normalizeLayout(layout));
 			}
 		}
 	}
 
+	/**
+	 * Imports a layout into this board.
+	 *
+	 * **Note**: If this board is under a ResponsiveFlexiBoard, prefer using
+	 * `responsiveBoard.importLayout()` to import layouts for all breakpoints.
+	 */
 	importLayout(layout: FlexiLayout) {
+		if (this.#responsiveController) {
+			console.warn(
+				'importLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
+				'Use responsiveBoard.importLayout() instead to import layouts for all breakpoints.'
+			);
+		}
+		this.#importLayoutInternal(layout);
+	}
+
+	/**
+	 * Internal implementation of importLayout - no warning, used by responsive controller.
+	 */
+	#importLayoutInternal(layout: FlexiLayout) {
 		// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
-		if(!this.#ready) {
+		if (!this.#ready) {
 			this.#storedLoadLayout = layout;
 			return;
 		}
@@ -342,7 +401,26 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return layout;
 	}
 
+	/**
+	 * Exports the current layout from this board.
+	 *
+	 * **Note**: If this board is under a ResponsiveFlexiBoard, prefer using
+	 * `responsiveBoard.exportLayout()` to export layouts for all breakpoints.
+	 */
 	exportLayout(): FlexiLayout {
+		if (this.#responsiveController) {
+			console.warn(
+				'exportLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
+				'Use responsiveBoard.exportLayout() instead to export layouts for all breakpoints.'
+			);
+		}
+		return this.#exportLayoutInternal();
+	}
+
+	/**
+	 * Internal implementation of exportLayout - no warning, used internally.
+	 */
+	#exportLayoutInternal(): FlexiLayout {
 		const result: FlexiLayout = {};
 
 		// Grab the current layout of each target.
@@ -418,6 +496,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	get currentWidgetAction() {
 		return this.#currentWidgetAction;
+	}
+
+	/**
+	 * Returns the parent responsive controller if this board is within a ResponsiveFlexiBoard.
+	 */
+	get responsiveController() {
+		return this.#responsiveController;
 	}
 
 	/**

@@ -1,11 +1,3 @@
-<script module lang="ts">
-	type SavedWidget = {
-		x: number;
-		y: number;
-		number: number;
-	};
-</script>
-
 <script lang="ts">
 	import {
 		FlexiBoard,
@@ -20,7 +12,6 @@
 		type FlexiBoardConfiguration,
 		type FlexiBoardController
 	} from 'svelte-flexiboards';
-	import type { Component } from 'svelte';
 	import NumberTile from '$lib/components/examples/numbers/number-tile.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import Trash2 from 'lucide-svelte/icons/trash-2';
@@ -54,10 +45,6 @@
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
 </script>
 
-<svelte:head>
-	<title>Flexiboards</title>
-</svelte:head>
-
 <main class="flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
 	<h1 class="flex shrink-0 justify-between text-2xl font-semibold lg:text-3xl">Numbers.</h1>
 
@@ -66,8 +53,8 @@
 		config={boardConfig}
 		bind:controller={boardController}
 	>
-		<FlexiAdd 
-			{addWidget} 
+		<FlexiAdd
+			{addWidget}
 			class={"flex size-32 flex-col items-center justify-center rounded-lg border p-4 text-sm lg:size-40 lg:text-base"}
 		>
 			<Plus class="mb-2 size-8 lg:size-12" />

@@ -13,8 +13,8 @@
     import { AspectRatio } from "$lib/components/ui/aspect-ratio";
     import { Button } from "$lib/components/ui/button";
     import ArrowLeft from 'lucide-svelte/icons/arrow-left';
-    
-    
+
+
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
 	import type { FlexiBoardConfiguration, FlexiBoardController } from 'svelte-flexiboards';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
@@ -41,10 +41,6 @@
 
 	let onBoardReady = (board: FlexiBoardController) => {};
 </script>
-
-<svelte:head>
-	<title>Flexiboards</title>
-</svelte:head>
 
 <div class="flex flex-col items-stretch mx-auto aspect-[9/18] gap-0.5 h-full py-8 border rounded-4xl px-6 text-sm">
     {#if !editMode}

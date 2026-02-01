@@ -13,7 +13,7 @@
 	});
 </script>
 
-<div class="relative flex h-full gap-16 px-8">
+<div class="relative flex h-full gap-16">
 	<nav class="hidden w-64 shrink-0 border-r border-dashed lg:block">
 		<div class="sticky top-14">
 			<div
@@ -24,14 +24,14 @@
 		</div>
 	</nav>
 	<article
-		class="prose prose-sm mx-auto w-full shrink-0 overflow-y-auto py-8 dark:prose-invert lg:prose-lg 2xl:prose-xl lg:py-12"
+		class="prose prose-sm mx-auto w-full shrink-0 overflow-y-auto py-8 dark:prose-invert lg:prose-lg lg:py-12"
 		id="docs-content"
 	>
-		<div class="not-prose">
-			<h1 class="mb-2 text-3xl font-bold text-foreground lg:mb-4 lg:text-4xl 2xl:text-5xl">
+		<div class="not-prose text-base">
+			<h1 class="mb-2 text-2xl font-bold text-foreground lg:mb-4 lg:text-3xl 2xl:text-4xl">
 				{data.doc.meta.title}
 			</h1>
-			<p class="text-muted-foreground">{data.doc.meta.description}</p>
+			<p class="text-muted-foreground text-base lg:text-lg">{data.doc.meta.description}</p>
 		</div>
 		<PageComponent />
 	</article>

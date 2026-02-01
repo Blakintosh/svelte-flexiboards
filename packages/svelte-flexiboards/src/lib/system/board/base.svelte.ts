@@ -14,6 +14,11 @@ export interface FlexiBoardController {
 	ref: HTMLElement | null;
 
 	/**
+	 * The breakpoint that the board corresponds to, if the board is responsive.
+	 */
+	readonly breakpoint?: string;
+
+	/**
 	 * Moves an existing widget from one target to another.
 	 * @param widget The widget to move.
 	 * @param from The target to move the widget from.

@@ -35,6 +35,9 @@
 	// Reactive statement to generate highlighted HTML when src or lang changes
 	let highlightedCodePromise = $derived.by(async () => {
 		async function getHighlightedCode() {
+			if(!rawElement) {
+				return '';
+			}
 			const codeContents = rawElement.textContent;
 			const lang = 'svelte';
 
