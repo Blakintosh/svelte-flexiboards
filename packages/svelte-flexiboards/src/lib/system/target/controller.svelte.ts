@@ -268,6 +268,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
+		// Clear any pre-grab snapshot since the widget is being intentionally removed
+		// (prevents the board's safety net from restoring the widget)
+		this.forgetPreGrabSnapshot();
+
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
 
@@ -395,6 +399,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	forgetPreGrabSnapshot() {
 		this.#preGrabSnapshot = null;
+	}
+
+	hasPreGrabSnapshot(): boolean {
+		return this.#preGrabSnapshot !== null;
 	}
 
 	applyGridPostCompletionOperations(): void {

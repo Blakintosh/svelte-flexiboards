@@ -13,6 +13,7 @@ import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
 	HoveredTargetEvent,
 	ProxiedValue,
+	ResponsiveLayoutImportEvent,
 	TargetEvent,
 	WidgetAction,
 	WidgetEvent,
@@ -98,7 +99,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 			// Layout change events
 			this.#eventBus.subscribe('widget:dropped', this.#onLayoutChange.bind(this)),
-			this.#eventBus.subscribe('widget:delete', this.#onLayoutChange.bind(this))
+			this.#eventBus.subscribe('widget:delete', this.#onLayoutChange.bind(this)),
+
+			// Responsive layout import events
+			this.#eventBus.subscribe('responsive:layoutimport', this.#onResponsiveLayoutImport.bind(this))
 		);
 	}
 
@@ -128,6 +132,21 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			// Also call local callback if provided
 			this.config?.onLayoutChange?.(layout);
 		}, this.#layoutChangeDebounceMs);
+	}
+
+	#onResponsiveLayoutImport(event: ResponsiveLayoutImportEvent) {
+		// Not our responsive controller
+		if (event.responsiveController !== this.#responsiveController) {
+			return;
+		}
+
+		// Get the layout for our breakpoint and import it
+		if (this.breakpoint) {
+			const layout = this.#responsiveController?.getLayoutForBreakpoint(this.breakpoint);
+			if (layout) {
+				this.#importLayoutInternal(layout);
+			}
+		}
 	}
 
 	style: string = $derived.by(() => {
@@ -298,6 +317,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#unlockViewport();
 
 		const currentAction = this.#currentWidgetAction!;
+		// Capture source target before any handlers might change widget.internalTarget
+		const sourceTarget = currentAction.widget.internalTarget;
 
 		switch (currentAction.action) {
 			case 'grab':
@@ -307,11 +328,40 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				this.#handleResizingWidgetRelease(currentAction);
 				break;
 		}
+
+		// Safety net: After all synchronous handlers complete, check if the source target
+		// still has a pre-grab snapshot (meaning the drop didn't happen). If so, restore it.
+		// This handles the case where the widget was released outside of all targets.
+		queueMicrotask(() => {
+			if (sourceTarget?.hasPreGrabSnapshot()) {
+				sourceTarget.restorePreGrabSnapshot();
+				sourceTarget.applyGridPostCompletionOperations();
+			}
+		});
 	}
 
 	handleWidgetCancel(event: WidgetEvent) {
+		// Not our event.
+		if (event.board !== this) {
+			return;
+		}
+
 		this.#unlockViewport();
+
+		// Capture source target before releasing the action
+		const sourceTarget = this.#currentWidgetAction?.widget.internalTarget;
+
 		this.#releaseCurrentWidgetAction();
+
+		// Safety net: After all synchronous handlers complete, check if the source target
+		// still has a pre-grab snapshot. If so, restore it.
+		// This handles the case where the widget was cancelled while outside of all targets.
+		queueMicrotask(() => {
+			if (sourceTarget?.hasPreGrabSnapshot()) {
+				sourceTarget.restorePreGrabSnapshot();
+				sourceTarget.applyGridPostCompletionOperations();
+			}
+		});
 	}
 
 	attachAnnouncer(announcer: FlexiAnnouncerController) {

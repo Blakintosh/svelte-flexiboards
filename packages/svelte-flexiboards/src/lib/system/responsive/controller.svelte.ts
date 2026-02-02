@@ -223,6 +223,11 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	importLayout(layout: ResponsiveFlexiLayout): void {
 		this.#storedLayouts = { ...layout };
 		this.#hasStoredLayouts = true;
+
+		// Notify child boards to reload their layout from the stored layouts
+		this.#eventBus.dispatch('responsive:layoutimport', {
+			responsiveController: this
+		});
 	}
 
 	/**

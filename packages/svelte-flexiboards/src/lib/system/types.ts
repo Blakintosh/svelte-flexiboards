@@ -9,6 +9,7 @@ import type { FlexiBoardController } from './board/base.svelte.js';
 import type { InternalFlexiBoardController } from './board/controller.svelte.js';
 import type { InternalFlexiWidgetController } from './widget/controller.svelte.js';
 import type { FlexiLayout } from './board/types.js';
+import type { InternalResponsiveFlexiBoardController } from './responsive/controller.svelte.js';
 
 export type ProxiedValue<T> = {
 	value: T;
@@ -159,4 +160,8 @@ export type BoardLayoutChangeEvent = {
 	board: InternalFlexiBoardController;
 	layout: FlexiLayout;
 	breakpoint?: string;
+};
+
+export type ResponsiveLayoutImportEvent = {
+	responsiveController: InternalResponsiveFlexiBoardController;
 };
