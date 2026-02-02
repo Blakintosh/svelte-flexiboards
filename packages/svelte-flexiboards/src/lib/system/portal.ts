@@ -68,9 +68,6 @@ export class FlexiPortalController {
 	 */
 	moveWidgetToPortal(widget: FlexiWidgetController) {
 		if (!widget.ref) {
-			console.warn(
-				'moveWidgetToPortal() was called on a widget that has no ref. No widget will appear under the pointer.'
-			);
 			return;
 		}
 

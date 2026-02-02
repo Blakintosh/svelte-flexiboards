@@ -26,8 +26,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
 
 	// Grabber and resizer tracking
-	#grabbers: number = $state(0);
-	#resizers: number = $state(0);
+	#grabbers: number = 0;
+	#resizers: number = 0;
+	#disposed: boolean = false;
 
 	// Movement interpolation
 	interpolator: WidgetMoveInterpolator;
@@ -336,6 +337,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Unregisters a grabber from the widget.
 	 */
 	removeGrabber(): number {
+		if (this.#disposed) {
+			return 0;
+		}
 		this.#grabbers--;
 		this.backingState.hasGrabbers = this.#grabbers > 0;
 		return this.#grabbers;
@@ -354,6 +358,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Unregisters a resizer from the widget.
 	 */
 	removeResizer(): number {
+		if (this.#disposed) {
+			return 0;
+		}
 		this.#resizers--;
 		this.backingState.hasResizers = this.#resizers > 0;
 		return this.#resizers;
@@ -420,6 +427,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Cleanup method to be called when the widget is destroyed
 	 */
 	destroy() {
+		// Mark as disposed to ignore any deferred cleanup callbacks
+		this.#disposed = true;
+
 		// Reset counters
 		this.#grabbers = 0;
 		this.#resizers = 0;

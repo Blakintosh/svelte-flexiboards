@@ -53,6 +53,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.46.1",
 		"globals": "^15.15.0",
+		"layerchart": "2.0.0-next.43",
 		"lucide-svelte": "^0.460.1",
 		"mdsvex": "^0.12.3",
 		"prettier": "^3.5.1",
@@ -72,6 +73,7 @@
 	},
 	"dependencies": {
 		"@melt-ui/svelte": "^0.86.6",
+		"d3-shape": "^3.2.0",
 		"formsnap": "^2.0.1",
 		"mdsvexamples": "^0.5.0",
 		"melt": "^0.28.2",

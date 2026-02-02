@@ -12,12 +12,14 @@
 		ResponsiveFlexiLayout
 	} from 'svelte-flexiboards';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
 	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
 	import { browser } from '$app/environment';
+	import Pencil from 'lucide-svelte/icons/pencil';
+	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
+	import Check from 'lucide-svelte/icons/check';
+	import { fly } from 'svelte/transition';
 
 	const STORAGE_KEY = 'flexiboards-dashboard-responsive-layout';
 
@@ -42,13 +44,13 @@
 		}
 	};
 
-	let editMode = $state(true);
+	let editMode = $state(false);
 	let responsiveBoard: ResponsiveFlexiBoardController | undefined = $state();
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
-			draggability: 'full',
-			resizability: 'horizontal'
+			draggability: 'none',
+			resizability: 'none'
 		},
 		registry: {
 			default: {
@@ -66,36 +68,41 @@
 		}
 	});
 
+	function toggleEditMode() {
+		editMode = !editMode;
+		boardConfig.widgetDefaults = {
+			draggability: editMode ? 'full' : 'none',
+			resizability: editMode ? 'horizontal' : 'none'
+		};
+	}
+
 	function resetLayout() {
 		if (browser) {
 			localStorage.removeItem(STORAGE_KEY);
 		}
 		responsiveBoard?.importLayout(DEFAULT_LAYOUTS);
 	}
+
+	function saveAndExit() {
+		// Layout is already auto-saved, just exit edit mode
+		toggleEditMode();
+	}
 </script>
 
 <Sidebar.Provider class="h-full min-h-0 grow">
 	<AppSidebar />
-	<main class="flex min-h-0 w-full grow flex-col gap-8 px-4 py-8 lg:px-16">
-		<h1 class="flex shrink-0 justify-between text-3xl font-semibold">
-			Dashboard
-			<div class="flex items-center gap-2">
-				<Button variant="outline" size="sm" onclick={resetLayout}>
-					Reset Layout
-				</Button>
-				<Switch
-					id="edit-mode"
-					bind:checked={editMode}
-					onCheckedChange={() => {
-						boardConfig.widgetDefaults = {
-							draggability: editMode ? 'full' : 'none',
-							resizability: editMode ? 'horizontal' : 'none'
-						};
-					}}
-				/>
-				<Label for="edit-mode">Edit mode</Label>
+	<main class="relative flex min-h-0 w-full grow flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-16 lg:py-8">
+		<header class="flex shrink-0 items-center justify-between">
+			<div class="flex items-center gap-3">
+				<Sidebar.Trigger class="lg:hidden" />
+				<h1 class="text-2xl font-semibold lg:text-3xl">Dashboard</h1>
 			</div>
-		</h1>
+			{#if !editMode}
+				<Button variant="outline" size="icon" onclick={toggleEditMode} title="Edit layout">
+					<Pencil class="size-4" />
+				</Button>
+			{/if}
+		</header>
 
 		<ResponsiveFlexiBoard
 			bind:controller={responsiveBoard}
@@ -170,5 +177,35 @@
 				</FlexiBoard>
 			{/snippet}
 		</ResponsiveFlexiBoard>
+
+		<!-- Edit mode bottom bar -->
+		{#if editMode}
+			<div
+				class="absolute inset-x-4 bottom-4 lg:inset-x-16 lg:bottom-8"
+				transition:fly={{ y: 20, duration: 200 }}
+			>
+				<div class="flex items-center justify-between gap-4 rounded-lg border bg-card/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80">
+					<div class="flex items-center gap-2">
+						<div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
+							<Pencil class="size-4 text-primary" />
+						</div>
+						<div class="flex flex-col">
+							<span class="text-sm font-medium">Editing layout</span>
+							<span class="text-xs text-muted-foreground hidden sm:block">Drag and resize widgets to customise</span>
+						</div>
+					</div>
+					<div class="flex items-center gap-2">
+						<Button variant="ghost" size="sm" onclick={resetLayout}>
+							<RotateCcw class="size-4 mr-1.5" />
+							<span class="hidden sm:inline">Reset</span>
+						</Button>
+						<Button size="sm" onclick={saveAndExit}>
+							<Check class="size-4 mr-1.5" />
+							Done
+						</Button>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</main>
 </Sidebar.Provider>

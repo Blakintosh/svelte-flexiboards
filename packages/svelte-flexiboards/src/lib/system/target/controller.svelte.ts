@@ -715,11 +715,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
+		const dropzoneWidget = this.dropzoneWidget;
 		const grid = this.grid;
 
-		grid.removeWidget(this.dropzoneWidget);
+		grid.removeWidget(dropzoneWidget);
 		if (this.#isDropzoneWidgetAdded) {
-			this.widgets.delete(this.dropzoneWidget);
+			this.widgets.delete(dropzoneWidget);
 			this.#isDropzoneWidgetAdded = false;
 		}
 
@@ -729,6 +730,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.dropzoneWidget = null;
 		this.#dropzoneWidgetDestroy?.();
 		this.#dropzoneWidgetDestroy = null;
+
+		// Clean up the shadow widget's event subscriptions and reset counters
+		dropzoneWidget.destroy();
 	}
 
 	// State-related getters and setters

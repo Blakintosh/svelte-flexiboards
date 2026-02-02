@@ -13,6 +13,6 @@
 	let { class: className, size = 20 }: GrabberProps = $props();
 </script>
 
-<FlexiGrab class={cn('shrink-0 py-1', className)}>
+<FlexiGrab class={cn('shrink-0 rounded-md p-1.5 transition-colors hover:bg-muted active:bg-muted', className)}>
 	<GripVertical {size} />
 </FlexiGrab>
