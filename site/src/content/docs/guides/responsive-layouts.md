@@ -13,10 +13,8 @@ published: true
 
 The `ResponsiveFlexiBoard` component wraps your board and manages different layouts for different viewport sizes. Each breakpoint can have its own widget arrangement, and layouts are automatically persisted per breakpoint.
 
-<Callout variant="info" title="Independence">
-Each breakpoint of a responsive Flexiboard creates an independent Flexiboard that conditionally renders based on the viewport width. This means operations such as resize, move, add and remove only apply to the current breakpoint Flexiboard that is rendering.
-
-For example, if you had a default and `lg` Flexiboard, deleting a widget in the `lg` Flexiboard (when it's rendering) would not also be deleted in the default one.
+<Callout variant="info" title="Breakpoints are independent">
+Each breakpoint renders its own separate Flexiboard. Moving, resizing, adding, or removing widgets only affects the currently active breakpoint - changes don't sync across breakpoints.
 </Callout>
 
 ## Shared Layout with Breakpoint Parameter
@@ -142,7 +140,11 @@ When using `ResponsiveFlexiBoard`, use the responsive controller's `importLayout
 </ResponsiveFlexiBoard>
 ```
 
-The responsive controller manages layouts for all breakpoints together. Calling the methods on the inner `FlexiBoard` directly will log a warning.
+The responsive controller manages layouts for all breakpoints together.
+
+<Callout variant="warning" title="When using responsive dashboards, use the responsive methods">
+When a board is rendering in a responsive context, calling `importLayout()` or `exportLayout()` on the inner `FlexiBoard` will log a warning. Always use the `ResponsiveFlexiBoard` controller's methods instead.
+</Callout>
 
 ## Auto-Persistence
 
@@ -167,4 +169,6 @@ For automatic saving, use `loadLayouts` and `onLayoutsChange`:
 
 As with importing / exporting layouts, prefer the use of these methods over the individual `FlexiBoard`'s methods when using a responsive board.
 
-**Note:** Layouts are lazily initialized. If a user never visits a particular breakpoint, no layout is stored for it. The `onLayoutsChange` callback only includes breakpoints that have been actively used.
+<Callout variant="info" title="Lazy initialisation">
+Layouts are created on-demand. If a user never resizes their viewport to trigger a breakpoint, no layout is stored for it. The `onLayoutsChange` callback only includes breakpoints that have been visited.
+</Callout>

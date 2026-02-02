@@ -104,7 +104,9 @@ export abstract class FlexiGrid {
 
 		this._target.onmousegridcellmove({
 			cellX: this.mouseCellPosition.x,
-			cellY: this.mouseCellPosition.y
+			cellY: this.mouseCellPosition.y,
+			rawCellX: rawCell?.column ?? 0,
+			rawCellY: rawCell?.row ?? 0
 		});
 	}
 

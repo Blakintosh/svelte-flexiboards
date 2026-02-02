@@ -68,6 +68,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		y: 0
 	});
 
+	// Raw (fractional) cell position - used for resize snapping (rounds instead of floors)
+	#rawMouseCellPosition: Position = $state({
+		x: 0,
+		y: 0
+	});
+
 	key: string;
 
 	#grid: FlexiGrid | null = null;
@@ -270,16 +276,29 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	/**
 	 * Imports a layout of widgets into this target, replacing any existing widgets.
+	 * Widgets with types not found in the registry will be skipped with a warning.
 	 * @param layout The layout to import.
 	 */
 	importLayout(layout: FlexiWidgetLayoutEntry[]) {
-		if(!this.registry) {
-			throw new Error('importLayout(): cannot import a layout when no registry is given.');
+		if (!this.registry) {
+			console.warn('importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.');
+			return;
 		}
+
 		this.widgets.clear();
 		this.grid.clear();
 
 		for (const entry of layout) {
+			if (!entry.type) {
+				console.warn('importLayout(): skipping widget entry with no type:', entry);
+				continue;
+			}
+
+			if (!this.registry[entry.type]) {
+				console.warn(`importLayout(): widget type "${entry.type}" not found in registry, skipping widget.`);
+				continue;
+			}
+
 			this.createWidget({
 				id: entry.id,
 				type: entry.type,
@@ -416,6 +435,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {
 		this.#updateMouseCellPosition(event.cellX, event.cellY);
+		this.#rawMouseCellPosition.x = event.rawCellX;
+		this.#rawMouseCellPosition.y = event.rawCellY;
 		this.#updateDropzoneWidget();
 	}
 
@@ -661,8 +682,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
 		const grid = this.grid;
 
-		let newWidth = Math.max(1, Math.min(widget.maxWidth, Math.max(mouseCellPosition.x - widget.x, widget.minWidth)));
-		let newHeight = Math.max(1, Math.min(widget.maxHeight, Math.max(mouseCellPosition.y - widget.y, widget.minHeight)));
+		// Use raw (fractional) position with rounding for smoother resize snapping
+		// This makes the widget snap to the next cell when more than halfway through
+		const roundedX = Math.round(this.#rawMouseCellPosition.x);
+		const roundedY = Math.round(this.#rawMouseCellPosition.y);
+
+		let newWidth = Math.max(1, Math.min(widget.maxWidth, Math.max(roundedX - widget.x, widget.minWidth)));
+		let newHeight = Math.max(1, Math.min(widget.maxHeight, Math.max(roundedY - widget.y, widget.minHeight)));
 
 		// If the widget is in a flow layout, then they can't change their flow axis dimensions.
 		// NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.

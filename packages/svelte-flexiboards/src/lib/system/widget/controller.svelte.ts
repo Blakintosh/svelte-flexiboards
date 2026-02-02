@@ -265,7 +265,13 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * @param height The height of the widget.
 	 */
 	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
-		if (this.x == x && this.y == y && this.width == width && this.height == height) {
+		const positionUnchanged = this.x == x && this.y == y && this.width == width && this.height == height;
+
+		if (positionUnchanged) {
+			// Still interpolate for drop animations even when position is unchanged
+			if (interpolate && this.backingState.currentAction?.action === 'grab') {
+				this.#interpolateMove(x, y, this.width, this.height);
+			}
 			return;
 		}
 

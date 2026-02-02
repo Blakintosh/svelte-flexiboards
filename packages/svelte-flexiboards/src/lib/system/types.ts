@@ -138,6 +138,9 @@ export type TargetEvent = {
 export type MouseGridCellMoveEvent = {
 	cellX: number;
 	cellY: number;
+	// Raw (fractional) cell coordinates before rounding - useful for resize snapping
+	rawCellX: number;
+	rawCellY: number;
 };
 
 export type GrabbedWidgetMouseEvent = {

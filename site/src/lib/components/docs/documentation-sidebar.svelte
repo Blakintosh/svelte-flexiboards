@@ -64,11 +64,6 @@
 			section: 'Guides',
 			pages: [
 				{
-					title: 'Widget Rendering',
-					href: '/docs/widget-rendering',
-					icon: LucideComponent
-				},
-				{
 					title: 'Free-Form Grids',
 					href: '/docs/free-form-grids',
 					icon: LayoutGrid
@@ -77,6 +72,11 @@
 					title: 'Flow Grids',
 					href: '/docs/flow-grids',
 					icon: LayoutList
+				},
+				{
+					title: 'Widget Rendering',
+					href: '/docs/widget-rendering',
+					icon: LucideComponent
 				},
 				{
 					title: 'Multiple Targets',

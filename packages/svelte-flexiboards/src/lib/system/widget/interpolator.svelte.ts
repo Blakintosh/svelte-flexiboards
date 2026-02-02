@@ -74,30 +74,46 @@ export class WidgetMoveInterpolator {
 			return;
 		}
 
-		if (this.active) {
-			clearTimeout(this.#timeout);
+		const isInterruption = this.active;
+		clearTimeout(this.#timeout);
+
+		if (isInterruption) {
+			// INTERRUPTION PATH - only update target, keep transition flowing
+			// Don't change #animation to preserve CSS transition property
+			// Don't reset #interpolatedWidgetPosition
+
+			this.#placeholderPosition = {
+				x: newDimensions.x,
+				y: newDimensions.y,
+				width: newDimensions.width,
+				height: newDimensions.height,
+				heightPx: this.#interpolatedWidgetPosition.height,
+				widthPx: this.#interpolatedWidgetPosition.width
+			};
+		} else {
+			// INITIAL MOVE PATH - set up starting position, then animate
+			this.#inInitialFrame = true; // Disable CSS transition for initial position
+			this.active = true;
+			this.#animation = animation;
+
+			this.#placeholderPosition = {
+				x: newDimensions.x,
+				y: newDimensions.y,
+				width: newDimensions.width,
+				height: newDimensions.height,
+				heightPx: oldPosition.height,
+				widthPx: oldPosition.width
+			};
+
+			this.#interpolatedWidgetPosition.top =
+				oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
+			this.#interpolatedWidgetPosition.left =
+				oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
+			this.#interpolatedWidgetPosition.width = oldPosition.width;
+			this.#interpolatedWidgetPosition.height = oldPosition.height;
 		}
 
-		this.active = true;
-		this.#animation = animation;
-
-		this.#placeholderPosition = {
-			x: newDimensions.x,
-			y: newDimensions.y,
-			width: newDimensions.width,
-			height: newDimensions.height,
-			heightPx: oldPosition.height,
-			widthPx: oldPosition.width
-		};
-
-		this.#interpolatedWidgetPosition.top =
-			oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
-		this.#interpolatedWidgetPosition.left =
-			oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
-
-		this.#interpolatedWidgetPosition.width = oldPosition.width;
-		this.#interpolatedWidgetPosition.height = oldPosition.height;
-
+		// Reset timeout for both paths
 		requestAnimationFrame(() => {
 			this.#timeout = setTimeout(() => {
 				this.active = false;

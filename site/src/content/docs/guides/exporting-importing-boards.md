@@ -5,6 +5,10 @@ category: Guides
 published: true
 ---
 
+<script>
+	import Callout from '$lib/components/docs/callout.svelte';
+</script>
+
 ## Introduction
 
 Flexiboards provides a simple API for exporting and importing widget layouts. This enables you to:
@@ -88,6 +92,10 @@ Use the `exportLayout()` method on the board controller to get the current layou
 <button onclick={saveLayout}>Save Layout</button>
 ```
 
+<Callout variant="warning" title="Validate, if necessary">
+Like all client-side data, exported layouts could be tampered with. If the data stored on a layout is critical to function, always validate and sanitise layouts on your server before trusting `metadata` or other fields.
+</Callout>
+
 The exported layout is a `FlexiLayout` object, which maps target keys to arrays of widget entries:
 
 ```typescript
@@ -141,7 +149,9 @@ Use the `importLayout()` method to restore a saved layout:
 <button onclick={loadLayout}>Load Layout</button>
 ```
 
-**Important:** When importing, any existing widgets in the target are cleared and replaced with the imported widgets.
+<Callout variant="info" title="Important">
+When importing, any existing widgets in the target are cleared and replaced with the imported widgets.
+</Callout>
 
 ## Loading on Mount
 
