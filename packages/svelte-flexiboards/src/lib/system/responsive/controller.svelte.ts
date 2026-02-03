@@ -141,7 +141,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 			if (key === DEFAULT_BREAKPOINT) {
                 continue;
             }
-			this.#mediaQueries.set(key, new MediaQuery(`min-width: ${minWidth}px`, false));
+			this.#mediaQueries.set(key, new MediaQuery(`(min-width: ${minWidth}px)`, false));
 		}
 	}
 

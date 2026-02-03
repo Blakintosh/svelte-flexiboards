@@ -1,6 +1,5 @@
-import type { Component } from 'svelte';
 import type { FlexiTargetDefaults } from '../target/types.js';
-import type { FlexiWidgetChildrenSnippet, FlexiWidgetDefaults } from '../widget/types.js';
+import type { FlexiWidgetDefaults } from '../widget/types.js';
 
 export type FlexiLayoutChangeFn = (layout: FlexiLayout) => void;
 

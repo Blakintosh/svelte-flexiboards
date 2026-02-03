@@ -214,8 +214,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		if(config.type) {
 			if(!this.registry?.[config.type]) {
 				console.warn('createWidget(): widget with type ', config.type, ' not found in registry, it will be missing settings.');
+			} else {
+				widgetConfig = {...this.registry[config.type]};
 			}
-			widgetConfig = {...this.registry![config.type]};
 		}
 
 		const widget = new InternalFlexiWidgetController({
@@ -268,9 +269,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
-		// Clear any pre-grab snapshot since the widget is being intentionally removed
-		// (prevents the board's safety net from restoring the widget)
-		this.forgetPreGrabSnapshot();
+		// Clear the pre-grab snapshot only if the deleted widget is the one being grabbed/resized
+		// (prevents the board's safety net from restoring a widget that was intentionally removed)
+		// Note: We don't clear if a different widget is deleted during a grab operation
+		if (this.actionWidget?.widget === widget) {
+			this.forgetPreGrabSnapshot();
+		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
