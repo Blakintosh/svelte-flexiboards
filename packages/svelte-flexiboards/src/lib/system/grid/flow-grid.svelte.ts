@@ -57,6 +57,8 @@ type DerivedFlowTargetLayout = Required<FlowTargetLayout>;
 type FlowMoveOperation = {
 	widget: InternalFlexiWidgetController;
 	newPosition: number;
+	width: number;
+	height: number;
 };
 
 /**
@@ -136,7 +138,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 		// If there's no widgets in the grid, just trivially add ours to the start.
 		if (!nearestWidget) {
-			return this.#placeWidgetAt(widget, 0, 0);
+			return this.#placeWidgetAt(widget, 0, 0, width, height);
 		}
 
 		const nearestWidgetPosition = this.#coordinateSystem.to1D(nearestWidget.x, nearestWidget.y);
@@ -146,7 +148,9 @@ export class FlowFlexiGrid extends FlexiGrid {
 			return this.#placeWidgetAt(
 				widget,
 				nearestWidgetPosition + this.#coordinateSystem.getWidgetLength(nearestWidget),
-				index + 1
+				index + 1,
+				width,
+				height
 			);
 		}
 
@@ -158,33 +162,34 @@ export class FlowFlexiGrid extends FlexiGrid {
 				widget,
 				this.#coordinateSystem.to1D(predecessor.x, predecessor.y) +
 					this.#coordinateSystem.getWidgetLength(predecessor),
-				index
+				index,
+				width,
+				height
 			);
 		}
 
-		return this.#placeWidgetAt(widget, nearestWidgetPosition, index);
+		return this.#placeWidgetAt(widget, nearestWidgetPosition, index, width, height);
 	}
 
 	#commitOperations(operations: FlowMoveOperation[]) {
-		const isRowFlow = this.isRowFlow;
-
 		for (const operation of operations) {
 			const [newX, newY] = this.#coordinateSystem.to2D(operation.newPosition);
-			operation.widget.setBounds(
-				newX,
-				newY,
-				isRowFlow ? operation.widget.width : 1,
-				isRowFlow ? 1 : operation.widget.height
-			);
+			operation.widget.setBounds(newX, newY, operation.width, operation.height);
 		}
 		return true;
 	}
 
-	#placeWidgetAt(widget: InternalFlexiWidgetController, position: number, index: number) {
+	#placeWidgetAt(
+		widget: InternalFlexiWidgetController,
+		position: number,
+		index: number,
+		width?: number,
+		height?: number
+	) {
 		const operations: FlowMoveOperation[] = [];
 
 		this.#widgets.splice(index, 0, widget);
-		if (!this.#shiftWidget(index, position, operations)) {
+		if (!this.#shiftWidget(index, position, operations, width, height)) {
 			// Undo the insertion.
 			this.#widgets.splice(index, 1);
 
@@ -194,9 +199,39 @@ export class FlowFlexiGrid extends FlexiGrid {
 		return this.#commitOperations(operations);
 	}
 
-	#shiftWidget(index: number, position: number, operations: FlowMoveOperation[]): boolean {
+	#shiftWidget(
+		index: number,
+		position: number,
+		operations: FlowMoveOperation[],
+		width?: number,
+		height?: number
+	): boolean {
 		const widget = this.#widgets[index];
-		const finalPosition = this.#coordinateSystem.findPositionToFitWidget(widget, position);
+		const isRowFlow = this.isRowFlow;
+
+		// Determine the dimensions to use for this widget.
+		// For flow grids, the cross-axis dimension is always 1.
+		// For the primary widget (first in chain), use provided flow-axis dimension if given.
+		// For displaced widgets, use their current flow-axis dimension.
+		let effectiveWidth: number;
+		let effectiveHeight: number;
+
+		if (isRowFlow) {
+			effectiveWidth = width ?? widget.width;
+			effectiveHeight = 1; // Cross-axis is always 1 for row flow
+		} else {
+			effectiveWidth = 1; // Cross-axis is always 1 for column flow
+			effectiveHeight = height ?? widget.height;
+		}
+
+		// The "length" along the flow axis for positioning calculations.
+		const effectiveLength = isRowFlow ? effectiveWidth : effectiveHeight;
+
+		const finalPosition = this.#coordinateSystem.findPositionToFitWidget(
+			widget,
+			position,
+			effectiveLength
+		);
 
 		// Expand the grid if the widget is being added past the current flow axis end.
 		if (!this.#coordinateSystem.expandIfNeededToFit(finalPosition)) {
@@ -205,7 +240,9 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 		operations.push({
 			widget,
-			newPosition: finalPosition
+			newPosition: finalPosition,
+			width: effectiveWidth,
+			height: effectiveHeight
 		});
 
 		if (index + 1 >= this.#widgets.length) {
@@ -213,9 +250,10 @@ export class FlowFlexiGrid extends FlexiGrid {
 		}
 
 		// Prepare to shift the remaining widgets along relative to this one.
+		// Displaced widgets use their current dimensions (no width/height override).
 		return this.#shiftWidget(
 			index + 1,
-			finalPosition + this.#coordinateSystem.getWidgetLength(widget),
+			finalPosition + effectiveLength,
 			operations
 		);
 	}
@@ -497,8 +535,12 @@ class FlowGridCoordinateSystem {
 		return !(!this.#isRowFlow && y !== undefined && y > this.#rows);
 	}
 
-	findPositionToFitWidget(widget: FlexiWidgetController, basePosition: number): number {
-		const widgetLength = this.getWidgetLength(widget);
+	findPositionToFitWidget(
+		widget: FlexiWidgetController,
+		basePosition: number,
+		overrideLength?: number
+	): number {
+		const widgetLength = overrideLength ?? this.getWidgetLength(widget);
 		const crossPosition = this.getCrossAxisCoordinate(basePosition);
 
 		const crossAxisLength = this.getCrossAxisLength();

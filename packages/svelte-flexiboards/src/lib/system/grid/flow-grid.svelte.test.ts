@@ -22,7 +22,11 @@ describe('FlowFlexiGrid', () => {
 		y = 0,
 		width = 1,
 		height = 1,
-		draggable = true
+		draggable = true,
+		minWidth = 1,
+		maxWidth = Infinity,
+		minHeight = 1,
+		maxHeight = Infinity
 	): FlexiWidgetController => {
 		const widget = {
 			x,
@@ -30,6 +34,10 @@ describe('FlowFlexiGrid', () => {
 			width,
 			height,
 			draggable,
+			minWidth,
+			maxWidth,
+			minHeight,
+			maxHeight,
 			setBounds: vi.fn().mockImplementation(function (
 				newX: number,
 				newY: number,
@@ -435,6 +443,131 @@ describe('FlowFlexiGrid', () => {
 			expectPlacement(b, { x: 1, y: 0 });
 			expect(grid.rows).toBe(preSnapshotRows);
 			expect(grid.columns).toBe(preSnapshotColumns);
+		});
+	});
+
+	describe('Widget resizing', () => {
+		it('should apply the new width when resizing a widget in row flow', () => {
+			// Create a widget with width 1
+			const widget = createMockWidget(0, 0, 1, 1, true, 1, 3); // minWidth=1, maxWidth=3
+
+			// Place it initially
+			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+			expect(result).toBe(true);
+
+			// State:
+			// a--
+			// ---
+			// ---
+
+			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 1 });
+
+			// Now remove and re-add with a larger width (simulating resize)
+			grid.removeWidget(widget);
+
+			// Reset the mock to track the new call
+			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
+
+			// Re-place with width 2
+			const resizeResult = grid.tryPlaceWidget(widget, 0, 0, 2, 1);
+			expect(resizeResult).toBe(true);
+
+			// State:
+			// aa-
+			// ---
+			// ---
+
+			// The widget should now have width 2
+			expectPlacement(widget, { x: 0, y: 0, width: 2, height: 1 });
+		});
+
+		it('should apply the new height when resizing a widget in column flow', () => {
+			const columnGrid = new FlowFlexiGrid(mockTarget, {
+				...targetConfig,
+				layout: {
+					...(targetConfig.layout as FlowTargetLayout),
+					flowAxis: 'column'
+				}
+			});
+
+			// Create a widget with height 1
+			const widget = createMockWidget(0, 0, 1, 1, true, 1, 3, 1, 3); // minHeight=1, maxHeight=3
+
+			// Place it initially
+			const result = columnGrid.tryPlaceWidget(widget, 0, 0, 1, 1);
+			expect(result).toBe(true);
+
+			// State (column flow):
+			// a
+			// -
+			// -
+
+			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 1 });
+
+			// Now remove and re-add with a larger height (simulating resize)
+			columnGrid.removeWidget(widget);
+
+			// Reset the mock to track the new call
+			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
+
+			// Re-place with height 2
+			const resizeResult = columnGrid.tryPlaceWidget(widget, 0, 0, 1, 2);
+			expect(resizeResult).toBe(true);
+
+			// State (column flow):
+			// a
+			// a
+			// -
+
+			// The widget should now have height 2
+			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 2 });
+		});
+
+		it('should push other widgets when resizing causes displacement in row flow', () => {
+			const a = mockWidgetPlacement({ x: 0, y: 0, width: 1, height: 1 });
+			const b = mockWidgetPlacement({ x: 1, y: 0, width: 1, height: 1 });
+
+			// State:
+			// ab-
+			// ---
+			// ---
+
+			// Remove widget a
+			grid.removeWidget(a);
+
+			// Reset mocks
+			(a.setBounds as ReturnType<typeof vi.fn>).mockClear();
+			(b.setBounds as ReturnType<typeof vi.fn>).mockClear();
+
+			// Re-place widget a with width 2 (this should push b)
+			const resizeResult = grid.tryPlaceWidget(a, 0, 0, 2, 1);
+			expect(resizeResult).toBe(true);
+
+			// Expected state:
+			// aab
+			// ---
+			// ---
+
+			expectPlacement(a, { x: 0, y: 0, width: 2, height: 1 });
+			expectPlacement(b, { x: 2, y: 0, width: 1, height: 1 });
+		});
+
+		it('should respect maxWidth constraint when resizing', () => {
+			// Create a widget with maxWidth of 2
+			const widget = createMockWidget(0, 0, 1, 1, true, 1, 2); // maxWidth=2
+
+			// Place it initially
+			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+
+			// Remove and try to resize beyond maxWidth
+			grid.removeWidget(widget);
+			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
+
+			// Try to place with width 3 (should be constrained to 2)
+			grid.tryPlaceWidget(widget, 0, 0, 3, 1);
+
+			// Should be constrained to maxWidth of 2
+			expectPlacement(widget, { x: 0, y: 0, width: 2, height: 1 });
 		});
 	});
 });
