@@ -330,11 +330,25 @@ export class FlowFlexiGrid extends FlexiGrid {
 		this.#widgets.splice(index, 1);
 
 		const operations: FlowMoveOperation[] = [];
-		const widgetPosition = this.#coordinateSystem.to1D(widget.x, widget.y);
 
-		// Shift the remaining widgets back if possible.
-		if (index < this.#widgets.length && !this.#shiftWidget(index, widgetPosition, operations)) {
-			return false;
+		// When removing a widget, we need to re-compact all remaining widgets
+		// starting from the beginning. This is because there may be gaps before
+		// the removed widget that widgets after it can now fill.
+		//
+		// Example: In a 3-column grid with [A(2-wide), B(2-wide), C(1-wide)]:
+		// - A occupies positions 0-1
+		// - B can't fit at position 2 (only 1 cell), so it goes to position 3
+		// - C goes to position 5
+		// State: AA- / BBC
+		//
+		// When B is removed, C should move to position 2 (the gap after A),
+		// NOT to position 3 (where B was).
+
+		if (this.#widgets.length > 0) {
+			// Start compaction from position 0
+			if (!this.#shiftWidget(0, 0, operations)) {
+				return false;
+			}
 		}
 
 		return this.#commitOperations(operations);
