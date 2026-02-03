@@ -71,6 +71,26 @@
 {#if phone}
 	<!-- Phone: Full-width vertical card -->
 	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
+		<!-- Controls -->
+		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
+							<MoreVertical class="size-4" />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Item><Eye class="mr-2 size-4" />View</DropdownMenu.Item>
+					<DropdownMenu.Item><PencilLine class="mr-2 size-4" />Edit</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item class="text-destructive"><Trash2 class="mr-2 size-4" />Delete</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
 		<!-- Image (top) -->
 		<div class="relative h-28 shrink-0">
 			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
@@ -82,33 +102,13 @@
 					{badgeVariants[product.badge].label}
 				</Badge>
 			{/if}
-			<div class="absolute top-2 right-2 flex items-center gap-1">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button variant="ghost" size="icon" class="size-7 bg-black/20 text-white backdrop-blur-sm hover:bg-black/40" {...props}>
-								<MoreVertical class="size-4" />
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end">
-						<DropdownMenu.Item><Eye class="mr-2 size-4" />View</DropdownMenu.Item>
-						<DropdownMenu.Item><PencilLine class="mr-2 size-4" />Edit</DropdownMenu.Item>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item class="text-destructive"><Trash2 class="mr-2 size-4" />Delete</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-				<Grabber size={14} class="text-white/70" />
-			</div>
 		</div>
 
 		<!-- Content (bottom) -->
 		<div class="flex min-h-0 flex-1 flex-col p-3">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-2">
-					<p class="text-muted-foreground text-xs uppercase tracking-wide">{product.category}</p>
-					<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
-				</div>
+			<div class="flex items-center gap-2">
+				<p class="text-muted-foreground text-xs uppercase tracking-wide">{product.category}</p>
+				<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
 			</div>
 			<h3 class="mt-1 text-base font-semibold leading-tight">{product.name}</h3>
 
@@ -143,6 +143,44 @@
 {:else if isWide}
 	<!-- Wide card layout: horizontal -->
 	<Card.Root class="group relative flex h-full flex-row overflow-hidden transition-shadow hover:shadow-md">
+		<!-- Controls - top right -->
+		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
+							<MoreVertical class="size-4" />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Item>
+						<Eye class="mr-2 size-4" />
+						View Details
+					</DropdownMenu.Item>
+					<DropdownMenu.Item>
+						<PencilLine class="mr-2 size-4" />
+						Edit Product
+					</DropdownMenu.Item>
+					<DropdownMenu.Item>
+						<Copy class="mr-2 size-4" />
+						Duplicate
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item class="text-destructive">
+						<Trash2 class="mr-2 size-4" />
+						Delete
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
+		<!-- Resizer - bottom right -->
+		<div class="absolute bottom-2 right-2 z-10">
+			<Resizer size={16} class="text-muted-foreground" />
+		</div>
+
 		<!-- Image placeholder (left) -->
 		<div class="relative w-2/5 shrink-0">
 			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
@@ -155,57 +193,20 @@
 				</Badge>
 			{/if}
 			{#if product.featured}
-				<div class="absolute top-3 right-3">
-					<Badge variant="outline" class="border-white/30 bg-black/20 text-white backdrop-blur-sm">
-						Featured
-					</Badge>
-				</div>
+				<Badge variant="outline" class="absolute bottom-3 left-3 border-white/30 bg-black/20 text-white backdrop-blur-sm">
+					Featured
+				</Badge>
 			{/if}
 		</div>
 
 		<!-- Content (right) -->
-		<div class="flex flex-1 flex-col p-4">
-			<div class="flex items-start justify-between gap-2">
-				<div class="min-w-0 flex-1">
-					<div class="flex items-center gap-2">
-						<p class="text-muted-foreground text-xs font-medium uppercase tracking-wide">{product.category}</p>
-						<span class="text-muted-foreground/50">·</span>
-						<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
-					</div>
-					<h3 class="mt-1 truncate text-lg leading-tight font-semibold">{product.name}</h3>
-				</div>
-				<div class="flex items-center gap-1">
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger>
-							{#snippet child({ props })}
-								<Button variant="ghost" size="icon" class="size-8 opacity-0 transition-opacity group-hover:opacity-100" {...props}>
-									<MoreVertical class="size-4" />
-								</Button>
-							{/snippet}
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
-							<DropdownMenu.Item>
-								<Eye class="mr-2 size-4" />
-								View Details
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<PencilLine class="mr-2 size-4" />
-								Edit Product
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<Copy class="mr-2 size-4" />
-								Duplicate
-							</DropdownMenu.Item>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Item class="text-destructive">
-								<Trash2 class="mr-2 size-4" />
-								Delete
-							</DropdownMenu.Item>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-					<Grabber size={18} class="text-muted-foreground shrink-0" />
-				</div>
+		<div class="flex flex-1 flex-col p-4 pr-12">
+			<div class="flex items-center gap-2">
+				<p class="text-muted-foreground text-xs font-medium uppercase tracking-wide">{product.category}</p>
+				<span class="text-muted-foreground/50">·</span>
+				<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
 			</div>
+			<h3 class="mt-1 truncate text-lg leading-tight font-semibold">{product.name}</h3>
 
 			<!-- Rating -->
 			<div class="mt-2 flex items-center gap-1">
@@ -236,8 +237,8 @@
 				<span class="text-muted-foreground text-xs">{product.stock} units</span>
 			</div>
 
-			<!-- Price & Actions -->
-			<div class="mt-auto flex items-end justify-between pt-4">
+			<!-- Price -->
+			<div class="mt-auto pt-4">
 				<div class="flex items-baseline gap-2">
 					<span class="text-2xl font-bold">${product.price.toFixed(2)}</span>
 					{#if product.originalPrice}
@@ -249,13 +250,46 @@
 						</Badge>
 					{/if}
 				</div>
-				<Resizer size={16} class="text-muted-foreground" />
 			</div>
 		</div>
 	</Card.Root>
 {:else}
 	<!-- Narrow card layout: vertical (tablet/desktop 1x1) -->
 	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
+		<!-- Controls - top right -->
+		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
+							<MoreVertical class="size-4" />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end">
+					<DropdownMenu.Item>
+						<Eye class="mr-2 size-4" />
+						View
+					</DropdownMenu.Item>
+					<DropdownMenu.Item>
+						<PencilLine class="mr-2 size-4" />
+						Edit
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item class="text-destructive">
+						<Trash2 class="mr-2 size-4" />
+						Delete
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
+		<!-- Resizer - bottom right -->
+		<div class="absolute bottom-2 right-2 z-10">
+			<Resizer size={16} class="text-muted-foreground" />
+		</div>
+
 		<!-- Image placeholder (top) -->
 		<div class="relative h-24 shrink-0 lg:h-28">
 			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
@@ -267,43 +301,11 @@
 					{badgeVariants[product.badge].label}
 				</Badge>
 			{/if}
-			<div class="absolute top-2 right-2 flex items-center gap-1">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button
-								variant="ghost"
-								size="icon"
-								class="size-7 bg-black/20 text-white backdrop-blur-sm hover:bg-black/40"
-								{...props}
-							>
-								<MoreVertical class="size-4" />
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end">
-						<DropdownMenu.Item>
-							<Eye class="mr-2 size-4" />
-							View
-						</DropdownMenu.Item>
-						<DropdownMenu.Item>
-							<PencilLine class="mr-2 size-4" />
-							Edit
-						</DropdownMenu.Item>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item class="text-destructive">
-							<Trash2 class="mr-2 size-4" />
-							Delete
-						</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-				<Grabber size={14} class="text-white/70" />
-			</div>
 		</div>
 
 		<!-- Content (bottom) -->
 		<div class="flex min-h-0 flex-1 flex-col px-2.5 pt-1.5 pb-2">
-			<div class="min-w-0">
+			<div class="min-w-0 pr-6">
 				<div class="flex items-center gap-1.5">
 					<p class="text-muted-foreground truncate text-[10px] uppercase tracking-wide">{product.category}</p>
 					<span class="size-1.5 shrink-0 rounded-full {product.stock > 50 ? 'bg-emerald-500' : product.stock > 10 ? 'bg-amber-500' : 'bg-red-500'}"></span>
@@ -319,7 +321,7 @@
 			</div>
 
 			<!-- Price -->
-			<div class="mt-auto flex items-end justify-between">
+			<div class="mt-auto">
 				<div class="flex items-baseline gap-1">
 					<span class="text-base font-bold">${product.price.toFixed(2)}</span>
 					{#if product.originalPrice}
@@ -328,7 +330,6 @@
 						</span>
 					{/if}
 				</div>
-				<Resizer size={14} class="text-muted-foreground" />
 			</div>
 		</div>
 	</Card.Root>
