@@ -4,6 +4,7 @@
 	import NumbersExample from '$lib/components/examples/pages/numbers-example.svelte';
 	import FlowExample from '$lib/components/examples/pages/flow-example.svelte';
 	import FlexspressiveExample from '$lib/components/examples/pages/flexspressive-example.svelte';
+	import ProductsExample from '$lib/components/examples/pages/products-example.svelte';
 
 	let { data } = $props();
 
@@ -12,7 +13,8 @@
 		notes: NotesExample,
 		numbers: NumbersExample,
 		flow: FlowExample,
-		flexspressive: FlexspressiveExample
+		flexspressive: FlexspressiveExample,
+		products: ProductsExample
 	} as const;
 
 	let ExampleComponent = $derived(examples[data.slug as keyof typeof examples]);

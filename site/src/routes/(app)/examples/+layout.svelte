@@ -36,6 +36,12 @@
 			slug: 'flexspressive',
 			description: 'All your quick settings.',
 			href: '/examples/flexspressive'
+		},
+		products: {
+			title: 'Products',
+			slug: 'products',
+			description: 'An e-commerce product grid with 2D flow layout.',
+			href: '/examples/products'
 		}
 	};
 

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
-const validSlugs = ['dashboard', 'notes', 'numbers', 'flow', 'flexspressive'];
+const validSlugs = ['dashboard', 'notes', 'numbers', 'flow', 'flexspressive', 'products'];
 
 export const load = (async ({ params }) => {
 	if (!validSlugs.includes(params.slug)) {
