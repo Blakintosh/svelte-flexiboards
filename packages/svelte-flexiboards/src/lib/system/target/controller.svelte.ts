@@ -606,6 +606,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
+		grid.setDragSnapshot(this.#gridSnapshot);
 
 		// TODO: Not sure why the $effect.root is needed, but it is.
 		this.#dropzoneWidgetDestroy = $effect.root(() => {
@@ -737,6 +738,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
+		grid.clearDragSnapshot();
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;

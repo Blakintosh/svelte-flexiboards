@@ -89,6 +89,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 	});
 
 	#coordinateSystem: FlowGridCoordinateSystem = new FlowGridCoordinateSystem(this);
+	#dragSnapshot: FlowGridSnapshot | null = null;
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		super(target, targetConfig);
@@ -390,31 +391,71 @@ export class FlowFlexiGrid extends FlexiGrid {
 		this.columns = snapshot.columns;
 	}
 
+	override setDragSnapshot(snapshot: unknown): void {
+		this.#dragSnapshot = snapshot as FlowGridSnapshot;
+	}
+
+	override clearDragSnapshot(): void {
+		this.#dragSnapshot = null;
+	}
+
 	mapRawCellToFinalCell(x: number, y: number): [number, number] {
-		// This gets us most of the way there, but we need to account for the cases where different flow axis indexes may have different pixel sizes.
 		const position = this.#coordinateSystem.getNormalisedHoverPosition(x, y);
 
-		// This is somewhat hacky, but we're basically saying that if the shadow widget is anywhere before the current index,
-		// then we need to adjust the drop position to offset the shadow widget's length.
-		// This is pre-emptive as when the final placement happens, the shadow won't be present.
-		// We do this to factor for different pixel sizes, as if we do not factor this then variable pixel sizes will cause flickering.
+		// Without a drag snapshot, just return the normalized position directly.
+		if (!this.#dragSnapshot) {
+			return position;
+		}
 
-		// NEXT: This doesn't play very nice with 2D flow logic, because it's weird to displace widgets when the one we're moving doesn't fit anyway.
+		const position1D = this.#coordinateSystem.to1D(position[0], position[1]);
 
-		const [index, _] = this.#coordinateSystem.findNearestWidgetFrom2D(position[0], position[1]);
+		// Find the nearest widget to the cursor in the CURRENT (live) grid.
+		let [index, nearestWidget] = this.#coordinateSystem.findNearestWidgetFrom2D(
+			position[0],
+			position[1]
+		);
 
-		let position1D = this.#coordinateSystem.to1D(position[0], position[1]);
+		// If the nearest widget is the shadow, look at neighbors and pick the closest non-shadow.
+		if (nearestWidget && (nearestWidget as InternalFlexiWidgetController).isShadow) {
+			nearestWidget = null;
 
-		// Hack: find if there's a shadow widget anywhere before the current index
-		for (let i = 0; i < index; i++) {
-			const widget = this.#widgets[i];
-			if (widget.isShadow) {
-				position1D -= this.#coordinateSystem.getWidgetLength(widget);
-				break;
+			// Check the widget after the shadow first, then before.
+			if (index + 1 < this.#widgets.length && !(this.#widgets[index + 1] as InternalFlexiWidgetController).isShadow) {
+				nearestWidget = this.#widgets[index + 1];
+				index = index + 1;
+			} else if (index - 1 >= 0 && !(this.#widgets[index - 1] as InternalFlexiWidgetController).isShadow) {
+				nearestWidget = this.#widgets[index - 1];
+				index = index - 1;
 			}
 		}
 
-		return this.#coordinateSystem.to2D(position1D);
+		// If we couldn't find a non-shadow widget, fall back to the normalized position.
+		if (!nearestWidget) {
+			return position;
+		}
+
+		// Look up this widget in the snapshot by identity (same object reference).
+		const snapshotEntry = this.#dragSnapshot.widgets.find((s) => s.widget === nearestWidget);
+		if (!snapshotEntry) {
+			return position;
+		}
+
+		// Determine: is the cursor BEFORE or AFTER the midpoint of this widget in the current grid?
+		const widgetPosition1D = this.#coordinateSystem.to1D(nearestWidget.x, nearestWidget.y);
+		const widgetLength = this.#coordinateSystem.getWidgetLength(nearestWidget);
+		const widgetMidpoint1D = widgetPosition1D + widgetLength / 2;
+
+		if (position1D < widgetMidpoint1D) {
+			// Cursor is before the widget → return the widget's snapshot position.
+			return [snapshotEntry.x, snapshotEntry.y];
+		} else {
+			// Cursor is at or after the widget → return snapshot position + widget length.
+			const snapshotCoords = this.#coordinateSystem;
+			const snapshotPosition1D =
+				snapshotCoords.to1D(snapshotEntry.x, snapshotEntry.y) +
+				(this.isRowFlow ? snapshotEntry.width : snapshotEntry.height);
+			return snapshotCoords.to2D(snapshotPosition1D);
+		}
 	}
 
 	get rows(): number {

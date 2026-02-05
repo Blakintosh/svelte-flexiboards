@@ -732,4 +732,137 @@ describe('FlowFlexiGrid', () => {
 			expectPlacement(widget, { x: 0, y: 0, width: 2, height: 1 });
 		});
 	});
+
+	describe('mapRawCellToFinalCell with drag snapshot', () => {
+		const createShadowWidget = (
+			x = 0,
+			y = 0,
+			width = 1,
+			height = 1
+		): FlexiWidgetController => {
+			const widget = createMockWidget(x, y, width, height);
+			(widget as any).isShadow = true;
+			return widget;
+		};
+
+		it('should return normalized position when no drag snapshot is set', () => {
+			// No snapshot set, so mapRawCellToFinalCell should just pass through
+			const result = grid.mapRawCellToFinalCell(1, 0);
+			expect(result).toEqual([1, 0]);
+		});
+
+		it('should map cursor on first half of widget to before-position in snapshot', () => {
+			// Set up: 3-column grid with widget A(1-wide) at position 0
+			const a = createMockWidget(0, 0, 1, 1);
+			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+
+			// Take a snapshot (A is at position 0)
+			const snapshot = grid.takeSnapshot();
+
+			// Now simulate a shadow (2-wide) being placed at position 0, displacing A to position 2
+			const shadow = createShadowWidget(0, 0, 2, 1);
+			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
+
+			// A should now be at position 2 in the live grid
+			expect(a.x).toBe(2);
+			expect(a.y).toBe(0);
+
+			// Set the drag snapshot
+			grid.setDragSnapshot(snapshot);
+
+			// Cursor at (2, 0) — on A in the live grid. A is 1-wide, so midpoint is 2.5.
+			// position1D (2) < midpoint (2.5) → "before" → returns A's snapshot position (0, 0).
+			const result = grid.mapRawCellToFinalCell(2, 0);
+			expect(result).toEqual([0, 0]);
+		});
+
+		it('should map cursor past widget midpoint to after-position in snapshot', () => {
+			// Set up: 3-column grid with widget A(2-wide) at position 0
+			const a = createMockWidget(0, 0, 2, 1);
+			grid.tryPlaceWidget(a, 0, 0, 2, 1);
+
+			const snapshot = grid.takeSnapshot();
+
+			// Shadow (1-wide) placed at position 0 pushes A to position 1
+			const shadow = createShadowWidget(0, 0, 1, 1);
+			grid.tryPlaceWidget(shadow, 0, 0, 1, 1);
+
+			expect(a.x).toBe(1);
+			expect(a.y).toBe(0);
+
+			grid.setDragSnapshot(snapshot);
+
+			// Cursor at (2, 0) → 1D pos 2. A is at live pos 1, width 2, midpoint = 1 + 1 = 2.
+			// position1D (2) < midpoint (2) → false → "after"
+			// A in snapshot is at (0,0) width 2, so after = 0 + 2 = 2 → (2, 0).
+			const result = grid.mapRawCellToFinalCell(2, 0);
+			expect(result).toEqual([2, 0]);
+		});
+
+		it('should map cursor over shadow to nearest non-shadow using midpoint logic', () => {
+			// Set up: 3-column grid with widget A(1-wide) at position 0
+			const a = createMockWidget(0, 0, 1, 1);
+			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+
+			const snapshot = grid.takeSnapshot();
+
+			// Shadow (2-wide) placed at position 0 pushes A to position 2
+			const shadow = createShadowWidget(0, 0, 2, 1);
+			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
+
+			grid.setDragSnapshot(snapshot);
+
+			// Cursor at (1, 0) → 1D pos 1, over the shadow.
+			// Nearest non-shadow neighbor is A at live pos 2, midpoint 2.5.
+			// 1 < 2.5 → "before" → returns A's snapshot position (0, 0).
+			const result = grid.mapRawCellToFinalCell(1, 0);
+			expect(result).toEqual([0, 0]);
+		});
+
+		it('should map correctly in multi-column grid without crossing row boundaries', () => {
+			// 3-column grid with A(1-wide) at position 0, B(1-wide) at position 1
+			const a = createMockWidget(0, 0, 1, 1);
+			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+
+			const b = createMockWidget(1, 0, 1, 1);
+			grid.tryPlaceWidget(b, 1, 0, 1, 1);
+
+			// Snapshot: A at (0,0) width 1, B at (1,0) width 1
+			const snapshot = grid.takeSnapshot();
+
+			// Shadow (2-wide) placed at position 0 pushes A to (2,0) and B wraps to (0,1)
+			const shadow = createShadowWidget(0, 0, 2, 1);
+			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
+
+			expect(a.x).toBe(2);
+			expect(a.y).toBe(0);
+			expect(b.x).toBe(0);
+			expect(b.y).toBe(1);
+
+			grid.setDragSnapshot(snapshot);
+
+			// Cursor at (0, 1) → 1D pos 3, over B in the live grid.
+			// B is 1-wide at live pos 3, midpoint = 3.5.
+			// position1D (3) < midpoint (3.5) → "before" → returns B's snapshot position (1, 0).
+			// This is the key: without snapshot-based mapping, a 1D subtraction would have produced
+			// an incorrect result that crosses row boundaries in multi-column layouts.
+			const result = grid.mapRawCellToFinalCell(0, 1);
+			expect(result).toEqual([1, 0]);
+		});
+
+		it('should clear the drag snapshot', () => {
+			const a = createMockWidget(0, 0, 1, 1);
+			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+
+			const snapshot = grid.takeSnapshot();
+			grid.setDragSnapshot(snapshot);
+
+			// Clear it
+			grid.clearDragSnapshot();
+
+			// Now should behave as passthrough
+			const result = grid.mapRawCellToFinalCell(1, 0);
+			expect(result).toEqual([1, 0]);
+		});
+	});
 });
