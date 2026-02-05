@@ -657,13 +657,13 @@ class FlowGridCoordinateSystem {
 			if (Math.ceil(x) == this.#grid.columns && y % 1 > 0.5) {
 				return [0, Math.round(y)];
 			}
-			return [Math.round(x), Math.floor(y)];
+			return [Math.min(Math.round(x), this.#grid.columns - 1), Math.floor(y)];
 		}
 
 		if (Math.ceil(y) == this.#grid.rows && x % 1 > 0.5) {
 			return [Math.round(x), 0];
 		}
-		return [Math.floor(x), Math.round(y)];
+		return [Math.floor(x), Math.min(Math.round(y), this.#grid.rows - 1)];
 	}
 }
 

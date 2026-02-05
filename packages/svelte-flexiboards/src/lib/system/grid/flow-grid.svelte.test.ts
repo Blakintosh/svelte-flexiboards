@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { FlexiGrid } from './base.svelte.js';
-import type { FlexiWidgetController } from '../widget.svelte';
-import type { FlexiTargetConfiguration, InternalFlexiTargetController } from '../target.svelte';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiTargetConfiguration } from '../target/index.js';
+import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { FlowFlexiGrid, type FlowTargetLayout } from './flow-grid.svelte.js';
 
 // TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
@@ -27,7 +27,7 @@ describe('FlowFlexiGrid', () => {
 		maxWidth = Infinity,
 		minHeight = 1,
 		maxHeight = Infinity
-	): FlexiWidgetController => {
+	): InternalFlexiWidgetController => {
 		const widget = {
 			x,
 			y,
@@ -52,7 +52,7 @@ describe('FlowFlexiGrid', () => {
 			id: `widget-${Math.random().toString(36).substring(2, 9)}`
 		};
 
-		return widget as unknown as FlexiWidgetController;
+		return widget as unknown as InternalFlexiWidgetController;
 	};
 
 	type Placement = {
@@ -84,7 +84,7 @@ describe('FlowFlexiGrid', () => {
 		return widget;
 	};
 
-	const expectPlacement = (widget: FlexiWidgetController, placement: Placement) => {
+	const expectPlacement = (widget: InternalFlexiWidgetController, placement: Placement) => {
 		expect(widget.setBounds).toHaveBeenCalledWith(
 			placement.x,
 			placement.y,
@@ -329,7 +329,7 @@ describe('FlowFlexiGrid', () => {
 
 			expect(grid.rows).toBe(initialRows);
 			expect(grid.columns).toBe(initialColumns);
-		})
+		});
 	});
 
 	describe('Widget removal', () => {
@@ -405,7 +405,12 @@ describe('FlowFlexiGrid', () => {
 			// bbb
 			// ccc
 
-			const d = mockWidgetPlacement({ width: 3, height: 1, grid: nonExpandingGrid, expectedResult: false });
+			const d = mockWidgetPlacement({
+				width: 3,
+				height: 1,
+				grid: nonExpandingGrid,
+				expectedResult: false
+			});
 
 			// Expected state:
 			// aaa
@@ -485,7 +490,7 @@ describe('FlowFlexiGrid', () => {
 			// After placing shadow at 0, 1x1 should be displaced to position 2
 			expect(shadow.x).toBe(0);
 			expect(shadow.y).toBe(0);
-			expect(widget1x1.x).toBe(2);  // Displaced to position 2
+			expect(widget1x1.x).toBe(2); // Displaced to position 2
 			expect(widget1x1.y).toBe(0);
 
 			// Now simulate moving the shadow behind 1x1
@@ -506,7 +511,7 @@ describe('FlowFlexiGrid', () => {
 			// Shadow should be at position 1-2, 1x1 stays at position 0
 			expect(shadow.x).toBe(1);
 			expect(shadow.y).toBe(0);
-			expect(widget1x1.x).toBe(0);  // 1x1 should still be at position 0!
+			expect(widget1x1.x).toBe(0); // 1x1 should still be at position 0!
 			expect(widget1x1.y).toBe(0);
 		});
 
@@ -541,7 +546,7 @@ describe('FlowFlexiGrid', () => {
 
 			// a should be displaced
 			expect(shadow.x).toBe(0);
-			expect(a.x).toBe(2);  // Displaced to position 2
+			expect(a.x).toBe(2); // Displaced to position 2
 
 			// Now user moves shadow to position after a (say, position 3)
 			// Remove shadow and restore
@@ -555,7 +560,7 @@ describe('FlowFlexiGrid', () => {
 			// Place shadow at position 3 (user hovering there thinking it's behind a@2)
 			// The flow grid should compact it to position 1 (right after a)
 			(shadow.setBounds as ReturnType<typeof vi.fn>).mockClear();
-			smallGrid.tryPlaceWidget(shadow, 0, 1, 2, 1);  // (0, 1) = position 3 in 3-col grid
+			smallGrid.tryPlaceWidget(shadow, 0, 1, 2, 1); // (0, 1) = position 3 in 3-col grid
 
 			// Shadow should be compacted to position 1 (adjacent to a)
 			expect(shadow.x).toBe(1);
@@ -734,12 +739,7 @@ describe('FlowFlexiGrid', () => {
 	});
 
 	describe('mapRawCellToFinalCell with drag snapshot', () => {
-		const createShadowWidget = (
-			x = 0,
-			y = 0,
-			width = 1,
-			height = 1
-		): FlexiWidgetController => {
+		const createShadowWidget = (x = 0, y = 0, width = 1, height = 1): InternalFlexiWidgetController => {
 			const widget = createMockWidget(x, y, width, height);
 			(widget as any).isShadow = true;
 			return widget;
@@ -848,6 +848,43 @@ describe('FlowFlexiGrid', () => {
 			// an incorrect result that crosses row boundaries in multi-column layouts.
 			const result = grid.mapRawCellToFinalCell(0, 1);
 			expect(result).toEqual([1, 0]);
+		});
+
+		it('should allow placing before first widget in 1-column grid', () => {
+			// 1-column, 3-row grid — simulates mobile/narrow view
+			const narrowGrid = new FlowFlexiGrid(mockTarget, {
+				...targetConfig,
+				layout: {
+					...(targetConfig.layout as FlowTargetLayout),
+					columns: 1,
+					rows: 3
+				}
+			});
+
+			const a = createMockWidget(0, 0, 1, 1);
+			narrowGrid.tryPlaceWidget(a, 0, 0, 1, 1);
+			const b = createMockWidget(0, 1, 1, 1);
+			narrowGrid.tryPlaceWidget(b, 0, 1, 1, 1);
+
+			// Snapshot: A(0,0), B(0,1)
+			const snapshot = narrowGrid.takeSnapshot();
+
+			// Place shadow at (0,1) — pushes B to (0,2)
+			const shadow = createShadowWidget(0, 0, 1, 1);
+			narrowGrid.tryPlaceWidget(shadow, 0, 1, 1, 1);
+
+			expect(shadow.x).toBe(0);
+			expect(shadow.y).toBe(1);
+			expect(b.x).toBe(0);
+			expect(b.y).toBe(2);
+
+			narrowGrid.setDragSnapshot(snapshot);
+
+			// Cursor at (0.6, 0.2) — in the first cell, past x midpoint but clearly in the
+			// top portion of the first row. In a 1-col grid, x should be irrelevant.
+			// Should map to (0, 0) = before A in the snapshot.
+			const result = narrowGrid.mapRawCellToFinalCell(0.6, 0.2);
+			expect(result).toEqual([0, 0]);
 		});
 
 		it('should clear the drag snapshot', () => {
