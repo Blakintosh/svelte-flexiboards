@@ -56,7 +56,7 @@
 		</h2>
 		<Badge class="gap-4 px-6 py-0.5 text-lg" variant={'outline'}>
 			<Rocket size={32} class="size-8 text-xl" />
-			Version 0.3 out now!
+			Version 0.4 out now!
 		</Badge>
 
 		<div class="flex flex-col gap-4 lg:flex-row">
