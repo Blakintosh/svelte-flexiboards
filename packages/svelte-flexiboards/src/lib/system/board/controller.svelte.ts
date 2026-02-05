@@ -151,7 +151,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	style: string = $derived.by(() => {
-		const overflow = this.#activeInterpolations > 0 || this.#currentWidgetAction ? ' overflow: clip;' : '';
+		const overflow = this.#activeInterpolations > 0 || this.#currentWidgetAction ? ' overflow: hidden;' : '';
 
 		if (!this.#currentWidgetAction) {
 			return `position: relative;${overflow}`;
