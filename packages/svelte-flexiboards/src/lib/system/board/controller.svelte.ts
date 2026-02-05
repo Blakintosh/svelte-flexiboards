@@ -32,6 +32,7 @@ import type { InternalResponsiveFlexiBoardController } from '../responsive/contr
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
+	#activeInterpolations: number = $state(0);
 
 	#targets: Map<string, InternalFlexiTargetController> = new Map();
 	hoveredTarget: InternalFlexiTargetController | null = null;
@@ -150,11 +151,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	style: string = $derived.by(() => {
+		const overflow = this.#activeInterpolations > 0 || this.#currentWidgetAction ? ' overflow: clip;' : '';
+
 		if (!this.#currentWidgetAction) {
-			return 'position: relative;';
+			return `position: relative;${overflow}`;
 		}
 
-		return `position: relative; ${this.#getStyleForCurrentWidgetAction()}`;
+		return `position: relative;${overflow} ${this.#getStyleForCurrentWidgetAction()}`;
 	});
 
 	#getStyleForCurrentWidgetAction() {
@@ -168,6 +171,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			case 'resize':
 				return `cursor: nwse-resize;`;
 		}
+	}
+
+	notifyInterpolationStarted() {
+		this.#activeInterpolations++;
+	}
+
+	notifyInterpolationEnded() {
+		this.#activeInterpolations = Math.max(0, this.#activeInterpolations - 1);
 	}
 
 	get ref() {

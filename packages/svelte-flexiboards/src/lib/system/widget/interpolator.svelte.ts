@@ -48,7 +48,7 @@ export class WidgetMoveInterpolator {
 	});
 
 	placeholderStyle: string = $derived.by(() => {
-		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; visibility: hidden;`;
+		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; min-height: ${this.#placeholderPosition.heightPx}px; min-width: ${this.#placeholderPosition.widthPx}px; visibility: hidden;`;
 	});
 
 	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
@@ -56,6 +56,14 @@ export class WidgetMoveInterpolator {
 		this.#widget = widget;
 		this.onPlaceholderMount = this.onPlaceholderMount.bind(this);
 		this.onPlaceholderUnmount = this.onPlaceholderUnmount.bind(this);
+	}
+
+	#notifyStart() {
+		this.#provider?.notifyInterpolationStarted();
+	}
+
+	#notifyEnd() {
+		this.#provider?.notifyInterpolationEnded();
 	}
 
 	interpolateMove(
@@ -95,6 +103,7 @@ export class WidgetMoveInterpolator {
 			this.#inInitialFrame = true; // Disable CSS transition for initial position
 			this.active = true;
 			this.#animation = animation;
+			this.#notifyStart();
 
 			this.#placeholderPosition = {
 				x: newDimensions.x,
@@ -118,6 +127,7 @@ export class WidgetMoveInterpolator {
 			this.#timeout = setTimeout(() => {
 				this.active = false;
 				this.#animation = 'move';
+				this.#notifyEnd();
 			}, transitionConfig.duration);
 		});
 	}

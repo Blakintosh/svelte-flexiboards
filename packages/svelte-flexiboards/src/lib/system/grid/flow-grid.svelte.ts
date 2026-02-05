@@ -383,7 +383,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 		this.clear();
 
 		for (const widget of snapshot.widgets) {
-			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
+			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height, false);
 			this.#widgets.push(widget.widget);
 		}
 
