@@ -71,8 +71,13 @@
 {#if phone}
 	<!-- Phone: Full-width vertical card -->
 	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
-		<!-- Controls -->
-		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+		<!-- Grab handle - top left -->
+		<div class="absolute top-2 left-2 z-10">
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
+		<!-- Controls - top right -->
+		<div class="absolute top-2 right-2 z-10">
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
@@ -88,7 +93,6 @@
 					<DropdownMenu.Item class="text-destructive"><Trash2 class="mr-2 size-4" />Delete</DropdownMenu.Item>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
 		</div>
 
 		<!-- Image (top) -->
@@ -143,8 +147,13 @@
 {:else if isWide}
 	<!-- Wide card layout: horizontal -->
 	<Card.Root class="group relative flex h-full flex-row overflow-hidden transition-shadow hover:shadow-md">
+		<!-- Grab handle - top left -->
+		<div class="absolute top-2 left-2 z-10">
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
 		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+		<div class="absolute top-2 right-2 z-10">
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
@@ -173,7 +182,6 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
 		</div>
 
 		<!-- Resizer - bottom right -->
@@ -256,8 +264,13 @@
 {:else}
 	<!-- Narrow card layout: vertical (tablet/desktop 1x1) -->
 	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
+		<!-- Grab handle - top left -->
+		<div class="absolute top-2 left-2 z-10">
+			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+		</div>
+
 		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10 flex items-center gap-1">
+		<div class="absolute top-2 right-2 z-10">
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
@@ -282,7 +295,6 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
 		</div>
 
 		<!-- Resizer - bottom right -->
