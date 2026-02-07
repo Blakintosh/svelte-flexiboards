@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import type { Position } from '../types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
@@ -32,7 +33,6 @@ export class WidgetMoveInterpolator {
 	});
 
 	#inInitialFrame: boolean = $state(false);
-	#lockPlaceholderMinSize: boolean = $state(true);
 	#animation: WidgetMovementAnimation = $state('move');
 
 	#widget: FlexiWidgetController = $state() as FlexiWidgetController;
@@ -48,11 +48,7 @@ export class WidgetMoveInterpolator {
 	});
 
 	placeholderStyle: string = $derived.by(() => {
-		const minSizeStyle = this.#lockPlaceholderMinSize
-			? `min-height: ${this.#placeholderPosition.heightPx}px; min-width: ${this.#placeholderPosition.widthPx}px;`
-			: '';
-
-		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; ${minSizeStyle} visibility: hidden;`;
+		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; min-height: ${this.#placeholderPosition.heightPx}px; min-width: ${this.#placeholderPosition.widthPx}px; visibility: hidden;`;
 	});
 
 	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
@@ -102,7 +98,6 @@ export class WidgetMoveInterpolator {
 				heightPx: this.#interpolatedWidgetPosition.height,
 				widthPx: this.#interpolatedWidgetPosition.width
 			};
-			this.#lockPlaceholderMinSize = true;
 		} else {
 			// INITIAL MOVE PATH - set up starting position, then animate
 			this.#inInitialFrame = true; // Disable CSS transition for initial position
@@ -118,7 +113,6 @@ export class WidgetMoveInterpolator {
 				heightPx: oldPosition.height,
 				widthPx: oldPosition.width
 			};
-			this.#lockPlaceholderMinSize = true;
 
 			this.#interpolatedWidgetPosition.top =
 				oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
@@ -138,31 +132,22 @@ export class WidgetMoveInterpolator {
 		});
 	}
 
-	onPlaceholderMove() {
+	onPlaceholderMove(rect: DOMRect) {
 		requestAnimationFrame(() => {
 			this.#inInitialFrame = false;
-			this.#lockPlaceholderMinSize = false;
 
-			requestAnimationFrame(() => {
-				if (!this.ref) {
-					return;
-				}
+			// Now finalise the position.
+			const containerRect = this.#containerRef?.getBoundingClientRect();
+			if (!containerRect) {
+				return;
+			}
 
-				const rect = this.ref.getBoundingClientRect();
-
-				// Now finalise the position.
-				const containerRect = this.#containerRef?.getBoundingClientRect();
-				if (!containerRect) {
-					return;
-				}
-
-				this.#interpolatedWidgetPosition.top =
-					rect.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
-				this.#interpolatedWidgetPosition.left =
-					rect.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
-				this.#interpolatedWidgetPosition.width = rect.width;
-				this.#interpolatedWidgetPosition.height = rect.height;
-			});
+			this.#interpolatedWidgetPosition.top =
+				rect.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
+			this.#interpolatedWidgetPosition.left =
+				rect.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
+			this.#interpolatedWidgetPosition.width = rect.width;
+			this.#interpolatedWidgetPosition.height = rect.height;
 		});
 	}
 
@@ -170,7 +155,7 @@ export class WidgetMoveInterpolator {
 		this.ref = ref;
 
 		// Now that we're mounted, start moving our widget.
-		this.onPlaceholderMove();
+		this.onPlaceholderMove(this.ref.getBoundingClientRect());
 
 		// However, if the widget moves again before timeout, we need to track and update the position.
 		this.#observer = new MutationObserver((mutations) => {
@@ -180,7 +165,7 @@ export class WidgetMoveInterpolator {
 
 			for (const mutation of mutations) {
 				if (mutation.type == 'attributes' && mutation.attributeName == 'style') {
-					this.onPlaceholderMove();
+					this.onPlaceholderMove(this.ref.getBoundingClientRect());
 				}
 			}
 		});
