@@ -257,7 +257,7 @@
 	>
 		<!-- Desktop: 3 columns -->
 		{#snippet lg()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-scroll" config={boardConfig}>
+			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-auto" config={boardConfig}>
 				<FlexiTarget
 					key="products"
 					class="gap-4 p-1"
@@ -292,7 +292,7 @@
 		<!-- Tablet: 2 columns -->
 		{#snippet sm()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-scroll"
+				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
 				config={boardConfig}
 			>
 				<FlexiTarget
@@ -329,7 +329,7 @@
 		<!-- Phone: 1 column, full vertical cards -->
 		{#snippet children()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-scroll"
+				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
 				config={boardConfig}
 			>
 				<FlexiTarget

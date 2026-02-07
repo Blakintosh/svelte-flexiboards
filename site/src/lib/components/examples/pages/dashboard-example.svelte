@@ -133,7 +133,7 @@
 		>
 			{#snippet lg()}
 				<FlexiBoard
-					class={'dashboard-board min-h-0 grow overflow-x-clip overflow-y-scroll'}
+					class={'dashboard-board min-h-0 grow overflow-x-clip overflow-y-auto'}
 					config={boardConfig}
 				>
 					<FlexiTarget
@@ -159,7 +159,7 @@
 			{/snippet}
 
 			{#snippet children({ currentBreakpoint })}
-				<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-scroll'} config={boardConfig}>
+				<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto'} config={boardConfig}>
 					<FlexiTarget
 						key="left"
 						class={'h-full gap-2 overflow-x-clip'}
