@@ -95,8 +95,10 @@
 
     <!-- Resize handle when editing tile -->
     {#if editingTile}
-        <FlexiResize class="absolute top-[50%] right-0 translate-y-[-50%] w-2 h-4 bg-primary rounded-lg translate-x-[50%]">
-
+        <FlexiResize
+            class="absolute top-[50%] right-0 translate-y-[-50%] translate-x-[50%] grid place-items-center p-2 lg:p-0"
+        >
+            <span class="pointer-events-none block w-2 h-4 bg-primary rounded-lg"></span>
         </FlexiResize>
     {/if}
 </button>

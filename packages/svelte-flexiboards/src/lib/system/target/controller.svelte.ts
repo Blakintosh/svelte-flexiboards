@@ -814,6 +814,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#dropzoneWidget.value = value;
 	}
 
+	get shouldRenderDropzoneWidget() {
+		return this.#isDropzoneWidgetAdded && !!this.dropzoneWidget;
+	}
+
 	get widgets() {
 		return this.#widgets as SvelteSet<FlexiWidgetController>;
 	}

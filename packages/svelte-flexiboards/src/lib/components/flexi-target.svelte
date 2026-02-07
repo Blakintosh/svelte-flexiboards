@@ -93,7 +93,7 @@
 				<RenderedFlexiWidget {widget} />
 			{/each}
 
-			{#if target.dropzoneWidget}
+			{#if target.dropzoneWidget && target.shouldRenderDropzoneWidget}
 				<RenderedFlexiWidget widget={target.dropzoneWidget} />
 			{/if}
 		{/if}
