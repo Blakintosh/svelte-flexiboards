@@ -123,11 +123,52 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	#getResizingWidgetStyle(action: WidgetResizeAction) {
+		const clamp = (value: number, min: number, max: number) =>
+			Math.min(Math.max(value, min), max);
+		const parseGap = (value?: string) => {
+			if (!value || value === 'normal') {
+				return 0;
+			}
+			const numeric = Number.parseFloat(value);
+			return Number.isFinite(numeric) ? numeric : 0;
+		};
+		const toPx = (units: number, unitSize: number, gapSize: number) => {
+			if (!Number.isFinite(units)) {
+				return Infinity;
+			}
+			return units * unitSize + Math.max(0, units - 1) * gapSize;
+		};
+
+		const gridRef = this.internalTarget?.grid?.ref;
+		const gridColumns = this.internalTarget?.columns ?? 0;
+		const gridRows = this.internalTarget?.rows ?? 0;
+		const gridStyle =
+			gridRef && typeof window !== 'undefined' ? window.getComputedStyle(gridRef) : null;
+		const columnGapPx = parseGap(gridStyle?.columnGap);
+		const rowGapPx = parseGap(gridStyle?.rowGap);
+
 		// Calculate size of one grid unit in pixels
-		const unitSizeY = action.capturedHeightPx / action.initialHeightUnits;
+		const fallbackUnitSizeY =
+			(action.capturedHeightPx - Math.max(0, action.initialHeightUnits - 1) * rowGapPx) /
+			action.initialHeightUnits;
 		// Guard against division by zero if initial width is somehow 0
+		const fallbackUnitSizeX =
+			action.initialWidthUnits > 0
+				? (action.capturedWidthPx - Math.max(0, action.initialWidthUnits - 1) * columnGapPx) /
+					action.initialWidthUnits
+				: 1;
+		const liveUnitSizeX =
+			gridRef && gridColumns > 0
+				? (gridRef.clientWidth - Math.max(0, gridColumns - 1) * columnGapPx) / gridColumns
+				: NaN;
+		const liveUnitSizeY =
+			gridRef && gridRows > 0
+				? (gridRef.clientHeight - Math.max(0, gridRows - 1) * rowGapPx) / gridRows
+				: NaN;
 		const unitSizeX =
-			action.initialWidthUnits > 0 ? action.capturedWidthPx / action.initialWidthUnits : 1;
+			Number.isFinite(liveUnitSizeX) && liveUnitSizeX > 0 ? liveUnitSizeX : fallbackUnitSizeX;
+		const unitSizeY =
+			Number.isFinite(liveUnitSizeY) && liveUnitSizeY > 0 ? liveUnitSizeY : fallbackUnitSizeY;
 
 		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
 		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
@@ -140,19 +181,34 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		let height = action.capturedHeightPx;
 		let width = action.capturedWidthPx;
 
+		const minWidthPx = toPx(this.minWidth, unitSizeX, columnGapPx);
+		const minHeightPx = toPx(this.minHeight, unitSizeY, rowGapPx);
+		const gridMaxWidthUnits =
+			this.internalTarget && this.internalTarget.columns > 0
+				? Math.max(1, this.internalTarget.columns - this.x)
+				: Infinity;
+		const gridMaxHeightUnits =
+			this.internalTarget && this.internalTarget.rows > 0
+				? Math.max(1, this.internalTarget.rows - this.y)
+				: Infinity;
+		const configMaxWidthUnits = Number.isFinite(this.maxWidth) ? this.maxWidth : Infinity;
+		const configMaxHeightUnits = Number.isFinite(this.maxHeight) ? this.maxHeight : Infinity;
+		const maxWidthPx = toPx(Math.min(configMaxWidthUnits, gridMaxWidthUnits), unitSizeX, columnGapPx);
+		const maxHeightPx = toPx(Math.min(configMaxHeightUnits, gridMaxHeightUnits), unitSizeY, rowGapPx);
+
 		switch (this.resizability) {
 			case 'horizontal':
 				// NOTE: Use the pre-calculated deltaX here
-				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 			case 'vertical':
 				// NOTE: Use the pre-calculated deltaY here
-				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
 				break;
 			case 'both':
 				// NOTE: Use the pre-calculated deltaX and deltaY here
-				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
-				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 		}
 

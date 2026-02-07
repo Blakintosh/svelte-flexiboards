@@ -150,19 +150,19 @@
 	];
 </script>
 
-<main class="relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8">
+<main
+	class="relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
+>
 	<!-- Header -->
 	<header class="shrink-0">
 		<div class="flex items-center justify-between gap-3">
 			<div class="flex items-center gap-2 sm:gap-3">
-				<div class="hidden size-10 items-center justify-center rounded-lg bg-primary/10 sm:flex">
-					<Package class="size-5 text-primary" />
+				<div class="bg-primary/10 hidden size-10 items-center justify-center rounded-lg sm:flex">
+					<Package class="text-primary size-5" />
 				</div>
 				<div>
 					<h1 class="text-xl font-semibold sm:text-2xl lg:text-3xl">Products</h1>
-					<p class="text-muted-foreground hidden text-sm sm:block">
-						Manage your product catalog
-					</p>
+					<p class="text-muted-foreground hidden text-sm sm:block">Manage your product catalog</p>
 				</div>
 			</div>
 			<Button size="sm" class="shrink-0">
@@ -176,13 +176,8 @@
 	<div class="flex shrink-0 flex-col gap-2 sm:gap-3">
 		<div class="flex items-center gap-2">
 			<div class="relative min-w-0 flex-1 sm:max-w-xs">
-				<Search class="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-				<Input
-					type="search"
-					placeholder="Search..."
-					class="pl-9"
-					bind:value={searchQuery}
-				/>
+				<Search class="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+				<Input type="search" placeholder="Search..." class="pl-9" bind:value={searchQuery} />
 			</div>
 
 			<DropdownMenu.Root>
@@ -233,11 +228,17 @@
 				{filteredProducts().length} products
 			</span>
 			<div class="flex items-center gap-1.5 sm:gap-2">
-				<Badge variant="secondary" class="gap-1 px-1.5 py-0.5 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs">
+				<Badge
+					variant="secondary"
+					class="gap-1 px-1.5 py-0.5 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs"
+				>
 					<span class="size-1.5 rounded-full bg-emerald-500 sm:size-2"></span>
 					In Stock
 				</Badge>
-				<Badge variant="outline" class="gap-1 px-1.5 py-0.5 text-[10px] text-amber-600 sm:px-2 sm:py-0.5 sm:text-xs">
+				<Badge
+					variant="outline"
+					class="gap-1 px-1.5 py-0.5 text-[10px] text-amber-600 sm:px-2 sm:py-0.5 sm:text-xs"
+				>
 					<span class="size-1.5 rounded-full bg-amber-500 sm:size-2"></span>
 					Low
 				</Badge>
@@ -256,7 +257,7 @@
 	>
 		<!-- Desktop: 3 columns -->
 		{#snippet lg()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-auto" config={boardConfig}>
+			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-scroll" config={boardConfig}>
 				<FlexiTarget
 					key="products"
 					class="gap-4 p-1"
@@ -290,7 +291,10 @@
 
 		<!-- Tablet: 2 columns -->
 		{#snippet sm()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-auto" config={boardConfig}>
+			<FlexiBoard
+				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-scroll"
+				config={boardConfig}
+			>
 				<FlexiTarget
 					key="products"
 					class="gap-3 p-0.5"
@@ -324,7 +328,10 @@
 
 		<!-- Phone: 1 column, full vertical cards -->
 		{#snippet children()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-auto" config={boardConfig}>
+			<FlexiBoard
+				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-scroll"
+				config={boardConfig}
+			>
 				<FlexiTarget
 					key="products"
 					class="gap-3 p-1"

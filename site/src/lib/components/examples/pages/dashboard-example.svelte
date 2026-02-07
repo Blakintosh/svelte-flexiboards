@@ -91,7 +91,9 @@
 
 <Sidebar.Provider class="h-full min-h-0 grow">
 	<AppSidebar />
-	<main class="relative flex min-h-0 w-full grow flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-16 lg:py-8">
+	<main
+		class="relative flex min-h-0 w-full grow flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-16 lg:py-8"
+	>
 		<header class="flex shrink-0 items-center justify-between">
 			<div class="flex items-center gap-3">
 				<Sidebar.Trigger class="lg:hidden" />
@@ -130,7 +132,10 @@
 			}}
 		>
 			{#snippet lg()}
-				<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto'} config={boardConfig}>
+				<FlexiBoard
+					class={'dashboard-board min-h-0 grow overflow-x-clip overflow-y-scroll'}
+					config={boardConfig}
+				>
 					<FlexiTarget
 						key="left"
 						class={'h-full gap-2 overflow-x-clip lg:gap-4'}
@@ -154,7 +159,7 @@
 			{/snippet}
 
 			{#snippet children({ currentBreakpoint })}
-				<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto'} config={boardConfig}>
+				<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-scroll'} config={boardConfig}>
 					<FlexiTarget
 						key="left"
 						class={'h-full gap-2 overflow-x-clip'}
@@ -184,23 +189,27 @@
 				class="absolute inset-x-4 bottom-4 lg:inset-x-16 lg:bottom-8"
 				transition:fly={{ y: 20, duration: 200 }}
 			>
-				<div class="flex items-center justify-between gap-4 rounded-lg border bg-card/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80">
+				<div
+					class="bg-card/95 supports-[backdrop-filter]:bg-card/80 flex items-center justify-between gap-4 rounded-lg border px-4 py-3 shadow-lg backdrop-blur"
+				>
 					<div class="flex items-center gap-2">
-						<div class="flex size-8 items-center justify-center rounded-full bg-primary/10">
-							<Pencil class="size-4 text-primary" />
+						<div class="bg-primary/10 flex size-8 items-center justify-center rounded-full">
+							<Pencil class="text-primary size-4" />
 						</div>
 						<div class="flex flex-col">
 							<span class="text-sm font-medium">Editing layout</span>
-							<span class="text-xs text-muted-foreground hidden sm:block">Drag and resize widgets to customise</span>
+							<span class="text-muted-foreground hidden text-xs sm:block"
+								>Drag and resize widgets to customise</span
+							>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
 						<Button variant="ghost" size="sm" onclick={resetLayout}>
-							<RotateCcw class="size-4 mr-1.5" />
+							<RotateCcw class="mr-1.5 size-4" />
 							<span class="hidden sm:inline">Reset</span>
 						</Button>
 						<Button size="sm" onclick={saveAndExit}>
-							<Check class="size-4 mr-1.5" />
+							<Check class="mr-1.5 size-4" />
 							Done
 						</Button>
 					</div>

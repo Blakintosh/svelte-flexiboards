@@ -33,6 +33,8 @@ import type { InternalResponsiveFlexiBoardController } from '../responsive/contr
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
 	#activeInterpolations: number = $state(0);
+	#scrollbarCompensation: number = $state(0);
+	#hasScrollbarCompensation: boolean = false;
 
 	#targets: Map<string, InternalFlexiTargetController> = new Map();
 	hoveredTarget: InternalFlexiTargetController | null = null;
@@ -151,7 +153,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	style: string = $derived.by(() => {
-		const overflow = this.#activeInterpolations > 0 || this.#currentWidgetAction ? ' overflow: hidden;' : '';
+		const needsOverflowLock = this.#activeInterpolations > 0 || this.#currentWidgetAction;
+		const overflow = needsOverflowLock
+			? ` overflow: hidden; padding-right: ${this.#scrollbarCompensation}px;`
+			: '';
 
 		if (!this.#currentWidgetAction) {
 			return `position: relative;${overflow}`;
@@ -174,11 +179,32 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	notifyInterpolationStarted() {
+		this.#captureScrollbarWidthIfNeeded();
 		this.#activeInterpolations++;
 	}
 
 	notifyInterpolationEnded() {
 		this.#activeInterpolations = Math.max(0, this.#activeInterpolations - 1);
+		this.#scheduleScrollbarCompensationRelease();
+	}
+
+	#captureScrollbarWidthIfNeeded() {
+		if (this.#hasScrollbarCompensation) {
+			return;
+		}
+		if (this.ref) {
+			this.#scrollbarCompensation = this.ref.offsetWidth - this.ref.clientWidth;
+			this.#hasScrollbarCompensation = true;
+		}
+	}
+
+	#scheduleScrollbarCompensationRelease() {
+		queueMicrotask(() => {
+			if (this.#activeInterpolations === 0 && !this.#currentWidgetAction) {
+				this.#scrollbarCompensation = 0;
+				this.#hasScrollbarCompensation = false;
+			}
+		});
 	}
 
 	get ref() {
@@ -257,6 +283,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
+		this.#captureScrollbarWidthIfNeeded();
+
 		if (event.clientX !== undefined && event.clientY !== undefined) {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
@@ -280,6 +308,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.#currentWidgetAction || event.board !== this) {
 			return;
 		}
+
+		this.#captureScrollbarWidthIfNeeded();
 
 		this.#currentWidgetAction = {
 			action: 'resize',
@@ -520,6 +550,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.announce(`You have released the widget.`);
 		this.#currentWidgetAction = null;
+		this.#scheduleScrollbarCompensationRelease();
 	}
 
 	/**
