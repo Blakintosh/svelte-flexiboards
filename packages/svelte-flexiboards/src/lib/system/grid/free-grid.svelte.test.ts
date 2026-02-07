@@ -82,7 +82,7 @@ describe('FreeFormFlexiGrid', () => {
 				layout: {
 					type: 'free',
 					minRows: 3,
-					minColumns: 3,
+					minColumns: 3
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -474,7 +474,7 @@ describe('FreeFormFlexiGrid', () => {
 					maxColumns: 3,
 					minRows: 2,
 					maxRows: 4,
-					colllapsibility: 'any'
+					collapsibility: 'any'
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -543,7 +543,7 @@ describe('FreeFormFlexiGrid', () => {
 					minColumns: 2,
 					minRows: 2,
 					maxRows: 2, // Fixed at 2 rows
-					colllapsibility: 'any'
+					collapsibility: 'any'
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -609,7 +609,7 @@ describe('FreeFormFlexiGrid', () => {
 					maxColumns: 3,
 					minRows: 3,
 					maxRows: 3,
-					colllapsibility: 'none'
+					collapsibility: 'none'
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -644,7 +644,7 @@ describe('FreeFormFlexiGrid', () => {
 
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
 		});
-		
+
 		it('should work with basic widget placement (no constraints)', () => {
 			const widget = createMockWidget();
 
@@ -710,7 +710,7 @@ describe('FreeFormFlexiGrid', () => {
 			beforeEach(() => {
 				grid = createPackingGrid('none');
 			});
-			
+
 			it('should not move widgets after placement', () => {
 				const widget1 = createMockWidget();
 				const widget2 = createMockWidget();
@@ -739,7 +739,7 @@ describe('FreeFormFlexiGrid', () => {
 			beforeEach(() => {
 				grid = createPackingGrid('horizontal');
 			});
-			
+
 			it('should pack widgets toward the left', () => {
 				const widget1 = createMockWidget();
 				const widget2 = createMockWidget();
@@ -868,13 +868,13 @@ describe('FreeFormFlexiGrid', () => {
 				// a--
 				// ---
 				// bb-
-	
+
 				grid.applyPostCompletionOperations();
-	
+
 				// Expected state:
 				// a--
 				// bb-
-	
+
 				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
 				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 2, 1);
 			});

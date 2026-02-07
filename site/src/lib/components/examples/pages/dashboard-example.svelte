@@ -147,7 +147,7 @@
 								maxColumns: 3,
 								minRows: 3,
 								maxRows: 4,
-								colllapsibility: 'any',
+								collapsibility: 'any',
 								packing: 'vertical'
 							},
 							widgetDefaults: {
@@ -171,7 +171,7 @@
 								maxColumns: 2,
 								minRows: 3,
 								maxRows: 5,
-								colllapsibility: 'any',
+								collapsibility: 'any',
 								packing: 'vertical'
 							},
 							widgetDefaults: {
