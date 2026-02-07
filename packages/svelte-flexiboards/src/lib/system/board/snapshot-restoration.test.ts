@@ -87,7 +87,7 @@ const createMockTargetWithGrid = () => {
 	const grid = new FreeFormFlexiGrid(mockTarget, targetConfig);
 
 	// Track snapshot state like the real target controller does
-	let preGrabSnapshot: unknown | null = null;
+	let preGrabSnapshot: any = null;
 
 	return {
 		grid,

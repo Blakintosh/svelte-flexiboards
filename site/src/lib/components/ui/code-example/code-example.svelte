@@ -1,10 +1,9 @@
 <script module lang="ts">
 	async function loadHighlighter() {
-		const highlighter = await createHighlighter({
+		const highlighter = await getSingletonHighlighter({
 			themes: ['poimandres'],
 			langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell']
 		});
-		await highlighter.loadLanguage('svelte', 'javascript', 'typescript', 'html', 'css', 'shell');
 
 		return { highlighter };
 	}
@@ -16,7 +15,7 @@
 	import type { Snippet } from 'svelte';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { cn } from '$lib/utils.js';
-	import { createHighlighter } from 'shiki';
+	import { getSingletonHighlighter } from 'shiki';
 	import Copy from 'lucide-svelte/icons/copy';
 	import Check from 'lucide-svelte/icons/check';
 
