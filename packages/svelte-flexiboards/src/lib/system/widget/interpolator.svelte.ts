@@ -1,8 +1,8 @@
-import { onMount } from 'svelte';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import type { Position } from '../types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { FlexiWidgetTransitionConfiguration } from './types.js';
+import { getPlaceholderMinDimensionLocks, type InterpolationSize } from './interpolation-utils.js';
 
 export class WidgetMoveInterpolator {
 	active: boolean = $state(false);
@@ -22,7 +22,9 @@ export class WidgetMoveInterpolator {
 		width: 1,
 		height: 1,
 		heightPx: 0,
-		widthPx: 0
+		widthPx: 0,
+		lockMinWidth: true,
+		lockMinHeight: true
 	});
 
 	#interpolatedWidgetPosition: InterpolationPosition = $state({
@@ -48,7 +50,13 @@ export class WidgetMoveInterpolator {
 	});
 
 	placeholderStyle: string = $derived.by(() => {
-		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; visibility: hidden;`;
+		const minHeight = this.#placeholderPosition.lockMinHeight
+			? ` min-height: ${this.#placeholderPosition.heightPx}px;`
+			: '';
+		const minWidth = this.#placeholderPosition.lockMinWidth
+			? ` min-width: ${this.#placeholderPosition.widthPx}px;`
+			: '';
+		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height};${minHeight}${minWidth} visibility: hidden;`;
 	});
 
 	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
@@ -58,10 +66,19 @@ export class WidgetMoveInterpolator {
 		this.onPlaceholderUnmount = this.onPlaceholderUnmount.bind(this);
 	}
 
+	#notifyStart() {
+		this.#provider?.notifyInterpolationStarted();
+	}
+
+	#notifyEnd() {
+		this.#provider?.notifyInterpolationEnded();
+	}
+
 	interpolateMove(
 		newDimensions: Dimensions,
 		oldPosition: InterpolationPosition,
-		animation: WidgetMovementAnimation = 'move'
+		animation: WidgetMovementAnimation = 'move',
+		previousDimensions?: InterpolationSize
 	) {
 		const containerRect = this.#containerRef?.getBoundingClientRect();
 		if (!containerRect) {
@@ -74,34 +91,65 @@ export class WidgetMoveInterpolator {
 			return;
 		}
 
-		if (this.active) {
-			clearTimeout(this.#timeout);
+		const minDimensionLocks = getPlaceholderMinDimensionLocks(
+			animation,
+			{
+				width: newDimensions.width,
+				height: newDimensions.height
+			},
+			previousDimensions
+		);
+
+		const isInterruption = this.active;
+		clearTimeout(this.#timeout);
+
+		if (isInterruption) {
+			// INTERRUPTION PATH - only update target, keep transition flowing
+			// Don't change #animation to preserve CSS transition property
+			// Don't reset #interpolatedWidgetPosition
+
+			this.#placeholderPosition = {
+				x: newDimensions.x,
+				y: newDimensions.y,
+				width: newDimensions.width,
+				height: newDimensions.height,
+				heightPx: this.#interpolatedWidgetPosition.height,
+				widthPx: this.#interpolatedWidgetPosition.width,
+				lockMinWidth: minDimensionLocks.lockMinWidth,
+				lockMinHeight: minDimensionLocks.lockMinHeight
+			};
+		} else {
+			// INITIAL MOVE PATH - set up starting position, then animate
+			this.#inInitialFrame = true; // Disable CSS transition for initial position
+			this.active = true;
+			this.#animation = animation;
+			this.#notifyStart();
+
+			this.#placeholderPosition = {
+				x: newDimensions.x,
+				y: newDimensions.y,
+				width: newDimensions.width,
+				height: newDimensions.height,
+				heightPx: oldPosition.height,
+				widthPx: oldPosition.width,
+				lockMinWidth: minDimensionLocks.lockMinWidth,
+				lockMinHeight: minDimensionLocks.lockMinHeight
+			};
+
+			this.#interpolatedWidgetPosition.top =
+				oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
+			this.#interpolatedWidgetPosition.left =
+				oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
+			this.#interpolatedWidgetPosition.width = oldPosition.width;
+			this.#interpolatedWidgetPosition.height = oldPosition.height;
 		}
 
-		this.active = true;
-		this.#animation = animation;
-
-		this.#placeholderPosition = {
-			x: newDimensions.x,
-			y: newDimensions.y,
-			width: newDimensions.width,
-			height: newDimensions.height,
-			heightPx: oldPosition.height,
-			widthPx: oldPosition.width
-		};
-
-		this.#interpolatedWidgetPosition.top =
-			oldPosition.top - containerRect.top + (this.#containerRef?.scrollTop ?? 0);
-		this.#interpolatedWidgetPosition.left =
-			oldPosition.left - containerRect.left + (this.#containerRef?.scrollLeft ?? 0);
-
-		this.#interpolatedWidgetPosition.width = oldPosition.width;
-		this.#interpolatedWidgetPosition.height = oldPosition.height;
-
+		// Reset timeout for both paths
 		requestAnimationFrame(() => {
 			this.#timeout = setTimeout(() => {
 				this.active = false;
 				this.#animation = 'move';
+				this.#notifyEnd();
 			}, transitionConfig.duration);
 		});
 	}
@@ -184,4 +232,7 @@ type PlaceholderPosition = {
 	// The width and height of the placeholder in pixels.
 	heightPx: number;
 	widthPx: number;
+	// Whether min dimensions should be applied to the placeholder.
+	lockMinWidth: boolean;
+	lockMinHeight: boolean;
 };

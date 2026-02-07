@@ -1,4 +1,6 @@
-<blockquote>
+<blockquote
+	class="border-l-4 border-muted-foreground/30 pl-4 text-sm italic leading-relaxed text-muted-foreground lg:text-base"
+>
 	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 	labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
 	nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit

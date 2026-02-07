@@ -6,80 +6,82 @@
 	import ArrowRightLeft from 'lucide-svelte/icons/arrow-right-left';
 	import ChartArea from 'lucide-svelte/icons/chart-area';
 	import Bell from 'lucide-svelte/icons/bell';
+	import Plus from 'lucide-svelte/icons/plus';
+	import Settings from 'lucide-svelte/icons/settings';
+	import Layers from 'lucide-svelte/icons/layers';
 </script>
 
-<Sidebar.Root class="absolute h-full">
-	<Sidebar.Header>
-		<h2 class="px-4 py-2 text-xl font-semibold">Flexiboard</h2>
-		<Sidebar.Group class="text-muted-foreground">
+<Sidebar.Root class="absolute h-full border-r bg-sidebar">
+	<Sidebar.Header class="border-b px-2 py-4">
+		<div class="flex items-center gap-3 px-2">
+			<div class="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+				<Layers class="size-4" />
+			</div>
+			<div class="flex flex-col">
+				<span class="text-sm font-semibold">Flexiboard</span>
+				<span class="text-xs text-muted-foreground">Dashboard</span>
+			</div>
+		</div>
+	</Sidebar.Header>
+
+	<Sidebar.Content class="px-2 py-4">
+		<!-- Quick actions -->
+		<Sidebar.Group>
+			<Sidebar.GroupLabel class="text-xs font-medium text-muted-foreground px-2 mb-2">
+				Quick Actions
+			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								class="lucide lucide-plus"><path d="M5 12h14" /><path d="M12 5v14" /></svg
-							>
+						<Sidebar.MenuButton class="text-muted-foreground hover:text-foreground">
+							<Plus class="size-4" />
 							<span>New dashboard</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								class="lucide lucide-settings"
-								><path
-									d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-								/><circle cx="12" cy="12" r="3" /></svg
-							>
+						<Sidebar.MenuButton class="text-muted-foreground hover:text-foreground">
+							<Settings class="size-4" />
 							<span>Settings</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
-	</Sidebar.Header>
-	<Sidebar.Content>
-		<Sidebar.Group>
+
+		<!-- Main navigation -->
+		<Sidebar.Group class="mt-4">
+			<Sidebar.GroupLabel class="text-xs font-medium text-muted-foreground px-2 mb-2">
+				Navigation
+			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="bg-muted pl-4">
-							<LayoutDashboard />
+						<Sidebar.MenuButton class="bg-primary/10 text-primary font-medium">
+							<LayoutDashboard class="size-4" />
 							<span>Dashboard</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="pl-4">
-							<ArrowRightLeft />
+						<Sidebar.MenuButton class="text-muted-foreground hover:text-foreground">
+							<ArrowRightLeft class="size-4" />
 							<span>Transactions</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="pl-4">
-							<ChartArea />
+						<Sidebar.MenuButton class="text-muted-foreground hover:text-foreground">
+							<ChartArea class="size-4" />
 							<span>Reports</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="pl-4">
-							<Bell />
+						<Sidebar.MenuButton class="text-muted-foreground hover:text-foreground">
+							<div class="relative">
+								<Bell class="size-4" />
+								<span class="absolute -right-1 -top-1 flex size-2">
+									<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+									<span class="relative inline-flex size-2 rounded-full bg-primary"></span>
+								</span>
+							</div>
 							<span>Notifications</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
@@ -87,7 +89,8 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
-	<Sidebar.Footer>
+
+	<Sidebar.Footer class="border-t p-2">
 		<UserDropdown />
 	</Sidebar.Footer>
 </Sidebar.Root>

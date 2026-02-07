@@ -52,11 +52,13 @@ export type FlexiWidgetDefaults = {
 
 	/**
 	 * The width of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	width?: number;
 
 	/**
 	 * The height of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	height?: number;
 
@@ -119,8 +121,12 @@ export type FlexiWidgetDefaults = {
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+	id?: string;
+	type?: string;
 	x?: number;
 	y?: number;
+	width?: number;
+	height?: number;
 	metadata?: Record<string, any>;
 };
 
@@ -133,11 +139,6 @@ export type FlexiWidgetState = {
 };
 
 export type FlexiWidgetDerivedConfiguration = {
-	/**
-	 * The name of the widget, which can be used to identify it in exported layouts.
-	 */
-	name?: string;
-
 	/**
 	 * The component that is rendered by this item. This is optional if a snippet is provided.
 	 */
@@ -221,6 +222,7 @@ export type FlexiWidgetConstructorParams = {
 	config: FlexiWidgetConfiguration;
 	provider: InternalFlexiBoardController;
 	target?: InternalFlexiTargetController;
+	type?: string;
 	isShadow?: boolean;
 };
 

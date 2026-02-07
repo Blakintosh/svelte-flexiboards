@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+@source "../src/**/*.md";
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*

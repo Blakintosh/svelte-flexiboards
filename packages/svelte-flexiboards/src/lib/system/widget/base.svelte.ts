@@ -379,6 +379,21 @@ export class FlexiWidgetController {
 	get maxHeight() {
 		return this.#config.maxHeight;
 	}
+
+	/**
+	 * The user-provided stable identifier for this widget, if any.
+	 * This is used for persistence and layout import/export.
+	 */
+	get userProvidedId(): string | undefined {
+		return undefined; // Overridden in InternalFlexiWidgetController
+	}
+
+	/**
+	 * The type of this widget (registry key for looking up configuration).
+	 */
+	get type(): string | undefined {
+		return undefined; // Overridden in InternalFlexiWidgetController
+	}
 }
 
 export type WidgetStateData = {

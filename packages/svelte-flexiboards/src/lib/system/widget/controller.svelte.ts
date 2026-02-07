@@ -26,8 +26,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#pointerService: PointerService = getPointerService();
 
 	// Grabber and resizer tracking
-	#grabbers: number = $state(0);
-	#resizers: number = $state(0);
+	#grabbers: number = 0;
+	#resizers: number = 0;
+	#disposed: boolean = false;
 
 	// Movement interpolation
 	interpolator: WidgetMoveInterpolator;
@@ -39,6 +40,19 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
+	#lastActionType: WidgetAction['action'] | null = null;
+	#interpolationAnimationHint: WidgetMovementAnimation | null = null;
+
+	#type?: string;
+	#userProvidedId?: string;
+
+	override get type(): string | undefined {
+		return this.#type;
+	}
+
+	override get userProvidedId(): string | undefined {
+		return this.#userProvidedId;
+	}
 
 	/**
 	 * The styling to apply to the widget.
@@ -109,11 +123,52 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	#getResizingWidgetStyle(action: WidgetResizeAction) {
+		const clamp = (value: number, min: number, max: number) =>
+			Math.min(Math.max(value, min), max);
+		const parseGap = (value?: string) => {
+			if (!value || value === 'normal') {
+				return 0;
+			}
+			const numeric = Number.parseFloat(value);
+			return Number.isFinite(numeric) ? numeric : 0;
+		};
+		const toPx = (units: number, unitSize: number, gapSize: number) => {
+			if (!Number.isFinite(units)) {
+				return Infinity;
+			}
+			return units * unitSize + Math.max(0, units - 1) * gapSize;
+		};
+
+		const gridRef = this.internalTarget?.grid?.ref;
+		const gridColumns = this.internalTarget?.columns ?? 0;
+		const gridRows = this.internalTarget?.rows ?? 0;
+		const gridStyle =
+			gridRef && typeof window !== 'undefined' ? window.getComputedStyle(gridRef) : null;
+		const columnGapPx = parseGap(gridStyle?.columnGap);
+		const rowGapPx = parseGap(gridStyle?.rowGap);
+
 		// Calculate size of one grid unit in pixels
-		const unitSizeY = action.capturedHeightPx / action.initialHeightUnits;
+		const fallbackUnitSizeY =
+			(action.capturedHeightPx - Math.max(0, action.initialHeightUnits - 1) * rowGapPx) /
+			action.initialHeightUnits;
 		// Guard against division by zero if initial width is somehow 0
+		const fallbackUnitSizeX =
+			action.initialWidthUnits > 0
+				? (action.capturedWidthPx - Math.max(0, action.initialWidthUnits - 1) * columnGapPx) /
+					action.initialWidthUnits
+				: 1;
+		const liveUnitSizeX =
+			gridRef && gridColumns > 0
+				? (gridRef.clientWidth - Math.max(0, gridColumns - 1) * columnGapPx) / gridColumns
+				: NaN;
+		const liveUnitSizeY =
+			gridRef && gridRows > 0
+				? (gridRef.clientHeight - Math.max(0, gridRows - 1) * rowGapPx) / gridRows
+				: NaN;
 		const unitSizeX =
-			action.initialWidthUnits > 0 ? action.capturedWidthPx / action.initialWidthUnits : 1;
+			Number.isFinite(liveUnitSizeX) && liveUnitSizeX > 0 ? liveUnitSizeX : fallbackUnitSizeX;
+		const unitSizeY =
+			Number.isFinite(liveUnitSizeY) && liveUnitSizeY > 0 ? liveUnitSizeY : fallbackUnitSizeY;
 
 		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
 		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
@@ -126,19 +181,34 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		let height = action.capturedHeightPx;
 		let width = action.capturedWidthPx;
 
+		const minWidthPx = toPx(this.minWidth, unitSizeX, columnGapPx);
+		const minHeightPx = toPx(this.minHeight, unitSizeY, rowGapPx);
+		const gridMaxWidthUnits =
+			this.internalTarget && this.internalTarget.columns > 0
+				? Math.max(1, this.internalTarget.columns - this.x)
+				: Infinity;
+		const gridMaxHeightUnits =
+			this.internalTarget && this.internalTarget.rows > 0
+				? Math.max(1, this.internalTarget.rows - this.y)
+				: Infinity;
+		const configMaxWidthUnits = Number.isFinite(this.maxWidth) ? this.maxWidth : Infinity;
+		const configMaxHeightUnits = Number.isFinite(this.maxHeight) ? this.maxHeight : Infinity;
+		const maxWidthPx = toPx(Math.min(configMaxWidthUnits, gridMaxWidthUnits), unitSizeX, columnGapPx);
+		const maxHeightPx = toPx(Math.min(configMaxHeightUnits, gridMaxHeightUnits), unitSizeY, rowGapPx);
+
 		switch (this.resizability) {
 			case 'horizontal':
 				// NOTE: Use the pre-calculated deltaX here
-				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 			case 'vertical':
 				// NOTE: Use the pre-calculated deltaY here
-				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
 				break;
 			case 'both':
 				// NOTE: Use the pre-calculated deltaX and deltaY here
-				height = Math.max(action.capturedHeightPx + deltaY, unitSizeY);
-				width = Math.max(action.capturedWidthPx + deltaX, unitSizeX);
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 		}
 
@@ -167,6 +237,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		this.provider = params.provider;
+		this.#type = params.type;
+		this.#userProvidedId = params.config.id;
 
 		// Create the widget's interpolator
 		this.interpolator = new WidgetMoveInterpolator(this.provider, this);
@@ -196,6 +268,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
+		this.#lastActionType = 'grab';
+
 		// We probably need to wait for the widget to be portalled before we can acquire its focus.
 		setTimeout(() => {
 			this.ref?.focus();
@@ -215,6 +289,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		if (event.widget !== this) {
 			return;
 		}
+
+		this.#lastActionType = 'resize';
 
 		// We probably need to wait for the widget to be portalled before we can acquire its focus.
 		setTimeout(() => {
@@ -252,7 +328,18 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * @param height The height of the widget.
 	 */
 	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
-		if (this.x == x && this.y == y && this.width == width && this.height == height) {
+		const previousDimensions = {
+			width: this.width,
+			height: this.height
+		};
+
+		const positionUnchanged = this.x == x && this.y == y && this.width == width && this.height == height;
+
+		if (positionUnchanged) {
+			// Still interpolate for drop animations even when position is unchanged
+			if (interpolate && this.backingState.currentAction?.action === 'grab') {
+				this.#interpolateMove(x, y, this.width, this.height, previousDimensions);
+			}
 			return;
 		}
 
@@ -265,7 +352,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.backingState.height = constrainedHeight;
 
 		if (interpolate) {
-			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight);
+			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight, previousDimensions);
 		}
 	}
 
@@ -275,12 +362,29 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 				return 'drop';
 			case 'resize':
 				return 'resize';
-			default:
-				return 'move';
 		}
+
+		// If action state has already been released but this update is part of a drop placement,
+		// preserve the last interaction animation type for interpolation.
+		if (this.backingState.isBeingDropped) {
+			return this.#lastActionType === 'resize' ? 'resize' : 'drop';
+		}
+
+		// Shadow/dropzone widgets can hint the desired interpolation mode even without an action state.
+		if (this.#interpolationAnimationHint) {
+			return this.#interpolationAnimationHint;
+		}
+
+		return 'move';
 	}
 
-	#interpolateMove(x: number, y: number, width: number, height: number) {
+	#interpolateMove(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		previousDimensions?: { width: number; height: number }
+	) {
 		const rect = this.ref?.getBoundingClientRect();
 		if (!rect || !this.interpolator) {
 			return;
@@ -299,7 +403,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 				width: rect.width,
 				height: rect.height
 			},
-			this.#getMovementAnimation()
+			this.#getMovementAnimation(),
+			previousDimensions
 		);
 		this.backingState.isBeingDropped = false;
 	}
@@ -317,6 +422,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Unregisters a grabber from the widget.
 	 */
 	removeGrabber(): number {
+		if (this.#disposed) {
+			return 0;
+		}
 		this.#grabbers--;
 		this.backingState.hasGrabbers = this.#grabbers > 0;
 		return this.#grabbers;
@@ -335,6 +443,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Unregisters a resizer from the widget.
 	 */
 	removeResizer(): number {
+		if (this.#disposed) {
+			return 0;
+		}
 		this.#resizers--;
 		this.backingState.hasResizers = this.#resizers > 0;
 		return this.#resizers;
@@ -401,6 +512,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Cleanup method to be called when the widget is destroyed
 	 */
 	destroy() {
+		// Mark as disposed to ignore any deferred cleanup callbacks
+		this.#disposed = true;
+
 		// Reset counters
 		this.#grabbers = 0;
 		this.#resizers = 0;
@@ -415,5 +529,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	get shouldDrawPlaceholder() {
 		return this.interpolator?.active ?? false;
+	}
+
+	set interpolationAnimationHint(value: WidgetMovementAnimation | null) {
+		this.#interpolationAnimationHint = value;
 	}
 }

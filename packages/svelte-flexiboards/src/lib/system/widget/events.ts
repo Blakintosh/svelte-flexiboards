@@ -49,6 +49,8 @@ export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 
 	return {
 		onpointerdown: (event: PointerEvent) => {
+			// Don't propagate to parent widget, preventing double-grab dispatch
+			event.stopPropagation();
 			// Use the trigger watcher which respects trigger configuration (immediate vs long press)
 			grabWatcher.onstartpointerdown(event);
 		},

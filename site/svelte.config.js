@@ -1,22 +1,23 @@
 import adapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex, escapeSvelte } from "mdsvex";
-import { createHighlighter } from 'shiki';
+import { getSingletonHighlighter } from 'shiki';
 import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
 import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 import examples from 'mdsvexamples';
+
+const shikiPromise = getSingletonHighlighter({
+	themes: ['poimandres'],
+	langs: ['javascript', 'typescript', 'svelte']
+});
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
 	extensions: ['.md'],
 	highlight: {
 		highlighter: async (code, lang = 'text') => {
-			const highlighter = await createHighlighter({
-				themes: ['poimandres'],
-				langs: ['javascript', 'typescript', 'svelte']
-			})
-			await highlighter.loadLanguage('javascript', 'typescript', 'svelte')
+			const highlighter = await shikiPromise;
 			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'poimandres' }))
 			return `{@html \`${html}\` }`
 		}

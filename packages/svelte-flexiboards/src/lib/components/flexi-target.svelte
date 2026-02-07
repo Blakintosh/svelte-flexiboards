@@ -70,21 +70,6 @@
 	controller = target;
 	onfirstcreate?.(target);
 
-	// TODO: probable Svelte bug, causes browser freeze on production builds.
-	// Haven't been able to repro on REPL as yet.
-	// let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
-	// 	return Array.from(target.internalWidgets).toSorted((a, b) => {
-	// 		if (a.y !== b.y) {
-	// 			return a.y - b.y;
-	// 		}
-
-	// 		if (a.x == b.x) {
-	// 			console.warn('[warning] collision detected between widgets ', a.id, ' and ', b.id);
-	// 		}
-	// 		return a.x - b.x;
-	// 	});
-	// });
-
 	// Cleanup target subscriptions when component is destroyed
 	onDestroy(() => {
 		target.destroy();
@@ -108,7 +93,7 @@
 				<RenderedFlexiWidget {widget} />
 			{/each}
 
-			{#if target.dropzoneWidget}
+			{#if target.dropzoneWidget && target.shouldRenderDropzoneWidget}
 				<RenderedFlexiWidget widget={target.dropzoneWidget} />
 			{/if}
 		{/if}
