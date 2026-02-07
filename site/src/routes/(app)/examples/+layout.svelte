@@ -150,7 +150,7 @@
 				</div>
 
 				<Button
-					href={`https://github.com/Blakintosh/svelte-flexiboards/tree/main/site/src/routes/examples/${data.slug}`}
+					href={`https://github.com/Blakintosh/svelte-flexiboards/tree/main/site/src/lib/components/examples/pages`}
 					target="_blank"
 					rel="noopener noreferrer"
 					variant={'secondary'}>View source code</Button
