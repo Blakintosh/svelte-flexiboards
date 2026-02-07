@@ -1,5 +1,4 @@
 import { tick, untrack } from 'svelte';
-import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
 import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
 import type {
 	GrabbedWidgetMouseEvent,
@@ -29,6 +28,8 @@ import type {
 	FlexiTargetState
 } from './types.js';
 import { getPointerService } from '../shared/utils.svelte.js';
+import type { FlexiRegistryEntry, FlexiWidgetLayoutEntry } from '../board/types.js';
+import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: SvelteSet<InternalFlexiWidgetController> = $state(new SvelteSet());
@@ -67,12 +68,20 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		y: 0
 	});
 
+	// Raw (fractional) cell position - used for resize snapping (rounds instead of floors)
+	#rawMouseCellPosition: Position = $state({
+		x: 0,
+		y: 0
+	});
+
 	key: string;
 
 	#grid: FlexiGrid | null = null;
 
 	#preGrabSnapshot: unknown | null = null;
 	#gridSnapshot: unknown | null = null;
+
+	registry?: Record<string, FlexiRegistryEntry> = $derived(this.provider?.registry);
 
 	#targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
 
@@ -199,10 +208,22 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
+
+		let widgetConfig = {};
+
+		if(config.type) {
+			if(!this.registry?.[config.type]) {
+				console.warn('createWidget(): widget with type ', config.type, ' not found in registry, it will be missing settings.');
+			} else {
+				widgetConfig = {...this.registry[config.type]};
+			}
+		}
+
 		const widget = new InternalFlexiWidgetController({
-			config,
+			config: {...widgetConfig, ...config},
 			provider: this.provider,
-			target: this
+			target: this,
+			type: config.type
 		});
 
 		// If the widget can't be added, it's probably a collision.
@@ -248,6 +269,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
+		// Clear the pre-grab snapshot only if the deleted widget is the one being grabbed/resized
+		// (prevents the board's safety net from restoring a widget that was intentionally removed)
+		// Note: We don't clear if a different widget is deleted during a grab operation
+		if (this.actionWidget?.widget === widget) {
+			this.forgetPreGrabSnapshot();
+		}
+
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		this.applyGridPostCompletionOperations();
 
@@ -256,14 +284,38 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	/**
 	 * Imports a layout of widgets into this target, replacing any existing widgets.
+	 * Widgets with types not found in the registry will be skipped with a warning.
 	 * @param layout The layout to import.
 	 */
-	importLayout(layout: FlexiWidgetConfiguration[]) {
+	importLayout(layout: FlexiWidgetLayoutEntry[]) {
+		if (!this.registry) {
+			console.warn('importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.');
+			return;
+		}
+
 		this.widgets.clear();
 		this.grid.clear();
 
-		for (const config of layout) {
-			this.createWidget(config);
+		for (const entry of layout) {
+			if (!entry.type) {
+				console.warn('importLayout(): skipping widget entry with no type:', entry);
+				continue;
+			}
+
+			if (!this.registry[entry.type]) {
+				console.warn(`importLayout(): widget type "${entry.type}" not found in registry, skipping widget.`);
+				continue;
+			}
+
+			this.createWidget({
+				id: entry.id,
+				type: entry.type,
+				x: entry.x,
+				y: entry.y,
+				width: entry.width,
+				height: entry.height,
+				metadata: entry.metadata
+			});
 		}
 	}
 
@@ -271,45 +323,55 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * Exports the current layout of widgets from this target.
 	 * @returns The layout of widgets.
 	 */
-	exportLayout(): FlexiWidgetConfiguration[] {
-		const result: FlexiWidgetConfiguration[] = [];
+	exportLayout(): FlexiWidgetLayoutEntry[] {
+		const result: FlexiWidgetLayoutEntry[] = [];
 
 		// Likely much more information than needed, but we've got it.
-		for (const widget of this.widgets) {
-			result.push({
-				component: widget.component,
-				componentProps: widget.componentProps,
-				snippet: widget.snippet,
+		for (const widget of this.internalWidgets) {
+			if(!widget.type) {
+				console.warn('exportLayout(): widget has no type, it will be skipped.');
+				continue;
+			}
+
+			const entry: FlexiWidgetLayoutEntry = {
+				type: widget.type,
 				width: widget.width,
 				height: widget.height,
 				x: widget.x,
 				y: widget.y,
-				draggable: widget.draggable,
-				resizability: widget.resizability,
-				className: widget.className,
 				metadata: widget.metadata
-			});
+			};
+
+			// Only include id if user provided one
+			if (widget.userProvidedId) {
+				entry.id = widget.userProvidedId;
+			}
+
+			result.push(entry);
 		}
 
 		return result;
 	}
 
-	#createShadow(of: FlexiWidgetController) {
+	#createShadow(of: FlexiWidgetController, action: FlexiTargetActionWidget['action']) {
 		const shadow = new InternalFlexiWidgetController({
 			config: {
 				width: of.width,
 				height: of.height,
 				component: of.component,
 				draggable: of.draggable,
+				draggability: of.draggability,
 				resizability: of.resizability,
 				snippet: of.snippet,
 				className: of.className,
-				componentProps: of.componentProps
+				componentProps: of.componentProps,
+				metadata: of.metadata
 			},
 			provider: this.provider,
 			target: this,
 			isShadow: true
 		});
+		shadow.interpolationAnimationHint = action === 'resize' ? 'resize' : 'move';
 
 		return shadow;
 	}
@@ -344,6 +406,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#preGrabSnapshot = null;
 	}
 
+	hasPreGrabSnapshot(): boolean {
+		return this.#preGrabSnapshot !== null;
+	}
+
 	applyGridPostCompletionOperations(): void {
 		this.grid.applyPostCompletionOperations();
 	}
@@ -369,6 +435,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
 		const result = this.#tryAddWidget(widget, x, y, width, height);
+		if (!result) {
+			widget.isBeingDropped = false;
+		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		if (result) {
@@ -382,6 +451,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {
 		this.#updateMouseCellPosition(event.cellX, event.cellY);
+		this.#rawMouseCellPosition.x = event.rawCellX;
+		this.#rawMouseCellPosition.y = event.rawCellY;
 		this.#updateDropzoneWidget();
 	}
 
@@ -539,10 +610,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
+		grid.setDragSnapshot(this.#gridSnapshot);
 
 		// TODO: Not sure why the $effect.root is needed, but it is.
 		this.#dropzoneWidgetDestroy = $effect.root(() => {
-			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
+			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget, this.actionWidget!.action);
 		});
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
@@ -627,8 +699,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
 		const grid = this.grid;
 
-		let newWidth = Math.max(1, mouseCellPosition.x - widget.x);
-		let newHeight = Math.max(1, mouseCellPosition.y - widget.y);
+		// Use raw (fractional) position with rounding for smoother resize snapping
+		// This makes the widget snap to the next cell when more than halfway through
+		const roundedX = Math.round(this.#rawMouseCellPosition.x);
+		const roundedY = Math.round(this.#rawMouseCellPosition.y);
+
+		let newWidth = Math.max(1, Math.min(widget.maxWidth, Math.max(roundedX - widget.x, widget.minWidth)));
+		let newHeight = Math.max(1, Math.min(widget.maxHeight, Math.max(roundedY - widget.y, widget.minHeight)));
 
 		// If the widget is in a flow layout, then they can't change their flow axis dimensions.
 		// NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.
@@ -655,20 +732,25 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
+		const dropzoneWidget = this.dropzoneWidget;
 		const grid = this.grid;
 
-		grid.removeWidget(this.dropzoneWidget);
+		grid.removeWidget(dropzoneWidget);
 		if (this.#isDropzoneWidgetAdded) {
-			this.widgets.delete(this.dropzoneWidget);
+			this.widgets.delete(dropzoneWidget);
 			this.#isDropzoneWidgetAdded = false;
 		}
 
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
+		grid.clearDragSnapshot();
 		this.#gridSnapshot = null;
 
 		this.dropzoneWidget = null;
 		this.#dropzoneWidgetDestroy?.();
 		this.#dropzoneWidgetDestroy = null;
+
+		// Clean up the shadow widget's event subscriptions and reset counters
+		dropzoneWidget.destroy();
 	}
 
 	// State-related getters and setters
@@ -734,6 +816,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
 		this.#dropzoneWidget.value = value;
+	}
+
+	get shouldRenderDropzoneWidget() {
+		return this.#isDropzoneWidgetAdded && !!this.dropzoneWidget;
 	}
 
 	get widgets() {

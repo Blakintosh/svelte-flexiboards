@@ -5,6 +5,7 @@ import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiTargetConfiguration } from '../target/index.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { WidgetDraggability } from '../types.js';
 
 // TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
 vi.mock('./base.svelte.js', () => ({
@@ -14,19 +15,46 @@ vi.mock('./base.svelte.js', () => ({
 	}
 }));
 
-const createMockWidget = (
-	x = 0,
-	y = 0,
-	width = 1,
-	height = 1,
-	draggable = true
-): InternalFlexiWidgetController => {
+type MockWidgetOptions = {
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+	minWidth?: number;
+	maxWidth?: number;
+	minHeight?: number;
+	maxHeight?: number;
+	draggability?: WidgetDraggability;
+	id?: string;
+};
+
+const createMockWidget = (options: MockWidgetOptions = {}): InternalFlexiWidgetController => {
+	const {
+		x = 0,
+		y = 0,
+		width = 1,
+		height = 1,
+		minWidth = 1,
+		maxWidth = Infinity,
+		minHeight = 1,
+		maxHeight = Infinity,
+		draggability = 'full',
+		id = `widget-${Math.random().toString(36).substring(2, 9)}`
+	} = options;
+
 	const widget = {
 		x,
 		y,
 		width,
 		height,
-		draggable,
+		minWidth,
+		maxWidth,
+		minHeight,
+		maxHeight,
+		draggability,
+		draggable: draggability == 'full',
+		isMovable: draggability == 'full' || draggability == 'movable',
+		id,
 		setBounds: vi.fn().mockImplementation(function (
 			newX: number,
 			newY: number,
@@ -37,8 +65,7 @@ const createMockWidget = (
 			widget.y = newY;
 			widget.width = newWidth;
 			widget.height = newHeight;
-		}),
-		id: `widget-${Math.random().toString(36).substring(2, 9)}`
+		})
 	};
 
 	return widget as unknown as InternalFlexiWidgetController;
@@ -132,7 +159,7 @@ describe('FreeFormFlexiGrid', () => {
 
 			it('should fail when colliding with a non-draggable widget', () => {
 				// Create a non-draggable widget at (1,1)
-				const widget1 = createMockWidget(0, 0, 0, 0, false);
+				const widget1 = createMockWidget({ x: 0, y: 0, width: 0, height: 0, draggability: 'none' });
 				grid.tryPlaceWidget(widget1, 1, 1, 2, 2);
 
 				// State:
@@ -447,7 +474,7 @@ describe('FreeFormFlexiGrid', () => {
 					maxColumns: 3,
 					minRows: 2,
 					maxRows: 4,
-					colllapsibility: 'any'
+					collapsibility: 'any'
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -474,7 +501,7 @@ describe('FreeFormFlexiGrid', () => {
 
 		it('should maintain state during an unsuccessful placement', () => {
 			// a is not draggable
-			const a = createMockWidget(undefined, undefined, undefined, undefined, false);
+			const a = createMockWidget({ draggability: 'none' });
 			const b = createMockWidget();
 			const c = createMockWidget();
 			const d = createMockWidget();
@@ -489,7 +516,7 @@ describe('FreeFormFlexiGrid', () => {
 			grid.tryPlaceWidget(b, 1, 0, 1, 1);
 			grid.tryPlaceWidget(c, 2, 0, 1, 1);
 			grid.tryPlaceWidget(d, 0, 1, 3, 1);
-			grid.tryPlaceWidget(e, 0, 1, 1, 1);
+			grid.tryPlaceWidget(e, 0, 2, 1, 1);
 
 			// Now try to move e to (0, 0)
 			const result = grid.tryPlaceWidget(e, 0, 0, 1, 1);
@@ -516,7 +543,7 @@ describe('FreeFormFlexiGrid', () => {
 					minColumns: 2,
 					minRows: 2,
 					maxRows: 2, // Fixed at 2 rows
-					colllapsibility: 'any'
+					collapsibility: 'any'
 				},
 				rowSizing: 'auto',
 				columnSizing: 'auto'
@@ -566,7 +593,291 @@ describe('FreeFormFlexiGrid', () => {
 			});
 		});
 
-		// TODO: grid collapsibility tests - which needs a fix to how positions
-		// are normalised.
+		// TODO: grid collapsibility tests - which need a way to flag applyPostCompletionOperations
+	});
+
+	describe('Min/max widget dimensions', () => {
+		let grid: FreeFormFlexiGrid;
+		let mockTarget: InternalFlexiTargetController;
+
+		beforeEach(() => {
+			mockTarget = {} as InternalFlexiTargetController;
+			const targetConfig: FlexiTargetConfiguration = {
+				layout: {
+					type: 'free',
+					minColumns: 2,
+					maxColumns: 3,
+					minRows: 3,
+					maxRows: 3,
+					collapsibility: 'none'
+				},
+				rowSizing: 'auto',
+				columnSizing: 'auto'
+			};
+			grid = new FreeFormFlexiGrid(mockTarget, targetConfig);
+		});
+
+		it('should respect a widget max width', () => {
+			const widget = createMockWidget({ maxWidth: 2 });
+
+			// Try to place widget with width 3, should be constrained to maxWidth of 2
+			grid.tryPlaceWidget(widget, 0, 0, 3, 1);
+
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
+		});
+
+		it('should respect a widget min width', () => {
+			const widget = createMockWidget({ minWidth: 2 });
+
+			// Try to place widget with width 1, should be expanded to minWidth of 2
+			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+
+			expect(result).toBe(true);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
+		});
+
+		it('should respect a widget max height', () => {
+			const widget = createMockWidget({ maxHeight: 2 });
+
+			// Try to place widget with height 3, should be constrained to maxHeight of 2
+			grid.tryPlaceWidget(widget, 0, 0, 1, 3);
+
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
+		});
+
+		it('should work with basic widget placement (no constraints)', () => {
+			const widget = createMockWidget();
+
+			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+
+			expect(result).toBe(true);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+		});
+
+		it('should respect both min and max width constraints', () => {
+			const widget = createMockWidget({ minWidth: 2, maxWidth: 2 });
+
+			// Try to place with width 1 (should be 2) and then with width 3 (should be 2)
+			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
+
+			grid.tryPlaceWidget(widget, 0, 0, 3, 1);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
+		});
+
+		it('should respect both min and max height constraints', () => {
+			const widget = createMockWidget({ minHeight: 2, maxHeight: 2 });
+
+			// Try to place with height 1 (should be 2) and then with height 3 (should be 2)
+			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
+
+			grid.tryPlaceWidget(widget, 0, 0, 1, 3);
+			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
+		});
+	});
+
+	describe('Packing', () => {
+		// Helper function to create grids with different packing strategies
+		const createPackingGrid = (
+			packing: 'none' | 'horizontal' | 'vertical',
+			options: {
+				minRows?: number;
+				minColumns?: number;
+				maxRows?: number;
+				maxColumns?: number;
+			} = {}
+		): FreeFormFlexiGrid => {
+			const mockTarget = {} as InternalFlexiTargetController;
+			const targetConfig: FlexiTargetConfiguration = {
+				layout: {
+					type: 'free',
+					minRows: options.minRows ?? 4,
+					minColumns: options.minColumns ?? 4,
+					maxRows: options.maxRows,
+					maxColumns: options.maxColumns,
+					packing
+				},
+				rowSizing: 'auto',
+				columnSizing: 'auto'
+			};
+			return new FreeFormFlexiGrid(mockTarget, targetConfig);
+		};
+
+		describe('no packing', () => {
+			let grid: FreeFormFlexiGrid;
+
+			beforeEach(() => {
+				grid = createPackingGrid('none');
+			});
+
+			it('should not move widgets after placement', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				// Placements:
+				// a--
+				// -b-
+				// ---
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
+
+				// Expected state:
+				// a--
+				// -b-
+				// ---
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 1, 1, 1);
+			});
+		});
+
+		describe('horizontal packing', () => {
+			let grid: FreeFormFlexiGrid;
+
+			beforeEach(() => {
+				grid = createPackingGrid('horizontal');
+			});
+
+			it('should pack widgets toward the left', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 1, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
+
+				// Placement:
+				// -a-
+				// -b-
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// a--
+				// b--
+				// ---
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 1, 1);
+			});
+
+			it('should collapse gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 2, 0, 1, 1);
+
+				// Placement:
+				// a-b
+				// ---
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 1);
+			});
+
+			it('should collapse multi-row gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 2, 0, 1, 2);
+
+				// Placement:
+				// a-b
+				// --b
+				// ---
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+				// -b-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 2);
+			});
+		});
+
+		describe('vertical packing', () => {
+			let grid: FreeFormFlexiGrid;
+
+			beforeEach(() => {
+				grid = createPackingGrid('vertical');
+			});
+
+			it('should pack widgets toward the top', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 2, 1, 1);
+				grid.tryPlaceWidget(widget2, 1, 2, 1, 1);
+
+				// Placement:
+				// ---
+				// ---
+				// ab-
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// ab-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(1, 0, 1, 1);
+			});
+
+			it('should collapse gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 0, 2, 1, 1);
+
+				// Placement:
+				// a--
+				// ---
+				// b--
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// a--
+				// b--
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 1, 1);
+			});
+
+			it('should collapse multi-column gaps', () => {
+				const widget1 = createMockWidget();
+				const widget2 = createMockWidget();
+
+				grid.tryPlaceWidget(widget1, 0, 0, 1, 1);
+				grid.tryPlaceWidget(widget2, 0, 2, 2, 1);
+
+				// Placement:
+				// a--
+				// ---
+				// bb-
+
+				grid.applyPostCompletionOperations();
+
+				// Expected state:
+				// a--
+				// bb-
+
+				expect(widget1.setBounds).toHaveBeenCalledWith(0, 0, 1, 1);
+				expect(widget2.setBounds).toHaveBeenCalledWith(0, 1, 2, 1);
+			});
+		});
 	});
 });

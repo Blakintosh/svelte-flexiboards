@@ -28,8 +28,8 @@
 
 	let config: FlexiWidgetConfiguration = $state({
 		...propsConfig,
-		className: className,
-		snippet: children
+		...(className !== undefined && { className }),
+		...(children !== undefined && { snippet: children })
 	});
 
 	// Callback so that we still fulfil these props.

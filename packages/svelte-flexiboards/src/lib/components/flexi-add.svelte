@@ -64,7 +64,6 @@
 	});
 </script>
 
-<!-- TODO: will probably need a breaking change, because we need a ref to get the start widget position -->
 <button
 	class={derivedClassName}
 	bind:this={adder.ref}

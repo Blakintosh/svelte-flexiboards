@@ -70,21 +70,6 @@
 	controller = target;
 	onfirstcreate?.(target);
 
-	// TODO: probable Svelte bug, causes browser freeze on production builds.
-	// Haven't been able to repro on REPL as yet.
-	// let orderedWidgets: InternalFlexiWidgetController[] = $derived.by(() => {
-	// 	return Array.from(target.internalWidgets).toSorted((a, b) => {
-	// 		if (a.y !== b.y) {
-	// 			return a.y - b.y;
-	// 		}
-
-	// 		if (a.x == b.x) {
-	// 			console.warn('[warning] collision detected between widgets ', a.id, ' and ', b.id);
-	// 		}
-	// 		return a.x - b.x;
-	// 	});
-	// });
-
 	// Cleanup target subscriptions when component is destroyed
 	onDestroy(() => {
 		target.destroy();
@@ -96,15 +81,19 @@
 
 	<!-- Allow user to specify components directly via a registration component. Once that's done, mount them to the actual target list dynamically -->
 	<FlexiGrid class={className}>
-		{#if !target.prepared && children}
-			{@render children()}
-		{:else if target.prepared}
+		{#if children}
+			<!-- Keep the initial widgets 'rendered' so that state inside children snippet doesn't get lost -->
+			<div style={target.prepared ? 'visibility: hidden;' : ''}>
+				{@render children()}
+			</div>
+		{/if}
+		{#if target.prepared}
 			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
 			{#each target.orderedWidgets as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
 			{/each}
 
-			{#if target.dropzoneWidget}
+			{#if target.dropzoneWidget && target.shouldRenderDropzoneWidget}
 				<RenderedFlexiWidget widget={target.dropzoneWidget} />
 			{/if}
 		{/if}

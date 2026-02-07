@@ -7,7 +7,7 @@ import {
 	longPressTriggerConfig,
 	type PointerTriggerCondition
 } from './triggers.svelte.js';
-import type { Position, WidgetAction, WidgetResizability } from '../types.js';
+import type { Position, WidgetAction, WidgetDraggability, WidgetResizability } from '../types.js';
 import type { InternalFlexiAddController } from '../misc/adder.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
@@ -36,8 +36,14 @@ export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondi
 export type FlexiWidgetDefaults = {
 	/**
 	 * Whether the widget is draggable.
+	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
 	 */
 	draggable?: boolean;
+
+	/**
+	 * The draggability of the widget.
+	 */
+	draggability?: WidgetDraggability;
 
 	/**
 	 * The resizability of the widget.
@@ -46,11 +52,13 @@ export type FlexiWidgetDefaults = {
 
 	/**
 	 * The width of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	width?: number;
 
 	/**
 	 * The height of the widget in units.
+	 * @deprecated This property does not work and will be removed in the next version.
 	 */
 	height?: number;
 
@@ -90,11 +98,35 @@ export type FlexiWidgetDefaults = {
 	 * on the widget. E.g. a long press.
 	 */
 	resizeTrigger?: FlexiWidgetTriggerConfiguration;
+
+	/**
+	 * The minimum width of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minWidth?: number;
+
+	/**
+	 * The minimum height of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minHeight?: number;
+
+	/**
+	 * The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxWidth?: number;
+
+	/**
+	 * The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxHeight?: number;
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+	id?: string;
+	type?: string;
 	x?: number;
 	y?: number;
+	width?: number;
+	height?: number;
 	metadata?: Record<string, any>;
 };
 
@@ -107,11 +139,6 @@ export type FlexiWidgetState = {
 };
 
 export type FlexiWidgetDerivedConfiguration = {
-	/**
-	 * The name of the widget, which can be used to identify it in exported layouts.
-	 */
-	name?: string;
-
 	/**
 	 * The component that is rendered by this item. This is optional if a snippet is provided.
 	 */
@@ -133,9 +160,15 @@ export type FlexiWidgetDerivedConfiguration = {
 	resizability: WidgetResizability;
 
 	/**
-	 * Whether the item is draggable.
+	 * Whether the widget is draggable.
+	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
 	 */
 	draggable: boolean;
+	
+	/**
+	 * The draggability of the widget.
+	 */
+	draggability: WidgetDraggability;
 
 	/**
 	 * The class name that is applied to this widget.
@@ -163,12 +196,33 @@ export type FlexiWidgetDerivedConfiguration = {
 	 * The transition configuration for this widget.
 	 */
 	transition: FlexiWidgetTransitionConfiguration;
+
+	/**
+	 * The minimum width of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minWidth: number;
+
+	/**
+	 * The minimum height of the widget in units. Defaults to 1, cannot be less than 1.
+	 */
+	minHeight: number;
+
+	/**
+	 * The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxWidth: number;
+
+	/**
+	 * The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.
+	 */
+	maxHeight: number;
 };
 
 export type FlexiWidgetConstructorParams = {
 	config: FlexiWidgetConfiguration;
 	provider: InternalFlexiBoardController;
 	target?: InternalFlexiTargetController;
+	type?: string;
 	isShadow?: boolean;
 };
 

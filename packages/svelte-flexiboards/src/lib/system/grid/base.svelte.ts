@@ -43,6 +43,17 @@ export abstract class FlexiGrid {
 	 */
 	applyPostCompletionOperations(): void {}
 
+	/**
+	 * Stores a drag snapshot so that mapRawCellToFinalCell can map cursor positions
+	 * through the snapshot's widget positions instead of the live (displaced) grid.
+	 */
+	setDragSnapshot(snapshot: unknown): void {}
+
+	/**
+	 * Clears the stored drag snapshot.
+	 */
+	clearDragSnapshot(): void {}
+
 	_target: InternalFlexiTargetController;
 	_targetConfig: FlexiTargetConfiguration;
 
@@ -104,7 +115,9 @@ export abstract class FlexiGrid {
 
 		this._target.onmousegridcellmove({
 			cellX: this.mouseCellPosition.x,
-			cellY: this.mouseCellPosition.y
+			cellY: this.mouseCellPosition.y,
+			rawCellX: rawCell?.column ?? 0,
+			rawCellY: rawCell?.row ?? 0
 		});
 	}
 

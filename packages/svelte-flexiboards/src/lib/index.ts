@@ -8,6 +8,10 @@ import FlexiGrab from './components/flexi-grab.svelte';
 import FlexiResize from './components/flexi-resize.svelte';
 import FlexiAdd from './components/flexi-add.svelte';
 import FlexiDelete from './components/flexi-delete.svelte';
+import ResponsiveFlexiBoard, {
+	type ResponsiveFlexiBoardProps,
+	type BreakpointSnippetParams
+} from './components/responsive-flexi-board.svelte';
 
 // System
 import type { FlexiBoardConfiguration, FlexiBoardController } from './system/board/index.js';
@@ -35,12 +39,23 @@ import {
 	longPressTriggerConfig,
 	type PointerTriggerCondition
 } from './system/widget/triggers.svelte.js';
+import type { FlexiLayout, FlexiRegistryEntry, FlexiWidgetLayoutEntry, FlexiLoadLayoutFn, FlexiLayoutChangeFn } from './system/board/types.js';
+import type {
+	ResponsiveFlexiBoardController,
+	ResponsiveFlexiBoardConfiguration,
+	ResponsiveFlexiLayout
+} from './system/responsive/index.js';
 export * from './system/types.js';
 
 export {
 	FlexiBoard,
 	type FlexiBoardConfiguration,
 	type FlexiBoardProps,
+	type FlexiLayout,
+	type FlexiWidgetLayoutEntry,
+	type FlexiRegistryEntry,
+	type FlexiLoadLayoutFn,
+	type FlexiLayoutChangeFn,
 	FlexiTarget,
 	type FlexiTargetConfiguration,
 	type FlexiTargetProps,
@@ -66,5 +81,12 @@ export {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	getFlexiwidgetCtx,
-	simpleTransitionConfig
+	simpleTransitionConfig,
+	// Responsive FlexiBoard
+	ResponsiveFlexiBoard,
+	type ResponsiveFlexiBoardProps,
+	type ResponsiveFlexiBoardController,
+	type ResponsiveFlexiBoardConfiguration,
+	type ResponsiveFlexiLayout,
+	type BreakpointSnippetParams
 };

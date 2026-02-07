@@ -59,11 +59,6 @@ export function flexidelete() {
 	const deleter = new FlexiDeleteController(provider);
 
 	return {
-		deleter,
-		// TODO: remove in v0.4
-		/** @deprecated */
-		onpointerenter: () => {},
-		/** @deprecated */
-		onpointerleave: () => {}
+		deleter
 	};
 }

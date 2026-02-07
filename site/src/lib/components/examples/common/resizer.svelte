@@ -13,6 +13,6 @@
 	let { class: className, size = 20 }: ResizerProps = $props();
 </script>
 
-<FlexiResize class={cn('shrink-0 py-1', className)}>
+<FlexiResize class={cn('shrink-0 rounded-md p-1.5 bg-background/50 backdrop-blur-sm transition-colors hover:bg-muted active:bg-muted', className)}>
 	<MoveDiagonal2 {size} />
 </FlexiResize>

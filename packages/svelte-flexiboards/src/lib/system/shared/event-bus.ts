@@ -1,7 +1,9 @@
 import { getContext, setContext } from 'svelte';
 import type {
 	AdderWidgetReadyEvent,
+	BoardLayoutChangeEvent,
 	PointerMovedEvent,
+	ResponsiveLayoutImportEvent,
 	TargetEvent,
 	WidgetDroppedEvent,
 	WidgetEvent,
@@ -23,6 +25,10 @@ export interface EventMap {
 	'widget:leavetarget': WidgetEvent;
 	'adder:widgetready': AdderWidgetReadyEvent;
 	'pointer:moved': PointerMovedEvent;
+	// Fired when a board's layout changes (widget moved, resized, added, or removed)
+	'board:layoutchange': BoardLayoutChangeEvent;
+	// Fired when a responsive controller imports a new layout
+	'responsive:layoutimport': ResponsiveLayoutImportEvent;
 }
 
 // Event listener function type

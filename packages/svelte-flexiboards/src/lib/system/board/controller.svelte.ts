@@ -11,9 +11,9 @@ import type { FlexiTargetController } from '../target/base.svelte.js';
 import { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
-	FlexiSavedLayout,
 	HoveredTargetEvent,
 	ProxiedValue,
+	ResponsiveLayoutImportEvent,
 	TargetEvent,
 	WidgetAction,
 	WidgetEvent,
@@ -25,10 +25,16 @@ import type {
 } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.svelte.js';
 import type { FlexiBoardController } from './base.svelte.js';
-import type { FlexiBoardConfiguration } from './types.js';
+import type { FlexiBoardConfiguration, FlexiRegistryEntry, FlexiLayout, FlexiWidgetLayoutEntry } from './types.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import { getInternalResponsiveFlexiboardCtx, hasInternalResponsiveFlexiboardCtx } from '../responsive/index.js';
+import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.svelte.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction: WidgetAction | null = $state(null);
+	#activeInterpolations: number = $state(0);
+	#scrollbarCompensation: number = $state(0);
+	#hasScrollbarCompensation: boolean = false;
 
 	#targets: Map<string, InternalFlexiTargetController> = new Map();
 	hoveredTarget: InternalFlexiTargetController | null = null;
@@ -43,10 +49,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#rawProps?: FlexiBoardProps = $state(undefined);
 	config?: FlexiBoardConfiguration = $derived(this.#rawProps?.config);
 
+	registry?: Record<string, FlexiRegistryEntry> = $derived(this.#rawProps?.config?.registry);
+
 	#nextTargetIndex = 0;
 
-	#storedLoadLayout: FlexiSavedLayout | null = null;
 	#ready: boolean = false;
+	#storedLoadLayout?: FlexiLayout;
 
 	portal: FlexiPortalController | null = null;
 
@@ -55,10 +63,33 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
+	#layoutChangeTimeout: ReturnType<typeof setTimeout> | null = null;
+	#layoutChangeDebounceMs = 150;
+
+	readonly breakpoint?: string;
+
+	/**
+	 * Reference to the parent responsive controller, if this board is within a ResponsiveFlexiBoard.
+	 */
+	#responsiveController: InternalResponsiveFlexiBoardController | null = null;
+
 	constructor(props: FlexiBoardProps) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps = props;
 		this.#eventBus = getFlexiEventBus();
+
+		// Check if we're inside a responsive context
+		if (hasInternalResponsiveFlexiboardCtx()) {
+			this.#responsiveController = getInternalResponsiveFlexiboardCtx();
+			// Infer breakpoint from responsive controller's current state
+			this.breakpoint = this.#responsiveController.currentBreakpoint;
+		} else {
+			// Not in responsive context - use config breakpoint if provided (with warning)
+			this.breakpoint = this.#rawProps?.config?.breakpoint;
+			if (this.breakpoint) {
+				console.warn('Breakpoint is set for a non-responsive board. Ignoring breakpoint.');
+			}
+		}
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
@@ -67,16 +98,74 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#eventBus.subscribe('widget:cancel', this.handleWidgetCancel.bind(this)),
 
 			this.#eventBus.subscribe('target:pointerenter', this.onPointerEnterTarget.bind(this)),
-			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this))
+			this.#eventBus.subscribe('target:pointerleave', this.onPointerLeaveTarget.bind(this)),
+
+			// Layout change events
+			this.#eventBus.subscribe('widget:dropped', this.#onLayoutChange.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.#onLayoutChange.bind(this)),
+
+			// Responsive layout import events
+			this.#eventBus.subscribe('responsive:layoutimport', this.#onResponsiveLayoutImport.bind(this))
 		);
 	}
 
-	style: string = $derived.by(() => {
-		if (!this.#currentWidgetAction) {
-			return 'position: relative;';
+	#onLayoutChange(event: { board: InternalFlexiBoardController }) {
+		// Not our event
+		if (event.board !== this) {
+			return;
 		}
 
-		return `position: relative; ${this.#getStyleForCurrentWidgetAction()}`;
+		// Debounce the callback
+		if (this.#layoutChangeTimeout) {
+			clearTimeout(this.#layoutChangeTimeout);
+		}
+
+		this.#layoutChangeTimeout = setTimeout(() => {
+			this.#layoutChangeTimeout = null;
+
+			const layout = this.#exportLayoutInternal();
+
+			// Emit event for responsive controller (and any other listeners)
+			this.#eventBus.dispatch('board:layoutchange', {
+				board: this,
+				layout,
+				breakpoint: this.breakpoint
+			});
+
+			// Also call local callback if provided
+			this.config?.onLayoutChange?.(layout);
+		}, this.#layoutChangeDebounceMs);
+	}
+
+	#onResponsiveLayoutImport(event: ResponsiveLayoutImportEvent) {
+		// Not our responsive controller
+		if (event.responsiveController !== this.#responsiveController) {
+			return;
+		}
+
+		// Get the layout for our breakpoint and import it
+		if (this.breakpoint) {
+			const layout = this.#responsiveController?.getLayoutForBreakpoint(this.breakpoint);
+			if (layout) {
+				this.#importLayoutInternal(layout);
+			}
+		}
+	}
+
+	style: string = $derived.by(() => {
+		const needsOverflowLock = this.#activeInterpolations > 0 || this.#currentWidgetAction;
+		const scrollbarPadding = this.#scrollbarCompensation > 0
+			? ` padding-right: ${this.#scrollbarCompensation}px;`
+			: '';
+		const overflow = needsOverflowLock
+			? ` overflow: hidden;${scrollbarPadding}`
+			: '';
+
+		if (!this.#currentWidgetAction) {
+			return `position: relative;${overflow}`;
+		}
+
+		return `position: relative;${overflow} ${this.#getStyleForCurrentWidgetAction()}`;
 	});
 
 	#getStyleForCurrentWidgetAction() {
@@ -90,6 +179,39 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			case 'resize':
 				return `cursor: nwse-resize;`;
 		}
+	}
+
+	notifyInterpolationStarted() {
+		this.#captureScrollbarWidthIfNeeded();
+		this.#activeInterpolations++;
+	}
+
+	notifyInterpolationEnded() {
+		this.#activeInterpolations = Math.max(0, this.#activeInterpolations - 1);
+		this.#scheduleScrollbarCompensationRelease();
+	}
+
+	#captureScrollbarWidthIfNeeded() {
+		if (this.#hasScrollbarCompensation) {
+			return;
+		}
+		if (this.ref) {
+			const scrollbarWidth = this.ref.offsetWidth - this.ref.clientWidth;
+			if (scrollbarWidth > 0) {
+				const existingPadding = parseFloat(getComputedStyle(this.ref).paddingRight) || 0;
+				this.#scrollbarCompensation = existingPadding + scrollbarWidth;
+			}
+			this.#hasScrollbarCompensation = true;
+		}
+	}
+
+	#scheduleScrollbarCompensationRelease() {
+		queueMicrotask(() => {
+			if (this.#activeInterpolations === 0 && !this.#currentWidgetAction) {
+				this.#scrollbarCompensation = 0;
+				this.#hasScrollbarCompensation = false;
+			}
+		});
 	}
 
 	get ref() {
@@ -168,6 +290,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
+		this.#captureScrollbarWidthIfNeeded();
+
 		if (event.clientX !== undefined && event.clientY !== undefined) {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
@@ -191,6 +315,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.#currentWidgetAction || event.board !== this) {
 			return;
 		}
+
+		this.#captureScrollbarWidthIfNeeded();
 
 		this.#currentWidgetAction = {
 			action: 'resize',
@@ -239,6 +365,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#unlockViewport();
 
 		const currentAction = this.#currentWidgetAction!;
+		// Capture source target before any handlers might change widget.internalTarget
+		const sourceTarget = currentAction.widget.internalTarget;
 
 		switch (currentAction.action) {
 			case 'grab':
@@ -248,11 +376,40 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				this.#handleResizingWidgetRelease(currentAction);
 				break;
 		}
+
+		// Safety net: After all synchronous handlers complete, check if the source target
+		// still has a pre-grab snapshot (meaning the drop didn't happen). If so, restore it.
+		// This handles the case where the widget was released outside of all targets.
+		queueMicrotask(() => {
+			if (sourceTarget?.hasPreGrabSnapshot()) {
+				sourceTarget.restorePreGrabSnapshot();
+				sourceTarget.applyGridPostCompletionOperations();
+			}
+		});
 	}
 
 	handleWidgetCancel(event: WidgetEvent) {
+		// Not our event.
+		if (event.board !== this) {
+			return;
+		}
+
 		this.#unlockViewport();
+
+		// Capture source target before releasing the action
+		const sourceTarget = this.#currentWidgetAction?.widget.internalTarget;
+
 		this.#releaseCurrentWidgetAction();
+
+		// Safety net: After all synchronous handlers complete, check if the source target
+		// still has a pre-grab snapshot. If so, restore it.
+		// This handles the case where the widget was cancelled while outside of all targets.
+		queueMicrotask(() => {
+			if (sourceTarget?.hasPreGrabSnapshot()) {
+				sourceTarget.restorePreGrabSnapshot();
+				sourceTarget.applyGridPostCompletionOperations();
+			}
+		});
 	}
 
 	attachAnnouncer(announcer: FlexiAnnouncerController) {
@@ -268,35 +425,109 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	oninitialloadcomplete() {
 		this.#ready = true;
 
-		// if(this.#storedLoadLayout) {
-		// 	this.importLayout(this.#storedLoadLayout);
-		// }
+		// Check for stored layout from early import attempt
+		if (this.#storedLoadLayout) {
+			this.#importLayoutInternal(this.#storedLoadLayout);
+			this.#storedLoadLayout = undefined;
+			return;
+		}
+
+		// If in responsive context, load from responsive controller
+		if (this.#responsiveController && this.breakpoint) {
+			const layout = this.#responsiveController.getLayoutForBreakpoint(this.breakpoint);
+			if (layout) {
+				this.#importLayoutInternal(layout);
+				return;
+			}
+			// Fall through to loadLayout callback if no stored layout for this breakpoint
+		}
+
+		// Check for loadLayout in config (for non-responsive boards OR first-time breakpoint)
+		const loadLayoutFn = this.config?.loadLayout;
+		if (loadLayoutFn) {
+			const layout = loadLayoutFn();
+			if (layout) {
+				this.#importLayoutInternal(this.#normalizeLayout(layout));
+			}
+		}
 	}
 
-	// NEXT: Add import/export layout.
-	// importLayout(layout: FlexiSavedLayout) {
-	// 	// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
-	// 	if(!this.#ready) {
-	// 		this.#storedLoadLayout = layout;
-	// 		return;
-	// 	}
+	/**
+	 * Imports a layout into this board.
+	 *
+	 * **Note**: If this board is under a ResponsiveFlexiBoard, prefer using
+	 * `responsiveBoard.importLayout()` to import layouts for all breakpoints.
+	 */
+	importLayout(layout: FlexiLayout) {
+		if (this.#responsiveController) {
+			console.warn(
+				'importLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
+				'Use responsiveBoard.importLayout() instead to import layouts for all breakpoints.'
+			);
+		}
+		this.#importLayoutInternal(layout);
+	}
 
-	// 	// Good to go - import the widgets into their respective targets.
-	// 	this.#targets.forEach(target => {
-	// 		target.importLayout(layout[target.key]);
-	// 	});
-	// }
+	/**
+	 * Internal implementation of importLayout - no warning, used by responsive controller.
+	 */
+	#importLayoutInternal(layout: FlexiLayout) {
+		// The board isn't ready to import widgets yet, so we'll store the layout and import it later.
+		if (!this.#ready) {
+			this.#storedLoadLayout = layout;
+			return;
+		}
 
-	// exportLayout(): FlexiSavedLayout {
-	// 	const result: FlexiSavedLayout = {};
+		// Good to go - import the widgets into their respective targets.
+		this.#targets.forEach(target => {
+			const targetLayout = layout[target.key];
+			if (targetLayout) {
+				target.importLayout(targetLayout);
+			}
+		});
+	}
 
-	// 	// Grab the current layout of each target.
-	// 	this.#targets.forEach(target => {
-	// 		result[target.key] = target.exportLayout();
-	// 	});
+	#normalizeLayout(layout: FlexiLayout | FlexiWidgetLayoutEntry[]): FlexiLayout {
+		// If it's an array, assume single target (first one)
+		if (Array.isArray(layout)) {
+			const firstTargetKey = this.#targets.keys().next().value;
+			if (firstTargetKey) {
+				return { [firstTargetKey]: layout };
+			}
+			return {};
+		}
+		return layout;
+	}
 
-	// 	return result;
-	// }
+	/**
+	 * Exports the current layout from this board.
+	 *
+	 * **Note**: If this board is under a ResponsiveFlexiBoard, prefer using
+	 * `responsiveBoard.exportLayout()` to export layouts for all breakpoints.
+	 */
+	exportLayout(): FlexiLayout {
+		if (this.#responsiveController) {
+			console.warn(
+				'exportLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
+				'Use responsiveBoard.exportLayout() instead to export layouts for all breakpoints.'
+			);
+		}
+		return this.#exportLayoutInternal();
+	}
+
+	/**
+	 * Internal implementation of exportLayout - no warning, used internally.
+	 */
+	#exportLayoutInternal(): FlexiLayout {
+		const result: FlexiLayout = {};
+
+		// Grab the current layout of each target.
+		this.#targets.forEach(target => {
+			result[target.key] = target.exportLayout();
+		});
+
+		return result;
+	}
 
 	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
 		// If a deleter is hovered, then we'll delete the widget.
@@ -326,6 +557,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.announce(`You have released the widget.`);
 		this.#currentWidgetAction = null;
+		this.#scheduleScrollbarCompensationRelease();
 	}
 
 	/**
@@ -335,9 +567,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * @param to The target to move the widget to.
 	 */
 	moveWidget(
-		widget: FlexiWidgetController,
-		from: FlexiTargetController | undefined,
-		to: FlexiTargetController
+		widget: InternalFlexiWidgetController,
+		from: InternalFlexiTargetController | undefined,
+		to: InternalFlexiTargetController
 	): boolean {
 		const dropSuccessful = to.tryDropWidget(widget);
 
@@ -366,6 +598,13 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	/**
+	 * Returns the parent responsive controller if this board is within a ResponsiveFlexiBoard.
+	 */
+	get responsiveController() {
+		return this.#responsiveController;
+	}
+
+	/**
 	 * Cleanup method to be called when the board is destroyed
 	 */
 	destroy() {
@@ -376,5 +615,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
+
+		// Clean up any pending layout change timeout
+		if (this.#layoutChangeTimeout) {
+			clearTimeout(this.#layoutChangeTimeout);
+			this.#layoutChangeTimeout = null;
+		}
 	}
 }

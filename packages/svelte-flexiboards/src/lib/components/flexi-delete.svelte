@@ -22,7 +22,7 @@
 
 	export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 		class?: FlexiDeleteClasses;
-		children?: Snippet<[{ deleter: FlexiDeleteController; props: FlexiDeleteChildrenProps }]>;
+		children?: Snippet<[{ deleter: FlexiDeleteController }]>;
 	};
 </script>
 
@@ -34,8 +34,7 @@
 		onfirstcreate
 	}: FlexiDeleteProps = $props();
 
-	// TODO: remove pointer events in v0.4
-	const { deleter, onpointerenter, onpointerleave } = flexidelete();
+	const { deleter } = flexidelete();
 	controller = deleter;
 	onfirstcreate?.(deleter);
 
@@ -63,5 +62,5 @@
 	<span style={assistiveTextStyle} id={assistiveTextId}>
 		Drag a widget here and press Enter to delete it.
 	</span>
-	{@render children?.({ deleter, props: { onpointerenter, onpointerleave } })}
+	{@render children?.({ deleter })}
 </div>
