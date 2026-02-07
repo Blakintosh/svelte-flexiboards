@@ -40,6 +40,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
+	#lastActionType: WidgetAction['action'] | null = null;
+	#interpolationAnimationHint: WidgetMovementAnimation | null = null;
 
 	#type?: string;
 	#userProvidedId?: string;
@@ -210,6 +212,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
+		this.#lastActionType = 'grab';
+
 		// We probably need to wait for the widget to be portalled before we can acquire its focus.
 		setTimeout(() => {
 			this.ref?.focus();
@@ -229,6 +233,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		if (event.widget !== this) {
 			return;
 		}
+
+		this.#lastActionType = 'resize';
 
 		// We probably need to wait for the widget to be portalled before we can acquire its focus.
 		setTimeout(() => {
@@ -266,12 +272,17 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * @param height The height of the widget.
 	 */
 	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
+		const previousDimensions = {
+			width: this.width,
+			height: this.height
+		};
+
 		const positionUnchanged = this.x == x && this.y == y && this.width == width && this.height == height;
 
 		if (positionUnchanged) {
 			// Still interpolate for drop animations even when position is unchanged
 			if (interpolate && this.backingState.currentAction?.action === 'grab') {
-				this.#interpolateMove(x, y, this.width, this.height);
+				this.#interpolateMove(x, y, this.width, this.height, previousDimensions);
 			}
 			return;
 		}
@@ -285,7 +296,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.backingState.height = constrainedHeight;
 
 		if (interpolate) {
-			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight);
+			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight, previousDimensions);
 		}
 	}
 
@@ -295,12 +306,29 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 				return 'drop';
 			case 'resize':
 				return 'resize';
-			default:
-				return 'move';
 		}
+
+		// If action state has already been released but this update is part of a drop placement,
+		// preserve the last interaction animation type for interpolation.
+		if (this.backingState.isBeingDropped) {
+			return this.#lastActionType === 'resize' ? 'resize' : 'drop';
+		}
+
+		// Shadow/dropzone widgets can hint the desired interpolation mode even without an action state.
+		if (this.#interpolationAnimationHint) {
+			return this.#interpolationAnimationHint;
+		}
+
+		return 'move';
 	}
 
-	#interpolateMove(x: number, y: number, width: number, height: number) {
+	#interpolateMove(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		previousDimensions?: { width: number; height: number }
+	) {
 		const rect = this.ref?.getBoundingClientRect();
 		if (!rect || !this.interpolator) {
 			return;
@@ -319,7 +347,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 				width: rect.width,
 				height: rect.height
 			},
-			this.#getMovementAnimation()
+			this.#getMovementAnimation(),
+			previousDimensions
 		);
 		this.backingState.isBeingDropped = false;
 	}
@@ -444,5 +473,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 */
 	get shouldDrawPlaceholder() {
 		return this.interpolator?.active ?? false;
+	}
+
+	set interpolationAnimationHint(value: WidgetMovementAnimation | null) {
+		this.#interpolationAnimationHint = value;
 	}
 }

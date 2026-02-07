@@ -1,8 +1,8 @@
-import { onMount } from 'svelte';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import type { Position } from '../types.js';
 import type { FlexiWidgetController } from './base.svelte.js';
 import type { FlexiWidgetTransitionConfiguration } from './types.js';
+import { getPlaceholderMinDimensionLocks, type InterpolationSize } from './interpolation-utils.js';
 
 export class WidgetMoveInterpolator {
 	active: boolean = $state(false);
@@ -22,7 +22,9 @@ export class WidgetMoveInterpolator {
 		width: 1,
 		height: 1,
 		heightPx: 0,
-		widthPx: 0
+		widthPx: 0,
+		lockMinWidth: true,
+		lockMinHeight: true
 	});
 
 	#interpolatedWidgetPosition: InterpolationPosition = $state({
@@ -48,7 +50,13 @@ export class WidgetMoveInterpolator {
 	});
 
 	placeholderStyle: string = $derived.by(() => {
-		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height}; min-height: ${this.#placeholderPosition.heightPx}px; min-width: ${this.#placeholderPosition.widthPx}px; visibility: hidden;`;
+		const minHeight = this.#placeholderPosition.lockMinHeight
+			? ` min-height: ${this.#placeholderPosition.heightPx}px;`
+			: '';
+		const minWidth = this.#placeholderPosition.lockMinWidth
+			? ` min-width: ${this.#placeholderPosition.widthPx}px;`
+			: '';
+		return `grid-column: ${this.#placeholderPosition.x + 1} / span ${this.#placeholderPosition.width}; grid-row: ${this.#placeholderPosition.y + 1} / span ${this.#placeholderPosition.height};${minHeight}${minWidth} visibility: hidden;`;
 	});
 
 	constructor(provider: InternalFlexiBoardController, widget: FlexiWidgetController) {
@@ -69,7 +77,8 @@ export class WidgetMoveInterpolator {
 	interpolateMove(
 		newDimensions: Dimensions,
 		oldPosition: InterpolationPosition,
-		animation: WidgetMovementAnimation = 'move'
+		animation: WidgetMovementAnimation = 'move',
+		previousDimensions?: InterpolationSize
 	) {
 		const containerRect = this.#containerRef?.getBoundingClientRect();
 		if (!containerRect) {
@@ -81,6 +90,15 @@ export class WidgetMoveInterpolator {
 		if (!transitionConfig || !transitionConfig.duration || !transitionConfig.easing) {
 			return;
 		}
+
+		const minDimensionLocks = getPlaceholderMinDimensionLocks(
+			animation,
+			{
+				width: newDimensions.width,
+				height: newDimensions.height
+			},
+			previousDimensions
+		);
 
 		const isInterruption = this.active;
 		clearTimeout(this.#timeout);
@@ -96,7 +114,9 @@ export class WidgetMoveInterpolator {
 				width: newDimensions.width,
 				height: newDimensions.height,
 				heightPx: this.#interpolatedWidgetPosition.height,
-				widthPx: this.#interpolatedWidgetPosition.width
+				widthPx: this.#interpolatedWidgetPosition.width,
+				lockMinWidth: minDimensionLocks.lockMinWidth,
+				lockMinHeight: minDimensionLocks.lockMinHeight
 			};
 		} else {
 			// INITIAL MOVE PATH - set up starting position, then animate
@@ -111,7 +131,9 @@ export class WidgetMoveInterpolator {
 				width: newDimensions.width,
 				height: newDimensions.height,
 				heightPx: oldPosition.height,
-				widthPx: oldPosition.width
+				widthPx: oldPosition.width,
+				lockMinWidth: minDimensionLocks.lockMinWidth,
+				lockMinHeight: minDimensionLocks.lockMinHeight
 			};
 
 			this.#interpolatedWidgetPosition.top =
@@ -210,4 +232,7 @@ type PlaceholderPosition = {
 	// The width and height of the placeholder in pixels.
 	heightPx: number;
 	widthPx: number;
+	// Whether min dimensions should be applied to the placeholder.
+	lockMinWidth: boolean;
+	lockMinHeight: boolean;
 };

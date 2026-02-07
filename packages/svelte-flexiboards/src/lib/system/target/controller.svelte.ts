@@ -353,7 +353,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return result;
 	}
 
-	#createShadow(of: FlexiWidgetController) {
+	#createShadow(of: FlexiWidgetController, action: FlexiTargetActionWidget['action']) {
 		const shadow = new InternalFlexiWidgetController({
 			config: {
 				width: of.width,
@@ -371,6 +371,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			target: this,
 			isShadow: true
 		});
+		shadow.interpolationAnimationHint = action === 'resize' ? 'resize' : 'move';
 
 		return shadow;
 	}
@@ -434,6 +435,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Try to formally place the widget in the grid, which will also serve as a final check that
 		// the drop is possible.
 		const result = this.#tryAddWidget(widget, x, y, width, height);
+		if (!result) {
+			widget.isBeingDropped = false;
+		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
 		if (result) {
@@ -610,7 +614,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// TODO: Not sure why the $effect.root is needed, but it is.
 		this.#dropzoneWidgetDestroy = $effect.root(() => {
-			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget);
+			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget, this.actionWidget!.action);
 		});
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
