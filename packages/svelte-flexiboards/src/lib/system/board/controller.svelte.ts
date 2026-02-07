@@ -154,8 +154,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	style: string = $derived.by(() => {
 		const needsOverflowLock = this.#activeInterpolations > 0 || this.#currentWidgetAction;
+		const scrollbarPadding = this.#scrollbarCompensation > 0
+			? ` padding-right: ${this.#scrollbarCompensation}px;`
+			: '';
 		const overflow = needsOverflowLock
-			? ` overflow: hidden; padding-right: ${this.#scrollbarCompensation}px;`
+			? ` overflow: hidden;${scrollbarPadding}`
 			: '';
 
 		if (!this.#currentWidgetAction) {
@@ -193,7 +196,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 		if (this.ref) {
-			this.#scrollbarCompensation = this.ref.offsetWidth - this.ref.clientWidth;
+			const scrollbarWidth = this.ref.offsetWidth - this.ref.clientWidth;
+			if (scrollbarWidth > 0) {
+				const existingPadding = parseFloat(getComputedStyle(this.ref).paddingRight) || 0;
+				this.#scrollbarCompensation = existingPadding + scrollbarWidth;
+			}
 			this.#hasScrollbarCompensation = true;
 		}
 	}
