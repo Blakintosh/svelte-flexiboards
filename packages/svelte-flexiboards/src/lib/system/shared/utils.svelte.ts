@@ -76,7 +76,12 @@ export class PointerService {
 
 		const { x, y } = this.#position;
 
-		return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+		// Use scrollWidth/scrollHeight to account for content that overflows the element
+		// (e.g. grid columns that extend beyond a scrollable parent with overflow: hidden).
+		const width = Math.max(rect.width, element.scrollWidth);
+		const height = Math.max(rect.height, element.scrollHeight);
+
+		return x >= rect.left && x <= rect.left + width && y >= rect.top && y <= rect.top + height;
 	}
 
 	get keyboardControlsActive() {
@@ -758,9 +763,9 @@ export class GridDimensionTracker {
 			const overflowY = style.getPropertyValue('overflow-y');
 			const overflowX = style.getPropertyValue('overflow-x');
 			const isScrollable =
-				((overflowY === 'auto' || overflowY === 'scroll') &&
+				((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') &&
 					parent.scrollHeight > parent.clientHeight) ||
-				((overflowX === 'auto' || overflowX === 'scroll') &&
+				((overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') &&
 					parent.scrollWidth > parent.clientWidth);
 
 			if (isScrollable) {
@@ -779,17 +784,26 @@ export class GridDimensionTracker {
 		this.#pointerPosition.x = clientX;
 		this.#pointerPosition.y = clientY;
 
-		let xCell = this.#findCell(
+		// DEBUG: trace scroll offset issue
+		const gridRef = this.#grid.ref;
+		const freshRect = gridRef.getBoundingClientRect();
+		// Walk up to find the scrollable parent (board element)
+		let scrollParent = gridRef.parentElement;
+		while (scrollParent && scrollParent.scrollLeft === 0 && scrollParent !== document.documentElement) {
+			scrollParent = scrollParent.parentElement;
+		}
+
+		let xCell = findCell(
 			clientX,
 			this.#dimensions.left,
-			this.#dimensions.width,
+			contentSize(this.#dimensions.columns, this.#dimensions.columnGap),
 			this.#dimensions.columnGap,
 			this.#dimensions.columns
 		);
-		let yCell = this.#findCell(
+		let yCell = findCell(
 			clientY,
 			this.#dimensions.top,
-			this.#dimensions.height,
+			contentSize(this.#dimensions.rows, this.#dimensions.rowGap),
 			this.#dimensions.rowGap,
 			this.#dimensions.rows
 		);
@@ -800,33 +814,40 @@ export class GridDimensionTracker {
 		};
 	}
 
-	#findCell(
-		pointerLocation: number,
-		start: number,
-		size: number,
-		gap: number,
-		axisCoordinates: number[]
-	) {
-		// If outside the axis, then return the ends.
-		if (pointerLocation < start) {
-			return 0;
-		}
-		if (pointerLocation >= start + size) {
-			return axisCoordinates.length;
-		}
+}
 
-		let subtotal = start - gap / 2;
-		for (let i = 0; i < axisCoordinates.length; i++) {
-			const base = subtotal;
-			subtotal += axisCoordinates[i] + gap;
+export function contentSize(axisCoordinates: number[], gap: number) {
+	const totalCells = axisCoordinates.reduce((sum, size) => sum + size, 0);
+	const totalGaps = Math.max(0, axisCoordinates.length - 1) * gap;
+	return totalCells + totalGaps;
+}
 
-			const proportionAlong = (pointerLocation - base) / (subtotal - base);
-			if (pointerLocation < subtotal) {
-				return i + proportionAlong;
-			}
-		}
+export function findCell(
+	pointerLocation: number,
+	start: number,
+	size: number,
+	gap: number,
+	axisCoordinates: number[]
+) {
+	// If outside the axis, then return the ends.
+	if (pointerLocation < start) {
+		return 0;
+	}
+	if (pointerLocation >= start + size) {
 		return axisCoordinates.length;
 	}
+
+	let subtotal = start - gap / 2;
+	for (let i = 0; i < axisCoordinates.length; i++) {
+		const base = subtotal;
+		subtotal += axisCoordinates[i] + gap;
+
+		const proportionAlong = (pointerLocation - base) / (subtotal - base);
+		if (pointerLocation < subtotal) {
+			return i + proportionAlong;
+		}
+	}
+	return axisCoordinates.length;
 }
 
 let uniqueIdIndex = 0;

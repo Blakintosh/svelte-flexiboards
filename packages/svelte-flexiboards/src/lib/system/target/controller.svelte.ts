@@ -324,33 +324,36 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * @returns The layout of widgets.
 	 */
 	exportLayout(): FlexiWidgetLayoutEntry[] {
-		const result: FlexiWidgetLayoutEntry[] = [];
+		// Prevent reactive subscriptions onto exportLayout directly - they should use onLayoutChange.
+		return untrack(() => {
+			const result: FlexiWidgetLayoutEntry[] = [];
 
-		// Likely much more information than needed, but we've got it.
-		for (const widget of this.internalWidgets) {
-			if(!widget.type) {
-				console.warn('exportLayout(): widget has no type, it will be skipped.');
-				continue;
+			// Likely much more information than needed, but we've got it.
+			for (const widget of this.internalWidgets) {
+				if (!widget.type) {
+					console.warn('exportLayout(): widget has no type, it will be skipped.');
+					continue;
+				}
+
+				const entry: FlexiWidgetLayoutEntry = {
+					type: widget.type,
+					width: widget.width,
+					height: widget.height,
+					x: widget.x,
+					y: widget.y,
+					metadata: widget.metadata
+				};
+
+				// Only include id if user provided one
+				if (widget.userProvidedId) {
+					entry.id = widget.userProvidedId;
+				}
+
+				result.push(entry);
 			}
 
-			const entry: FlexiWidgetLayoutEntry = {
-				type: widget.type,
-				width: widget.width,
-				height: widget.height,
-				x: widget.x,
-				y: widget.y,
-				metadata: widget.metadata
-			};
-
-			// Only include id if user provided one
-			if (widget.userProvidedId) {
-				entry.id = widget.userProvidedId;
-			}
-
-			result.push(entry);
-		}
-
-		return result;
+			return result;
+		});
 	}
 
 	#createShadow(of: FlexiWidgetController, action: FlexiTargetActionWidget['action']) {
