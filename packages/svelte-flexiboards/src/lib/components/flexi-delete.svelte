@@ -8,18 +8,6 @@
 	} from '$lib/system/misc/deleter.svelte.js';
 	import { assistiveTextStyle, generateUniqueId } from '$lib/system/shared/utils.svelte.js';
 
-	/** @deprecated FlexiDelete's children props are now redundant and will be removed in v0.4. */
-	type FlexiDeleteChildrenProps = {
-		/**
-		 * @deprecated This has been replaced with internal pointer management and is redundant. These events will be removed in v0.4.
-		 */
-		onpointerenter: (event: PointerEvent) => void;
-		/**
-		 * @deprecated This has been replaced with internal pointer management and is redundant. These events will be removed in v0.4.
-		 */
-		onpointerleave: (event: PointerEvent) => void;
-	};
-
 	export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 		class?: FlexiDeleteClasses;
 		children?: Snippet<[{ deleter: FlexiDeleteController }]>;
