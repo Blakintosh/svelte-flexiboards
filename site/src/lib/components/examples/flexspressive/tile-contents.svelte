@@ -31,8 +31,6 @@
         }
     })
 
-    $inspect(editMode);
-
     function onclick() {
         if(!editMode) {
             on = !on;

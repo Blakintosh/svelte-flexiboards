@@ -115,6 +115,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
+		// No point exporting if nobody is listening
+		if (!this.config?.onLayoutChange && !this.#responsiveController) {
+			return;
+		}
+
 		// Debounce the callback
 		if (this.#layoutChangeTimeout) {
 			clearTimeout(this.#layoutChangeTimeout);
