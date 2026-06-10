@@ -1,34 +1,34 @@
 import { getContext, setContext } from 'svelte';
 import type {
-	AdderWidgetReadyEvent,
-	BoardLayoutChangeEvent,
-	PointerMovedEvent,
-	ResponsiveLayoutImportEvent,
-	TargetEvent,
-	WidgetDroppedEvent,
-	WidgetEvent,
-	WidgetGrabbedEvent,
-	WidgetResizingEvent
-} from '../types.js';
+	InternalAdderWidgetReadyEvent,
+	InternalBoardLayoutChangeEvent,
+	InternalResponsiveLayoutImportEvent,
+	InternalTargetEvent,
+	InternalWidgetDroppedEvent,
+	InternalWidgetEvent,
+	InternalWidgetGrabbedEvent,
+	InternalWidgetResizingEvent
+} from '../internal-types.js';
+import type { PointerMovedEvent } from '../types.js';
 
 export interface EventMap {
-	'widget:grabbed': WidgetGrabbedEvent;
-	'widget:resizing': WidgetResizingEvent;
-	'widget:release': WidgetEvent;
-	'widget:cancel': WidgetEvent;
+	'widget:grabbed': InternalWidgetGrabbedEvent;
+	'widget:resizing': InternalWidgetResizingEvent;
+	'widget:release': InternalWidgetEvent;
+	'widget:cancel': InternalWidgetEvent;
 	// Called when a release has been confirmed to be possible.
-	'widget:dropped': WidgetDroppedEvent;
-	'widget:delete': WidgetEvent;
-	'target:pointerenter': TargetEvent;
-	'target:pointerleave': TargetEvent;
-	'widget:entertarget': WidgetEvent;
-	'widget:leavetarget': WidgetEvent;
-	'adder:widgetready': AdderWidgetReadyEvent;
+	'widget:dropped': InternalWidgetDroppedEvent;
+	'widget:delete': InternalWidgetEvent;
+	'target:pointerenter': InternalTargetEvent;
+	'target:pointerleave': InternalTargetEvent;
+	'widget:entertarget': InternalWidgetEvent;
+	'widget:leavetarget': InternalWidgetEvent;
+	'adder:widgetready': InternalAdderWidgetReadyEvent;
 	'pointer:moved': PointerMovedEvent;
 	// Fired when a board's layout changes (widget moved, resized, added, or removed)
-	'board:layoutchange': BoardLayoutChangeEvent;
+	'board:layoutchange': InternalBoardLayoutChangeEvent;
 	// Fired when a responsive controller imports a new layout
-	'responsive:layoutimport': ResponsiveLayoutImportEvent;
+	'responsive:layoutimport': InternalResponsiveLayoutImportEvent;
 }
 
 // Event listener function type

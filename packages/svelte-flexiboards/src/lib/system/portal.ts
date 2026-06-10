@@ -1,6 +1,6 @@
 import { getInternalFlexiboardCtx } from './board/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from './shared/event-bus.js';
-import type { WidgetGrabbedEvent, WidgetEvent, WidgetResizingEvent } from './types.js';
+import type { InternalWidgetEvent, InternalWidgetGrabbedEvent } from './internal-types.js';
 import type { FlexiWidgetController } from './widget/index.js';
 
 /**
@@ -49,12 +49,12 @@ export class FlexiPortalController {
 		);
 	}
 
-	onWidgetGrabbed(event: WidgetGrabbedEvent) {
+	onWidgetGrabbed(event: InternalWidgetGrabbedEvent) {
 		this.moveWidgetToPortal(event.widget);
 		this.#hasPortalledWidget = true;
 	}
 
-	onWidgetRelease(event: WidgetEvent) {
+	onWidgetRelease(event: InternalWidgetEvent) {
 		if (!this.#hasPortalledWidget) {
 			return;
 		}

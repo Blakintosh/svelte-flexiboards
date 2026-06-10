@@ -4,7 +4,7 @@ import type { ResponsiveFlexiBoardController } from './base.svelte.js';
 import type { ResponsiveFlexiBoardConfiguration, ResponsiveFlexiLayout } from './types.js';
 import type { ResponsiveFlexiBoardProps } from '$lib/components/responsive-flexi-board.svelte';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
-import type { BoardLayoutChangeEvent } from '../types.js';
+import type { InternalBoardLayoutChangeEvent } from '../internal-types.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
 const DEFAULT_BREAKPOINT = 'default';
@@ -113,7 +113,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	/**
 	 * Handles layout change events from child boards.
 	 */
-	#onBoardLayoutChange(event: BoardLayoutChangeEvent) {
+	#onBoardLayoutChange(event: InternalBoardLayoutChangeEvent) {
 		// Only handle events from boards under our control
 		if (event.board.responsiveController !== this) {
 			return;

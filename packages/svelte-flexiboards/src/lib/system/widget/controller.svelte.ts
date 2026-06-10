@@ -1,24 +1,23 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import {
 	generateUniqueId,
-	getElementMidpoint,
 	getPointerService,
 	type PointerService
 } from '../shared/utils.svelte.js';
 import type {
 	WidgetAction,
-	WidgetActionEvent,
-	WidgetDroppedEvent,
-	WidgetEvent,
 	WidgetGrabAction,
-	WidgetGrabbedEvent,
-	WidgetResizeAction,
-	WidgetResizingEvent
+	WidgetResizeAction
 } from '../types.js';
+import type {
+	InternalWidgetDroppedEvent,
+	InternalWidgetEvent,
+	InternalWidgetGrabbedEvent,
+	InternalWidgetResizingEvent
+} from '../internal-types.js';
 import { FlexiWidgetController } from './base.svelte.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.svelte.js';
-import { WidgetPointerEventWatcher } from './triggers.svelte.js';
 import type { FlexiWidgetConstructorParams } from './types.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 
@@ -255,7 +254,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		);
 	}
 
-	onDropped(event: WidgetDroppedEvent) {
+	onDropped(event: InternalWidgetDroppedEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -263,7 +262,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.internalTarget = event.newTarget;
 	}
 
-	onGrabbed(event: WidgetGrabbedEvent) {
+	onGrabbed(event: InternalWidgetGrabbedEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -285,7 +284,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		};
 	}
 
-	onResizing(event: WidgetResizingEvent) {
+	onResizing(event: InternalWidgetResizingEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -311,7 +310,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		};
 	}
 
-	onReleased(event: WidgetEvent) {
+	onReleased(event: InternalWidgetEvent) {
 		if (event.widget !== this) {
 			return;
 		}
@@ -497,7 +496,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		// this.currentAction = null;
 	}
 
-	onDelete(event: WidgetEvent) {
+	onDelete(event: InternalWidgetEvent) {
 		if (event.widget != this) {
 			return;
 		}
