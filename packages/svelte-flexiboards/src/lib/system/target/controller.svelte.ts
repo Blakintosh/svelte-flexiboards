@@ -1,17 +1,16 @@
-import { tick, untrack } from 'svelte';
+import { untrack } from 'svelte';
 import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
 import type {
-	GrabbedWidgetMouseEvent,
+	InternalTargetEvent,
+	InternalWidgetDroppedEvent,
+	InternalWidgetEvent,
+	InternalWidgetGrabbedEvent,
+	InternalWidgetResizingEvent
+} from '../internal-types.js';
+import type {
 	MouseGridCellMoveEvent,
 	Position,
-	ProxiedValue,
-	TargetEvent,
-	WidgetDroppedEvent,
-	WidgetEvent,
-	WidgetGrabbedEvent,
-	WidgetGrabbedParams,
-	WidgetResizingEvent,
-	WidgetStartResizeParams
+	ProxiedValue
 } from '../types.js';
 import { FlexiWidgetController } from '../widget/base.svelte.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
@@ -241,7 +240,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#initialWidgetRegistrations.push({ config, onCreated });
 	}
 
-	onWidgetDelete(event: WidgetEvent) {
+	onWidgetDelete(event: InternalWidgetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -380,7 +379,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	// Events
-	onPointerEnterTarget(event: TargetEvent) {
+	onPointerEnterTarget(event: InternalTargetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -388,7 +387,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.hovered = true;
 	}
 
-	onPointerLeaveTarget(event: TargetEvent) {
+	onPointerLeaveTarget(event: InternalTargetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -459,7 +458,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#updateDropzoneWidget();
 	}
 
-	onWidgetGrabbed(event: WidgetGrabbedEvent) {
+	onWidgetGrabbed(event: InternalWidgetGrabbedEvent) {
 		// Nothing to do if it's not under this target.
 		if (event.target != this) {
 			return;
@@ -481,7 +480,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#createDropzoneWidget();
 	}
 
-	onWidgetResizing(event: WidgetResizingEvent) {
+	onWidgetResizing(event: InternalWidgetResizingEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -502,7 +501,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#createDropzoneWidget();
 	}
 
-	onWidgetCancel(event: WidgetEvent) {
+	onWidgetCancel(event: InternalWidgetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -514,7 +513,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.applyGridPostCompletionOperations();
 	}
 
-	onWidgetRelease(event: WidgetEvent) {
+	onWidgetRelease(event: InternalWidgetEvent) {
 		if (event.board != this.provider || !this.actionWidget) {
 			return;
 		}
@@ -538,7 +537,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		});
 	}
 
-	onWidgetDropped(event: WidgetDroppedEvent) {
+	onWidgetDropped(event: InternalWidgetDroppedEvent) {
 		// No-op if the widget was dropped back onto the same target
 		if (event.newTarget == event.oldTarget) {
 			return;
@@ -557,7 +556,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 	}
 
-	onWidgetEnterTarget(event: WidgetEvent) {
+	onWidgetEnterTarget(event: InternalWidgetEvent) {
 		if (event.target != this) {
 			return;
 		}
@@ -570,7 +569,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#createDropzoneWidget();
 	}
 
-	onWidgetLeaveTarget(event: WidgetEvent) {
+	onWidgetLeaveTarget(event: InternalWidgetEvent) {
 		if (event.target != this) {
 			return;
 		}

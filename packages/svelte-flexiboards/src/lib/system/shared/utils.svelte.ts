@@ -1,10 +1,5 @@
-import type {
-	Position,
-	ProxiedValue,
-	WidgetActionEvent,
-	WidgetGrabbedEvent,
-	WidgetEvent
-} from '../types.js';
+import type { InternalWidgetEvent } from '../internal-types.js';
+import type { Position, ProxiedValue } from '../types.js';
 import type { FlexiGrid } from '../grid/base.svelte.js';
 import type { FlexiTargetConfiguration } from '../target/types.js';
 import { onMount, untrack } from 'svelte';
@@ -166,11 +161,11 @@ export class AutoScrollService {
 		);
 	}
 
-	startAutoScroll(event: WidgetEvent) {
+	startAutoScroll(event: InternalWidgetEvent) {
 		this.shouldAutoScroll = true;
 	}
 
-	stopAutoScroll(event: WidgetEvent) {
+	stopAutoScroll(event: InternalWidgetEvent) {
 		this.shouldAutoScroll = false;
 	}
 

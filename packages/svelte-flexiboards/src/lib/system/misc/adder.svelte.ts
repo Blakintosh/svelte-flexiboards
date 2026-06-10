@@ -1,9 +1,9 @@
 import type { ClassValue } from 'svelte/elements';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
-import type { AdderWidgetReadyEvent, WidgetEvent, WidgetGrabbedParams } from '../types.js';
+import type { InternalAdderWidgetReadyEvent } from '../internal-types.js';
 import { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
-import type { FlexiWidgetConfiguration, FlexiWidgetController } from '../widget/index.js';
+import type { FlexiWidgetConfiguration } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getContext, hasContext, onMount, setContext } from 'svelte';
 import { isGrabPointerEvent } from '../shared/utils.svelte.js';
@@ -105,7 +105,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 		// When the widget mounts, it'll automatically trigger the drag in event.
 	}
 
-	onWidgetReady(event: AdderWidgetReadyEvent) {
+	onWidgetReady(event: InternalAdderWidgetReadyEvent) {
 		if (event.adder !== this || !this.toCreateParams) {
 			return;
 		}

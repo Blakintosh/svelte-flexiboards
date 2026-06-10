@@ -7,23 +7,19 @@ import {
 	getPointerService,
 	type PointerService
 } from '../shared/utils.svelte.js';
-import type { FlexiTargetController } from '../target/base.svelte.js';
 import { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
-	HoveredTargetEvent,
-	ProxiedValue,
-	ResponsiveLayoutImportEvent,
-	TargetEvent,
-	WidgetAction,
-	WidgetEvent,
-	WidgetGrabAction,
-	WidgetGrabbedEvent,
-	WidgetResizeAction,
-	WidgetResizingEvent,
-	WidgetStartResizeEvent
-} from '../types.js';
-import type { FlexiWidgetController } from '../widget/base.svelte.js';
+	InternalResponsiveLayoutImportEvent,
+	InternalTargetEvent,
+	InternalWidgetAction,
+	InternalWidgetEvent,
+	InternalWidgetGrabAction,
+	InternalWidgetGrabbedEvent,
+	InternalWidgetResizeAction,
+	InternalWidgetResizingEvent
+} from '../internal-types.js';
+import type { ProxiedValue } from '../types.js';
 import type { FlexiBoardController } from './base.svelte.js';
 import type { FlexiBoardConfiguration, FlexiRegistryEntry, FlexiLayout, FlexiWidgetLayoutEntry } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
@@ -31,7 +27,7 @@ import { getInternalResponsiveFlexiboardCtx, hasInternalResponsiveFlexiboardCtx 
 import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.svelte.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
-	#currentWidgetAction: WidgetAction | null = $state(null);
+	#currentWidgetAction: InternalWidgetAction | null = $state(null);
 	#activeInterpolations: number = $state(0);
 	#scrollbarCompensation: number = $state(0);
 	#hasScrollbarCompensation: boolean = false;
@@ -142,7 +138,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}, this.#layoutChangeDebounceMs);
 	}
 
-	#onResponsiveLayoutImport(event: ResponsiveLayoutImportEvent) {
+	#onResponsiveLayoutImport(event: InternalResponsiveLayoutImportEvent) {
 		// Not our responsive controller
 		if (event.responsiveController !== this.#responsiveController) {
 			return;
@@ -241,7 +237,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return target;
 	}
 
-	onPointerEnterTarget(event: TargetEvent) {
+	onPointerEnterTarget(event: InternalTargetEvent) {
 		if (event.board != this) {
 			return;
 		}
@@ -259,7 +255,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 	}
 
-	onPointerLeaveTarget(event: TargetEvent) {
+	onPointerLeaveTarget(event: InternalTargetEvent) {
 		if (event.board != this) {
 			return;
 		}
@@ -290,7 +286,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#hoveredOverDeleter = false;
 	}
 
-	onWidgetGrabbed(event: WidgetGrabbedEvent) {
+	onWidgetGrabbed(event: InternalWidgetGrabbedEvent) {
 		if (this.#currentWidgetAction || event.board !== this) {
 			return;
 		}
@@ -301,7 +297,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
 
-		const action: WidgetGrabAction = {
+		const action: InternalWidgetGrabAction = {
 			action: 'grab',
 			widget: event.widget,
 			offsetX: event.xOffset,
@@ -316,7 +312,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
 	}
 
-	onWidgetResizing(event: WidgetResizingEvent) {
+	onWidgetResizing(event: InternalWidgetResizingEvent) {
 		if (this.#currentWidgetAction || event.board !== this) {
 			return;
 		}
@@ -361,7 +357,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		document.documentElement.style.userSelect = this.#originalUserSelect ?? 'auto';
 	}
 
-	handleWidgetRelease(event: WidgetEvent) {
+	handleWidgetRelease(event: InternalWidgetEvent) {
 		// Not our event.
 		if (event.board !== this) {
 			return;
@@ -393,7 +389,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		});
 	}
 
-	handleWidgetCancel(event: WidgetEvent) {
+	handleWidgetCancel(event: InternalWidgetEvent) {
 		// Not our event.
 		if (event.board !== this) {
 			return;
@@ -534,7 +530,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return result;
 	}
 
-	#handleGrabbedWidgetRelease(action: WidgetGrabAction) {
+	#handleGrabbedWidgetRelease(action: InternalWidgetGrabAction) {
 		// If a deleter is hovered, then we'll delete the widget.
 		if (this.#hoveredOverDeleter) {
 			this.#eventBus.dispatch('widget:delete', {
@@ -549,7 +545,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#releaseCurrentWidgetAction();
 	}
 
-	#handleResizingWidgetRelease(action: WidgetResizeAction) {
+	#handleResizingWidgetRelease(action: InternalWidgetResizeAction) {
 		this.#releaseCurrentWidgetAction();
 	}
 

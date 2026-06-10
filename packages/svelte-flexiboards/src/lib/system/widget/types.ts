@@ -7,8 +7,7 @@ import {
 	longPressTriggerConfig,
 	type PointerTriggerCondition
 } from './triggers.svelte.js';
-import type { Position, WidgetAction, WidgetDraggability, WidgetResizability } from '../types.js';
-import type { InternalFlexiAddController } from '../misc/adder.svelte.js';
+import type { WidgetAction, WidgetDraggability, WidgetResizability } from '../types.js';
 import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
 import type { InternalFlexiBoardController } from '../board/controller.svelte.js';
 

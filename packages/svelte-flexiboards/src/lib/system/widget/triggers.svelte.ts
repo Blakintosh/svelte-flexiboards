@@ -1,6 +1,5 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
-import type { WidgetActionEvent } from '../types.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
 import { isGrabPointerEvent } from '../shared/utils.svelte.js';
@@ -51,6 +50,10 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
+		if (!this.#canStartWidgetEvent()) {
+			return;
+		}
+
 		const pointerType = event.pointerType;
 
 		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
@@ -64,6 +67,14 @@ export class WidgetPointerEventWatcher {
 	}
 
 	#eventTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	#canStartWidgetEvent() {
+		if (this.#type == 'resize') {
+			return this.#widget.resizable;
+		}
+
+		return this.#widget.isGrabbable;
+	}
 
 	#handleLongPress(event: PointerEvent, trigger: PointerLongPressTriggerCondition) {
 		if (this.#eventTimeout) {
