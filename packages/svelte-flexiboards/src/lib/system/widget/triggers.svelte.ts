@@ -50,6 +50,10 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
+		if (!this.#canStartWidgetEvent()) {
+			return;
+		}
+
 		const pointerType = event.pointerType;
 
 		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
@@ -63,6 +67,14 @@ export class WidgetPointerEventWatcher {
 	}
 
 	#eventTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	#canStartWidgetEvent() {
+		if (this.#type == 'resize') {
+			return this.#widget.resizable;
+		}
+
+		return this.#widget.isGrabbable;
+	}
 
 	#handleLongPress(event: PointerEvent, trigger: PointerLongPressTriggerCondition) {
 		if (this.#eventTimeout) {
