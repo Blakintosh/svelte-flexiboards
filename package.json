@@ -2,6 +2,7 @@
 	"name": "root",
 	"licence": "MIT",
 	"version": "0.0.1",
+	"private": true,
 	"scripts": {
 		"build": "pnpm -r build",
 		"build:packages": "pnpm -F \"./packages/**\" --parallel build",
