@@ -2,7 +2,7 @@ import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
-import { isGrabPointerEvent, isInteractiveElement } from '../shared/utils.svelte.js';
+import { closestInteractiveElement, isGrabPointerEvent } from '../shared/utils.svelte.js';
 
 interface PointerDownTriggerCondition {
 	type: 'immediate';
@@ -61,10 +61,14 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
-		// Pointer-downs on interactive content inside the widget (inputs, buttons, links, ...)
-		// belong to that content — starting a grab here (and calling preventDefault) would make
-		// it impossible to focus or activate.
-		if (isInteractiveElement(event.target)) {
+		// Pointer-downs on pointer-down-sensitive content inside the widget (inputs, textareas,
+		// selects, contenteditable) belong to that content — starting a grab here (and calling
+		// preventDefault) would make it impossible to focus or place the caret. Buttons/links are
+		// not guarded: their activation comes from the click event, which fires regardless. The
+		// element this handler is attached to is exempt (event.currentTarget), so handles always
+		// work even if a user styles them as one of the guarded elements.
+		const interactiveElement = closestInteractiveElement(event.target);
+		if (interactiveElement && interactiveElement !== event.currentTarget) {
 			return;
 		}
 

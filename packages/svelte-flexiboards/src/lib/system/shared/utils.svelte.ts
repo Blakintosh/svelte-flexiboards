@@ -880,17 +880,21 @@ export function isGrabPointerEvent(event: PointerEvent) {
 	return event.button === 0;
 }
 
+// Only elements whose pointer interaction depends on the pointer-down itself (focus, caret
+// placement, dragging a slider, opening a dropdown). Buttons and links are deliberately NOT
+// included: their activation happens via the click event, which still fires when a grab starts
+// on pointer-down — so widgets whose content is a button stay both clickable and draggable.
 const interactiveElementsSelector =
-	'input, textarea, select, button, a, audio, video, [contenteditable]:not([contenteditable="false"])';
+	'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
 
 /**
- * Whether the given event target is (or is inside) an interactive element that should receive
- * pointer interactions itself, rather than them starting a widget grab/resize.
+ * Returns the closest pointer-down-sensitive interactive element (input, textarea, select,
+ * contenteditable) at or above the given event target — content that must receive the
+ * pointer-down itself, rather than it starting a widget grab/resize.
  */
-export function isInteractiveElement(target: EventTarget | null): boolean {
-	return (
-		typeof Element !== 'undefined' &&
-		target instanceof Element &&
-		!!target.closest(interactiveElementsSelector)
-	);
+export function closestInteractiveElement(target: EventTarget | null): Element | null {
+	if (typeof Element === 'undefined' || !(target instanceof Element)) {
+		return null;
+	}
+	return target.closest(interactiveElementsSelector);
 }
