@@ -13,6 +13,8 @@ export type InternalWidgetGrabAction = {
 	offsetY: number;
 	capturedHeightPx: number;
 	capturedWidthPx: number;
+	// The pointer that initiated the action; undefined for keyboard-initiated actions.
+	pointerId?: number;
 };
 
 export type InternalWidgetResizeAction = {
@@ -26,6 +28,8 @@ export type InternalWidgetResizeAction = {
 	capturedWidthPx: number;
 	initialHeightUnits: number;
 	initialWidthUnits: number;
+	// The pointer that initiated the action; undefined for keyboard-initiated actions.
+	pointerId?: number;
 };
 
 export type InternalWidgetAction = InternalWidgetGrabAction | InternalWidgetResizeAction;
@@ -69,6 +73,8 @@ export type InternalWidgetGrabbedEvent = InternalWidgetEvent & {
 	yOffset: number;
 	capturedHeightPx: number;
 	capturedWidthPx: number;
+	// The pointer that initiated the grab; undefined for keyboard-initiated grabs.
+	pointerId?: number;
 };
 
 export type InternalWidgetResizingEvent = InternalWidgetEvent & {
@@ -81,6 +87,8 @@ export type InternalWidgetResizingEvent = InternalWidgetEvent & {
 	top: number;
 	capturedHeightPx: number;
 	capturedWidthPx: number;
+	// The pointer that initiated the resize; undefined for keyboard-initiated resizes.
+	pointerId?: number;
 };
 
 export type InternalWidgetDroppedEvent = {

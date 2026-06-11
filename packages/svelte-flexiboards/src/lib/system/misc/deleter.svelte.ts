@@ -52,6 +52,15 @@ export class FlexiDeleteController {
 	get isHovered() {
 		return this.#inside;
 	}
+
+	/**
+	 * Cleanup method to be called when the deleter is destroyed. The event bus outlives this
+	 * controller, so failing to unsubscribe would leak a hot pointer:moved listener.
+	 */
+	destroy() {
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
 }
 
 export function flexidelete() {

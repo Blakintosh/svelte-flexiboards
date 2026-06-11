@@ -130,6 +130,17 @@ export abstract class FlexiGrid {
 	}
 
 	/**
+	 * Releases the grid's event bus subscriptions. Must be called when the grid is replaced or
+	 * its target is destroyed, otherwise the grid keeps receiving pointer events forever.
+	 */
+	destroy() {
+		for (const unsubscribe of this.#unsubscribers) {
+			unsubscribe();
+		}
+		this.#unsubscribers = [];
+	}
+
+	/**
 	 * Clears the grid layout.
 	 */
 	abstract clear(): void;

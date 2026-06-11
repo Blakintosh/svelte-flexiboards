@@ -191,6 +191,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			console.warn(
 				'A grid already exists but is being replaced. If this is due to a hot reload, this is no cause for alarm.'
 			);
+			// Release the old grid's event bus subscriptions, otherwise it keeps reacting to
+			// pointer events forever.
+			this.#grid.destroy();
 		}
 
 		const layout = this.config.layout;
@@ -292,6 +295,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
+		// Destroy the replaced widgets so their event bus subscriptions are released — the bus
+		// is long-lived, so anything left subscribed leaks for the lifetime of the page.
+		this.internalWidgets.forEach((widget) => widget.destroy());
 		this.widgets.clear();
 		this.grid.clear();
 
@@ -316,6 +322,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				metadata: entry.metadata
 			});
 		}
+
+		// Rebuild the ordered list even if nothing was imported, so stale widgets don't keep rendering.
+		this.#updateOrderedWidgets();
 	}
 
 	/**
@@ -840,16 +849,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 */
 	destroy() {
 		// Clean up all widgets
-		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
-		this.widgets.forEach((widget) => {
-			if ('destroy' in widget) {
-				(widget as InternalFlexiWidgetController).destroy();
-			}
-		});
+		this.internalWidgets.forEach((widget) => widget.destroy());
 		this.widgets.clear();
 
-		// Clean up event subscriptions
+		// Clean up the grid's event subscriptions, then our own.
+		this.#grid?.destroy();
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
+
+		// Deregister from the board so a remounted target with the same key gets a fresh,
+		// live controller instead of this destroyed one.
+		this.provider.removeTarget(this.key);
 	}
 }

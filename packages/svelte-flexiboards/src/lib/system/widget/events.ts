@@ -93,6 +93,13 @@ function dispatchKeyDownGrab(
 		return;
 	}
 
+	// Only grab when Enter was pressed on the element this handler is attached to (the widget
+	// or its grabber) — an Enter on an interactive child (e.g. a button inside the widget's
+	// content) must activate that child, not start a grab.
+	if (event.target !== event.currentTarget) {
+		return;
+	}
+
 	// If an action is already active, do not intercept Enter.
 	// Let it bubble to the board so it can confirm (release) the action.
 	if (board.currentWidgetAction) {
@@ -159,6 +166,11 @@ function dispatchKeyDownResize(
 	event: KeyboardEvent
 ) {
 	if (!widget.resizable || !widget.ref || event.key !== 'Enter') {
+		return;
+	}
+
+	// Only resize when Enter was pressed on the resizer element itself, not a child of it.
+	if (event.target !== event.currentTarget) {
 		return;
 	}
 

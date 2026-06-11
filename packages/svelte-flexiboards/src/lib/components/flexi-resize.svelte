@@ -17,7 +17,11 @@
 </script>
 
 <button
-	style={'user-select: none; touch-action: none;' +
+	style={`user-select: none; touch-action: ${
+		(widget.resizeTrigger['touch'] ?? widget.resizeTrigger['default'])?.type === 'immediate'
+			? 'none'
+			: 'manipulation'
+	};` +
 		(widget.resizability != 'none' && widget.mounted
 			? 'cursor: nwse-resize'
 			: 'cursor: not-allowed')}

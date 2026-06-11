@@ -237,6 +237,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return target;
 	}
 
+	/**
+	 * Deregisters a target from this board. Called when the target is destroyed, so that a
+	 * subsequent mount under the same key creates a fresh controller rather than reusing a
+	 * destroyed one.
+	 */
+	removeTarget(key: string) {
+		this.#targets.delete(key);
+	}
+
 	onPointerEnterTarget(event: InternalTargetEvent) {
 		if (event.board != this) {
 			return;
@@ -303,7 +312,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			offsetX: event.xOffset,
 			offsetY: event.yOffset,
 			capturedHeightPx: event.capturedHeightPx,
-			capturedWidthPx: event.capturedWidthPx
+			capturedWidthPx: event.capturedWidthPx,
+			pointerId: event.pointerId
 		};
 		this.#currentWidgetAction = action;
 
@@ -329,7 +339,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			capturedHeightPx: event.capturedHeightPx,
 			capturedWidthPx: event.capturedWidthPx,
 			initialHeightUnits: event.widget.height,
-			initialWidthUnits: event.widget.width
+			initialWidthUnits: event.widget.width,
+			pointerId: event.pointerId
 		};
 
 		this.#lockViewport();
@@ -609,6 +620,22 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * Cleanup method to be called when the board is destroyed
 	 */
 	destroy() {
+		// Flush (not drop) any pending debounced layout change before the targets go away —
+		// otherwise an edit made just before destruction (e.g. a responsive breakpoint switch)
+		// is silently lost.
+		if (this.#layoutChangeTimeout) {
+			clearTimeout(this.#layoutChangeTimeout);
+			this.#layoutChangeTimeout = null;
+
+			const layout = this.#exportLayoutInternal();
+			this.#eventBus.dispatch('board:layoutchange', {
+				board: this,
+				layout,
+				breakpoint: this.breakpoint
+			});
+			this.config?.onLayoutChange?.(layout);
+		}
+
 		// Clean up all targets (which will clean up their widgets)
 		this.#targets.forEach((target) => target.destroy());
 		this.#targets.clear();
@@ -616,11 +643,5 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
-
-		// Clean up any pending layout change timeout
-		if (this.#layoutChangeTimeout) {
-			clearTimeout(this.#layoutChangeTimeout);
-			this.#layoutChangeTimeout = null;
-		}
 	}
 }

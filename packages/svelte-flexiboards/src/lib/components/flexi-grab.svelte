@@ -17,8 +17,11 @@
 </script>
 
 <button
-	style={'user-select: none; touch-action: none;' +
-		(widget.isGrabbable && widget.mounted ? 'cursor: grab;' : 'cursor: not-allowed;')}
+	style={`user-select: none; touch-action: ${
+		(widget.grabTrigger['touch'] ?? widget.grabTrigger['default'])?.type === 'immediate'
+			? 'none'
+			: 'manipulation'
+	};` + (widget.isGrabbable && widget.mounted ? 'cursor: grab;' : 'cursor: not-allowed;')}
 	disabled={!widget.isGrabbable || !widget.mounted}
 	class={className}
 	{onpointerdown}

@@ -15,6 +15,8 @@
 </script>
 
 <script lang="ts">
+	import { onDestroy } from 'svelte';
+
 	let {
 		class: className,
 		children,
@@ -25,6 +27,10 @@
 	const { deleter } = flexidelete();
 	controller = deleter;
 	onfirstcreate?.(deleter);
+
+	onDestroy(() => {
+		deleter.destroy();
+	});
 
 	let derivedClassName = $derived.by(() => {
 		if (!deleter) {

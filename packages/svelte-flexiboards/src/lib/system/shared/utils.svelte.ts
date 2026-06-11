@@ -879,3 +879,18 @@ export function isGrabPointerEvent(event: PointerEvent) {
 	// 0 = left click
 	return event.button === 0;
 }
+
+const interactiveElementsSelector =
+	'input, textarea, select, button, a, audio, video, [contenteditable]:not([contenteditable="false"])';
+
+/**
+ * Whether the given event target is (or is inside) an interactive element that should receive
+ * pointer interactions itself, rather than them starting a widget grab/resize.
+ */
+export function isInteractiveElement(target: EventTarget | null): boolean {
+	return (
+		typeof Element !== 'undefined' &&
+		target instanceof Element &&
+		!!target.closest(interactiveElementsSelector)
+	);
+}

@@ -1,18 +1,25 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { immediateTriggerConfig, WidgetPointerEventWatcher } from './triggers.svelte.js';
 
-vi.mock('../board/index.js', () => ({
-	getInternalFlexiboardCtx: () => ({
-		ref: {
-			scrollLeft: 0,
-			scrollTop: 0,
-			getBoundingClientRect: () => ({
-				left: 0,
-				top: 0
-			})
-		}
-	})
+const mockBoard = vi.hoisted(() => ({
+	currentWidgetAction: null as unknown,
+	ref: {
+		scrollLeft: 0,
+		scrollTop: 0,
+		getBoundingClientRect: () => ({
+			left: 0,
+			top: 0
+		})
+	}
 }));
+
+vi.mock('../board/index.js', () => ({
+	getInternalFlexiboardCtx: () => mockBoard
+}));
+
+beforeEach(() => {
+	mockBoard.currentWidgetAction = null;
+});
 
 function createPointerEvent() {
 	return {
@@ -63,6 +70,19 @@ describe('WidgetPointerEventWatcher', () => {
 
 	it('does not prevent default when a resize cannot start', () => {
 		const watcher = new WidgetPointerEventWatcher(createWidget({ resizable: false }), 'resize');
+		const event = createPointerEvent();
+
+		watcher.onstartpointerdown(event);
+
+		expect(event.preventDefault).not.toHaveBeenCalled();
+	});
+
+	it('does not start a second action while the board already has one', () => {
+		// A second pointer (e.g. multi-touch) grabbing another widget mid-drag would put that
+		// widget in a grabbed state the board ignores and that never gets released.
+		mockBoard.currentWidgetAction = { action: 'grab' };
+
+		const watcher = new WidgetPointerEventWatcher(createWidget(), 'grab');
 		const event = createPointerEvent();
 
 		watcher.onstartpointerdown(event);

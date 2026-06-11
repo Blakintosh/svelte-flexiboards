@@ -96,7 +96,13 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		if (this.#grabbers == 0) {
-			return 'user-select: none; cursor: grab; touch-action: none;';
+			// touch-action: none at rest would make a touch on this widget unable to ever scroll
+			// the page — only justified when a touch immediately starts a grab. With a long-press
+			// trigger, scrolling must stay native; 'manipulation' just removes the double-tap
+			// zoom delay.
+			const touchTrigger = this.grabTrigger['touch'] ?? this.grabTrigger['default'];
+			const touchAction = touchTrigger?.type === 'immediate' ? 'none' : 'manipulation';
+			return `user-select: none; cursor: grab; touch-action: ${touchAction};`;
 		}
 
 		return '';

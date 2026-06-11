@@ -22,9 +22,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	#layoutConfig: DerivedFreeFormTargetLayout = $derived({
 		type: 'free',
-		minColumns: this.#rawLayoutConfig?.minColumns ?? 1,
+		// Column counts are clamped to MAX_COLUMNS as occupancy is tracked in 32-bit row bitmaps.
+		minColumns: Math.min(this.#rawLayoutConfig?.minColumns ?? 1, MAX_COLUMNS),
 		minRows: this.#rawLayoutConfig?.minRows ?? 1,
-		maxColumns: this.#rawLayoutConfig?.maxColumns ?? Infinity,
+		maxColumns: Math.min(this.#rawLayoutConfig?.maxColumns ?? Infinity, MAX_COLUMNS),
 		maxRows: this.#rawLayoutConfig?.maxRows ?? Infinity,
 		collapsibility: this.#rawLayoutConfig?.collapsibility ?? 'any',
 		packing: this.#rawLayoutConfig?.packing ?? 'none'
@@ -47,7 +48,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		const layout = targetConfig.layout as FreeFormTargetLayout;
 
 		this.#rows = layout.minRows ?? 1;
-		this.#columns = layout.minColumns ?? 1;
+		this.#columns = Math.min(layout.minColumns ?? 1, MAX_COLUMNS);
 
 		this.#coordinateSystem = new FreeFormGridCoordinateSystem(this);
 	}
@@ -69,13 +70,40 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		);
 
 		// Constrain the width/height of the widget to the min/max values.
-		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
-		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
+		width = Math.max(1, widget.minWidth, Math.min(widget.maxWidth, width));
+		height = Math.max(1, widget.minHeight, Math.min(widget.maxHeight, height));
+
+		// If the widget is already placed in this grid, lift its current footprint first so it
+		// doesn't collide with itself; restore it if the placement fails.
+		const previousPlacement = this.#widgets.has(widget)
+			? { x: widget.x, y: widget.y, width: widget.width, height: widget.height }
+			: null;
+		if (previousPlacement) {
+			this.#widgets.delete(widget);
+			this.#coordinateSystem.removeWidget(widget);
+		}
+
+		const startRows = this.#rows;
+		const startColumns = this.#columns;
+		const fail = () => {
+			this.#revertGridDimensions(startRows, startColumns);
+			if (previousPlacement) {
+				this.#coordinateSystem.addWidget(
+					widget,
+					previousPlacement.x,
+					previousPlacement.y,
+					previousPlacement.width,
+					previousPlacement.height
+				);
+				this.#widgets.add(widget);
+			}
+			return false;
+		};
 
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
-			return false;
+			return fail();
 		}
 
 		// Get proposed operations up-front, so we can cancel if needed.
@@ -83,7 +111,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
-			return false;
+			return fail();
 		}
 
 		// Apply the moves.
@@ -101,6 +129,21 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return true;
 	}
 
+	/**
+	 * Shrinks the grid back to the given dimensions, undoing speculative expansions made by a
+	 * placement attempt that subsequently failed. Only safe when no occupancy has been committed
+	 * beyond the given bounds, which holds on all failure paths (exploratory moves are reverted
+	 * before this is called).
+	 */
+	#revertGridDimensions(rows: number, columns: number) {
+		if (this.#columns !== columns) {
+			this.#setColumns(columns);
+		}
+		if (this.#rows !== rows) {
+			this.#setRows(rows);
+		}
+	}
+
 	#resolveCollisions(
 		move: CollisionCheck,
 		operations: Map<FlexiWidgetController, MoveOperation>,
@@ -109,9 +152,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	): boolean {
 		const { x: newX, y: newY, width, height } = move;
 
+		// Speculative grid expansions made by this attempt (or its sub-attempts) must be undone
+		// if the attempt fails, otherwise failed placements permanently grow the grid.
+		const startRows = this.#rows;
+		const startColumns = this.#columns;
+
 		// We need to try expand the grid if the widget is moving beyond the current bounds,
 		// but if this is not possible then the operation fails.
 		if (!this.adjustGridDimensionsToFit(newX, newY, width, height)) {
+			this.#revertGridDimensions(startRows, startColumns);
 			return false;
 		}
 
@@ -127,6 +176,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				}
 
 				if (!collidingWidget.isMovable) {
+					this.#revertGridDimensions(startRows, startColumns);
 					return false;
 				}
 
@@ -134,6 +184,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				this.#coordinateSystem.removeWidget(collidingWidget);
 
 				// Try move the colliding widget along the x-axis if this is allowed and possible.
+				// Each axis attempt records its moves into its own map, which is only merged into
+				// the caller's operations if the attempt succeeds — a failed attempt must not
+				// leave behind moves for widgets that no longer need to be displaced.
+				const xOperations: Map<FlexiWidgetController, MoveOperation> = new Map();
 				const xMove =
 					displaceX &&
 					this.#resolveCollisions(
@@ -144,12 +198,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 							width: collidingWidget.width,
 							height: collidingWidget.height
 						},
-						operations,
+						xOperations,
 						displaceX,
 						false
 					);
 
 				if (xMove) {
+					for (const [movedWidget, operation] of xOperations) {
+						operations.set(movedWidget, operation);
+					}
 					operations.set(collidingWidget, {
 						widget: collidingWidget,
 						newX: newX + width,
@@ -169,6 +226,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				}
 
 				// If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
+				const yOperations: Map<FlexiWidgetController, MoveOperation> = new Map();
 				const yMove =
 					displaceY &&
 					this.#resolveCollisions(
@@ -179,12 +237,15 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 							width: collidingWidget.width,
 							height: collidingWidget.height
 						},
-						operations,
+						yOperations,
 						false,
 						displaceY
 					);
 
 				if (yMove) {
+					for (const [movedWidget, operation] of yOperations) {
+						operations.set(movedWidget, operation);
+					}
 					operations.set(collidingWidget, {
 						widget: collidingWidget,
 						newX: collidingWidget.x,
@@ -212,6 +273,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					collidingWidget.width,
 					collidingWidget.height
 				);
+				this.#revertGridDimensions(startRows, startColumns);
 				return false;
 			}
 		}
@@ -219,8 +281,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	removeWidget(widget: InternalFlexiWidgetController): boolean {
-		// Delete it from the grid, incl the coordinate system.
-		this.#widgets.delete(widget);
+		// If the widget isn't in this grid, clearing its claimed region would corrupt the
+		// occupancy of whatever widget actually occupies those cells.
+		if (!this.#widgets.delete(widget)) {
+			return false;
+		}
 		this.#coordinateSystem.removeWidget(widget);
 
 		// Mark that collapsing is needed, but don't apply it immediately
@@ -294,11 +359,10 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
 		// Must deep copy these again, as the snapshot may be re-used.
+		// These assignments fully determine the coordinate system's dimensions — resizing the
+		// arrays on top of them would desync them from the row/column counts below.
 		this.#coordinateSystem.bitmaps = [...snapshot.bitmaps];
 		this.#coordinateSystem.layout = snapshot.layout.map((row) => [...row]);
-
-		this.#coordinateSystem.updateForRows(this.#rows, snapshot.rows);
-		this.#coordinateSystem.updateForColumns(this.#columns, snapshot.columns);
 
 		this.#rows = snapshot.rows;
 		this.#columns = snapshot.columns;
@@ -330,6 +394,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			);
 		}
 
+		// Out-of-range inputs (negative coordinates, zero/negative sizes) would corrupt the
+		// bitmap and layout arrays, so clamp them into the valid domain.
+		x = Math.max(0, Math.floor(x));
+		y = Math.max(0, Math.floor(y));
+
 		// Make sure the grabbed widget can only expand the grid relative from its current dimensions.
 		if (isGrabbedWidget) {
 			if (x >= this.#columns) {
@@ -340,7 +409,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			}
 		}
 
-		return [x, y, width ?? 1, height ?? 1];
+		return [x, y, Math.max(1, Math.floor(width ?? 1)), Math.max(1, Math.floor(height ?? 1))];
 	}
 
 	#doMoveOperation(widget: InternalFlexiWidgetController, operation: MoveOperation) {
@@ -523,7 +592,8 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	getFirstCollisionColumn(occupancy: number): number {
-		return Math.floor(Math.log2(occupancy & -occupancy));
+		// NB: Math.log2 breaks on bit 31 (the lowest set bit of a negative int32), so use clz32.
+		return 31 - Math.clz32(occupancy & -occupancy);
 	}
 
 	#adjustBitmaps(oldRows: number, newRows: number) {

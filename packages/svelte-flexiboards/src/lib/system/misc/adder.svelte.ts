@@ -136,8 +136,24 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 
 	#clearWidget() {
+		const widget = this.newWidget;
+
 		this.newWidget = undefined;
 		this.toCreateParams = null;
+
+		if (!widget) {
+			return;
+		}
+
+		// If the drag-in didn't end with the widget being adopted by a target (cancelled, or
+		// released outside every target), nothing else owns it — destroy it so its event bus
+		// subscriptions don't leak. Deferred to a microtask because a successful drop assigns
+		// internalTarget during the same dispatch that triggers this cleanup, possibly after it.
+		queueMicrotask(() => {
+			if (!widget.internalTarget) {
+				widget.destroy();
+			}
+		});
 	}
 
 	/**

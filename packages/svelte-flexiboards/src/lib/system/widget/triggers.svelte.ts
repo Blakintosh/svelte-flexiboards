@@ -2,7 +2,7 @@ import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { InternalFlexiWidgetController } from './controller.svelte.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
-import { isGrabPointerEvent } from '../shared/utils.svelte.js';
+import { isGrabPointerEvent, isInteractiveElement } from '../shared/utils.svelte.js';
 
 interface PointerDownTriggerCondition {
 	type: 'immediate';
@@ -54,15 +54,31 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
+		// Only one widget action can be active at a time. Without this gate, a second pointer
+		// (e.g. multi-touch) would put another widget into a grabbed state that the board ignores
+		// and that never gets released.
+		if (this.#board.currentWidgetAction) {
+			return;
+		}
+
+		// Pointer-downs on interactive content inside the widget (inputs, buttons, links, ...)
+		// belong to that content — starting a grab here (and calling preventDefault) would make
+		// it impossible to focus or activate.
+		if (isInteractiveElement(event.target)) {
+			return;
+		}
+
 		const pointerType = event.pointerType;
 
 		const triggerForType = this.#triggerConfig[pointerType] ?? this.#triggerConfig.default;
 
-		event.preventDefault();
-
 		if (triggerForType.type == 'longPress') {
+			// No preventDefault here: until the press resolves, the pointer-down may still be a
+			// tap, scroll or text selection, which must behave normally.
 			return this.#handleLongPress(event, triggerForType);
 		}
+
+		event.preventDefault();
 		return this.#triggerWidgetEvent(event);
 	}
 
@@ -164,7 +180,8 @@ export class WidgetPointerEventWatcher {
 				left,
 				top,
 				capturedHeightPx: rect.height,
-				capturedWidthPx: rect.width
+				capturedWidthPx: rect.width,
+				pointerId: event.pointerId
 			});
 			return;
 		}
@@ -182,7 +199,8 @@ export class WidgetPointerEventWatcher {
 			capturedHeightPx: rect.height,
 			capturedWidthPx: rect.width,
 			xOffset: event.clientX - rect.left,
-			yOffset: event.clientY - rect.top
+			yOffset: event.clientY - rect.top,
+			pointerId: event.pointerId
 		});
 	}
 }

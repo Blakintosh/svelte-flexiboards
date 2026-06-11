@@ -119,16 +119,18 @@ export class FlowFlexiGrid extends FlexiGrid {
 		// Finalise where we're going to place the widget.
 		const cellPosition = this.#getPlacementPosition(cellX, cellY);
 
-		// If the width/height of the widget is greater than the flow axis' length, then constrain it to the flow axis' length.
+		// Constrain the width/height of the widget to its min/max values.
+		width = Math.max(1, widget.minWidth, Math.min(widget.maxWidth, width));
+		height = Math.max(1, widget.minHeight, Math.min(widget.maxHeight, height));
+
+		// The cross axis bounds the widget unconditionally — a widget wider than the grid would
+		// otherwise overflow it and never find a fitting position. This clamp must come after the
+		// min/max constraint so a minWidth/minHeight larger than the grid cannot reintroduce overflow.
 		if (isRowFlow && width > this.columns) {
 			width = this.columns;
 		} else if (!isRowFlow && height > this.rows) {
 			height = this.rows;
 		}
-
-		// Additionally, constrain the width/height of the widget to the min/max values.
-		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
-		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
 
 		// Find the nearest widget to the proposed position, and determine the precise location based on it.
 		const [index, nearestWidget] = this.#coordinateSystem.findNearestWidget(
@@ -189,10 +191,17 @@ export class FlowFlexiGrid extends FlexiGrid {
 	) {
 		const operations: FlowMoveOperation[] = [];
 
+		// The shift chain expands the flow axis as it goes; if a later widget in the chain fails
+		// to fit, those expansions must be rolled back along with the insertion.
+		const startRows = this.rows;
+		const startColumns = this.columns;
+
 		this.#widgets.splice(index, 0, widget);
 		if (!this.#shiftWidget(index, position, operations, width, height)) {
 			// Undo the insertion.
 			this.#widgets.splice(index, 1);
+			this.rows = startRows;
+			this.columns = startColumns;
 
 			return false;
 		}
@@ -348,6 +357,9 @@ export class FlowFlexiGrid extends FlexiGrid {
 		if (this.#widgets.length > 0) {
 			// Start compaction from position 0
 			if (!this.#shiftWidget(0, 0, operations)) {
+				// Compaction never needs more space than the widgets already had, so this should
+				// be unreachable — but if it fails, put the widget back rather than half-remove it.
+				this.#widgets.splice(index, 0, widget);
 				return false;
 			}
 		}
