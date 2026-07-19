@@ -584,7 +584,7 @@ export class GridDimensionTracker {
 		y: 0
 	});
 
-	#targetConfig$: FlexiTargetConfiguration = signal({} as FlexiTargetConfiguration);
+	#targetConfig$: Signal<FlexiTargetConfiguration> = signal({} as FlexiTargetConfiguration);
 
 	#activeScrollListeners: { element: EventTarget; handler: () => void }[] = [];
 	#currentScrollableAncestors: HTMLElement[] = [];

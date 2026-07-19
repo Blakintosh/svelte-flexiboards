@@ -1,6 +1,6 @@
 import type { SvelteSet } from 'svelte/reactivity';
 import type { FlexiTargetConfiguration } from './types.js';
-import type { FlexiWidgetController } from '../widget/base.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
 
 export interface FlexiTargetController {
@@ -41,5 +41,5 @@ export interface FlexiTargetController {
 	/**
 	 * The widgets currently in this target.
 	 */
-	get widgets(): SvelteSet<FlexiWidgetController>;
+	get widgets(): Set<FlexiWidgetController>;
 }

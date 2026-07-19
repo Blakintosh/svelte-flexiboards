@@ -1,8 +1,8 @@
-import type { FreeFormTargetLayout } from '../grid/free-grid.svelte.js';
+import type { FreeFormTargetLayout } from '../grid/free-grid.js';
 import type { FlexiGrid, FlowTargetLayout } from '../grid/index.js';
 import type { InternalWidgetAction } from '../internal-types.js';
-import type { FlexiWidgetController } from '../widget/base.svelte.js';
-import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { FlexiWidgetController } from '../widget/base.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { FlexiWidgetDefaults } from '../widget/types.js';
 import type { FlexiTargetController } from './base.js';
 
