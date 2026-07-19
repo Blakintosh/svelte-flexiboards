@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { FlexiTargetConfiguration } from '../target/index.js';
-import type { InternalFlexiTargetController } from '../target/controller.svelte.js';
+import type { InternalFlexiTargetController } from '../target/controller.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
 import type { WidgetDraggability } from '../types.js';
 import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';

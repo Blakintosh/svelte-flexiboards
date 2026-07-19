@@ -6,8 +6,8 @@ import {
 	AutoScrollService,
 	getPointerService,
 	type PointerService
-} from '../shared/utils.svelte.js';
-import { InternalFlexiTargetController } from '../target/controller.svelte.js';
+} from '../shared/utils.js';
+import { InternalFlexiTargetController } from '../target/controller.js';
 import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
 	InternalResponsiveLayoutImportEvent,
@@ -27,6 +27,7 @@ import { getInternalResponsiveFlexiboardCtx, hasInternalResponsiveFlexiboardCtx 
 import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.svelte.js';
 import { computed, signal } from 'alien-signals';
 import { Signal } from '../types.js';
+import { ReadonlySignal } from '../types.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction$: Signal<InternalWidgetAction | null> = signal(null);
@@ -45,9 +46,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#autoScrollService: AutoScrollService = new AutoScrollService(this.#ref$);
 
 	#rawProps$: Signal<FlexiBoardProps> = signal(undefined);
-	config$: Signal<FlexiBoardConfiguration> = computed(() => this.#rawProps$()?.config);
+	config$: ReadonlySignal<FlexiBoardConfiguration> = computed(() => this.#rawProps$()?.config);
 
-	registry$: Signal<Record<string, FlexiRegistryEntry>> = computed(() => this.#rawProps$()?.config?.registry);
+	registry$: ReadonlySignal<Record<string, FlexiRegistryEntry>> = computed(() => this.#rawProps$()?.config?.registry);
 
 	#nextTargetIndex = 0;
 
@@ -155,7 +156,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 	}
 
-	style: Signal<string> = computed(() => {
+	style: ReadonlySignal<string> = computed(() => {
         const currentWidgetAction = this.#currentWidgetAction$();
 		const needsOverflowLock = this.#activeInterpolations$() > 0 || currentWidgetAction;
         const scrollbarCompensation = this.#scrollbarCompensation$();
