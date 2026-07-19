@@ -43,6 +43,12 @@ importers:
         specifier: ^8.0.0
         version: 8.24.0(eslint@9.20.1(jiti@2.4.2))(typescript@5.7.3)
 
+  packages/core:
+    dependencies:
+      alien-signals:
+        specifier: ^3.2.1
+        version: 3.2.1
+
   packages/svelte-flexiboards:
     dependencies:
       svelte:
@@ -1205,6 +1211,9 @@ packages:
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
+
+  alien-signals@3.2.1:
+    resolution: {integrity: sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g==}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -3858,6 +3867,8 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
+
+  alien-signals@3.2.1: {}
 
   ansi-regex@5.0.1: {}
 

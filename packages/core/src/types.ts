@@ -1,0 +1,1 @@
+export type Signal<T> = { (): T, (value: T): void };
