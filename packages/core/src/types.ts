@@ -4,19 +4,21 @@ import type { FlexiWidgetController } from './widget/base.js';
 import type { FlexiBoardController } from './board/base.js';
 import type { FlexiLayout } from './board/types.js';
 import type { ResponsiveFlexiBoardController } from './responsive/base.js';
-import { setActiveSub } from 'alien-signals';
 
-export type Signal<T> = { (): T, (value: T): void };
-export type ReadonlySignal<T> = () => T;
+export type { Signal, ReadonlySignal } from './reactivity.js';
 
-export function untracked<T>(fn: () => T): T {
-    const prev = setActiveSub(undefined);
-    try {
-        return fn();
-    } finally {
-        return prev !== undefined ? (setActiveSub(prev), fn as never) : undefined as never;
-    }
-}
+/**
+ * Framework-erased render types. Core stores these opaquely; each framework
+ * adapter narrows them (Svelte: Component/Snippet, React: ComponentType/render prop).
+ * TODO(adapter-generics): consider replacing with a generic parameter threaded
+ * through the widget/target/board configuration types so adapter re-exports
+ * stay fully type-safe.
+ */
+export type FlexiComponent = unknown;
+export type FlexiContent = unknown;
+
+/** Framework-neutral replacement for svelte/elements' ClassValue. */
+export type ClassValue = string | null | undefined | ClassValue[] | Record<string, boolean>;
 
 export type Position = {
 	x: number;

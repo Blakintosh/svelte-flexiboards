@@ -1,51 +1,11 @@
-import { getContext, setContext } from 'svelte';
 import type { FlexiTargetController } from './base.js';
-import type { InternalFlexiTargetController } from './controller.js';
-import type { FlexiTargetConfiguration, FlexiTargetPartialConfiguration } from './types.js';
-import { getInternalFlexiboardCtx } from '../board/index.js';
+import type { FlexiTargetConfiguration } from './types.js';
 
-const contextKey = Symbol('flexitarget');
+// TODO(adapter): removed flexitarget — created a target on the context board provider via provider.createTarget() and set it in component context.
+// TODO(adapter): removed getInternalFlexitargetCtx — retrieved the InternalFlexiTargetController from Svelte context, throwing if absent.
+// TODO(adapter): removed getFlexitargetCtx — public wrapper returning the context target as FlexiTargetController.
 
-/**
- * Creates a new {@link FlexiTargetController} instance in the context of the current FlexiBoard.
- * @returns A {@link FlexiTargetController} instance.
- */
-export function flexitarget(config?: FlexiTargetPartialConfiguration, key?: string) {
-	const provider = getInternalFlexiboardCtx();
-	const target = provider.createTarget(config, key);
-
-	setContext(contextKey, target);
-
-	return {
-		target: target
-	};
-}
-
-/**
- * Gets the current {@link InternalFlexiTargetController} instance, if any. Throws an error if no target is found.
- * @internal
- * @returns An {@link InternalFlexiTargetController} instance.
- */
-export function getInternalFlexitargetCtx() {
-	const target = getContext<InternalFlexiTargetController | undefined>(contextKey);
-
-	// No provider to attach to.
-	if (!target) {
-		throw new Error(
-			'Cannot get FlexiTarget context outside of a registered target. Ensure that flexitarget() (or <FlexiTarget>) is called within a <FlexiBoard> component.'
-		);
-	}
-
-	return target;
-}
-
-/**
- * Gets the current {@link FlexiTargetController} instance, if any. Throws an error if no target is found.
- * @returns A {@link FlexiTargetController} instance.
- */
-export function getFlexitargetCtx() {
-	return getInternalFlexitargetCtx() as FlexiTargetController;
-}
+export { InternalFlexiTargetController } from './controller.js';
 
 /* Exports to go to root index.ts */
 export { type FlexiTargetConfiguration, type FlexiTargetController };

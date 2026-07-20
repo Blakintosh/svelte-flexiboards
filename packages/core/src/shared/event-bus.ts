@@ -1,4 +1,3 @@
-import { getContext, setContext } from 'svelte';
 import type {
 	InternalAdderWidgetReadyEvent,
 	InternalBoardLayoutChangeEvent,
@@ -73,34 +72,18 @@ export class FlexiEventBus {
 	}
 }
 
-const contextKey = Symbol('flexieventbus');
-
 let flexiEventBusInstance: FlexiEventBus | undefined = undefined;
 
+/**
+ * Module-level singleton event bus. All events carry their board reference and
+ * handlers filter on it, so a shared bus preserves multi-board isolation.
+ * TODO(injection): consider constructor-injecting a per-board-tree bus instead,
+ * decided alongside the adapter plumbing.
+ */
 export function getFlexiEventBus() {
-	// Define event bus at time of calling, so that effect context is assured.
 	if (!flexiEventBusInstance) {
 		flexiEventBusInstance = new FlexiEventBus();
 	}
 
 	return flexiEventBusInstance;
-}
-
-export function flexiEventBus() {
-	const eventBus = getFlexiEventBus();
-
-	setContext(contextKey, eventBus);
-	return eventBus;
-}
-
-export function getFlexiEventBusCtx() {
-	const eventBus = getContext<FlexiEventBus | undefined>(contextKey);
-
-	if (!eventBus) {
-		throw new Error(
-			'Cannot get FlexiEventBus context outside of a registered event bus. Ensure that flexiEventBus() is called.'
-		);
-	}
-
-	return eventBus;
 }

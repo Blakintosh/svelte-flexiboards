@@ -1,14 +1,11 @@
-import type { ClassValue } from 'svelte/elements';
 import type { InternalFlexiBoardController } from '../board/controller.js';
-import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { InternalAdderWidgetReadyEvent } from '../internal-types.js';
 import { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { FlexiWidgetConfiguration } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
-import { getContext, hasContext, onMount, setContext } from 'svelte';
 import { isGrabPointerEvent } from '../shared/utils.js';
-import { Signal } from '../types.js';
-import { signal } from 'alien-signals';
+import type { ClassValue, Signal } from '../types.js';
+import { signal } from '../reactivity.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
@@ -39,7 +36,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
-	newWidget$: Signal<InternalFlexiWidgetController> = signal(undefined);
+	newWidget$: Signal<InternalFlexiWidgetController | undefined> = signal(undefined);
 
 	toCreateParams$: Signal<NewWidgetDragInParams | null> = signal(null);
 
@@ -94,10 +91,12 @@ export class InternalFlexiAddController implements FlexiAddController {
 		}
 
 		// Create a widget under this FlexiAdd.
-		this.newWidget$(new InternalFlexiWidgetController({
-			config: config.widget,
-			provider: this.provider
-		}));
+		this.newWidget$(
+			new InternalFlexiWidgetController({
+				config: config.widget,
+				provider: this.provider
+			})
+		);
 
 		this.toCreateParams$({
 			clientX,
@@ -161,52 +160,26 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 }
 
-const contextKey = Symbol('flexiadd');
+// TODO(adapter): removed hasInternalFlexiaddCtx() — context presence check for an enclosing FlexiAdd.
+// TODO(adapter): removed getInternalFlexiaddCtx() — context getter returning the internal adder controller.
+// TODO(adapter): removed getFlexiaddCtx() — context getter narrowing to the public FlexiAddController.
+// TODO(adapter): removed flexiadd(addWidgetFn) — composition root that read the board context, constructed
+// InternalFlexiAddController(provider, addWidgetFn), set the adder context, and returned the adder alongside
+// its bound onpointerdown/onkeydown handlers for the adapter's element to wire up.
 
-export function hasInternalFlexiaddCtx() {
-	return hasContext(contextKey);
-}
-
-export function getInternalFlexiaddCtx() {
-	const adder = getContext<InternalFlexiAddController>(contextKey);
-	if (!adder) {
-		// TODO: make this error message in line with others.
-		throw new Error('No FlexiAdd context found. ');
-	}
-
-	return adder;
-}
-
-export function getFlexiaddCtx() {
-	const adder = getContext<FlexiAddController>(contextKey);
-	if (!adder) {
-		// TODO: make this error message in line with others.
-		throw new Error('No FlexiAdd context found. ');
-	}
-	return adder;
-}
-
-export function flexiadd(addWidgetFn: FlexiAddWidgetFn) {
-	const provider = getInternalFlexiboardCtx();
-
-	const adder = new InternalFlexiAddController(provider, addWidgetFn);
-	setContext(contextKey, adder);
-
-	return {
-		adder,
-		onpointerdown: (event: PointerEvent) => adder.onpointerdown(event),
-		onkeydown: (event: KeyboardEvent) => adder.onkeydown(event)
-	};
-}
-
-export function dragInOnceMounted(widget: InternalFlexiWidgetController) {
-	const adder = getInternalFlexiaddCtx();
+/**
+ * Dispatches the adder's widget-ready event once the newly created widget has mounted,
+ * triggering the drag-in. Call at mount time (the adapter's responsibility) for widgets
+ * rendered under a FlexiAdd.
+ */
+export function dragInOnceMounted(
+	adder: InternalFlexiAddController,
+	widget: InternalFlexiWidgetController
+) {
 	const eventBus = getFlexiEventBus();
 
-	onMount(() => {
-		eventBus.dispatch('adder:widgetready', {
-			adder,
-			widget
-		});
+	eventBus.dispatch('adder:widgetready', {
+		adder,
+		widget
 	});
 }

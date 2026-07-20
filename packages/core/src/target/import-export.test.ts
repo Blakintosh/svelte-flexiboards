@@ -32,7 +32,9 @@ function importLayout(
 	warnFn: (msg: string, ...args: unknown[]) => void
 ): void {
 	if (!registry) {
-		warnFn('importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.');
+		warnFn(
+			'importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.'
+		);
 		return;
 	}
 
@@ -158,7 +160,14 @@ describe('Import/Export Layout', () => {
 			};
 
 			const layout: FlexiWidgetLayoutEntry[] = [
-				{ id: 'my-custom-id', type: 'test-widget', x: 0, y: 0, width: 1, height: 1 }
+				{
+					id: 'my-custom-id',
+					type: 'test-widget',
+					x: 0,
+					y: 0,
+					width: 1,
+					height: 1
+				}
 			];
 
 			importLayout(layout, registry, widgets, warnSpy);
@@ -238,8 +247,22 @@ describe('Import/Export Layout', () => {
 			};
 
 			// Pre-populate with existing widgets
-			widgets.set('existing-1', { id: 'existing-1', type: 'old', x: 0, y: 0, width: 1, height: 1 });
-			widgets.set('existing-2', { id: 'existing-2', type: 'old', x: 1, y: 0, width: 1, height: 1 });
+			widgets.set('existing-1', {
+				id: 'existing-1',
+				type: 'old',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1
+			});
+			widgets.set('existing-2', {
+				id: 'existing-2',
+				type: 'old',
+				x: 1,
+				y: 0,
+				width: 1,
+				height: 1
+			});
 
 			const layout: FlexiWidgetLayoutEntry[] = [
 				{ type: 'new-widget', x: 0, y: 0, width: 1, height: 1 }
@@ -278,7 +301,7 @@ describe('Import/Export Layout', () => {
 			importLayout(layout, registry, widgets, warnSpy);
 
 			expect(widgets.size).toBe(2);
-			const types = Array.from(widgets.values()).map(w => w.type);
+			const types = Array.from(widgets.values()).map((w) => w.type);
 			expect(types).toContain('valid-a');
 			expect(types).toContain('valid-b');
 		});
@@ -286,8 +309,22 @@ describe('Import/Export Layout', () => {
 
 	describe('exportLayout', () => {
 		it('should export widgets with their positions and dimensions', () => {
-			widgets.set('w1', { id: 'w1', type: 'widget-a', x: 0, y: 0, width: 1, height: 1 });
-			widgets.set('w2', { id: 'w2', type: 'widget-b', x: 2, y: 1, width: 3, height: 2 });
+			widgets.set('w1', {
+				id: 'w1',
+				type: 'widget-a',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1
+			});
+			widgets.set('w2', {
+				id: 'w2',
+				type: 'widget-b',
+				x: 2,
+				y: 1,
+				width: 3,
+				height: 2
+			});
 
 			const layout = exportLayout(widgets, warnSpy);
 
@@ -360,14 +397,23 @@ describe('Import/Export Layout', () => {
 		});
 
 		it('should skip widgets without type and warn', () => {
-			widgets.set('w1', { id: 'w1', type: 'valid-type', x: 0, y: 0, width: 1, height: 1 });
+			widgets.set('w1', {
+				id: 'w1',
+				type: 'valid-type',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1
+			});
 			widgets.set('w2', { id: 'w2', x: 1, y: 0, width: 1, height: 1 }); // No type
 
 			const layout = exportLayout(widgets, warnSpy);
 
 			expect(layout).toHaveLength(1);
 			expect(layout[0].type).toBe('valid-type');
-			expect(warnSpy).toHaveBeenCalledWith('exportLayout(): widget has no type, it will be skipped.');
+			expect(warnSpy).toHaveBeenCalledWith(
+				'exportLayout(): widget has no type, it will be skipped.'
+			);
 		});
 
 		it('should handle empty widget collection', () => {
@@ -428,7 +474,7 @@ describe('Import/Export Layout', () => {
 
 			// Find widget-b (auto-generated ID won't match)
 			const allWidgets = Array.from(widgets.values());
-			const widgetB = allWidgets.find(w => w.type === 'widget-b');
+			const widgetB = allWidgets.find((w) => w.type === 'widget-b');
 			expect(widgetB).toBeDefined();
 			expect(widgetB?.x).toBe(2);
 			expect(widgetB?.y).toBe(1);

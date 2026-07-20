@@ -1,19 +1,62 @@
-import { MediaQuery, SvelteMap } from 'svelte/reactivity';
 import type { FlexiLayout } from '../board/types.js';
 import type { ResponsiveFlexiBoardController } from './base.js';
-import type { ResponsiveFlexiBoardConfiguration, ResponsiveFlexiLayout } from './types.js';
-import type { ResponsiveFlexiBoardProps } from '$lib/components/responsive-flexi-board.svelte';
+import type {
+	ResponsiveFlexiBoardConfiguration,
+	ResponsiveFlexiBoardProps,
+	ResponsiveFlexiLayout
+} from './types.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { InternalBoardLayoutChangeEvent } from '../internal-types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
-import { computed, signal, trigger } from 'alien-signals';
-import { ReadonlySignal, Signal } from '../types.js';
+import { computed, effect, signal, trigger } from '../reactivity.js';
+import type { ReadonlySignal, Signal } from '../types.js';
+import { ReactiveMap } from '../shared/reactive-collections.js';
 
 const DEFAULT_BREAKPOINT = 'default';
 
+/**
+ * Signal-backed replacement for Svelte's MediaQuery (svelte/reactivity).
+ * Wraps window.matchMedia, exposing a reactive `current` boolean.
+ */
+class MediaQuery {
+	#matches$: Signal<boolean>;
+	#mql: MediaQueryList | null = null;
+	#listener: ((event: MediaQueryListEvent) => void) | null = null;
+
+	constructor(query: string, fallback: boolean = false) {
+		this.#matches$ = signal(fallback);
+
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		this.#mql = window.matchMedia(query);
+		this.#matches$(this.#mql.matches);
+
+		this.#listener = (event: MediaQueryListEvent) => {
+			this.#matches$(event.matches);
+		};
+		this.#mql.addEventListener('change', this.#listener);
+	}
+
+	get current(): boolean {
+		return this.#matches$();
+	}
+
+	destroy() {
+		if (this.#mql && this.#listener) {
+			this.#mql.removeEventListener('change', this.#listener);
+		}
+		this.#mql = null;
+		this.#listener = null;
+	}
+}
+
 export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBoardController {
 	#rawProps$: Signal<ResponsiveFlexiBoardProps | undefined> = signal(undefined);
-	config$: ReadonlySignal<ResponsiveFlexiBoardConfiguration | undefined> = computed(this.#rawProps$()?.config);
+	config$: ReadonlySignal<ResponsiveFlexiBoardConfiguration | undefined> = computed(
+		() => this.#rawProps$()?.config
+	);
 
 	/**
 	 * Stored layouts for all breakpoints.
@@ -49,10 +92,15 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#unsubscribers: (() => void)[] = [];
 
 	/**
+	 * Stop functions for effects created by this controller.
+	 */
+	#stopEffects: (() => void)[] = [];
+
+	/**
 	 * MediaQuery instances for each breakpoint.
 	 * Created lazily when breakpoints config changes.
 	 */
-	#mediaQueries: SvelteMap<string, MediaQuery> = new SvelteMap();
+	#mediaQueries: ReactiveMap<string, MediaQuery> = new ReactiveMap();
 
 	/**
 	 * Breakpoints sorted in descending order by min-width.
@@ -70,7 +118,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Determined by checking MediaQuery matches in descending order.
 	 * Falls back to 'default' if no breakpoint matches.
 	 */
-	currentBreakpoint: string = $derived.by(() => {
+	#currentBreakpoint$: ReadonlySignal<string> = computed(() => {
 		// Check breakpoints in descending order (largest first)
 		for (const [key] of this.#sortedBreakpoints$()) {
 			const query = this.#mediaQueries.get(key);
@@ -80,6 +128,10 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		}
 		return DEFAULT_BREAKPOINT;
 	});
+
+	get currentBreakpoint(): string {
+		return this.#currentBreakpoint$();
+	}
 
 	/**
 	 * Previous breakpoint for detecting changes.
@@ -96,20 +148,32 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		);
 
 		// Initialize media queries when breakpoints config changes
-		$effect(() => {
-			this.#initializeMediaQueries();
-		});
+		this.#stopEffects.push(
+			effect(() => {
+				this.#initializeMediaQueries();
+			})
+		);
 
 		// Detect and handle breakpoint changes
-		$effect(() => {
-			const current = this.currentBreakpoint;
-			const previous = this.#previousBreakpoint;
+		this.#stopEffects.push(
+			effect(() => {
+				const current = this.currentBreakpoint;
+				const previous = this.#previousBreakpoint;
 
-			if (previous !== current) {
-				this.#onBreakpointChange(previous, current);
-				this.#previousBreakpoint = current;
-			}
-		});
+				if (previous !== current) {
+					this.#onBreakpointChange(previous, current);
+					this.#previousBreakpoint = current;
+				}
+			})
+		);
+	}
+
+	/**
+	 * Updates the props backing this controller's reactive configuration.
+	 * The adapter's prop seam: call whenever the component's props change.
+	 */
+	updateProps(props: ResponsiveFlexiBoardProps): void {
+		this.#rawProps$(props);
 	}
 
 	/**
@@ -124,7 +188,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		// Store the layout for this breakpoint
 		if (event.breakpoint) {
 			this.#storedLayouts$()[event.breakpoint] = event.layout;
-            trigger(() => this.#storedLayouts$());
+			trigger(() => this.#storedLayouts$());
 			this.#hasStoredLayouts = true;
 			this.#notifyLayoutChange();
 		}
@@ -137,13 +201,14 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		const breakpoints = this.config$()?.breakpoints ?? {};
 
 		// Clear existing queries
+		this.#mediaQueries.forEach((query) => query.destroy());
 		this.#mediaQueries.clear();
 
 		// Create min-width queries for each breakpoint (except 'default')
 		for (const [key, minWidth] of Object.entries(breakpoints)) {
 			if (key === DEFAULT_BREAKPOINT) {
-                continue;
-            }
+				continue;
+			}
 			this.#mediaQueries.set(key, new MediaQuery(`(min-width: ${minWidth}px)`, false));
 		}
 	}
@@ -164,7 +229,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Falls back to 'default' if no layout exists for the current breakpoint.
 	 */
 	getLayoutForCurrentBreakpoint(): FlexiLayout | undefined {
-        const storedLayouts = this.#storedLayouts$();
+		const storedLayouts = this.#storedLayouts$();
 		return storedLayouts[this.currentBreakpoint] ?? storedLayouts[DEFAULT_BREAKPOINT];
 	}
 
@@ -174,7 +239,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 */
 	setLayoutForCurrentBreakpoint(layout: FlexiLayout): void {
 		this.#storedLayouts$()[this.currentBreakpoint] = layout;
-        trigger(() => this.#storedLayouts$());
+		trigger(() => this.#storedLayouts$());
 		this.#notifyLayoutChange();
 	}
 
@@ -208,7 +273,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 */
 	setLayoutForBreakpoint(breakpoint: string, layout: FlexiLayout): void {
 		this.#storedLayouts$()[breakpoint] = layout;
-        trigger(() => this.#storedLayouts$());
+		trigger(() => this.#storedLayouts$());
 	}
 
 	/**
@@ -279,8 +344,8 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 */
 	oninitialloadcomplete(): void {
 		if (this.#ready) {
-            return;
-        }
+			return;
+		}
 		this.#ready = true;
 
 		const loadLayoutsFn = this.config$()?.loadLayouts;
@@ -312,6 +377,11 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Cleanup method to be called when the responsive board is destroyed.
 	 */
 	destroy(): void {
+		// Stop effects before tearing down the media queries they track
+		this.#stopEffects.forEach((stop) => stop());
+		this.#stopEffects = [];
+
+		this.#mediaQueries.forEach((query) => query.destroy());
 		this.#mediaQueries.clear();
 
 		// Clean up event subscriptions

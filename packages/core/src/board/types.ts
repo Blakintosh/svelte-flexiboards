@@ -1,5 +1,12 @@
+import type { ClassValue, FlexiCommonProps } from '../types.js';
 import type { FlexiTargetDefaults } from '../target/types.js';
 import type { FlexiWidgetDefaults } from '../widget/types.js';
+import type { FlexiBoardController } from './base.js';
+
+export type FlexiBoardProps = FlexiCommonProps<FlexiBoardController> & {
+	config?: FlexiBoardConfiguration;
+	class?: ClassValue;
+};
 
 export type FlexiLayoutChangeFn = (layout: FlexiLayout) => void;
 
@@ -22,7 +29,6 @@ export type FlexiBoardConfiguration = {
 };
 
 export type FlexiRegistryEntry = Omit<FlexiWidgetDefaults, 'width' | 'height' | 'draggable'>;
-
 
 export type FlexiWidgetLayoutEntry = {
 	id?: string;

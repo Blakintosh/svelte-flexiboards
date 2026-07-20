@@ -1,12 +1,7 @@
-import type { FlexiBoardProps } from '$lib/components/flexi-board.svelte';
-import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.svelte.js';
+import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiPortalController } from '../portal.js';
-import {
-	AutoScrollService,
-	getPointerService,
-	type PointerService
-} from '../shared/utils.js';
+import { AutoScrollService, getPointerService, type PointerService } from '../shared/utils.js';
 import { InternalFlexiTargetController } from '../target/controller.js';
 import type { FlexiTargetPartialConfiguration } from '../target/types.js';
 import type {
@@ -19,15 +14,18 @@ import type {
 	InternalWidgetResizeAction,
 	InternalWidgetResizingEvent
 } from '../internal-types.js';
-import type { ProxiedValue } from '../types.js';
-import type { FlexiBoardController } from './base.svelte.js';
-import type { FlexiBoardConfiguration, FlexiRegistryEntry, FlexiLayout, FlexiWidgetLayoutEntry } from './types.js';
-import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
-import { getInternalResponsiveFlexiboardCtx, hasInternalResponsiveFlexiboardCtx } from '../responsive/index.js';
-import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.svelte.js';
-import { computed, signal } from 'alien-signals';
-import { Signal } from '../types.js';
-import { ReadonlySignal } from '../types.js';
+import type { FlexiBoardController } from './base.js';
+import type {
+	FlexiBoardConfiguration,
+	FlexiBoardProps,
+	FlexiRegistryEntry,
+	FlexiLayout,
+	FlexiWidgetLayoutEntry
+} from './types.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.js';
+import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.js';
+import { computed, signal } from '../reactivity.js';
+import type { Signal, ReadonlySignal } from '../types.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
 	#currentWidgetAction$: Signal<InternalWidgetAction | null> = signal(null);
@@ -45,10 +43,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#pointerService: PointerService = getPointerService();
 	#autoScrollService: AutoScrollService = new AutoScrollService(this.#ref$);
 
-	#rawProps$: Signal<FlexiBoardProps> = signal(undefined);
-	config$: ReadonlySignal<FlexiBoardConfiguration> = computed(() => this.#rawProps$()?.config);
+	#rawProps$: Signal<FlexiBoardProps | undefined> = signal(undefined);
+	config$: ReadonlySignal<FlexiBoardConfiguration | undefined> = computed(
+		() => this.#rawProps$()?.config
+	);
 
-	registry$: ReadonlySignal<Record<string, FlexiRegistryEntry>> = computed(() => this.#rawProps$()?.config?.registry);
+	registry$: ReadonlySignal<Record<string, FlexiRegistryEntry> | undefined> = computed(
+		() => this.#rawProps$()?.config?.registry
+	);
 
 	#nextTargetIndex = 0;
 
@@ -72,14 +74,17 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 */
 	#responsiveController: InternalResponsiveFlexiBoardController | null = null;
 
-	constructor(props: FlexiBoardProps) {
+	constructor(
+		props: FlexiBoardProps,
+		responsiveController: InternalResponsiveFlexiBoardController | null = null
+	) {
 		// Track the props proxy so our config reactively updates.
 		this.#rawProps$(props);
 		this.#eventBus = getFlexiEventBus();
 
 		// Check if we're inside a responsive context
-		if (hasInternalResponsiveFlexiboardCtx()) {
-			this.#responsiveController = getInternalResponsiveFlexiboardCtx();
+		if (responsiveController) {
+			this.#responsiveController = responsiveController;
 			// Infer breakpoint from responsive controller's current state
 			this.breakpoint = this.#responsiveController.currentBreakpoint;
 		} else {
@@ -156,16 +161,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 	}
 
-	style: ReadonlySignal<string> = computed(() => {
-        const currentWidgetAction = this.#currentWidgetAction$();
+	style$: ReadonlySignal<string> = computed(() => {
+		const currentWidgetAction = this.#currentWidgetAction$();
 		const needsOverflowLock = this.#activeInterpolations$() > 0 || currentWidgetAction;
-        const scrollbarCompensation = this.#scrollbarCompensation$();
-		const scrollbarPadding = this.#scrollbarCompensation$() > 0
-			? ` padding-right: ${this.#scrollbarCompensation$()}px;`
-			: '';
-		const overflow = needsOverflowLock
-			? ` overflow: hidden;${scrollbarPadding}`
-			: '';
+		const scrollbarCompensation = this.#scrollbarCompensation$();
+		const scrollbarPadding =
+			this.#scrollbarCompensation$() > 0
+				? ` padding-right: ${this.#scrollbarCompensation$()}px;`
+				: '';
+		const overflow = needsOverflowLock ? ` overflow: hidden;${scrollbarPadding}` : '';
 
 		if (!currentWidgetAction) {
 			return `position: relative;${overflow}`;
@@ -173,6 +177,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		return `position: relative;${overflow} ${this.#getStyleForCurrentWidgetAction()}`;
 	});
+
+	get style() {
+		return this.style$();
+	}
 
 	#getStyleForCurrentWidgetAction() {
 		const currentWidgetAction = this.#currentWidgetAction$();
@@ -190,12 +198,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	notifyInterpolationStarted() {
 		this.#captureScrollbarWidthIfNeeded();
-        const activeInterpolations = this.#activeInterpolations$();
+		const activeInterpolations = this.#activeInterpolations$();
 		this.#activeInterpolations$(activeInterpolations + 1);
 	}
 
 	notifyInterpolationEnded() {
-        const activeInterpolations = this.#activeInterpolations$();
+		const activeInterpolations = this.#activeInterpolations$();
 		this.#activeInterpolations$(Math.max(0, activeInterpolations - 1));
 		this.#scheduleScrollbarCompensationRelease();
 	}
@@ -373,7 +381,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.#unlockViewport();
 
-		const currentAction = this.#currentWidgetAction$();
+		const currentAction = this.#currentWidgetAction$()!;
 		// Capture source target before any handlers might change widget.internalTarget
 		const sourceTarget = currentAction.widget.internalTarget;
 
@@ -471,7 +479,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.#responsiveController) {
 			console.warn(
 				'importLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
-				'Use responsiveBoard.importLayout() instead to import layouts for all breakpoints.'
+					'Use responsiveBoard.importLayout() instead to import layouts for all breakpoints.'
 			);
 		}
 		this.#importLayoutInternal(layout);
@@ -488,7 +496,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		// Good to go - import the widgets into their respective targets.
-		this.#targets.forEach(target => {
+		this.#targets.forEach((target) => {
 			const targetLayout = layout[target.key];
 			if (targetLayout) {
 				target.importLayout(targetLayout);
@@ -518,7 +526,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.#responsiveController) {
 			console.warn(
 				'exportLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
-				'Use responsiveBoard.exportLayout() instead to export layouts for all breakpoints.'
+					'Use responsiveBoard.exportLayout() instead to export layouts for all breakpoints.'
 			);
 		}
 		return this.#exportLayoutInternal();
@@ -531,7 +539,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		const result: FlexiLayout = {};
 
 		// Grab the current layout of each target.
-		this.#targets.forEach(target => {
+		this.#targets.forEach((target) => {
 			result[target.key] = target.exportLayout();
 		});
 
@@ -607,6 +615,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	/**
+	 * Updates the props backing this controller's reactive configuration.
+	 * The adapter's prop seam: call whenever the component's props change.
+	 */
+	updateProps(props: FlexiBoardProps): void {
+		this.#rawProps$(props);
+	}
+
+	/**
 	 * Returns the parent responsive controller if this board is within a ResponsiveFlexiBoard.
 	 */
 	get responsiveController() {
@@ -620,6 +636,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		// Clean up all targets (which will clean up their widgets)
 		this.#targets.forEach((target) => target.destroy());
 		this.#targets.clear();
+
+		// Clean up the board-scoped auto-scroll service
+		this.#autoScrollService.destroy();
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());

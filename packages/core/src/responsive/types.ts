@@ -1,4 +1,10 @@
-import type { FlexiLayout } from "../board/types.js";
+import type { FlexiLayout } from '../board/types.js';
+import type { FlexiCommonProps } from '../types.js';
+import type { ResponsiveFlexiBoardController } from './base.js';
+
+export type ResponsiveFlexiBoardProps = FlexiCommonProps<ResponsiveFlexiBoardController> & {
+	config?: ResponsiveFlexiBoardConfiguration;
+};
 
 /**
  * A responsive layout is a map of breakpoint keys to FlexiBoard layouts.
@@ -13,7 +19,7 @@ import type { FlexiLayout } from "../board/types.js";
  * ```
  */
 export type ResponsiveFlexiLayout = {
-    [breakpoint: string]: FlexiLayout;
+	[breakpoint: string]: FlexiLayout;
 };
 
 /**
@@ -27,37 +33,37 @@ export type ResponsiveFlexiLayoutChangeFn = (layouts: ResponsiveFlexiLayout) => 
 export type ResponsiveFlexiLoadLayoutFn = () => ResponsiveFlexiLayout | undefined;
 
 export type ResponsiveFlexiBoardConfiguration = {
-    /**
-     * Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels).
-     * Breakpoints are evaluated in descending order - the largest matching breakpoint wins.
-     * Use 'default' as the fallback when no breakpoint matches.
-     *
-     * @example
-     * ```ts
-     * breakpoints: {
-     *   lg: 1200,  // >= 1200px
-     *   md: 900,   // >= 900px
-     *   sm: 600,   // >= 600px
-     *   // 'default' is implicit for < 600px
-     * }
-     * ```
-     */
-    breakpoints?: Record<string, number>;
+	/**
+	 * Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels).
+	 * Breakpoints are evaluated in descending order - the largest matching breakpoint wins.
+	 * Use 'default' as the fallback when no breakpoint matches.
+	 *
+	 * @example
+	 * ```ts
+	 * breakpoints: {
+	 *   lg: 1200,  // >= 1200px
+	 *   md: 900,   // >= 900px
+	 *   sm: 600,   // >= 600px
+	 *   // 'default' is implicit for < 600px
+	 * }
+	 * ```
+	 */
+	breakpoints?: Record<string, number>;
 
-    /**
-     * Callback fired when the active breakpoint changes.
-     */
-    onBreakpointChange?: (newBreakpoint: string, oldBreakpoint: string) => void;
+	/**
+	 * Callback fired when the active breakpoint changes.
+	 */
+	onBreakpointChange?: (newBreakpoint: string, oldBreakpoint: string) => void;
 
-    /**
-     * Callback fired when any layout changes (widget moved, resized, added, or removed).
-     * Receives all breakpoint layouts, including the updated current one.
-     */
-    onLayoutsChange?: ResponsiveFlexiLayoutChangeFn;
+	/**
+	 * Callback fired when any layout changes (widget moved, resized, added, or removed).
+	 * Receives all breakpoint layouts, including the updated current one.
+	 */
+	onLayoutsChange?: ResponsiveFlexiLayoutChangeFn;
 
-    /**
-     * Function to load initial layouts on mount.
-     * Called once when the responsive board is ready.
-     */
-    loadLayouts?: ResponsiveFlexiLoadLayoutFn;
+	/**
+	 * Function to load initial layouts on mount.
+	 * Called once when the responsive board is ready.
+	 */
+	loadLayouts?: ResponsiveFlexiLoadLayoutFn;
 };

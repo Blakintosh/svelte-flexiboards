@@ -1,9 +1,13 @@
-import { onDestroy, onMount } from 'svelte';
-import { getFlexiEventBusCtx, type FlexiEventBus } from '../shared/event-bus.js';
+import { getFlexiEventBus } from '../shared/event-bus.js';
 import type { InternalFlexiBoardController } from './controller.js';
 
-export function boardEvents(board: InternalFlexiBoardController) {
-	const eventBus = getFlexiEventBusCtx();
+/**
+ * Attaches the board's window-level pointer/keyboard event handlers.
+ * Call at mount (the adapter's responsibility) and invoke the returned
+ * cleanup at unmount.
+ */
+export function boardEvents(board: InternalFlexiBoardController): () => void {
+	const eventBus = getFlexiEventBus();
 
 	const onpointerup = (event: PointerEvent) => {
 		if (!board.currentWidgetAction) {
@@ -39,13 +43,11 @@ export function boardEvents(board: InternalFlexiBoardController) {
 		}
 	};
 
-	onMount(() => {
-		window.addEventListener('pointerup', onpointerup);
-		window.addEventListener('keydown', onkeydown);
+	window.addEventListener('pointerup', onpointerup);
+	window.addEventListener('keydown', onkeydown);
 
-		return () => {
-			window.removeEventListener('pointerup', onpointerup);
-			window.removeEventListener('keydown', onkeydown);
-		};
-	});
+	return () => {
+		window.removeEventListener('pointerup', onpointerup);
+		window.removeEventListener('keydown', onkeydown);
+	};
 }

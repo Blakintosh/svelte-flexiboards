@@ -1,10 +1,9 @@
 import type { InternalWidgetEvent } from '../internal-types.js';
-import type { Position, ProxiedValue, Signal } from '../types.js';
+import type { Position, Signal } from '../types.js';
 import type { FlexiGrid } from '../grid/base.js';
 import type { FlexiTargetConfiguration } from '../target/types.js';
-import { onMount, untrack } from 'svelte';
 import { getFlexiEventBus, type FlexiEventBus } from './event-bus.js';
-import { effect, signal, trigger } from 'alien-signals';
+import { effect, signal, trigger, untracked } from '../reactivity.js';
 
 /**
  * A singleton service that globally tracks the current position of the pointer.
@@ -122,7 +121,9 @@ export function getPointerService() {
  * then its parent, then grandparent, etc.
  */
 export class AutoScrollService {
-	#ref$: Signal<HTMLElement | null> = signal(null);
+	// Shared with the owning board controller: signals are stable references,
+	// so we track the board's ref signal directly rather than copying it.
+	#ref$: Signal<HTMLElement | null>;
 	#pointerService: PointerService = getPointerService();
 	#scrollableContainers$: Signal<HTMLElement[]> = signal([]);
 	#animationFrameId: number | null = null;
@@ -132,28 +133,20 @@ export class AutoScrollService {
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
+	#stopEffects: (() => void)[] = [];
 
 	constructor(ref: Signal<HTMLElement | null>) {
 		this.#eventBus = getFlexiEventBus();
-		// TODO: check this signal being passed on pattern.
 		this.#ref$ = ref;
 
 		// Update scrollable containers when ref changes
-		effect(() => {
-			if (this.ref) {
-				this.#updateScrollableContainers();
-			}
-		});
-
-		// Cleanup when the service is destroyed
-		effect(() => {
-			return () => {
-				this.#stopContinuousScroll();
-				// Clean up event subscriptions
-				this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
-				this.#unsubscribers = [];
-			};
-		});
+		this.#stopEffects.push(
+			effect(() => {
+				if (this.ref) {
+					this.#updateScrollableContainers();
+				}
+			})
+		);
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('widget:grabbed', this.startAutoScroll.bind(this)),
@@ -463,6 +456,18 @@ export class AutoScrollService {
 	stopScrolling() {
 		this.#stopContinuousScroll();
 	}
+
+	/**
+	 * Cleanup method, called by the owning board controller's destroy().
+	 * Replaces the Svelte component-teardown effect from the original.
+	 */
+	destroy() {
+		this.#stopContinuousScroll();
+		this.#stopEffects.forEach((stop) => stop());
+		this.#stopEffects = [];
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
 }
 
 export class KeyboardPointerController {
@@ -579,10 +584,11 @@ export class GridDimensionTracker {
 
 	#grid$: Signal<FlexiGrid | null> = signal(null);
 
-	#pointerPosition$ = signal({
+	// Plain field: nothing tracks the pointer position reactively.
+	#pointerPosition = {
 		x: 0,
 		y: 0
-	});
+	};
 
 	#targetConfig$: Signal<FlexiTargetConfiguration> = signal({} as FlexiTargetConfiguration);
 
@@ -594,47 +600,56 @@ export class GridDimensionTracker {
 		this.#targetConfig$(targetConfig);
 	}
 
-	watchGrid() {
+	/**
+	 * Starts watching the grid for dimension changes. Call at mount time
+	 * (the adapter's responsibility) and invoke the returned cleanup at unmount.
+	 */
+	watchGrid(): () => void {
 		// Whenever a change occurs to the grid's dimensions or the underlying widgets, update the sizes.
-		// TODO: need to consider how to do this without the use of an effect.
-		// TODO: doubly so now that we're on alien signals!
-		effect(() => {
-			// Which through reactivity will also look at the descendants (eg rows and columns)
-			const grid = this.#grid$()!;
-
-			// There's a weird edge case where adjusting dimensions causes an infinite effect when the grid is destroyed - but even without
-			// knowing the exact cause, it's sensible to untrack() this regardless.
-			untrack(() => {
-				this.updateGridDimensions();
-			});
-		});
-
-		// Whenever the grid is resized, update the sizes.
-		onMount(() => {
-			this.setupScrollListeners();
-
+		// Unlike Svelte's deep $state tracking, dependencies are explicit here: we
+		// track the grid reference and its row/column counts, then update untracked.
+		const stopEffect = effect(() => {
 			const grid = this.#grid$();
 
 			if (!grid) {
 				return;
 			}
 
-			const observer = new ResizeObserver((entries) => {
+			// Explicit dependencies: re-run when the grid's structure changes.
+			grid.rows;
+			grid.columns;
+
+			// There's a weird edge case where adjusting dimensions causes an infinite effect when the grid is destroyed - but even without
+			// knowing the exact cause, it's sensible to untrack this regardless.
+			untracked(() => {
+				this.updateGridDimensions();
+			});
+		});
+
+		// Whenever the grid is resized, update the sizes.
+		this.setupScrollListeners();
+
+		const grid = this.#grid$();
+		let observer: ResizeObserver | null = null;
+
+		if (grid?.ref) {
+			observer = new ResizeObserver((entries) => {
 				const entry = entries[0];
-				if (!entry || !grid) {
+				if (!entry) {
 					return;
 				}
 
 				this.updateGridDimensions();
 			});
 
-			observer.observe(grid);
+			observer.observe(grid.ref);
+		}
 
-			return () => {
-				observer.disconnect();
-				this.#cleanupScrollListeners();
-			};
-		});
+		return () => {
+			stopEffect();
+			observer?.disconnect();
+			this.#cleanupScrollListeners();
+		};
 	}
 
 	updateGridDimensions() {
@@ -796,20 +811,8 @@ export class GridDimensionTracker {
 			return null;
 		}
 
-		const pointerPosition = this.#pointerPosition$();
-		pointerPosition.x = clientX;
-		pointerPosition.y = clientY;
-		// Manually trigger the reactivity response.
-		trigger(() => this.#pointerPosition$());
-
-		// DEBUG: trace scroll offset issue
-		const gridRef = grid.ref;
-		const freshRect = gridRef.getBoundingClientRect();
-		// Walk up to find the scrollable parent (board element)
-		let scrollParent = gridRef.parentElement;
-		while (scrollParent && scrollParent.scrollLeft === 0 && scrollParent !== document.documentElement) {
-			scrollParent = scrollParent.parentElement;
-		}
+		this.#pointerPosition.x = clientX;
+		this.#pointerPosition.y = clientY;
 
 		const dimensions = this.#dimensions$();
 
@@ -833,7 +836,6 @@ export class GridDimensionTracker {
 			column: xCell
 		};
 	}
-
 }
 
 export function contentSize(axisCoordinates: number[], gap: number) {

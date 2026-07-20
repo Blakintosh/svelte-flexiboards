@@ -1,44 +1,47 @@
 {
-    "name": "@flexiboards/core",
-    "version": "1.0.0",
-    "description": "Framework-agnostic core library for Flexiboards.",
-    "main": "index.js",
-    "scripts": {
-        "dev": "pnpm watch",
-        "dev:host": "pnpm dev",
-        "build": "pnpm package",
-        "package": "svelte-kit sync && svelte-package && publint",
-        "prepublishOnly": "pnpm run package",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-        "format": "prettier --write .",
-        "lint": "prettier --check . && eslint .",
-        "watch": "svelte-kit sync && svelte-package --watch",
-        "test": "vitest run"
-    },
-    "files": [
-        "dist",
-        "!dist/**/*.test.*",
-        "!dist/**/*.spec.*"
-    ],
-    "publishConfig": {
-        "access": "public"
-    },
-    "keywords": [],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Blakintosh/svelte-flexiboards.git"
-    },
-    "author": "Blakintosh",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
-    },
-    "homepage": "https://github.com/Blakintosh/svelte-flexiboards#readme",
-    "dependencies": {
-        "alien-signals": "^3.2.1"
-    },
-    "devDependencies": {
-        "vitest": "^3.0.7"
-    }
+	"name": "@flexiboards/core",
+	"version": "1.0.0",
+	"description": "Framework-agnostic core library for Flexiboards.",
+	"scripts": {
+		"dev": "tsc -w --noEmit",
+		"dev:host": "pnpm dev",
+		"build": "tsc",
+		"check": "tsc --noEmit",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint .",
+		"test": "vitest run"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git"
+	},
+	"author": "Blakintosh",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
+	},
+	"homepage": "https://github.com/Blakintosh/svelte-flexiboards#readme",
+	"dependencies": {
+		"alien-signals": "3.2.1"
+	},
+	"devDependencies": {
+		"vitest": "^3.0.7",
+		"typescript": "^5.0.0"
+	},
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	}
 }

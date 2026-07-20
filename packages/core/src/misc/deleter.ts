@@ -1,11 +1,8 @@
-import { untrack } from 'svelte';
-import { getInternalFlexiboardCtx } from '../board/index.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 import { getPointerService, type PointerService } from '../shared/utils.js';
-import type { ClassValue } from 'svelte/elements';
 import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
-import type { PointerMovedEvent, Signal } from '../types.js';
-import { signal } from 'alien-signals';
+import type { ClassValue, PointerMovedEvent, Signal } from '../types.js';
+import { signal } from '../reactivity.js';
 
 export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
 export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
@@ -53,13 +50,17 @@ export class FlexiDeleteController {
 	get isHovered() {
 		return this.#inside$();
 	}
+
+	/**
+	 * Cleanup method to be called when the deleter is destroyed
+	 */
+	destroy() {
+		// Clean up event subscriptions
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
 }
 
-export function flexidelete() {
-	const provider = getInternalFlexiboardCtx();
-	const deleter = new FlexiDeleteController(provider);
-
-	return {
-		deleter
-	};
-}
+// TODO(adapter): removed flexidelete() — composition root that read the board context and constructed
+// FlexiDeleteController(provider). Adapters must construct the controller with their board controller and
+// call deleter.destroy() at unmount.

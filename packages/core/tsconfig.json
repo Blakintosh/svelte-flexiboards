@@ -10,6 +10,18 @@
 		"strict": true,
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"stripInternal": true
-	}
+		"stripInternal": true,
+		"target": "ES2023",
+		"lib": [
+			"ES2023",
+			"DOM",
+			"DOM.Iterable"
+		],
+		"declaration": true,
+		"outDir": "dist",
+		"rootDir": "src"
+	},
+	"include": [
+		"src"
+	]
 }

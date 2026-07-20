@@ -1,5 +1,6 @@
 import type { FreeFormTargetLayout } from '../grid/free-grid.js';
-import type { FlexiGrid, FlowTargetLayout } from '../grid/index.js';
+import type { FlexiGrid } from '../grid/base.js';
+import type { FlowTargetLayout } from '../grid/flow-grid.js';
 import type { InternalWidgetAction } from '../internal-types.js';
 import type { FlexiWidgetController } from '../widget/base.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.js';

@@ -1,5 +1,5 @@
-import { untrack } from 'svelte';
-import { FlexiGrid, FlowFlexiGrid } from '../grid/index.js';
+import { FlexiGrid } from '../grid/base.js';
+import { FlowFlexiGrid } from '../grid/flow-grid.js';
 import type {
 	InternalTargetEvent,
 	InternalWidgetDroppedEvent,
@@ -7,42 +7,52 @@ import type {
 	InternalWidgetGrabbedEvent,
 	InternalWidgetResizingEvent
 } from '../internal-types.js';
-import {
-	untracked,
-	type MouseGridCellMoveEvent,
-	type Position,
-	type ReadonlySignal,
-	type Signal
-} from '../types.js';
+import type { MouseGridCellMoveEvent, Position } from '../types.js';
 import { FlexiWidgetController } from '../widget/base.js';
 import { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { FlexiTargetController } from './base.js';
+import { ReactiveSet } from '../shared/reactive-collections.js';
 import type {
 	FlexiTargetActionWidget,
 	FlexiTargetConfiguration,
 	FlexiTargetDefaults,
-	FlexiTargetPartialConfiguration,
-	FlexiTargetState
+	FlexiTargetPartialConfiguration
 } from './types.js';
 import { getPointerService } from '../shared/utils.js';
 import type { FlexiRegistryEntry, FlexiWidgetLayoutEntry } from '../board/types.js';
 import { FreeFormFlexiGrid } from '../grid/free-grid.js';
-import { computed, effect, signal, trigger } from 'alien-signals';
+import {
+	computed,
+	effect,
+	effectScope,
+	signal,
+	trigger,
+	untracked,
+	type ReadonlySignal,
+	type Signal
+} from '../reactivity.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
-	#widgets$: Signal<Set<InternalFlexiWidgetController>> = signal(new Set());
+	#widgets: ReactiveSet<InternalFlexiWidgetController> = new ReactiveSet();
 	#orderedWidgets$: Signal<InternalFlexiWidgetController[]> = signal([]);
 
-	provider$: Signal<InternalFlexiBoardController> = signal({} as InternalFlexiBoardController);
+	provider$: Signal<InternalFlexiBoardController> = signal(
+		undefined as unknown as InternalFlexiBoardController
+	);
 
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
+	#stopEffects: (() => void)[] = [];
 
-	#providerTargetDefaults$: ReadonlySignal<FlexiTargetDefaults | undefined> = computed(() => this.provider$()?.config$()?.targetDefaults);
-	providerWidgetDefaults$: ReadonlySignal<FlexiWidgetDefaults | undefined> = computed(() => this.provider$()?.config$()?.widgetDefaults);
+	#providerTargetDefaults$: ReadonlySignal<FlexiTargetDefaults | undefined> = computed(
+		() => this.provider$()?.config$()?.targetDefaults
+	);
+	providerWidgetDefaults$: ReadonlySignal<FlexiWidgetDefaults | undefined> = computed(
+		() => this.provider$()?.config$()?.widgetDefaults
+	);
 
 	#initialWidgetRegistrations: Array<{
 		config: FlexiWidgetConfiguration;
@@ -52,17 +62,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	/**
 	 * Stores the underlying state of the target.
 	 */
-	#state$: Signal<FlexiTargetState> = signal({
-		hovered: false,
-		actionWidget: null,
-		prepared: false
-	});
+	#hovered$: Signal<boolean> = signal(false);
+	#actionWidget$: Signal<FlexiTargetActionWidget | null> = signal(null);
+	#prepared$: Signal<boolean> = signal(false);
 
 	#dropzoneWidget$: Signal<InternalFlexiWidgetController | null> = signal(null);
 	#dropzoneWidgetDestroy: (() => void) | null = null;
 	#isDropzoneWidgetAdded$: Signal<boolean> = signal(false);
 
-	#mouseCellPosition: Position = $state({
+	#mouseCellPosition$: Signal<Position> = signal({
 		x: 0,
 		y: 0
 	});
@@ -80,29 +88,31 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#preGrabSnapshot: unknown | null = null;
 	#gridSnapshot: unknown | null = null;
 
-	registry?: Record<string, FlexiRegistryEntry> = $derived(this.provider$()?.registry$());
+	#registry$: ReadonlySignal<Record<string, FlexiRegistryEntry> | undefined> = computed(() =>
+		this.provider$()?.registry$()
+	);
 
-	#targetConfig?: FlexiTargetPartialConfiguration = $state(undefined);
+	#targetConfig$: Signal<FlexiTargetPartialConfiguration | undefined> = signal(undefined);
 
 	#pointerService = getPointerService();
 
-	config: FlexiTargetConfiguration = $derived({
-		layout: this.#targetConfig?.layout ??
+	#config$: ReadonlySignal<FlexiTargetConfiguration> = computed(() => ({
+		layout: this.#targetConfig$()?.layout ??
 			this.#providerTargetDefaults$()?.layout ?? {
 				type: 'flow',
 				flowAxis: 'row',
 				placementStrategy: 'append'
 			},
 		rowSizing:
-			this.#targetConfig?.rowSizing ??
+			this.#targetConfig$()?.rowSizing ??
 			this.#providerTargetDefaults$()?.rowSizing ??
 			'minmax(1rem, auto)',
 		columnSizing:
-			this.#targetConfig?.columnSizing ??
+			this.#targetConfig$()?.columnSizing ??
 			this.#providerTargetDefaults$()?.columnSizing ??
 			'minmax(0, 1fr)',
-		widgetDefaults: this.#targetConfig?.widgetDefaults
-	});
+		widgetDefaults: this.#targetConfig$()?.widgetDefaults
+	}));
 
 	constructor(
 		provider: InternalFlexiBoardController,
@@ -110,7 +120,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		config?: FlexiTargetPartialConfiguration
 	) {
 		this.provider$(provider);
-		this.#targetConfig = config;
+		this.#targetConfig$(config);
 		this.key = key;
 		this.#eventBus = getFlexiEventBus();
 
@@ -133,18 +143,20 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#trackPointerHover() {
 		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
 		// make it universal with our keyboard pointer.
-		effect(() => {
-			if (!this.#grid?.ref) {
-				return;
-			}
+		this.#stopEffects.push(
+			effect(() => {
+				if (!this.#grid?.ref) {
+					return;
+				}
 
-			const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
+				const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
 
-			// Only check when keyboard controls are active
-			untrack(() => {
-				this.#updatePointerOverState(isPointerInside);
-			});
-		});
+				// Only check when keyboard controls are active
+				untracked(() => {
+					this.#updatePointerOverState(isPointerInside);
+				});
+			})
+		);
 	}
 
 	/**
@@ -178,10 +190,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const added = this.grid.tryPlaceWidget(widget, x, y, width, height);
 
 		if (added) {
-			// Mutate and trigger reactivity manually
-			this.#widgets$().add(widget);
-			trigger(() => this.#widgets$());
-
+			this.widgets.add(widget);
 			this.#updateOrderedWidgets();
 			widget.target = this;
 			widget.internalTarget = this;
@@ -213,16 +222,20 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let widgetConfig = {};
 
-		if(config.type) {
-			if(!this.registry?.[config.type]) {
-				console.warn('createWidget(): widget with type ', config.type, ' not found in registry, it will be missing settings.');
+		if (config.type) {
+			if (!this.registry?.[config.type]) {
+				console.warn(
+					'createWidget(): widget with type ',
+					config.type,
+					' not found in registry, it will be missing settings.'
+				);
 			} else {
-				widgetConfig = {...this.registry[config.type]};
+				widgetConfig = { ...this.registry[config.type] };
 			}
 		}
 
 		const widget = new InternalFlexiWidgetController({
-			config: {...widgetConfig, ...config},
+			config: { ...widgetConfig, ...config },
 			provider: this.provider$(),
 			target: this,
 			type: config.type
@@ -239,7 +252,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return widget;
 	}
 
-	registerWidget(config: FlexiWidgetConfiguration, onCreated?: (widget: FlexiWidgetController) => void) {
+	registerWidget(
+		config: FlexiWidgetConfiguration,
+		onCreated?: (widget: FlexiWidgetController) => void
+	) {
 		this.#initialWidgetRegistrations.push({ config, onCreated });
 	}
 
@@ -256,12 +272,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * @returns Whether the widget was deleted.
 	 */
 	deleteWidget(widget: FlexiWidgetController): boolean {
-		const deleted = this.#widgets$().delete(widget);
+		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
 
 		// Update the ordered widgets list to reflect the deletion
 		if (deleted) {
-			trigger(() => this.#widgets$());
 			this.#updateOrderedWidgets();
 		}
 
@@ -292,11 +307,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 */
 	importLayout(layout: FlexiWidgetLayoutEntry[]) {
 		if (!this.registry) {
-			console.warn('importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.');
+			console.warn(
+				'importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.'
+			);
 			return;
 		}
 
-		this.#widgets$().clear();
+		this.widgets.clear();
 		this.grid.clear();
 
 		for (const entry of layout) {
@@ -306,7 +323,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			}
 
 			if (!this.registry[entry.type]) {
-				console.warn(`importLayout(): widget type "${entry.type}" not found in registry, skipping widget.`);
+				console.warn(
+					`importLayout(): widget type "${entry.type}" not found in registry, skipping widget.`
+				);
 				continue;
 			}
 
@@ -320,9 +339,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				metadata: entry.metadata
 			});
 		}
-
-		// Re-trigger widget reactivity.
-		trigger(() => this.#widgets$());
 	}
 
 	/**
@@ -391,7 +407,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setHovered(true);
+		this.hovered = true;
 	}
 
 	onPointerLeaveTarget(event: InternalTargetEvent) {
@@ -399,7 +415,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setHovered(false);
+		this.hovered = false;
 	}
 
 	restorePreGrabSnapshot() {
@@ -424,7 +440,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	cancelDrop() {
-		this.#setActionWidget(null);
+		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 	}
 
@@ -436,7 +452,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let [x, y, width, height] = this.#getDropzoneLocation(actionWidget);
 
-		this.#setActionWidget(null);
+		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 
 		widget.isBeingDropped = true;
@@ -460,10 +476,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	onmousegridcellmove(event: MouseGridCellMoveEvent) {
 		this.#updateMouseCellPosition(event.cellX, event.cellY);
-		const rawMouseCellPosition = this.#rawMouseCellPosition$();
-		rawMouseCellPosition.x = event.rawCellX;
-		rawMouseCellPosition.y = event.rawCellY;
-		trigger(() => this.#rawMouseCellPosition$());
+		this.#rawMouseCellPosition$().x = event.rawCellX;
+		this.#rawMouseCellPosition$().y = event.rawCellY;
+		trigger(this.#rawMouseCellPosition$);
 		this.#updateDropzoneWidget();
 	}
 
@@ -473,10 +488,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setActionWidget({
+		this.actionWidget = {
 			action: 'grab',
 			widget: event.widget
-		});
+		};
 
 		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
 		// we can restore the grid to its original state.
@@ -494,10 +509,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setActionWidget({
+		this.actionWidget = {
 			action: 'resize',
 			widget: event.widget
-		});
+		};
 
 		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
 		// we can restore the grid to its original state.
@@ -515,7 +530,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setActionWidget(null);
+		this.actionWidget = null;
 
 		this.cancelDrop();
 		this.restorePreGrabSnapshot();
@@ -523,8 +538,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	onWidgetRelease(event: InternalWidgetEvent) {
-		const provider = this.provider$();
-		if (event.board != provider || !this.actionWidget) {
+		if (event.board != this.provider$() || !this.actionWidget) {
 			return;
 		}
 
@@ -541,7 +555,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 		this.#eventBus.dispatch('widget:dropped', {
 			widget: actionWidget.widget,
-			board: provider,
+			board: this.provider$(),
 			oldTarget: originalSourceTarget,
 			newTarget: this
 		});
@@ -556,8 +570,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// If this was the source target, then we need to remove the widget from it.
 		if (event.oldTarget == this) {
 			// Ensure the widget is no longer tracked by this (source) target
-			this.#widgets$().delete(event.widget);
-			trigger(() => this.#widgets$());
+			this.widgets.delete(event.widget);
 			// Update the ordered widgets list to reflect the removal
 			this.#updateOrderedWidgets();
 			// Clear any pre-grab snapshot now that the operation completed successfully
@@ -572,10 +585,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setActionWidget({
+		this.actionWidget = {
 			action: 'grab',
 			widget: event.widget
-		});
+		};
 
 		this.#createDropzoneWidget();
 	}
@@ -585,7 +598,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
-		this.#setActionWidget(null);
+		this.actionWidget = null;
 		this.#removeDropzoneWidget();
 	}
 
@@ -597,23 +610,25 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			}
 		}
 
-		this.#state$().prepared = true;
-		trigger(() => this.#state$());
+		this.#prepared$(true);
 	}
 
 	#updateOrderedWidgets() {
-		this.#orderedWidgets$(Array.from(this.internalWidgets).toSorted((a, b) => {
-			if (a.y !== b.y) {
-				return a.y - b.y;
-			}
+		this.#orderedWidgets$(
+			Array.from(this.internalWidgets).toSorted((a, b) => {
+				if (a.y !== b.y) {
+					return a.y - b.y;
+				}
 
-			return a.x - b.x;
-		}));
+				return a.x - b.x;
+			})
+		);
 	}
 
 	#updateMouseCellPosition(x: number, y: number) {
-		this.#mouseCellPosition.x = x;
-		this.#mouseCellPosition.y = y;
+		this.#mouseCellPosition$().x = x;
+		this.#mouseCellPosition$().y = y;
+		trigger(this.#mouseCellPosition$);
 	}
 
 	#createDropzoneWidget() {
@@ -627,8 +642,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.setDragSnapshot(this.#gridSnapshot);
 
 		// TODO: Not sure why the $effect.root is needed, but it is.
-		this.#dropzoneWidgetDestroy = $effect.root(() => {
-			this.dropzoneWidget = this.#createShadow(this.actionWidget!.widget, this.actionWidget!.action);
+		this.#dropzoneWidgetDestroy = effectScope(() => {
+			this.dropzoneWidget = this.#createShadow(
+				this.actionWidget!.widget,
+				this.actionWidget!.action
+			);
 		});
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
@@ -684,7 +702,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#getDropzoneLocation(actionWidget: FlexiTargetActionWidget) {
-		const mouseCellPosition = this.#mouseCellPosition;
+		const mouseCellPosition = this.#mouseCellPosition$();
 
 		switch (actionWidget.action) {
 			case 'grab':
@@ -715,12 +733,17 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Use raw (fractional) position with rounding for smoother resize snapping
 		// This makes the widget snap to the next cell when more than halfway through
-		const rawMouseCellPosition = this.#rawMouseCellPosition$();
-		const roundedX = Math.round(rawMouseCellPosition.x);
-		const roundedY = Math.round(rawMouseCellPosition.y);
+		const roundedX = Math.round(this.#rawMouseCellPosition$().x);
+		const roundedY = Math.round(this.#rawMouseCellPosition$().y);
 
-		let newWidth = Math.max(1, Math.min(widget.maxWidth, Math.max(roundedX - widget.x, widget.minWidth)));
-		let newHeight = Math.max(1, Math.min(widget.maxHeight, Math.max(roundedY - widget.y, widget.minHeight)));
+		let newWidth = Math.max(
+			1,
+			Math.min(widget.maxWidth, Math.max(roundedX - widget.x, widget.minWidth))
+		);
+		let newHeight = Math.max(
+			1,
+			Math.min(widget.maxHeight, Math.max(roundedY - widget.y, widget.minHeight))
+		);
 
 		// If the widget is in a flow layout, then they can't change their flow axis dimensions.
 		// NEXT: show this visually to the user by faking the "horizontal"/"vertical" resizable modes.
@@ -770,35 +793,53 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	// State-related getters and setters
 
+	get provider() {
+		return this.provider$();
+	}
+
+	set provider(value: InternalFlexiBoardController) {
+		this.provider$(value);
+	}
+
+	get providerWidgetDefaults() {
+		return this.providerWidgetDefaults$();
+	}
+
+	get registry() {
+		return this.#registry$();
+	}
+
+	get config() {
+		return this.#config$();
+	}
+
 	/**
 	 * Whether the target is currently being hovered over by the mouse.
 	 */
 	get hovered() {
-		return this.#state$().hovered;
+		return this.#hovered$();
 	}
 
-	#setHovered(value: boolean) {
-		this.#state$().hovered = value;
-		trigger(() => this.#state$());
+	set hovered(value: boolean) {
+		this.#hovered$(value);
 	}
 
 	/**
 	 * When set, this indicates that a widget is currently being hovered over this target.
 	 */
 	get actionWidget() {
-		return this.#state$().actionWidget;
+		return this.#actionWidget$();
 	}
 
-	#setActionWidget(value: FlexiTargetActionWidget | null) {
-		this.#state$().actionWidget = value;
-		trigger(() => this.#state$());
+	set actionWidget(value: FlexiTargetActionWidget | null) {
+		this.#actionWidget$(value);
 	}
 
 	/**
 	 * Whether the target is prepared and ready to render widgets.
 	 */
 	get prepared() {
-		return this.#state$().prepared;
+		return this.#prepared$();
 	}
 
 	/**
@@ -828,7 +869,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	get dropzoneWidget() {
-		return this.#dropzoneWidget$().value;
+		return this.#dropzoneWidget$();
 	}
 
 	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
@@ -840,11 +881,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	get widgets() {
-		return this.#widgets$() as Set<FlexiWidgetController>;
+		return this.#widgets as unknown as ReactiveSet<FlexiWidgetController>;
 	}
 
 	get internalWidgets() {
-		return this.#widgets$();
+		return this.#widgets;
 	}
 	get orderedWidgets() {
 		return this.#orderedWidgets$();
@@ -855,11 +896,17 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 */
 	destroy() {
 		// Clean up all widgets
-		this.#widgets$().forEach((widget) => {
-			widget.destroy();
+		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
+		this.widgets.forEach((widget) => {
+			if ('destroy' in widget) {
+				(widget as InternalFlexiWidgetController).destroy();
+			}
 		});
-		this.#widgets$().clear();
-		trigger(() => this.#widgets$());
+		this.widgets.clear();
+
+		// Stop effects owned by this controller
+		this.#stopEffects.forEach((stop) => stop());
+		this.#stopEffects = [];
 
 		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());

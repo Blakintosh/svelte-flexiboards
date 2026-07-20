@@ -1,55 +1,27 @@
-import { getContext, setContext } from 'svelte';
-import type { ResponsiveFlexiBoardController } from './base.svelte.js';
-import { InternalResponsiveFlexiBoardController } from './controller.svelte.js';
-import type { ResponsiveFlexiBoardProps } from '$lib/components/responsive-flexi-board.svelte';
-import type { ResponsiveFlexiBoardConfiguration, ResponsiveFlexiLayout } from './types.js';
+import type { ResponsiveFlexiBoardController } from './base.js';
+import { InternalResponsiveFlexiBoardController } from './controller.js';
+import type {
+	ResponsiveFlexiBoardConfiguration,
+	ResponsiveFlexiBoardProps,
+	ResponsiveFlexiLayout
+} from './types.js';
 
-const contextKey = Symbol('responsive-flexiboard');
+// TODO(adapter): removed responsiveflexiboard(props) — composition root that constructed the
+// InternalResponsiveFlexiBoardController and set the responsive board context. Adapters must construct the
+// controller, provide it via their own context mechanism, and call controller.destroy() at unmount.
+// TODO(adapter): removed getInternalResponsiveFlexiboardCtx() — context getter returning the internal
+// responsive controller (child boards now receive it via the InternalFlexiBoardController constructor).
+// TODO(adapter): removed hasInternalResponsiveFlexiboardCtx() — context presence check used by child boards
+// to detect a responsive parent.
+// TODO(adapter): removed getResponsiveFlexiboardCtx() — context getter narrowing to the public
+// ResponsiveFlexiBoardController.
 
-export function responsiveflexiboard(
-	props: ResponsiveFlexiBoardProps
-): InternalResponsiveFlexiBoardController {
-	const board = new InternalResponsiveFlexiBoardController(props);
-	setContext(contextKey, board);
-	return board;
-}
-
-/**
- * Gets the current {@link InternalResponsiveFlexiBoardController} instance, if any.
- * Throws an error if no responsive board is found.
- * @internal
- */
-export function getInternalResponsiveFlexiboardCtx(): InternalResponsiveFlexiBoardController {
-	const board = getContext<InternalResponsiveFlexiBoardController | undefined>(contextKey);
-
-	if (!board) {
-		throw new Error(
-			'Cannot get ResponsiveFlexiBoard context outside of a registered board. Ensure that responsiveflexiboard() (or <ResponsiveFlexiBoard>) is called.'
-		);
-	}
-
-	return board;
-}
-
-/**
- * Checks if a responsive board context is available.
- * @returns Whether a responsive board context is available.
- */
-export function hasInternalResponsiveFlexiboardCtx(): boolean {
-	return !!getContext<InternalResponsiveFlexiBoardController | undefined>(contextKey);
-}
-
-/**
- * Gets the current {@link ResponsiveFlexiBoardController} instance, if any.
- * Throws an error if no responsive board is found.
- */
-export function getResponsiveFlexiboardCtx(): ResponsiveFlexiBoardController {
-	return getInternalResponsiveFlexiboardCtx() as ResponsiveFlexiBoardController;
-}
+export { InternalResponsiveFlexiBoardController };
 
 /* Exports to go to root index.ts */
 export {
 	type ResponsiveFlexiBoardController,
 	type ResponsiveFlexiBoardConfiguration,
+	type ResponsiveFlexiBoardProps,
 	type ResponsiveFlexiLayout
 };

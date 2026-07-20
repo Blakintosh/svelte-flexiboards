@@ -46,8 +46,12 @@ importers:
   packages/core:
     dependencies:
       alien-signals:
-        specifier: ^3.2.1
+        specifier: 3.2.1
         version: 3.2.1
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
+        version: 5.7.3
       vitest:
         specifier: ^3.0.7
         version: 3.0.7(@types/node@22.13.5)(lightningcss@1.30.1)

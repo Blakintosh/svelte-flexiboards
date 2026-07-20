@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { FlexiTargetConfiguration } from '../target/index.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
-import type { InternalFlexiWidgetController } from '../widget/controller.svelte.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { WidgetDraggability } from '../types.js';
-import { FreeFormFlexiGrid } from '../grid/free-grid.svelte.js';
+import { FreeFormFlexiGrid } from '../grid/free-grid.js';
 
 // Mock the base class
-vi.mock('../grid/base.svelte.js', () => ({
+vi.mock('../grid/base.js', () => ({
 	FlexiGrid: class FlexiGrid {
 		constructor() {}
 	}
