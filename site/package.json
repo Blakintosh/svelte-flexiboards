@@ -83,6 +83,7 @@
 		"remark-toc": "^9.0.0",
 		"shiki": "^2.4.1",
 		"svelte-flexiboards": "workspace:^",
+		"@flexiboards/svelte": "workspace:^",
 		"svelte-sonner": "^1.0.2"
 	}
 }
