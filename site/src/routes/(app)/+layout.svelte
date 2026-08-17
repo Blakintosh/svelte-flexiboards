@@ -1,20 +1,98 @@
 <script lang="ts">
 	import Header from '$lib/components/nav/header.svelte';
+	import FlexiMark from '$lib/components/brand/flexi-mark.svelte';
+	import { page } from '$app/state';
 
 	let { children } = $props();
+
+	// The splash runs edge to edge — its sections supply their own gutters so the
+	// 1px rules between them can reach the viewport edge.
+	const fullBleed = $derived(page.url.pathname === '/');
+
+	const footerColumns = [
+		{
+			heading: 'Docs',
+			links: [
+				{ label: 'Overview', href: '/docs/overview' },
+				{ label: 'Free-form grids', href: '/docs/free-form-grids' },
+				{ label: 'Flow grids', href: '/docs/flow-grids' },
+				{ label: 'Configuration', href: '/docs/configuration' },
+				{ label: 'Transitions', href: '/docs/transitions' }
+			]
+		},
+		{
+			heading: 'Components',
+			links: [
+				{ label: 'FlexiBoard', href: '/docs/components/board' },
+				{ label: 'FlexiTarget', href: '/docs/components/target' },
+				{ label: 'FlexiWidget', href: '/docs/components/widget' },
+				{ label: 'FlexiAdd', href: '/docs/components/adder' },
+				{ label: 'Responsive board', href: '/docs/components/responsive-board' }
+			]
+		},
+		{
+			heading: 'Project',
+			links: [
+				{ label: 'GitHub', href: 'https://github.com/Blakintosh/svelte-flexiboards' },
+				{ label: 'npm', href: 'https://www.npmjs.com/package/svelte-flexiboards' },
+				{ label: 'Examples', href: '/examples' }
+			]
+		}
+	];
 </script>
 
-<div class="min-h-svh">
+<div class="flex min-h-svh flex-col">
 	<Header />
 
-	<main class="mb-14 flex min-h-0 flex-1 flex-col px-4 lg:px-8" id="main-content">
+	<main class="flex min-h-0 flex-1 flex-col {fullBleed ? '' : 'px-4 lg:px-8'}" id="main-content">
 		{@render children()}
 	</main>
-</div>
 
-<footer
-	class="h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur-sm"
->
-	Made by <a href="https://github.com/Blakintosh" class="underline font-medium underline-offset-4" target="_blank">Blakintosh</a>.
-	The Flexiboards source code is available on <a href="https://github.com/Blakintosh/svelte-flexiboards" class="underline font-medium underline-offset-4" target="_blank">GitHub</a>.
-</footer>
+	<footer class="border-t border-rule bg-paper">
+		<div
+			class="page-gutter grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-8 py-12 text-[13.5px] text-body"
+		>
+			<div>
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<FlexiMark />
+					<span class="font-serif text-base text-ink">Flexiboards</span>
+				</div>
+				<p class="m-0 max-w-[34ch] leading-relaxed">
+					A headless drag-and-drop grids library. We'll bring the grid, you bring the style.
+				</p>
+			</div>
+
+			{#each footerColumns as column (column.heading)}
+				<div>
+					<b class="label mb-2.5 block text-[11px] tracking-[0.12em] text-faint">
+						{column.heading}
+					</b>
+					<div class="flex flex-col gap-1.5">
+						{#each column.links as link (link.href)}
+							<a
+								href={link.href}
+								class="w-fit transition-colors duration-[120ms] hover:text-vermillion"
+								target={link.href.startsWith('http') ? '_blank' : undefined}
+							>
+								{link.label}
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<div
+			class="page-gutter label flex flex-wrap items-center justify-between gap-3 border-t border-rule py-4 text-[10px] text-faint"
+		>
+			<span>MIT licensed</span>
+			<span class="normal-case tracking-normal">
+				Made by <a
+					href="https://github.com/Blakintosh"
+					class="text-body transition-colors duration-[120ms] hover:text-vermillion"
+					target="_blank">Blakintosh</a
+				>
+			</span>
+		</div>
+	</footer>
+</div>

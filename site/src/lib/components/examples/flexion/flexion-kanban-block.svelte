@@ -18,10 +18,11 @@
 	let board: FlexiBoardController | undefined = $state();
 </script>
 
-<nav class="flex w-full min-w-0 justify-between border-b">
+<nav class="flex w-full min-w-0 justify-between border-b border-rule">
 	<ul class="flex w-full min-w-0 gap-2">
 		<li>
-			<Button variant="ghost" class="rounded-none border-b-2 border-primary font-bold">
+			<!-- The active tab takes a vermillion rule, not a fill. -->
+			<Button variant="ghost" class="-mb-px border-b border-vermillion text-ink">
 				<FolderDot />
 				Active
 			</Button>
@@ -68,22 +69,22 @@
 	<FlexionKanbanList
 		category="today"
 		categoryLabel="Today"
-		bgClass="bg-green-300"
-		dotClass="bg-green-500"
+		bgClass="bg-tint text-blue"
+		dotClass="bg-blue"
 		items={['Eggs', 'Bread', 'Milk']}
 	/>
 	<FlexionKanbanList
 		category="tomorrow"
 		categoryLabel="Tomorrow"
-		bgClass="bg-amber-300"
-		dotClass="bg-amber-500"
+		bgClass="bg-tint-2 text-body"
+		dotClass="bg-faint"
 		items={['Fish', 'Chips']}
 	/>
 	<FlexionKanbanList
 		category="never"
 		categoryLabel="Never"
-		bgClass="bg-red-300"
-		dotClass="bg-red-500"
+		bgClass="bg-tint-accent text-vermillion"
+		dotClass="bg-vermillion"
 		items={['Pasta', 'Ice cream']}
 	/>
 </FlexiBoard>

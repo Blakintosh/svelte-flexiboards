@@ -1,17 +1,22 @@
 <script lang="ts" module>
 	import { type VariantProps, tv } from "tailwind-variants";
 
+	// Blueprint status marks: fills mean shipped, outlines mean not yet,
+	// dashes mean going away. Version numbers are plain mono, never badged.
 	export const badgeVariants = tv({
-		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none [&>svg]:size-3",
+		base: "focus-visible:ring-ring/50 label inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-transparent px-2 py-[3px] text-[10px] tracking-[0.1em] transition-colors duration-[120ms] focus-visible:ring-[3px] [&>svg]:pointer-events-none [&>svg]:size-3",
 		variants: {
 			variant: {
-				default:
-					"bg-primary text-primary-foreground [a&]:hover:bg-primary/90 border-transparent",
-				secondary:
-					"bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90 border-transparent",
-				destructive:
-					"bg-destructive [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/70 border-transparent text-white",
-				outline: "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+				/* stable */
+				default: "bg-ink text-paper [a&]:hover:bg-blue [a&]:hover:text-white",
+				/* preview */
+				accent: "bg-vermillion text-white [a&]:hover:bg-vermillion-hover",
+				destructive: "bg-vermillion text-white [a&]:hover:bg-vermillion-hover",
+				secondary: "bg-tint text-ink [a&]:hover:bg-rule",
+				/* planned */
+				outline: "border-rule text-faint [a&]:hover:border-ink [a&]:hover:text-ink",
+				/* deprecated */
+				deprecated: "border-dashed border-vermillion text-vermillion",
 			},
 		},
 		defaultVariants: {

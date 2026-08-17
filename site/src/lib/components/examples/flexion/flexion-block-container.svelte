@@ -16,16 +16,16 @@
 <FlexiWidget
 	class={(widget: FlexiWidgetController) =>
 		cn(
-			'group flex w-full min-w-0 items-start gap-4 rounded-lg px-2 py-1 transition-colors hover:bg-muted/50',
-			widget.isGrabbed && 'animate-pulse opacity-50',
-			widget.isShadow && 'opacity-40'
+			'group flex w-full min-w-0 items-start gap-4 px-2 py-1 transition-colors duration-[120ms] hover:bg-tint',
+			widget.isGrabbed && 'border border-vermillion opacity-60',
+			widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70'
 		)}
 	transition={simpleTransitionConfig()}
 >
 	{#snippet children()}
 		<Grabber
 			size={16}
-			class="shrink-0 py-1 text-muted-foreground duration-75 group-hover:opacity-100 lg:opacity-0"
+			class="shrink-0 py-1 group-hover:opacity-100 lg:opacity-0"
 		/>
 
 		<div class="w-full min-w-0 grow">

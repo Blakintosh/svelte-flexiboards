@@ -26,8 +26,8 @@
 
 <Sidebar.Provider class="h-full min-h-0">
 	<AppSidebar />
-	<main class="flex h-full min-h-0 grow flex-col px-4 py-4 lg:px-8">
-		<header class="mb-8 flex items-center justify-between">
+	<main class="flex h-full min-h-0 grow flex-col bg-paper px-4 py-4 lg:px-8">
+		<header class="mb-8 flex items-center justify-between border-b border-rule pb-3">
 			<div class="flex items-center gap-4">
 				<Button variant={'ghost'} size={'icon'} class={'lg:hidden [&_svg]:size-5'}>
 					<Menu />
@@ -46,7 +46,7 @@
 					</li>
 				</ul>
 
-				<h3>My First Page</h3>
+				<span class="label text-[10px] text-faint">My First Page</span>
 			</div>
 
 			<ul class="flex items-center gap-2">
@@ -75,7 +75,7 @@
 				bind:controller={board}
 				class="overflow-y-auto py-8 2xl:pl-8 2xl:pr-16"
 			>
-				<h1 class="mb-8 pl-8 text-3xl 2xl:text-4xl font-semibold">My First Page</h1>
+				<h1 class="mb-8 pl-8 font-serif text-[30px] text-ink 2xl:text-[38px]">My First Page</h1>
 				<FlexiTarget key="page" class="gap-8">
 					<FlexionBlockContainer component={FlexionTextBlock} />
 					<FlexionBlockContainer component={FlexionKanbanBlock} />

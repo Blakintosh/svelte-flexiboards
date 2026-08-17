@@ -6,9 +6,10 @@ import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
 import { preprocessMeltUI, sequence } from '@melt-ui/pp';
 import examples from 'mdsvexamples';
+import { blueprintTheme } from './src/lib/shiki-blueprint-theme.js';
 
 const shikiPromise = getSingletonHighlighter({
-	themes: ['poimandres'],
+	themes: [blueprintTheme],
 	langs: ['javascript', 'typescript', 'svelte']
 });
 
@@ -18,7 +19,7 @@ const mdsvexOptions = {
 	highlight: {
 		highlighter: async (code, lang = 'text') => {
 			const highlighter = await shikiPromise;
-			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'poimandres' }))
+			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'blueprint' }))
 			return `{@html \`${html}\` }`
 		}
 	},

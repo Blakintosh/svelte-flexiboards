@@ -67,12 +67,15 @@
 
 {#if isWide}
 	<!-- Wide layout: side-by-side with chart taking full height -->
-	<Card.Root class="relative flex h-full w-full flex-row py-0 gap-0 from-primary/5 bg-gradient-to-t to-card" data-tile-type={tileType}>
+	<Card.Root
+		class="relative flex h-full w-full flex-row gap-0 border-rule bg-panel py-0 shadow-none"
+		data-tile-type={tileType}
+	>
 		<!-- Left side: title, stats, controls -->
 		<div class="flex w-44 shrink-0 flex-col p-3 lg:w-52 lg:p-4">
-			<div class="flex items-center gap-2 text-sm font-semibold lg:text-base">
+			<div class="label flex items-center gap-2 text-[10px] text-faint">
 				{#if widget.draggability == 'full'}
-					<Grabber size={grabberSize} class="text-muted-foreground" />
+					<Grabber size={grabberSize} class="-ml-1.5" />
 				{/if}
 				{tileConfig.title}
 			</div>
@@ -81,20 +84,26 @@
 			</div>
 		</div>
 		<!-- Right side: full-height chart -->
-		<div class="my-3 min-w-0 flex-1 border-l px-2 lg:my-4">
+		<div class="my-3 min-w-0 flex-1 border-l border-rule px-2 lg:my-4">
 			<ContentComponent {...(tileConfig.props as any)} {isWide} chartOnly />
 		</div>
 		{#if widget.resizable}
-			<Resizer size={grabberSize} class="absolute bottom-2 right-2 cursor-col-resize text-muted-foreground lg:bottom-3 lg:right-3" />
+			<Resizer
+				size={grabberSize}
+				class="absolute right-2 bottom-2 cursor-col-resize lg:right-3 lg:bottom-3"
+			/>
 		{/if}
 	</Card.Root>
 {:else}
 	<!-- Narrow layout: stacked -->
-	<Card.Root class="flex h-full w-full flex-col py-3 lg:py-4 from-primary/5 bg-gradient-to-t to-card" data-tile-type={tileType}>
+	<Card.Root
+		class="flex h-full w-full flex-col border-rule bg-panel py-3 shadow-none lg:py-4"
+		data-tile-type={tileType}
+	>
 		<Card.Header class="shrink-0 px-3 lg:px-4">
-			<Card.Title class="flex items-center gap-2 text-sm font-semibold lg:text-base truncate">
+			<Card.Title class="label flex items-center gap-2 truncate text-[10px] text-faint">
 				{#if widget.draggability == 'full'}
-					<Grabber size={grabberSize} class="text-muted-foreground" />
+					<Grabber size={grabberSize} class="-ml-1.5" />
 				{/if}
 				{tileConfig.title}
 			</Card.Title>
@@ -102,9 +111,9 @@
 		<Card.Content class="min-h-0 flex-1 px-3 pt-3 lg:px-4 lg:pt-4">
 			<ContentComponent {...(tileConfig.props as any)} {isWide} />
 		</Card.Content>
-		<Card.Footer class="shrink-0 flex justify-end px-3 pt-2 lg:px-4">
+		<Card.Footer class="flex shrink-0 justify-end px-3 pt-2 lg:px-4">
 			{#if widget.resizable}
-				<Resizer size={grabberSize} class="cursor-col-resize text-muted-foreground" />
+				<Resizer size={grabberSize} class="cursor-col-resize" />
 			{/if}
 		</Card.Footer>
 	</Card.Root>

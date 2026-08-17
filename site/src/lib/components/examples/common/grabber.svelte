@@ -13,6 +13,12 @@
 	let { class: className, size = 20 }: GrabberProps = $props();
 </script>
 
-<FlexiGrab class={cn('shrink-0 rounded-md p-1.5 transition-colors hover:bg-muted active:bg-muted', className)}>
+<!-- Vermillion means movement: the grab handle turns accent the moment it is touched. -->
+<FlexiGrab
+	class={cn(
+		'shrink-0 p-1.5 text-faint transition-colors duration-[120ms] hover:bg-tint hover:text-vermillion active:bg-tint-accent active:text-vermillion',
+		className
+	)}
+>
 	<GripVertical {size} />
 </FlexiGrab>

@@ -8,8 +8,9 @@
 	let { content }: FlowTileProps = $props();
 </script>
 
+<!-- A placed widget is board furniture: blue rule on tint, mono label. -->
 <div
-	class="flex h-full items-center justify-center rounded-md bg-card text-card-foreground shadow-sm border p-4 text-base font-bold lg:text-2xl"
+	class="label flex h-full items-center justify-center border border-blue bg-tint p-4 text-[11px] text-blue lg:text-[13px]"
 >
 	{content}
 </div>

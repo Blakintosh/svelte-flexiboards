@@ -29,7 +29,6 @@
 			reviewCount: 2341,
 			badge: 'sale',
 			category: 'Audio',
-			gradient: 'from-violet-500 to-purple-600',
 			featured: true,
 			stock: 45
 		},
@@ -41,7 +40,6 @@
 			reviewCount: 892,
 			badge: 'new',
 			category: 'Accessories',
-			gradient: 'from-slate-400 to-slate-600',
 			featured: false,
 			stock: 23
 		},
@@ -52,7 +50,6 @@
 			rating: 4.3,
 			reviewCount: 1567,
 			category: 'Audio',
-			gradient: 'from-emerald-400 to-teal-600',
 			featured: false,
 			stock: 156
 		},
@@ -64,7 +61,6 @@
 			reviewCount: 743,
 			badge: 'bestseller',
 			category: 'Peripherals',
-			gradient: 'from-amber-400 to-orange-500',
 			featured: true,
 			stock: 89
 		},
@@ -75,7 +71,6 @@
 			rating: 4.4,
 			reviewCount: 3201,
 			category: 'Accessories',
-			gradient: 'from-blue-400 to-cyan-500',
 			featured: false,
 			stock: 412
 		},
@@ -88,7 +83,6 @@
 			reviewCount: 1823,
 			badge: 'sale',
 			category: 'Audio',
-			gradient: 'from-pink-400 to-rose-500',
 			featured: false,
 			stock: 67
 		},
@@ -100,7 +94,6 @@
 			reviewCount: 456,
 			badge: 'new',
 			category: 'Home Office',
-			gradient: 'from-yellow-300 to-amber-400',
 			featured: false,
 			stock: 34
 		},
@@ -111,7 +104,6 @@
 			rating: 4.5,
 			reviewCount: 2104,
 			category: 'Peripherals',
-			gradient: 'from-gray-400 to-zinc-600',
 			featured: false,
 			stock: 198
 		}
@@ -144,30 +136,31 @@
 		}
 	});
 
+	// Anything provisional — the drop preview, the widget in hand — is dashed vermillion.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'opacity-50',
-		widget.isGrabbed && 'animate-pulse opacity-50'
+		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70',
+		widget.isGrabbed && 'border border-vermillion opacity-60'
 	];
 </script>
 
 <main
-	class="relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
+	class="relative flex h-full min-h-0 w-full flex-col gap-4 bg-paper px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
 >
 	<!-- Header -->
-	<header class="shrink-0">
+	<header class="shrink-0 border-b border-rule pb-4">
 		<div class="flex items-center justify-between gap-3">
 			<div class="flex items-center gap-2 sm:gap-3">
-				<div class="bg-primary/10 hidden size-10 items-center justify-center rounded-lg sm:flex">
-					<Package class="text-primary size-5" />
+				<div class="hidden size-10 items-center justify-center bg-ink text-paper sm:flex">
+					<Package class="size-5" />
 				</div>
 				<div>
-					<h1 class="text-xl font-semibold sm:text-2xl lg:text-3xl">Products</h1>
-					<p class="text-muted-foreground hidden text-sm sm:block">Manage your product catalog</p>
+					<h1 class="font-serif text-xl text-ink sm:text-2xl lg:text-[30px]">Products</h1>
+					<p class="hidden text-[13px] text-body sm:block">Manage your product catalogue</p>
 				</div>
 			</div>
 			<Button size="sm" class="shrink-0">
 				<Plus class="size-4 sm:mr-2" />
-				<span class="hidden sm:inline">Add Product</span>
+				<span class="hidden sm:inline">Add product</span>
 			</Button>
 		</div>
 	</header>
@@ -176,7 +169,7 @@
 	<div class="flex shrink-0 flex-col gap-2 sm:gap-3">
 		<div class="flex items-center gap-2">
 			<div class="relative min-w-0 flex-1 sm:max-w-xs">
-				<Search class="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+				<Search class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint" />
 				<Input type="search" placeholder="Search..." class="pl-9" bind:value={searchQuery} />
 			</div>
 
@@ -223,23 +216,18 @@
 			</DropdownMenu.Root>
 		</div>
 
-		<div class="flex items-center justify-between text-xs sm:text-sm">
-			<span class="text-muted-foreground">
+		<!-- Counts and status keys are labels: mono, uppercase, square ticks. -->
+		<div class="flex items-center justify-between">
+			<span class="font-mono text-[11px] text-faint">
 				{filteredProducts().length} products
 			</span>
 			<div class="flex items-center gap-1.5 sm:gap-2">
-				<Badge
-					variant="secondary"
-					class="gap-1 px-1.5 py-0.5 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs"
-				>
-					<span class="size-1.5 rounded-full bg-emerald-500 sm:size-2"></span>
-					In Stock
+				<Badge variant="secondary" class="gap-1.5">
+					<span class="size-1.5 bg-blue"></span>
+					In stock
 				</Badge>
-				<Badge
-					variant="outline"
-					class="gap-1 px-1.5 py-0.5 text-[10px] text-amber-600 sm:px-2 sm:py-0.5 sm:text-xs"
-				>
-					<span class="size-1.5 rounded-full bg-amber-500 sm:size-2"></span>
+				<Badge variant="outline" class="gap-1.5">
+					<span class="size-1.5 bg-faint"></span>
 					Low
 				</Badge>
 			</div>

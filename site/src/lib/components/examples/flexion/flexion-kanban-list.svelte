@@ -48,7 +48,7 @@
 		adding = false;
 
 		target!.createWidget({
-			className: 'bg-muted px-4 py-2 rounded-lg',
+			className: 'border border-blue bg-tint px-4 py-2 text-[13px] text-blue',
 			snippet: widgetChildren,
 			componentProps: {
 				content: newItem
@@ -69,26 +69,22 @@
 
 <FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>
 	{#snippet header({ target })}
-		<div class="mb-4 flex items-center gap-4 text-muted-foreground">
-			<h3
-				class={twMerge(
-					'inline-flex items-center gap-2 rounded-full bg-green-300 px-3 py-1 text-sm text-black',
-					bgClass
-				)}
-			>
-				<div class={twMerge('size-3 rounded-full bg-green-500', dotClass)}></div>
+		<!-- Column headings are labels: mono, uppercase, with a square status tick. -->
+		<div class="mb-4 flex items-center gap-4">
+			<h3 class={twMerge('label inline-flex items-center gap-2 px-3 py-1 text-[10px]', bgClass)}>
+				<div class={twMerge('size-2', dotClass)}></div>
 				{categoryLabel}
 			</h3>
-			{target.widgets.size}
+			<span class="font-mono text-[11px] text-faint">{target.widgets.size}</span>
 		</div>
 	{/snippet}
 	{#each items as item}
 		<FlexiWidget
 			class={(widget: FlexiWidgetController) => {
 				return cn(
-					'rounded-lg bg-muted px-4 py-2',
-					widget.isGrabbed && 'animate-pulse opacity-50',
-					widget.isShadow && 'opacity-40'
+					'border border-blue bg-tint px-4 py-2 text-[13px] text-blue',
+					widget.isGrabbed && 'border-vermillion opacity-60',
+					widget.isShadow && 'border-dashed border-vermillion bg-tint-accent opacity-70'
 				);
 			}}
 		>
@@ -102,7 +98,7 @@
 				Add
 			</Button>
 		{:else}
-			<div class="mt-1 flex w-48 2xl:w-64 items-center gap-2 rounded-lg bg-muted px-4 py-1">
+			<div class="mt-1 flex w-48 items-center gap-2 border border-rule bg-tint px-4 py-1 2xl:w-64">
 				<Button onclick={cancelAddItem} variant={'ghost'} size={'icon'} class="size-4 shrink-0">
 					<X />
 				</Button>
@@ -110,7 +106,7 @@
 					type="text"
 					bind:this={addInput}
 					bind:value={newItem}
-					class="min-w-0 grow rounded-sm bg-transparent"
+					class="min-w-0 grow bg-transparent text-[13px] text-ink outline-none"
 				/>
 				<Button onclick={onClickAddItem} variant="link" size={'sm'} class="shrink-0">Add</Button>
 			</div>

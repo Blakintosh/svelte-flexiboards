@@ -2,6 +2,7 @@
 	let { children } = $props();
 </script>
 
-<div class="h-svh w-full overflow-hidden bg-background text-foreground">
+<!-- Embeds are the rendered result, framed by the page that hosts them: paper ground, no chrome of their own. -->
+<div class="h-svh w-full overflow-hidden bg-paper text-ink">
 	{@render children()}
 </div>

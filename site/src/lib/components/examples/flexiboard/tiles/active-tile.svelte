@@ -41,7 +41,7 @@
 			y="users"
 			props={{
 				bar: {
-					radius: 4,
+					radius: 0,
 					fill: 'var(--color-users)',
 					'fill-opacity': 0.8
 				},
@@ -60,15 +60,15 @@
 	<!-- Stats display -->
 	<div class="flex flex-col gap-2">
 		<div class="flex items-center gap-2">
-			<span class="text-3xl font-bold lg:text-4xl">{count}</span>
-			<Activity class="size-5 text-emerald-500 animate-pulse" />
+			<span class="font-mono text-3xl text-ink lg:text-4xl">{count}</span>
+			<Activity class="size-5 text-blue" />
 		</div>
 		<div class="flex items-center gap-1.5">
 			{#if isPositive}
-				<TrendingUp class="size-3.5 text-emerald-500" />
-				<p class="text-xs text-emerald-600 dark:text-emerald-400">{change}</p>
+				<TrendingUp class="size-3.5 text-blue" />
+				<p class="font-mono text-[11px] text-blue">{change}</p>
 			{:else}
-				<p class="text-xs text-muted-foreground">{change}</p>
+				<p class="font-mono text-[11px] text-faint">{change}</p>
 			{/if}
 		</div>
 	</div>

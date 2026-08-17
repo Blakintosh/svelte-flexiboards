@@ -2,7 +2,7 @@
 	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
 </script>
 
-<FlexiBoard class="size-72 lg:size-96 rounded-xl border p-8">
+<FlexiBoard class="size-72 border border-ink bg-panel p-8 lg:size-96">
 	<FlexiTarget
 		class={'h-full w-full gap-4 lg:gap-6'}
 		containerClass={'w-full h-full'}
@@ -17,7 +17,11 @@
 			}
 		}}
 	>
-		<FlexiWidget x={0} y={0} class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+		<FlexiWidget
+			x={0}
+			y={0}
+			class="border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue"
+		>
 			{#snippet children({ widget, component, componentProps })}
 				I'm at ({widget.x}, {widget.y})
 			{/snippet}

@@ -61,7 +61,7 @@
 		// Legend adjustments
 		"[&_.lc-legend-swatch-button]:items-center [&_.lc-legend-swatch-button]:gap-1.5",
 		"[&_.lc-legend-swatch-group]:items-center [&_.lc-legend-swatch-group]:gap-4",
-		"[&_.lc-legend-swatch]:size-2.5 [&_.lc-legend-swatch]:rounded-[2px]",
+		"[&_.lc-legend-swatch]:size-2.5 [&_.lc-legend-swatch]:",
 
 		// Labels
 		"[&_.lc-labels-text:not([fill])]:fill-foreground [&_text]:stroke-transparent",

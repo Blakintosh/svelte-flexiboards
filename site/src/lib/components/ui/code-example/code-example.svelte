@@ -1,7 +1,9 @@
 <script module lang="ts">
+	import { blueprintTheme } from '$lib/shiki-blueprint-theme.js';
+
 	async function loadHighlighter() {
 		const highlighter = await getSingletonHighlighter({
-			themes: ['poimandres'],
+			themes: [blueprintTheme],
 			langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell']
 		});
 
@@ -14,7 +16,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { cn } from '$lib/utils.js';
 	import { getSingletonHighlighter } from 'shiki';
 	import Copy from 'lucide-svelte/icons/copy';
 	import Check from 'lucide-svelte/icons/check';
@@ -34,7 +35,7 @@
 	// Reactive statement to generate highlighted HTML when src or lang changes
 	let highlightedCodePromise = $derived.by(async () => {
 		async function getHighlightedCode() {
-			if(!rawElement) {
+			if (!rawElement) {
 				return '';
 			}
 			const codeContents = rawElement.textContent;
@@ -42,7 +43,7 @@
 
 			try {
 				const { highlighter } = await highlighterPromise;
-				const html = highlighter.codeToHtml(codeContents || '', { lang, theme: 'poimandres' });
+				const html = highlighter.codeToHtml(codeContents || '', { lang, theme: 'blueprint' });
 				return html;
 			} catch (error) {
 				console.error(`Error highlighting code as ${lang}:`, error);
@@ -64,22 +65,18 @@
 			copied = false;
 		}, 2000);
 	}
+
+	// Tabs are square mono labels; the active one takes a vermillion underline.
+	const triggerClass =
+		'label relative rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 text-[11px] text-faint shadow-none transition-colors duration-[120ms] focus-visible:ring-0 hover:text-ink data-[state=active]:border-b-vermillion data-[state=active]:text-ink data-[state=active]:shadow-none';
 </script>
 
 <Tabs.Root value={'preview'} class="relative mt-4">
 	<Tabs.List
-		class="mb-8 flex h-9 items-center justify-start rounded-none border-b border-b-border bg-transparent p-0"
+		class="mb-8 flex h-9 items-center justify-start rounded-none border-b border-rule bg-transparent p-0"
 	>
-		<Tabs.Trigger
-			value="preview"
-			class="relative rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 font-semibold text-muted-foreground shadow-none transition-none focus-visible:ring-0 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-			>Preview</Tabs.Trigger
-		>
-		<Tabs.Trigger
-			value="code"
-			class="relative rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 font-semibold text-muted-foreground shadow-none transition-none focus-visible:ring-0 data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-			>Code</Tabs.Trigger
-		>
+		<Tabs.Trigger value="preview" class={triggerClass}>Preview</Tabs.Trigger>
+		<Tabs.Trigger value="code" class={triggerClass}>Code</Tabs.Trigger>
 	</Tabs.List>
 	<Tabs.Content value="preview">
 		<div
@@ -89,9 +86,11 @@
 		</div>
 	</Tabs.Content>
 	<Tabs.Content value="code">
-		<div class="not-prose code-block group relative max-h-160 overflow-clip rounded-md">
+		<div
+			class="not-prose code-block group relative max-h-160 overflow-clip border border-ink bg-field"
+		>
 			<button
-				class="absolute right-4 top-2 z-10 rounded-md bg-muted p-2 text-muted-foreground opacity-0 transition-opacity duration-200 hover:bg-muted hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring group-hover:opacity-100"
+				class="label absolute right-3 top-3 z-10 border border-on-ink-faint/40 bg-field p-2 text-on-ink-faint opacity-0 transition-colors duration-[120ms] hover:text-on-ink focus:outline-hidden focus:ring-1 focus:ring-vermillion group-hover:opacity-100"
 				onclick={copyCode}
 				aria-label="Copy code to clipboard"
 			>
@@ -102,11 +101,13 @@
 				{/if}
 			</button>
 			{#await highlightedCodePromise}
-				<p>Loading code...</p>
+				<p class="label m-0 px-6 py-4 text-[10px] text-on-ink-faint">Loading listing</p>
 			{:then highlightedHtml}
 				{@html highlightedHtml}
 			{:catch error}
-				<p>Error loading code: {error.message}</p>
+				<p class="m-0 px-6 py-4 font-mono text-[12.5px] text-on-ink">
+					Error loading code: {error.message}
+				</p>
 			{/await}
 		</div>
 	</Tabs.Content>

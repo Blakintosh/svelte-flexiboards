@@ -42,33 +42,34 @@
 	let onBoardReady = (board: FlexiBoardController) => {};
 </script>
 
-<div class="flex flex-col items-stretch mx-auto aspect-[9/18] gap-0.5 h-full py-8 border rounded-4xl px-6 text-sm">
+<!-- The handset is a drawn frame: 1px ink, square corners, mono readouts. -->
+<div class="flex flex-col items-stretch mx-auto aspect-[9/18] gap-0.5 h-full py-8 border border-ink bg-panel px-6 text-sm">
     {#if !editMode}
         <div class="flex justify-between items-center">
-            <h1 class="font-semibold text-3xl">
+            <h1 class="font-mono text-3xl text-ink">
                 9:30
             </h1>
         </div>
-        <div class="flex justify-between items-center text-muted-foreground">
-            <h3>
-                Tue, Jul 19
-            </h3>
-            <h3>
-                Until 10:00 AM
-            </h3>
+        <div class="flex justify-between items-center">
+            <span class="label text-[10px] text-faint">
+                Tue, 19 Jul
+            </span>
+            <span class="label text-[10px] text-faint">
+                Until 10:00
+            </span>
         </div>
         <BrightnessSlider />
     {:else}
         <div class="flex gap-4 items-center mb-4">
-            <Button size={"icon"} variant={"outline"} class={"rounded-full cursor-pointer"} onclick={() => editor.editMode = false}>
+            <Button size={"icon"} variant={"outline"} class={"cursor-pointer"} onclick={() => editor.editMode = false}>
                 <ArrowLeft class="size-5" />
                 <span class="sr-only">Go back</span>
             </Button>
-            <h1 class="font-semibold text-xl">
+            <h1 class="font-serif text-[19px] text-ink">
                 Edit tiles
             </h1>
         </div>
-        <p class="text-center text-muted-foreground mb-4">
+        <p class="text-center text-[13px] text-body mb-4">
             Select tiles to rearrange and resize
         </p>
     {/if}
@@ -98,18 +99,16 @@
         </FlexiTarget>
     </FlexiBoard>
     {#if !editMode}
-        <div class="flex justify-between items-center text-muted-foreground my-2">
-            <p class="w-16">
+        <div class="flex justify-between items-center my-2">
+            <p class="w-16 font-mono text-[11px] text-faint">
                 16
             </p>
             <div class="flex items-center gap-1">
-                <div class="h-2 w-4 rounded-lg bg-primary">
-
-                </div>
-                <div class="size-2 rounded-lg bg-muted"></div>
+                <div class="h-2 w-4 bg-ink"></div>
+                <div class="size-2 bg-rule"></div>
             </div>
             <div class="w-16 flex justify-end">
-                <Button size={"icon"} variant={"ghost"} class={"rounded-full cursor-pointer"} onclick={() => editor.editMode = true}>
+                <Button size={"icon"} variant={"ghost"} class={"cursor-pointer"} onclick={() => editor.editMode = true}>
                     <Pencil class="size-5" />
                     <span class="sr-only">Edit tiles</span>
                 </Button>
@@ -117,6 +116,6 @@
         </div>
     {/if}
     <div class="flex flex-col items-center justify-end grow">
-        <div class="h-1 w-32 rounded-lg bg-primary"></div>
+        <div class="h-1 w-32 bg-ink"></div>
     </div>
 </div>

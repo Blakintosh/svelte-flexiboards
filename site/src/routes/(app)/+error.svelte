@@ -3,8 +3,11 @@
 </script>
 
 <div class="grid h-full w-full place-items-center">
-	<div class="flex flex-col items-center gap-8">
-		<h1 class="font-display text-8xl font-medium">{page.status}</h1>
-		<p class="text-xl">{page.error?.message}</p>
+	<div class="flex max-w-[48ch] flex-col items-start gap-4 border-l-2 border-vermillion pl-6">
+		<span class="label text-[10px] text-vermillion">Error {page.status}</span>
+		<h1 class="m-0 font-serif text-[62px] font-semibold leading-none tracking-[-0.02em] text-ink">
+			{page.status}
+		</h1>
+		<p class="m-0 text-[18px] leading-relaxed text-body">{page.error?.message}</p>
 	</div>
 </div>

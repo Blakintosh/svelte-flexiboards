@@ -64,12 +64,13 @@
     })
 </script>
 
+<!-- On is an ink fill, off is a tinted box; the tile being edited takes vermillion. -->
 <button class={[
-    on && !editMode && 'rounded-xl bg-primary text-primary-foreground',
-    (!on || editMode) && 'rounded-full bg-muted text-muted-foreground',
-    editingTile && 'outline-2 outline-primary',
+    on && !editMode && 'bg-ink text-paper',
+    (!on || editMode) && 'border border-rule bg-tint text-body',
+    editingTile && 'border border-dashed border-vermillion bg-tint-accent text-vermillion',
     widget.isShadow && 'opacity-40',
-    'h-12 grid place-items-center justify-items-center w-full cursor-pointer transition-all duration-150 relative'
+    'h-12 grid place-items-center justify-items-center w-full cursor-pointer transition-colors duration-[120ms] relative'
 ]} {onclick} bind:this={node}>
     <span class="sr-only">Toggle {title}</span>
     <div class={[
@@ -87,7 +88,7 @@
             </div>
         {/if}
         {#if widget.width == 2}
-            <h4 class="text-sm font-semibold truncate">{title}</h4>
+            <h4 class="label text-[10px] truncate">{title}</h4>
         {/if}
     </div>
 
@@ -96,7 +97,7 @@
         <FlexiResize
             class="absolute top-[50%] right-0 translate-y-[-50%] translate-x-[50%] grid place-items-center p-2 lg:p-0"
         >
-            <span class="pointer-events-none block w-2 h-4 bg-primary rounded-lg"></span>
+            <span class="pointer-events-none block w-2 h-4 bg-vermillion"></span>
         </FlexiResize>
     {/if}
 </button>

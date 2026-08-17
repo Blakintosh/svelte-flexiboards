@@ -1,5 +1,6 @@
+<!-- A note callout: 2px blue rule, tinted ground, never italic. -->
 <blockquote
-	class="border-l-4 border-muted-foreground/30 pl-4 text-sm italic leading-relaxed text-muted-foreground lg:text-base"
+	class="border-l-2 border-blue bg-tint px-4 py-3 text-[13px] leading-relaxed text-body lg:text-[14.5px]"
 >
 	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 	labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris

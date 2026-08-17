@@ -1,4 +1,4 @@
-<p class="text-sm leading-relaxed text-muted-foreground lg:text-base">
+<p class="max-w-[68ch] text-[13px] leading-relaxed text-body lg:text-[14.5px]">
 	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
 	labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
 	nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit

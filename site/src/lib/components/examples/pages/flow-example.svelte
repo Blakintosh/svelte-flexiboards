@@ -21,16 +21,20 @@
 		}
 	});
 
+	// Anything provisional — the drop preview, the widget in hand — is dashed vermillion.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'opacity-50',
-		widget.isGrabbed && 'animate-pulse opacity-50'
+		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70',
+		widget.isGrabbed && 'border border-vermillion opacity-60'
 	];
 
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
 </script>
 
-<main class="flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
-	<h1 class="flex shrink-0 justify-between text-2xl font-semibold lg:text-3xl">Flow.</h1>
+<main class="flex h-full min-h-0 w-full flex-col gap-8 bg-paper px-12 py-8 lg:px-16">
+	<header class="flex shrink-0 items-baseline justify-between gap-4">
+		<h1 class="font-serif text-2xl text-ink lg:text-[30px]">Flow</h1>
+		<span class="label text-[10px] text-faint">3 × 3 · flow · row axis</span>
+	</header>
 
 	<FlexiBoard
 		class="flex min-h-0 min-w-0 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-6"
@@ -39,7 +43,7 @@
 	>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-64 gap-2 rounded-lg border p-4 lg:h-128 lg:gap-6'}
+			class={'aspect-square h-64 gap-2 border border-ink bg-panel p-4 lg:h-128 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 6rem)',
 				layout: {

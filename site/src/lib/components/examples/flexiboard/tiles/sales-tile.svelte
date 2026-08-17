@@ -47,7 +47,7 @@
 			y="sales"
 			props={{
 				bar: {
-					radius: 4,
+					radius: 0,
 					fill: 'var(--color-sales)',
 					'fill-opacity': 0.8
 				},
@@ -65,14 +65,14 @@
 {:else}
 	<!-- Stats display -->
 	<div class="flex flex-col gap-2">
-		<div class="text-3xl font-bold lg:text-4xl">{count}</div>
+		<div class="font-mono text-3xl text-ink lg:text-4xl">{count}</div>
 		<div class="flex items-center gap-1.5">
 			{#if isPositive}
-				<TrendingUp class="size-3.5 text-emerald-500" />
-				<p class="text-xs text-emerald-600 dark:text-emerald-400">{change}</p>
+				<TrendingUp class="size-3.5 text-blue" />
+				<p class="font-mono text-[11px] text-blue">{change}</p>
 			{:else}
-				<TrendingDown class="size-3.5 text-rose-500" />
-				<p class="text-xs text-rose-600 dark:text-rose-400">{change}</p>
+				<TrendingDown class="size-3.5 text-vermillion" />
+				<p class="font-mono text-[11px] text-vermillion">{change}</p>
 			{/if}
 		</div>
 	</div>

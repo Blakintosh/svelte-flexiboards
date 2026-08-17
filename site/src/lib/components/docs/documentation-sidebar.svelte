@@ -1,32 +1,10 @@
 <script lang="ts">
-	import {
-		BookOpen,
-		Settings,
-		Gamepad2,
-		Zap,
-		LayoutGrid,
-		Workflow,
-		Columns3,
-		LayoutList,
-		Sparkles,
-		Save,
-		Smartphone,
-		Box,
-		Target,
-		Component as LucideComponent,
-		Plus,
-		Trash2
-	} from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
 	import { cn } from '$lib/utils';
 	import { page } from '$app/state';
-	import type { Component } from 'svelte';
 
 	type DocPage = {
 		title: string;
 		href: string;
-		icon?: any;
 	};
 
 	type Section = {
@@ -40,23 +18,19 @@
 			pages: [
 				{
 					title: 'Overview',
-					href: '/docs/overview',
-					icon: BookOpen
+					href: '/docs/overview'
 				},
 				{
 					title: 'Configuration',
-					href: '/docs/configuration',
-					icon: Settings
+					href: '/docs/configuration'
 				},
 				{
 					title: 'Controllers',
-					href: '/docs/controllers',
-					icon: Gamepad2
+					href: '/docs/controllers'
 				},
 				{
 					title: 'Breaking Changes in v0.4',
-					href: '/docs/breaking-changes-to-04',
-					icon: Zap
+					href: '/docs/breaking-changes-to-04'
 				}
 			]
 		},
@@ -65,38 +39,31 @@
 			pages: [
 				{
 					title: 'Free-Form Grids',
-					href: '/docs/free-form-grids',
-					icon: LayoutGrid
+					href: '/docs/free-form-grids'
 				},
 				{
 					title: 'Flow Grids',
-					href: '/docs/flow-grids',
-					icon: LayoutList
+					href: '/docs/flow-grids'
 				},
 				{
 					title: 'Widget Rendering',
-					href: '/docs/widget-rendering',
-					icon: LucideComponent
+					href: '/docs/widget-rendering'
 				},
 				{
 					title: 'Multiple Targets',
-					href: '/docs/multiple-targets',
-					icon: Columns3
+					href: '/docs/multiple-targets'
 				},
 				{
 					title: 'Transitions',
-					href: '/docs/transitions',
-					icon: Sparkles
+					href: '/docs/transitions'
 				},
 				{
 					title: 'Exporting & Importing',
-					href: '/docs/guides/exporting-importing-boards',
-					icon: Save
+					href: '/docs/guides/exporting-importing-boards'
 				},
 				{
 					title: 'Responsive Layouts',
-					href: '/docs/guides/responsive-layouts',
-					icon: Smartphone
+					href: '/docs/guides/responsive-layouts'
 				}
 			]
 		},
@@ -134,36 +101,28 @@
 	let { class: className = '' } = $props();
 </script>
 
+<!--
+  Docs nav is the label voice throughout: faint mono section labels, mono items,
+  and the active page in vermillion. No pills, no fills, no radius.
+-->
 <nav class={cn('flex min-h-0 flex-col', className)}>
 	{#each directory as section, i}
-		{#if i > 0}
-			<Separator class="my-4" />
-		{/if}
-		<div class="flex flex-col gap-0.5">
-			<h2 class="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+		<div class={cn('flex flex-col', i > 0 && 'mt-8 border-t border-rule pt-6')}>
+			<h2 class="label mb-3 text-[10px] text-faint">
 				{section.section}
 			</h2>
 			{#each section.pages as docPage}
 				{@const isActive = docPage.href === page.url.pathname}
-				<Button
-					variant="ghost"
-					size="sm"
-					class={cn(
-						'group inline-flex h-8 justify-start gap-2.5 px-2 text-sm font-normal text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-						isActive && 'bg-muted text-foreground'
-					)}
+				<a
 					href={docPage.href}
+					aria-current={isActive ? 'page' : undefined}
+					class={cn(
+						'truncate py-1.5 font-mono text-[12.5px] leading-snug no-underline transition-colors duration-[120ms]',
+						isActive ? 'text-vermillion' : 'text-body hover:text-ink'
+					)}
 				>
-					{#if docPage.icon}
-						<docPage.icon
-							class={cn(
-								'size-4 shrink-0 text-muted-foreground/70 transition-colors group-hover:text-foreground',
-								isActive && 'text-foreground'
-							)}
-						/>
-					{/if}
-					<span class="truncate">{docPage.title}</span>
-				</Button>
+					{docPage.title}
+				</a>
 			{/each}
 		</div>
 	{/each}

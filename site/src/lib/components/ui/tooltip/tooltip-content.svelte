@@ -32,7 +32,7 @@
 			{#snippet child({ props })}
 				<div
 					class={cn(
-						"bg-primary z-50 size-2.5 rotate-45 rounded-[2px]",
+						"bg-primary z-50 size-2.5 rotate-45",
 						side === "top" && "translate-x-1/2 translate-y-[calc(-50%_+_2px)]",
 						side === "bottom" && "-translate-x-1/2 -translate-y-[calc(-50%_+_1px)]",
 						side === "right" && "translate-x-[calc(50%_+_2px)] translate-y-1/2",

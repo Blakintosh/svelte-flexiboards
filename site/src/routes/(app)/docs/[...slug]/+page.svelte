@@ -2,7 +2,6 @@
 	import Toc from '$lib/components/docs/toc.svelte';
 	import DocumentationSidebar from '$lib/components/docs/documentation-sidebar.svelte';
 	import type { PageData } from './$types';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
 
 	let { data }: { data: PageData } = $props();
 
@@ -13,30 +12,39 @@
 	});
 </script>
 
-<div class="relative flex h-full gap-16">
-	<nav class="hidden w-64 shrink-0 border-r border-dashed lg:block">
-		<div class="sticky top-14">
+<!-- Three columns divided by single 1px rules; the prose measure is capped by `.prose`. -->
+<div class="relative flex h-full gap-8 xl:gap-12">
+	<nav class="hidden w-60 shrink-0 border-r border-rule lg:block">
+		<!-- 60px header, so sticky content clears at top-15. -->
+		<div class="sticky top-15">
 			<div
-				class="flex h-[calc(100%-6.5rem)] max-h-[calc(100%-6.5rem)] min-h-0 flex-col gap-8 overflow-y-auto py-12 pr-4 text-base"
+				class="flex h-[calc(100%-6.5rem)] max-h-[calc(100%-6.5rem)] min-h-0 flex-col overflow-y-auto py-12 pr-6"
 			>
 				<DocumentationSidebar />
 			</div>
 		</div>
 	</nav>
+	<!--
+		No `dark:prose-invert`: the brand prose tokens in app.css already flip under
+		`.dark`, and the plugin's inverted greys would override them.
+	-->
 	<article
-		class="prose prose-sm mx-auto w-full shrink-0 overflow-y-auto py-8 dark:prose-invert lg:prose-lg lg:py-12"
+		class="prose prose-sm mx-auto min-w-0 flex-1 overflow-y-auto py-8 lg:prose-lg lg:py-12"
 		id="docs-content"
 	>
-		<div class="not-prose text-base">
-			<h1 class="mb-2 text-2xl font-bold text-foreground lg:mb-4 lg:text-3xl 2xl:text-4xl">
+		<div class="not-prose mb-10 border-b border-rule pb-8">
+			<span class="label block text-[10px] text-vermillion">Documentation</span>
+			<h1 class="mb-3 mt-3 font-serif text-[30px] font-semibold text-ink lg:text-[38px]">
 				{data.doc.meta.title}
 			</h1>
-			<p class="text-muted-foreground text-base lg:text-lg">{data.doc.meta.description}</p>
+			<p class="max-w-[60ch] text-[17px] leading-relaxed text-body">
+				{data.doc.meta.description}
+			</p>
 		</div>
 		<PageComponent />
 	</article>
-	<aside class="hidden w-64 lg:block">
-		<div class="sticky top-14 flex flex-col gap-8 py-12 text-base">
+	<aside class="hidden w-60 shrink-0 border-l border-rule xl:block">
+		<div class="sticky top-15 flex flex-col gap-6 py-12 pl-6">
 			<Toc />
 		</div>
 	</aside>

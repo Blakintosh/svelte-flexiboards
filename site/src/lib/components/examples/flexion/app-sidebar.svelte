@@ -7,10 +7,10 @@
 	import Plus from 'lucide-svelte/icons/plus';
 </script>
 
-<Sidebar.Root class="absolute h-full">
+<Sidebar.Root class="absolute h-full border-r border-rule bg-paper">
 	<Sidebar.Header>
 		<HeaderDropdown />
-		<Sidebar.Group class="text-muted-foreground">
+		<Sidebar.Group class="text-body">
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
@@ -40,17 +40,17 @@
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="bg-muted pl-4">My First Page</Sidebar.MenuButton>
+						<Sidebar.MenuButton class="border-l-2 border-vermillion bg-tint pl-4 text-ink">My First Page</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="pl-4">Another Page</Sidebar.MenuButton>
+						<Sidebar.MenuButton class="pl-4 text-body hover:bg-tint hover:text-ink">Another Page</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
 	<Sidebar.Footer>
-		<Sidebar.Group class="text-muted-foreground">
+		<Sidebar.Group class="text-body">
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>

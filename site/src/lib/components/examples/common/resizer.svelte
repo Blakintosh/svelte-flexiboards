@@ -13,6 +13,12 @@
 	let { class: className, size = 20 }: ResizerProps = $props();
 </script>
 
-<FlexiResize class={cn('shrink-0 rounded-md p-1.5 bg-background/50 backdrop-blur-sm transition-colors hover:bg-muted active:bg-muted', className)}>
+<!-- Resizing is movement too, so the handle answers in vermillion rather than a shadowed pill. -->
+<FlexiResize
+	class={cn(
+		'shrink-0 p-1.5 text-faint transition-colors duration-[120ms] hover:bg-tint hover:text-vermillion active:bg-tint-accent active:text-vermillion',
+		className
+	)}
+>
 	<MoveDiagonal2 {size} />
 </FlexiResize>

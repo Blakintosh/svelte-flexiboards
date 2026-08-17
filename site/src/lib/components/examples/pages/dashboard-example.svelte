@@ -55,9 +55,10 @@
 		registry: {
 			default: {
 				component: DashboardTile,
+				// Provisional states are dashed vermillion, never a pulse or a lift.
 				className: (widget: FlexiWidgetController) => [
-					widget.isGrabbed && 'animate-pulse opacity-50',
-					widget.isShadow && 'opacity-50'
+					widget.isGrabbed && 'border border-vermillion opacity-60',
+					widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70'
 				]
 			},
 			immovable: {
@@ -92,12 +93,13 @@
 <Sidebar.Provider class="h-full min-h-0 grow">
 	<AppSidebar />
 	<main
-		class="relative flex min-h-0 w-full grow flex-col gap-6 px-4 py-6 lg:gap-8 lg:px-16 lg:py-8"
+		class="relative flex min-h-0 w-full grow flex-col gap-6 bg-paper px-4 py-6 lg:gap-8 lg:px-16 lg:py-8"
 	>
-		<header class="flex shrink-0 items-center justify-between">
-			<div class="flex items-center gap-3">
+		<header class="flex shrink-0 items-center justify-between border-b border-rule pb-4">
+			<div class="flex items-baseline gap-3">
 				<Sidebar.Trigger class="lg:hidden" />
-				<h1 class="text-2xl font-semibold lg:text-3xl">Dashboard</h1>
+				<h1 class="font-serif text-2xl text-ink lg:text-[30px]">Dashboard</h1>
+				<span class="label hidden text-[10px] text-faint lg:inline">3 × 4 · free · responsive</span>
 			</div>
 			{#if !editMode}
 				<Button variant="outline" size="icon" onclick={toggleEditMode} title="Edit layout">
@@ -189,16 +191,15 @@
 				class="absolute inset-x-4 bottom-4 lg:inset-x-16 lg:bottom-8"
 				transition:fly={{ y: 20, duration: 200 }}
 			>
+				<!-- Edit mode is a state, so the bar is a vermillion callout: 2px left rule, tinted ground. -->
 				<div
-					class="bg-card/95 supports-[backdrop-filter]:bg-card/80 flex items-center justify-between gap-4 rounded-lg border px-4 py-3 shadow-lg backdrop-blur"
+					class="flex items-center justify-between gap-4 border border-l-2 border-rule border-l-vermillion bg-tint-accent px-4 py-3"
 				>
-					<div class="flex items-center gap-2">
-						<div class="bg-primary/10 flex size-8 items-center justify-center rounded-full">
-							<Pencil class="text-primary size-4" />
-						</div>
+					<div class="flex items-center gap-3">
+						<Pencil class="size-4 shrink-0 text-vermillion" />
 						<div class="flex flex-col">
-							<span class="text-sm font-medium">Editing layout</span>
-							<span class="text-muted-foreground hidden text-xs sm:block"
+							<span class="label text-[10px] text-vermillion">Editing layout</span>
+							<span class="hidden text-[13px] text-body sm:block"
 								>Drag and resize widgets to customise</span
 							>
 						</div>
