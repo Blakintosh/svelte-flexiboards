@@ -10,6 +10,7 @@ import { boardEvents } from './events.js';
 // TODO(adapter): removed getFlexiboardCtx() — context getter narrowing to the public FlexiBoardController.
 
 export { InternalFlexiBoardController, boardEvents };
+export * from './types.js';
 
 /* Exports to go to root index.ts */
 export { type FlexiBoardController, type FlexiBoardConfiguration, type FlexiBoardProps };

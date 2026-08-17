@@ -17,6 +17,7 @@ import type {
 // ResponsiveFlexiBoardController.
 
 export { InternalResponsiveFlexiBoardController };
+export * from './types.js';
 
 /* Exports to go to root index.ts */
 export {

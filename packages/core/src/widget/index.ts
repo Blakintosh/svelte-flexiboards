@@ -44,6 +44,13 @@ function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	};
 }
 
+export { InternalFlexiWidgetController } from './controller.js';
+export * from './types.js';
+export * from './events.js';
+export * from './triggers.js';
+export * from './interpolator.js';
+export * from './interpolation-utils.js';
+
 /* Exports to go to root index.ts */
 export {
 	type FlexiWidgetController,

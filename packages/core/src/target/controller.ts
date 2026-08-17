@@ -83,7 +83,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	key: string;
 
-	#grid: FlexiGrid | null = null;
+	// Signal-backed so effects created before the grid exists (e.g. #trackPointerHover,
+	// which runs at construction) re-run once createGrid() assigns it.
+	#grid$: Signal<FlexiGrid | null> = signal(null);
 
 	#preGrabSnapshot: unknown | null = null;
 	#gridSnapshot: unknown | null = null;
@@ -145,11 +147,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// make it universal with our keyboard pointer.
 		this.#stopEffects.push(
 			effect(() => {
-				if (!this.#grid?.ref) {
+				const grid = this.#grid$();
+				if (!grid?.ref) {
 					return;
 				}
 
-				const isPointerInside = this.#pointerService.isPointerInside(this.#grid.ref);
+				const isPointerInside = this.#pointerService.isPointerInside(grid.ref);
 
 				// Only check when keyboard controls are active
 				untracked(() => {
@@ -199,22 +202,24 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	createGrid() {
-		if (this.#grid) {
+		if (this.#grid$()) {
 			console.warn(
 				'A grid already exists but is being replaced. If this is due to a hot reload, this is no cause for alarm.'
 			);
 		}
 
 		const layout = this.config.layout;
+		let grid: FlexiGrid;
 		switch (layout.type) {
 			case 'free':
-				this.#grid = new FreeFormFlexiGrid(this, this.config);
+				grid = new FreeFormFlexiGrid(this, this.config);
 				break;
 			case 'flow':
-				this.#grid = new FlowFlexiGrid(this, this.config);
+				grid = new FlowFlexiGrid(this, this.config);
 				break;
 		}
-		return this.#grid;
+		this.#grid$(grid);
+		return grid;
 	}
 
 	createWidget(config: FlexiWidgetConfiguration) {
@@ -847,7 +852,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * This value is readonly.
 	 */
 	get columns() {
-		return this.#grid?.columns ?? 0;
+		return this.#grid$()?.columns ?? 0;
 	}
 
 	/**
@@ -855,11 +860,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * This value is readonly.
 	 */
 	get rows() {
-		return this.#grid?.rows ?? 0;
+		return this.#grid$()?.rows ?? 0;
 	}
 
 	get grid() {
-		const grid = this.#grid;
+		const grid = this.#grid$();
 		if (!grid) {
 			throw new Error(
 				'Grid is not initialised. Ensure that a FlexiGrid has been created before accessing it.'

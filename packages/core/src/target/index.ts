@@ -6,6 +6,7 @@ import type { FlexiTargetConfiguration } from './types.js';
 // TODO(adapter): removed getFlexitargetCtx — public wrapper returning the context target as FlexiTargetController.
 
 export { InternalFlexiTargetController } from './controller.js';
+export * from './types.js';
 
 /* Exports to go to root index.ts */
 export { type FlexiTargetConfiguration, type FlexiTargetController };
