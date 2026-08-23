@@ -67,7 +67,7 @@ export abstract class FlexiGrid {
 		y: 0
 	});
 
-	#ref$: Signal<HTMLElement | null> = signal(null);
+	#ref$: Signal<HTMLElement | undefined> = signal(undefined);
 	#pointerService: PointerService = getPointerService();
 	#eventBus: FlexiEventBus = getFlexiEventBus();
 
@@ -168,7 +168,7 @@ export abstract class FlexiGrid {
 	get ref() {
 		return this.#ref$();
 	}
-	set ref(ref: HTMLElement | null) {
+	set ref(ref: HTMLElement | undefined) {
 		this.#ref$(ref);
 	}
 

@@ -11,7 +11,7 @@ export interface FlexiBoardController {
 	/**
 	 * The reactive DOM reference to the board's root element.
 	 */
-	ref: HTMLElement | null;
+	ref: HTMLElement | undefined;
 
 	/**
 	 * The breakpoint that the board corresponds to, if the board is responsive.

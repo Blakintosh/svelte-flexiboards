@@ -12,7 +12,7 @@ export class WidgetMoveInterpolator {
 
 	#provider$: Signal<InternalFlexiBoardController> = signal({} as InternalFlexiBoardController);
 
-	#containerRef$: ReadonlySignal<HTMLElement | null> = computed(() => this.#provider$()?.ref);
+	#containerRef$: ReadonlySignal<HTMLElement | undefined> = computed(() => this.#provider$()?.ref);
 	ref?: HTMLElement;
 
 	#observer?: MutationObserver;

@@ -39,7 +39,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	#hoveredOverDeleter$: Signal<boolean> = signal(false);
 
-	#ref$: Signal<HTMLElement | null> = signal(null);
+	#ref$: Signal<HTMLElement | undefined> = signal(undefined);
 
 	#pointerService: PointerService = getPointerService();
 	#autoScrollService: AutoScrollService = new AutoScrollService(this.#ref$);
@@ -239,7 +239,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		return this.#ref$();
 	}
 
-	set ref(ref: HTMLElement | null) {
+	set ref(ref: HTMLElement | undefined) {
 		this.#ref$(ref);
 	}
 

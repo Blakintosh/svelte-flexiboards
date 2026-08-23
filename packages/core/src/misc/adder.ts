@@ -33,7 +33,7 @@ export interface FlexiAddController {
 	/**
 	 * The DOM element bound to this adder.
 	 */
-	ref: HTMLElement | null;
+	ref: HTMLElement | undefined;
 }
 
 type NewWidgetDragInParams = {
@@ -54,7 +54,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 
 	toCreateParams$: Signal<NewWidgetDragInParams | null> = signal(null);
 
-	ref$: Signal<HTMLElement | null> = signal(null);
+	ref$: Signal<HTMLElement | undefined> = signal(undefined);
 
 	constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
 		this.provider = provider;
@@ -169,7 +169,7 @@ export class InternalFlexiAddController implements FlexiAddController {
 	get ref() {
 		return this.ref$();
 	}
-	set ref(value: HTMLElement | null) {
+	set ref(value: HTMLElement | undefined) {
 		this.ref$(value);
 	}
 }

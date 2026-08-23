@@ -49,12 +49,15 @@ export function useSingleRef<T extends { destroy(): void }>(create: () => T): T 
  * slot — the React equivalent of Svelte's `bind:this={controller.ref}`.
  * Controllers are core-owned mutable state, so writing them is their contract,
  * not a React immutability violation.
+ *
+ * Core ref slots are `HTMLElement | undefined`; React's detach `null` is
+ * normalized to `undefined` here.
  * @param controller The controller to receive the element.
  * @returns A callback for the JSX `ref` attribute.
  */
-export function controllerRef<T extends { ref: HTMLElement | null }>(controller: T) {
+export function controllerRef<T extends { ref: HTMLElement | undefined }>(controller: T) {
 	return (el: HTMLElement | null) => {
-		controller.ref = el;
+		controller.ref = el ?? undefined;
 	};
 }
 

@@ -123,7 +123,7 @@ export function getPointerService() {
 export class AutoScrollService {
 	// Shared with the owning board controller: signals are stable references,
 	// so we track the board's ref signal directly rather than copying it.
-	#ref$: Signal<HTMLElement | null>;
+	#ref$: Signal<HTMLElement | undefined>;
 	#pointerService: PointerService = getPointerService();
 	#scrollableContainers$: Signal<HTMLElement[]> = signal([]);
 	#animationFrameId: number | null = null;
@@ -135,7 +135,7 @@ export class AutoScrollService {
 	#unsubscribers: (() => void)[] = [];
 	#stopEffects: (() => void)[] = [];
 
-	constructor(ref: Signal<HTMLElement | null>) {
+	constructor(ref: Signal<HTMLElement | undefined>) {
 		this.#eventBus = getFlexiEventBus();
 		this.#ref$ = ref;
 
@@ -779,7 +779,7 @@ export class GridDimensionTracker {
 		}
 	}
 
-	#getScrollableAncestors(element: HTMLElement | null): HTMLElement[] {
+	#getScrollableAncestors(element: HTMLElement | undefined): HTMLElement[] {
 		const ancestors: HTMLElement[] = [];
 		if (!element) {
 			return ancestors;

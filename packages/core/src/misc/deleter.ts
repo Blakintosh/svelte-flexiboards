@@ -16,7 +16,7 @@ export class FlexiDeleteController {
 	/**
 	 * The DOM element bound to this deleter.
 	 */
-	ref: HTMLElement | null = null;
+	ref: HTMLElement | undefined = undefined;
 
 	#inside$: Signal<boolean> = signal(false);
 
