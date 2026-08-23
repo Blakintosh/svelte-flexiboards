@@ -21,9 +21,8 @@ export function FlexiGrid({ className, children }: FlexiGridProps) {
 	const style = useMemo(() => parseStyleString(styleString), [styleString]);
 
 	// Tell the grid's dimension tracker to watch the grid element.
-	useEffect(() => {
-		grid.watchGridElementDimensions();
-	}, [grid]);
+	// watchGridElementDimensions returns its cleanup — return it to the effect.
+	useEffect(() => grid.watchGridElementDimensions(), [grid]);
 
 	return <FlexiGridContext.Provider value={grid}>
 		<div

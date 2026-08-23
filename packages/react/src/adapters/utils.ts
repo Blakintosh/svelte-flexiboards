@@ -2,34 +2,46 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Holds a single controller instance for the component's lifetime: created
- * lazily on first render, destroyed on unmount. Survives StrictMode's
- * unmount/remount cycle by recreating the instance when the effect re-runs
- * after its cleanup destroyed the previous one.
+ * lazily on first render, destroyed on unmount.
+ *
+ * Destruction uses a grace period (the Relay/React Query timed-disposal
+ * pattern): cleanup schedules the destroy on a timer, and an immediately
+ * re-run effect — StrictMode's synchronous unmount/remount simulation —
+ * cancels it. This keeps the SAME instance alive across the fake death, so
+ * the whole controller graph (factory closures, context values, registration
+ * queues, all pointing at this instance) stays coherent. A real unmount has
+ * no re-run, so the timer fires and destroys on the next tick.
  * @param create Constructs the instance. Captured from the first mount only.
  * @returns The instance.
  */
 export function useSingleRef<T extends { destroy(): void }>(create: () => T): T {
-	const singleRef = useRef<T | null>(null);
-	singleRef.current ??= create();
+	const slotRef = useRef<{
+		instance: T;
+		destroyTimer?: ReturnType<typeof setTimeout>;
+	} | null>(null);
+	slotRef.current ??= { instance: create() };
 
 	useEffect(() => {
-		// In StrictMode, the cleanup below already ran and nulled the ref —
-		// recreate so the remounted component gets a live instance.
-		const single = (singleRef.current ??= create());
+		const slot = slotRef.current!;
+
+		// Resurrected before the scheduled destroy fired — cancel it.
+		if (slot.destroyTimer !== undefined) {
+			clearTimeout(slot.destroyTimer);
+			slot.destroyTimer = undefined;
+		}
+
 		return () => {
-			single.destroy();
-			// "destroyed" is representable as null, so the ??= above can tell.
-			singleRef.current = null;
+			slot.destroyTimer = setTimeout(() => {
+				slot.instance.destroy();
+				slotRef.current = null;
+			});
 		};
-		// create is deliberately captured at first mount only; listing it would
-		// re-run the effect (and destroy/recreate the controller) every render.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// Docs-sanctioned lazy-initialization pattern: the ref is written at most
 	// once per mount during render, and its identity is stable afterwards.
 	// eslint-disable-next-line react-hooks/refs
-	return singleRef.current;
+	return slotRef.current.instance;
 }
 
 /**

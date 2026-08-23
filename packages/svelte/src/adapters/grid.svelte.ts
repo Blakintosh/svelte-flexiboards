@@ -11,9 +11,9 @@ export function flexigrid() {
 	setContext(contextKey, grid);
 
 	// Tell the grid's dimension tracker to watch the grid element.
-	$effect(() => {
-		grid.watchGridElementDimensions();
-	});
+	// watchGridElementDimensions returns its cleanup — return it as the
+	// effect's teardown so the watcher is unsubscribed on destroy.
+	$effect(() => grid.watchGridElementDimensions());
 
 	return {
 		grid

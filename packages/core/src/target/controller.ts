@@ -651,7 +651,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	oninitialloadcomplete() {
-		for (const registration of this.#initialWidgetRegistrations) {
+		// Consume the queue so a repeated call (e.g. React StrictMode re-running
+		// a mount effect) cannot create duplicate widgets.
+		const registrations = this.#initialWidgetRegistrations.splice(0);
+		for (const registration of registrations) {
 			const widget = this.createWidget(registration.config);
 			if (widget && registration.onCreated) {
 				registration.onCreated(widget);
