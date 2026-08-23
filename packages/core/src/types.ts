@@ -17,9 +17,6 @@ export type { Signal, ReadonlySignal } from './reactivity.js';
 export type FlexiComponent = unknown;
 export type FlexiContent = unknown;
 
-/** Framework-neutral replacement for svelte/elements' ClassValue. */
-export type ClassValue = string | null | undefined | ClassValue[] | Record<string, boolean>;
-
 export type Position = {
 	x: number;
 	y: number;

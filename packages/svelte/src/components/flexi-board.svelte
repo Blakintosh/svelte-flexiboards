@@ -12,7 +12,7 @@
 		/**
 		 * The configuration object for the board.
 		 */
-		config?: FlexiBoardConfiguration;
+		config?: FlexiBoardConfiguration<ClassValue>;
 
 		/**
 		 * The class names to apply to the board's root element.
@@ -25,9 +25,10 @@
 	import FlexiPortal from './flexi-portal.svelte';
 	import FlexiAnnouncer from './flexi-announcer.svelte';
 	import { assistiveTextStyle, generateUniqueId, type FlexiBoardConfiguration, type FlexiBoardController } from '@flexiboards/core';
-	import type { ClassValue, FlexiCommonProps } from '@flexiboards/core';
+	import type { FlexiCommonProps } from '@flexiboards/core';
 	import { flexiboard } from '../adapters/board.js';
 	import { fromCore, reactive } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	let { controller = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 

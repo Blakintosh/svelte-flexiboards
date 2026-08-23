@@ -1,11 +1,11 @@
 import type { InternalFlexiBoardController } from '../board/controller.js';
 import { getPointerService, type PointerService } from '../shared/utils.js';
 import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
-import type { ClassValue, PointerMovedEvent, Signal } from '../types.js';
+import type { PointerMovedEvent, Signal } from '../types.js';
 import { signal } from '../reactivity.js';
 
-export type FlexiDeleteClassFunction = (deleter: FlexiDeleteController) => ClassValue;
-export type FlexiDeleteClasses = ClassValue | FlexiDeleteClassFunction;
+export type FlexiDeleteClassFunction<TClass = unknown> = (deleter: FlexiDeleteController) => TClass;
+export type FlexiDeleteClasses<TClass = unknown> = TClass | FlexiDeleteClassFunction<TClass>;
 
 export class FlexiDeleteController {
 	#provider: InternalFlexiBoardController;

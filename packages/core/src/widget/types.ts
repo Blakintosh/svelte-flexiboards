@@ -1,4 +1,4 @@
-import type { ClassValue, FlexiComponent, FlexiContent } from '../types.js';
+import type { FlexiComponent, FlexiContent } from '../types.js';
 
 import type { FlexiWidgetController } from './base.js';
 import {
@@ -15,8 +15,8 @@ export type FlexiWidgetChildrenSnippetParameters = {
 };
 export type FlexiWidgetChildrenSnippet = FlexiContent;
 
-export type FlexiWidgetClassFunction = (widget: FlexiWidgetController) => ClassValue;
-export type FlexiWidgetClasses = ClassValue | FlexiWidgetClassFunction;
+export type FlexiWidgetClassFunction<TClass = unknown> = (widget: FlexiWidgetController) => TClass;
+export type FlexiWidgetClasses<TClass = unknown> = TClass | FlexiWidgetClassFunction<TClass>;
 
 export type FlexiWidgetTransitionTypeConfiguration = {
 	duration?: number;
@@ -31,7 +31,7 @@ export type FlexiWidgetTransitionConfiguration = {
 
 export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondition>;
 
-export type FlexiWidgetDefaults = {
+export type FlexiWidgetDefaults<TClass = unknown> = {
 	/**
 	 * Whether the widget is draggable.
 	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
@@ -78,7 +78,7 @@ export type FlexiWidgetDefaults = {
 	/**
 	 * The class names to apply to this widget.
 	 */
-	className?: FlexiWidgetClasses;
+	className?: FlexiWidgetClasses<TClass>;
 
 	/**
 	 * The transition configuration for this widget.
@@ -118,7 +118,7 @@ export type FlexiWidgetDefaults = {
 	maxHeight?: number;
 };
 
-export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+export type FlexiWidgetConfiguration<TClass = unknown> = FlexiWidgetDefaults<TClass> & {
 	/**
 	 * A stable identifier for this widget, used for persistence and layout
 	 * import/export.
@@ -165,7 +165,7 @@ export type FlexiWidgetState = {
 	y: number;
 };
 
-export type FlexiWidgetDerivedConfiguration = {
+export type FlexiWidgetDerivedConfiguration<TClass = unknown> = {
 	/**
 	 * The component that is rendered by this item. This is optional if a snippet is provided.
 	 */
@@ -200,7 +200,7 @@ export type FlexiWidgetDerivedConfiguration = {
 	/**
 	 * The class name that is applied to this widget.
 	 */
-	className?: FlexiWidgetClasses;
+	className?: FlexiWidgetClasses<TClass>;
 
 	/**
 	 * The metadata associated with this widget, if any.
@@ -245,8 +245,8 @@ export type FlexiWidgetDerivedConfiguration = {
 	maxHeight: number;
 };
 
-export type FlexiWidgetConstructorParams = {
-	config: FlexiWidgetConfiguration;
+export type FlexiWidgetConstructorParams<TClass = unknown> = {
+	config: FlexiWidgetConfiguration<TClass>;
 	provider: InternalFlexiBoardController;
 	target?: InternalFlexiTargetController;
 	type?: string;

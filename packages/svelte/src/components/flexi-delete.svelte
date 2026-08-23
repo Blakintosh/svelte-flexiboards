@@ -3,13 +3,14 @@
 	import type { Snippet } from 'svelte';
 	import { flexidelete } from '../adapters/misc.js';
 	import { fromCore, reactive } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 		/**
 		 * The class names to apply to the deleter's container element. Either a
 		 * class value, or a function deriving one from the deleter's state.
 		 */
-		class?: FlexiDeleteClasses;
+		class?: FlexiDeleteClasses<ClassValue>;
 
 		/**
 		 * The content rendered inside of the deleter.

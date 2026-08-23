@@ -56,18 +56,18 @@ export type FlexiTargetDefaults = {
 
 type RequiredFlexiTargetProperties = Required<FlexiTargetDefaults>;
 
-export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
+export type FlexiTargetPartialConfiguration<TClass = unknown> = FlexiTargetDefaults & {
 	/**
 	 * The default configuration for widgets within this target.
 	 */
-	widgetDefaults?: FlexiWidgetDefaults;
+	widgetDefaults?: FlexiWidgetDefaults<TClass>;
 };
 
-export type FlexiTargetConfiguration = RequiredFlexiTargetProperties & {
+export type FlexiTargetConfiguration<TClass = unknown> = RequiredFlexiTargetProperties & {
 	/**
 	 * The default configuration for widgets within this target.
 	 */
-	widgetDefaults?: FlexiWidgetDefaults;
+	widgetDefaults?: FlexiWidgetDefaults<TClass>;
 };
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;

@@ -4,6 +4,7 @@
 	import { flexiadd } from "../adapters/misc.js";
 	import RenderedFlexiWidget from "./rendered-flexi-widget.svelte";
 	import { fromCore, reactive } from "../adapter.svelte.js";
+	import type { ClassValue } from "svelte/elements";
 
 
 	export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
@@ -11,7 +12,7 @@
 		 * The class names to apply to the adder's button element. Either a class
 		 * value, or a function deriving one from the adder's state.
 		 */
-		class?: FlexiAddClasses;
+		class?: FlexiAddClasses<ClassValue>;
 
 		/**
 		 * The child content of the adder, containing the contents of the adder

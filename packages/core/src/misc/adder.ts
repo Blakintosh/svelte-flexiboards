@@ -4,7 +4,7 @@ import { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { FlexiWidgetConfiguration } from '../widget/index.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { isGrabPointerEvent } from '../shared/utils.js';
-import type { ClassValue, Signal } from '../types.js';
+import type { Signal } from '../types.js';
 import { signal } from '../reactivity.js';
 
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
@@ -26,8 +26,8 @@ export type AdderWidgetConfiguration = {
 	heightPx?: number;
 };
 
-export type FlexiAddClassFunction = (adder: FlexiAddController) => ClassValue;
-export type FlexiAddClasses = ClassValue | FlexiAddClassFunction;
+export type FlexiAddClassFunction<TClass = unknown> = (adder: FlexiAddController) => TClass;
+export type FlexiAddClasses<TClass = unknown> = TClass | FlexiAddClassFunction<TClass>;
 
 export interface FlexiAddController {
 	/**

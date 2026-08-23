@@ -31,7 +31,7 @@
 		/**
 		 * The configuration object for the target.
 		 */
-		config?: FlexiTargetPartialConfiguration;
+		config?: FlexiTargetPartialConfiguration<ClassValue>;
 
 		/**
 		 * The unique identifier for the target.
@@ -48,6 +48,7 @@
 	import type { FlexiCommonProps, FlexiTargetController, FlexiTargetPartialConfiguration } from '@flexiboards/core';
 	import { flexitarget } from '../adapters/target.js';
 	import { fromCore, reactive } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	let {
 		children,

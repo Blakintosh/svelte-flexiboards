@@ -2,14 +2,15 @@
 	import type { FlexiCommonProps, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration, FlexiWidgetController, InternalFlexiWidgetController } from '@flexiboards/core';
 	import { flexiwidget } from '../adapters/widget.js';
 	import { reactive } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
-		Exclude<FlexiWidgetConfiguration, 'className' | 'snippet'> & {
+		Exclude<FlexiWidgetConfiguration<ClassValue>, 'className' | 'snippet'> & {
 			/**
 			 * The class names to apply to this widget. Either a class value, or a
 			 * function deriving one from the widget's state.
 			 */
-			class?: FlexiWidgetClasses;
+			class?: FlexiWidgetClasses<ClassValue>;
 
 			/**
 			 * The content rendered within the widget.
@@ -27,7 +28,7 @@
 		...propsConfig
 	}: FlexiWidgetProps = $props();
 
-	let config: FlexiWidgetConfiguration = $state({
+	let config: FlexiWidgetConfiguration<ClassValue> = $state({
 		...propsConfig,
 		...(className !== undefined && { className }),
 		...(children !== undefined && { snippet: children })

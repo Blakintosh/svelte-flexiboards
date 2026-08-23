@@ -4,12 +4,13 @@
 
 	export type FlexiGridProps = {
 		children?: Snippet;
-		class?: string;
+		class?: ClassValue;
 	};
 </script>
 
 <script lang="ts">
 	import { fromCore } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	let { children, class: className }: FlexiGridProps = $props();
 

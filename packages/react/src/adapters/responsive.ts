@@ -1,26 +1,12 @@
 import {
 	InternalResponsiveFlexiBoardController,
-	type ResponsiveFlexiBoardController,
-	type ResponsiveFlexiBoardProps as ResponsiveFlexiBoardPropsPrimitive
+	type ResponsiveFlexiBoardController
 } from '@flexiboards/core';
-import { createContext, useContext, type ReactNode } from 'react';
-import { useSingleRef } from './utils.js';
+import { createContext, useContext } from 'react';
 
-const ResponsiveFlexiBoardContext = createContext<InternalResponsiveFlexiBoardController | null>(null);
-
-export type ResponsiveFlexiBoardProps = ResponsiveFlexiBoardPropsPrimitive & {
-    children: ReactNode;
-}
-
-export function ResponsiveFlexiBoard({ children, ...props }: ResponsiveFlexiBoardProps) {
-	const board = useSingleRef(() => new InternalResponsiveFlexiBoardController(props));
-
-	return (
-        <ResponsiveFlexiBoardContext.Provider value={board}>
-            {children}
-        </ResponsiveFlexiBoardContext.Provider>
-    );
-}
+/** @internal Provided by the ResponsiveFlexiBoard component; consumed via the hooks below. */
+export const ResponsiveFlexiBoardContext =
+	createContext<InternalResponsiveFlexiBoardController | null>(null);
 
 /**
  * Gets the current {@link InternalResponsiveFlexiBoardController} instance, if any.
@@ -28,7 +14,7 @@ export function ResponsiveFlexiBoard({ children, ...props }: ResponsiveFlexiBoar
  * @internal
  */
 export function useInternalResponsiveFlexiBoardOrNull(): InternalResponsiveFlexiBoardController | null {
-    return useContext(ResponsiveFlexiBoardContext);
+	return useContext(ResponsiveFlexiBoardContext);
 }
 
 /**
@@ -41,7 +27,7 @@ export function useInternalResponsiveFlexiBoard(): InternalResponsiveFlexiBoardC
 
 	if (!board) {
 		throw new Error(
-			'Cannot get ResponsiveFlexiBoard context outside of a registered board. Ensure that <ResponsiveFlexiBoard> is called.'
+			'Cannot get ResponsiveFlexiBoard context outside of a registered board. Ensure that <ResponsiveFlexiBoard> is rendered above this component.'
 		);
 	}
 
