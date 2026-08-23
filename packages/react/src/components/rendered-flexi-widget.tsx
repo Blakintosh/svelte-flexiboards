@@ -1,5 +1,5 @@
 import { dragInOnceMounted, widgetEvents, type FlexiWidgetController } from '@flexiboards/core';
-import { useCallback, useEffect, useState, type ComponentType } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import { useInternalFlexiAddOrNull } from '../adapters/misc.js';
 import {
 	FlexiWidgetContext,
@@ -14,6 +14,9 @@ import { WidgetTransitionPlaceholder } from './widget-transition-placeholder.js'
 export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	const adder = useInternalFlexiAddOrNull();
 
+	const wrapperRef = useRef<HTMLDivElement | null>(null);
+	const innerRef = useRef<HTMLDivElement | null>(null);
+
 	useEffect(() => {
 		if (adder) {
 			// Core dispatches the drag-in immediately; the mount timing is ours.
@@ -24,6 +27,35 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 		// eslint-disable-next-line react-hooks/immutability
 		widget.mounted = true;
 	}, [adder, widget]);
+
+	const orphanSweepTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+	useEffect(() => {
+		// Capture at mount: React nulls the ref callbacks before this cleanup
+		// runs on unmount, so the refs can't be read then.
+		const wrapper = wrapperRef.current;
+		const inner = innerRef.current;
+
+		// A StrictMode fake unmount scheduled a sweep — we're alive, cancel it.
+		// (An adder widget is mid-drag from its very first mount, so "node not
+		// in the wrapper" does NOT imply a real unmount.)
+		if (orphanSweepTimer.current !== undefined) {
+			clearTimeout(orphanSweepTimer.current);
+			orphanSweepTimer.current = undefined;
+		}
+
+		return () => {
+			// React only removes the shield wrapper it owns. If core's portal
+			// moved the inner node out of the wrapper and nothing returned it,
+			// that node would linger in the portal overlay — sweep the orphan
+			// (Svelte-style tolerant teardown), on a grace period so only a
+			// real unmount goes through with it.
+			orphanSweepTimer.current = setTimeout(() => {
+				if (inner && inner.parentElement !== wrapper) {
+					inner.remove();
+				}
+			});
+		};
+	}, []);
 
 	// Event watchers are stateful — create once per component instance.
 	const [events] = useState(() => widgetEvents(widget));
@@ -77,30 +109,40 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 
 	return (
 		<FlexiWidgetContext.Provider value={widget}>
-			<div
-				className={derivedClassName}
-				style={parseStyleString(styleString)}
-				onPointerDown={(e) => events.onpointerdown(e.nativeEvent)}
-				onKeyDown={(e) => events.onkeydown(e.nativeEvent)}
-				aria-grabbed={draggable && !isShadow ? isGrabbed : undefined}
-				aria-label={ariaLabel}
-				aria-dropeffect={draggable ? 'move' : undefined}
-				role="cell"
-				aria-colindex={x}
-				aria-rowindex={y}
-				aria-colspan={width}
-				aria-rowspan={height}
-				tabIndex={draggable && !hasGrabbers ? 0 : undefined}
-				ref={controllerRef(widget)}
-			>
-				{snippet ? (
-					snippet({ widget: widget as FlexiWidgetController, ...events })
-				) : WidgetComponent ? (
-					// Not created during render: a stable component reference the
-					// consumer stored in the widget's config, retrieved from core.
-					// eslint-disable-next-line react-hooks/static-components
-					<WidgetComponent {...(componentProps ?? {})} />
-				) : null}
+			{/* Shield node: core's portal re-parents the inner widget element
+			    during drags, which React must never find out about — React
+			    unmounts THIS wrapper (which core never moves), so its strict
+			    parent.removeChild always succeeds. display:contents keeps the
+			    inner div a direct grid participant. */}
+			<div style={{ display: 'contents' }} ref={wrapperRef}>
+				<div
+					className={derivedClassName}
+					style={parseStyleString(styleString)}
+					onPointerDown={(e) => events.onpointerdown(e.nativeEvent)}
+					onKeyDown={(e) => events.onkeydown(e.nativeEvent)}
+					aria-grabbed={draggable && !isShadow ? isGrabbed : undefined}
+					aria-label={ariaLabel}
+					aria-dropeffect={draggable ? 'move' : undefined}
+					role="cell"
+					aria-colindex={x}
+					aria-rowindex={y}
+					aria-colspan={width}
+					aria-rowspan={height}
+					tabIndex={draggable && !hasGrabbers ? 0 : undefined}
+					ref={(el) => {
+						innerRef.current = el;
+						controllerRef(widget)(el);
+					}}
+				>
+					{snippet ? (
+						snippet({ widget: widget as FlexiWidgetController, ...events })
+					) : WidgetComponent ? (
+						// Not created during render: a stable component reference the
+						// consumer stored in the widget's config, retrieved from core.
+						// eslint-disable-next-line react-hooks/static-components
+						<WidgetComponent {...(componentProps ?? {})} />
+					) : null}
+				</div>
 			</div>
 
 			{/* When it exists, this temporarily occupies the widget's destination space,

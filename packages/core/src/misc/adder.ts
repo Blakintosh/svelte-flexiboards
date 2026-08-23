@@ -7,13 +7,13 @@ import { isGrabPointerEvent } from '../shared/utils.js';
 import type { Signal } from '../types.js';
 import { signal } from '../reactivity.js';
 
-export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
+export type FlexiAddWidgetFn<TClass = unknown> = () => AdderWidgetConfiguration<TClass> | null;
 
-export type AdderWidgetConfiguration = {
+export type AdderWidgetConfiguration<TClass = unknown> = {
 	/**
 	 * The configuration of the widget that is created and grabbed.
 	 */
-	widget: FlexiWidgetConfiguration;
+	widget: FlexiWidgetConfiguration<TClass>;
 
 	/**
 	 * The initial width of the grabbed widget in pixels.

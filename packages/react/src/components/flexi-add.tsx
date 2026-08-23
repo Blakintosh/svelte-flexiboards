@@ -31,7 +31,7 @@ export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
 	 * specify the configuration of the widget that is created and grabbed.
 	 * Return null to cancel the add.
 	 */
-	addWidget: FlexiAddWidgetFn;
+	addWidget: FlexiAddWidgetFn<string>;
 };
 
 export function FlexiAdd({ children, className, addWidget, onfirstcreate }: FlexiAddProps) {

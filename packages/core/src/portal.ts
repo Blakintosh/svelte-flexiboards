@@ -12,7 +12,13 @@ export class FlexiPortalController {
 	#widgetRefs = new Map<
 		FlexiWidgetController,
 		{
-			originalParent: Node;
+			// The element captured at move time. Return this exact node — by
+			// release time widget.ref may already point at a NEW element (the
+			// target mounts its own render of the same controller on drop).
+			element: HTMLElement;
+			// Null when the element was detached at grab time (an adapter may
+			// tear the node down mid-drag); the element is discarded on return.
+			originalParent: Node | null;
 			nextSibling: Node | null;
 		}
 	>();
@@ -73,7 +79,8 @@ export class FlexiPortalController {
 
 		// Store original position info
 		this.#widgetRefs.set(widget, {
-			originalParent: widget.ref.parentNode!,
+			element: widget.ref,
+			originalParent: widget.ref.parentNode,
 			nextSibling: widget.ref.nextSibling
 		});
 
@@ -85,13 +92,17 @@ export class FlexiPortalController {
 	 * Returns a widget's DOM element to its original position
 	 */
 	returnWidgetFromPortal(widget: FlexiWidgetController) {
-		if (!widget.ref) {
-			return;
-		}
-
 		const originalPosition = this.#widgetRefs.get(widget);
 		if (originalPosition) {
-			originalPosition.originalParent.insertBefore(widget.ref, originalPosition.nextSibling);
+			if (originalPosition.originalParent) {
+				originalPosition.originalParent.insertBefore(
+					originalPosition.element,
+					originalPosition.nextSibling
+				);
+			} else {
+				// Nowhere to return to — discard rather than strand in the portal.
+				originalPosition.element.remove();
+			}
 			this.#widgetRefs.delete(widget);
 		}
 	}
@@ -105,9 +116,11 @@ export class FlexiPortalController {
 		this.#unsubscribers = [];
 
 		// First return any widgets still in the portal
-		this.#widgetRefs.forEach((position, widget) => {
-			if (widget.ref) {
-				position.originalParent.insertBefore(widget.ref, position.nextSibling);
+		this.#widgetRefs.forEach((position) => {
+			if (position.originalParent) {
+				position.originalParent.insertBefore(position.element, position.nextSibling);
+			} else {
+				position.element.remove();
 			}
 		});
 		this.#widgetRefs.clear();
