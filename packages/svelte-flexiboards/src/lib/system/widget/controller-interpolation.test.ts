@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { InternalFlexiWidgetController } from './controller.svelte.js';
 import type { WidgetResizingEvent } from '../types.js';
+import type { InternalWidgetResizingEvent } from '../internal-types.js';
 
 describe('InternalFlexiWidgetController interpolation animation selection', () => {
 	it('keeps resize animation for drop placement when action state has already been released', () => {
@@ -29,12 +30,12 @@ describe('InternalFlexiWidgetController interpolation animation selection', () =
 					height: 100
 				}) as DOMRect,
 			focus: vi.fn()
-		} as HTMLElement;
+		} as unknown as HTMLElement;
 
 		const interpolateSpy = vi.fn();
 		(widget.interpolator as any).interpolateMove = interpolateSpy;
 
-		const resizeEvent: WidgetResizingEvent = {
+		const resizeEvent: InternalWidgetResizingEvent = {
 			widget,
 			board: provider,
 			target: {} as any,
@@ -87,7 +88,7 @@ describe('InternalFlexiWidgetController interpolation animation selection', () =
 					height: 100
 				}) as DOMRect,
 			focus: vi.fn()
-		} as HTMLElement;
+		} as unknown as HTMLElement;
 
 		const interpolateSpy = vi.fn();
 		(widget.interpolator as any).interpolateMove = interpolateSpy;

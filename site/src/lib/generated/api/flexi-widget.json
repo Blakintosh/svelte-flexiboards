@@ -1,0 +1,440 @@
+{
+	"component": "FlexiWidget",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-widget.svelte",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "FlexiWidgetController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiWidgetController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "draggable",
+			"type": "boolean",
+			"description": "Whether the widget is draggable.",
+			"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+		},
+		{
+			"name": "draggability",
+			"type": "'none' | 'movable' | 'full'",
+			"description": "The draggability of the widget."
+		},
+		{
+			"name": "resizability",
+			"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+			"description": "The resizability of the widget."
+		},
+		{
+			"name": "width",
+			"type": "number",
+			"description": "The width of the widget in units."
+		},
+		{
+			"name": "height",
+			"type": "number",
+			"description": "The height of the widget in units."
+		},
+		{
+			"name": "snippet",
+			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+			"description": "The snippet that is rendered by this widget."
+		},
+		{
+			"name": "component",
+			"type": "Component",
+			"description": "The component that is rendered by this widget."
+		},
+		{
+			"name": "componentProps",
+			"type": "Record<string, any>",
+			"description": "The props applied to the component rendered, if it has one."
+		},
+		{
+			"name": "className",
+			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+			"description": "The class names to apply to this widget."
+		},
+		{
+			"name": "transition",
+			"type": "FlexiWidgetTransitionConfiguration",
+			"description": "The transition configuration for this widget."
+		},
+		{
+			"name": "grabTrigger",
+			"type": "FlexiWidgetTriggerConfiguration",
+			"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+		},
+		{
+			"name": "resizeTrigger",
+			"type": "FlexiWidgetTriggerConfiguration",
+			"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+		},
+		{
+			"name": "minWidth",
+			"type": "number",
+			"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+		},
+		{
+			"name": "minHeight",
+			"type": "number",
+			"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+		},
+		{
+			"name": "maxWidth",
+			"type": "number",
+			"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+		},
+		{
+			"name": "maxHeight",
+			"type": "number",
+			"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+		},
+		{
+			"name": "id",
+			"type": "string",
+			"description": "A stable identifier for this widget, used for persistence and layout import/export."
+		},
+		{
+			"name": "type",
+			"type": "string",
+			"description": "The registry key used to look up shared configuration for this widget."
+		},
+		{
+			"name": "x",
+			"type": "number",
+			"description": "The starting column (x-coordinate) of the widget."
+		},
+		{
+			"name": "y",
+			"type": "number",
+			"description": "The starting row (y-coordinate) of the widget."
+		},
+		{
+			"name": "metadata",
+			"type": "Record<string, any>",
+			"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
+		},
+		{
+			"name": "class",
+			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+			"description": "The class names to apply to this widget. Either a class value, or a function deriving one from the widget's state.",
+			"bindable": true
+		},
+		{
+			"name": "children",
+			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+			"description": "The content rendered within the widget.",
+			"bindable": true
+		}
+	],
+	"controller": {
+		"name": "FlexiWidgetController",
+		"properties": [
+			{
+				"name": "target",
+				"type": "FlexiTargetController | undefined",
+				"description": "The target this widget is under. This is not defined if the widget has not yet been dropped in the board."
+			},
+			{
+				"name": "ref",
+				"type": "HTMLElement | undefined",
+				"description": "The DOM element bound to this widget."
+			},
+			{
+				"name": "isShadow",
+				"type": "boolean",
+				"description": "Whether this widget is a shadow dropzone widget."
+			},
+			{
+				"name": "isGrabbed",
+				"type": "boolean",
+				"description": "Whether this widget is grabbed.",
+				"readonly": true
+			},
+			{
+				"name": "isResizing",
+				"type": "boolean",
+				"description": "Whether this widget is being resized.",
+				"readonly": true
+			},
+			{
+				"name": "currentAction",
+				"type": "WidgetAction | null",
+				"description": "When the widget is being grabbed, this contains information that includes its position, size and offset. When this is null, the widget is not being grabbed."
+			},
+			{
+				"name": "draggable",
+				"type": "boolean",
+				"description": "Whether the widget is draggable.",
+				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+			},
+			{
+				"name": "draggability",
+				"type": "'none' | 'movable' | 'full'",
+				"description": "The draggability of the widget."
+			},
+			{
+				"name": "isGrabbable",
+				"type": "boolean",
+				"description": "Whether the widget can be grabbed.",
+				"readonly": true
+			},
+			{
+				"name": "isMovable",
+				"type": "boolean",
+				"description": "Whether the widget can be moved.",
+				"readonly": true
+			},
+			{
+				"name": "resizability",
+				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+				"description": "The resizability of the widget."
+			},
+			{
+				"name": "resizable",
+				"type": "boolean",
+				"description": "Whether the widget is resizable.",
+				"readonly": true
+			},
+			{
+				"name": "width",
+				"type": "number",
+				"description": "The width in units of the widget.",
+				"readonly": true
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": "The height in units of the widget.",
+				"readonly": true
+			},
+			{
+				"name": "component",
+				"type": "Component | undefined",
+				"description": "The component that is rendered by this widget."
+			},
+			{
+				"name": "componentProps",
+				"type": "Record<string, any> | undefined",
+				"description": "The props applied to the component rendered, if it has one."
+			},
+			{
+				"name": "snippet",
+				"type": "Snippet<[{ widget: FlexiWidgetController }]> | undefined",
+				"description": "The snippet that is rendered by this widget."
+			},
+			{
+				"name": "className",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"description": "The class name that is applied to this widget."
+			},
+			{
+				"name": "x",
+				"type": "number",
+				"description": "Gets the column (x-coordinate) of the widget. This value is readonly and is managed by the target.",
+				"readonly": true
+			},
+			{
+				"name": "y",
+				"type": "number",
+				"description": "Gets the row (y-coordinate) of the widget. This value is readonly and is managed by the target.",
+				"readonly": true
+			},
+			{
+				"name": "metadata",
+				"type": "Record<string, any> | undefined",
+				"description": "The metadata associated with this widget, if any."
+			},
+			{
+				"name": "grabTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "Gets the configuration for how pointer events should trigger widget grabs (either on the widget directly or on a grabber).",
+				"readonly": true
+			},
+			{
+				"name": "resizeTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "Gets the configuration for how pointer events should trigger widget resizing on a resizer.",
+				"readonly": true
+			},
+			{
+				"name": "transitionConfig",
+				"type": "FlexiWidgetTransitionConfiguration",
+				"description": "Gets the transition configuration for this widget.",
+				"readonly": true
+			},
+			{
+				"name": "hasGrabbers",
+				"type": "boolean",
+				"description": "Whether the widget has any grabbers attached.",
+				"readonly": true
+			},
+			{
+				"name": "hasResizers",
+				"type": "boolean",
+				"description": "Whether the widget has any resizers attached",
+				"readonly": true
+			},
+			{
+				"name": "isBeingDropped",
+				"type": "boolean",
+				"description": "Whether the widget is currently being dropped after a drag operation."
+			},
+			{
+				"name": "minWidth",
+				"type": "number",
+				"description": "The minimum width of the widget in units.",
+				"readonly": true
+			},
+			{
+				"name": "minHeight",
+				"type": "number",
+				"description": "The minimum height of the widget in units.",
+				"readonly": true
+			},
+			{
+				"name": "maxWidth",
+				"type": "number",
+				"description": "The maximum width of the widget in units.",
+				"readonly": true
+			},
+			{
+				"name": "maxHeight",
+				"type": "number",
+				"description": "The maximum height of the widget in units.",
+				"readonly": true
+			},
+			{
+				"name": "userProvidedId",
+				"type": "string | undefined",
+				"description": "The user-provided stable identifier for this widget, if any. This is used for persistence and layout import/export.",
+				"readonly": true
+			},
+			{
+				"name": "type",
+				"type": "string | undefined",
+				"description": "The type of this widget (registry key for looking up configuration).",
+				"readonly": true
+			}
+		],
+		"methods": []
+	},
+	"types": {
+		"FlexiWidgetConfiguration": [
+			{
+				"name": "draggable",
+				"type": "boolean",
+				"description": "Whether the widget is draggable.",
+				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+			},
+			{
+				"name": "draggability",
+				"type": "'none' | 'movable' | 'full'",
+				"description": "The draggability of the widget."
+			},
+			{
+				"name": "resizability",
+				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+				"description": "The resizability of the widget."
+			},
+			{
+				"name": "width",
+				"type": "number",
+				"description": "The width of the widget in units."
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": "The height of the widget in units."
+			},
+			{
+				"name": "snippet",
+				"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+				"description": "The snippet that is rendered by this widget."
+			},
+			{
+				"name": "component",
+				"type": "Component",
+				"description": "The component that is rendered by this widget."
+			},
+			{
+				"name": "componentProps",
+				"type": "Record<string, any>",
+				"description": "The props applied to the component rendered, if it has one."
+			},
+			{
+				"name": "className",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"description": "The class names to apply to this widget."
+			},
+			{
+				"name": "transition",
+				"type": "FlexiWidgetTransitionConfiguration",
+				"description": "The transition configuration for this widget."
+			},
+			{
+				"name": "grabTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+			},
+			{
+				"name": "resizeTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+			},
+			{
+				"name": "minWidth",
+				"type": "number",
+				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "minHeight",
+				"type": "number",
+				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "maxWidth",
+				"type": "number",
+				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+			},
+			{
+				"name": "maxHeight",
+				"type": "number",
+				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+			},
+			{
+				"name": "id",
+				"type": "string",
+				"description": "A stable identifier for this widget, used for persistence and layout import/export."
+			},
+			{
+				"name": "type",
+				"type": "string",
+				"description": "The registry key used to look up shared configuration for this widget."
+			},
+			{
+				"name": "x",
+				"type": "number",
+				"description": "The starting column (x-coordinate) of the widget."
+			},
+			{
+				"name": "y",
+				"type": "number",
+				"description": "The starting row (y-coordinate) of the widget."
+			},
+			{
+				"name": "metadata",
+				"type": "Record<string, any>",
+				"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
+			}
+		]
+	}
+}

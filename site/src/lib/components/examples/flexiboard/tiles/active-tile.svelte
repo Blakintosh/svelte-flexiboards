@@ -40,7 +40,7 @@
 			x="browser"
 			y="users"
 			props={{
-				bar: {
+				bars: {
 					radius: 0,
 					fill: 'var(--color-users)',
 					'fill-opacity': 0.8

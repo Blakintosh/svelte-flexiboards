@@ -63,8 +63,8 @@
 	}
 </script>
 
-{#snippet widgetChildren({ componentProps }: FlexiWidgetChildrenSnippetParameters)}
-	{componentProps?.content}
+{#snippet widgetChildren({ widget }: FlexiWidgetChildrenSnippetParameters)}
+	{widget.componentProps?.content}
 {/snippet}
 
 <FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>

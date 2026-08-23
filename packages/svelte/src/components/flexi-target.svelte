@@ -73,6 +73,11 @@
 		target.destroy();
 	});
 
+	// Prop seam — see FlexiBoard. Inert unless `config` actually changed.
+	$effect(() => {
+		target.updateConfig(config);
+	});
+
 	// Bridge core-signal reads into Svelte's reactivity.
 	const prepared = $derived.by(fromCore(() => target.prepared));
 	const orderedWidgets = $derived.by(fromCore(() => target.orderedWidgets));

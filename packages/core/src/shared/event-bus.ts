@@ -42,8 +42,24 @@ export class FlexiEventBus {
 		// Notify event listeners that the event happened.
 		// console.log('[event-bus] dispatching event', eventName, data);
 		const eventListeners = this.listeners[eventName];
-		if (eventListeners) {
-			eventListeners.forEach((listener) => listener(data));
+
+		if (!eventListeners) {
+			return;
+		}
+
+		// Iterated over a copy, because handlers may subscribe or unsubscribe
+		// while the event is being dispatched.
+		for (const listener of [...eventListeners]) {
+			try {
+				listener(data);
+			} catch (error) {
+				// Subscribers are independent, and the release/cancel events are
+				// what drive cleanup — returning portalled widgets to the DOM,
+				// unlocking the viewport, clearing action state. Letting one
+				// failure abort the rest leaves the board visibly stuck, so
+				// failures are contained and surfaced rather than propagated.
+				console.error(`[flexiboards] a "${eventName}" subscriber threw:`, error);
+			}
 		}
 	}
 

@@ -46,7 +46,7 @@
 			x="day"
 			y="sales"
 			props={{
-				bar: {
+				bars: {
 					radius: 0,
 					fill: 'var(--color-sales)',
 					'fill-opacity': 0.8

@@ -24,7 +24,8 @@ import type {
 } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.js';
-import { computed, signal } from '../reactivity.js';
+import { computed, signal, untracked } from '../reactivity.js';
+import { shallowEqual } from '../shared/prop-sync.js';
 import type { Signal, ReadonlySignal } from '../types.js';
 
 export class InternalFlexiBoardController implements FlexiBoardController {
@@ -78,8 +79,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		props: FlexiBoardProps,
 		responsiveController: InternalResponsiveFlexiBoardController | null = null
 	) {
-		// Track the props proxy so our config reactively updates.
-		this.#rawProps$(props);
+		// Normalised through the same seam the adapter uses, so the stored config
+		// never shares identity with the caller's object. That forces the adapter's
+		// first comparison to read config key-by-key, which is what registers the
+		// fine-grained dependencies it needs to notice later mutations.
+		this.updateProps(props);
 		this.#eventBus = getFlexiEventBus();
 
 		// Check if we're inside a responsive context
@@ -619,7 +623,22 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * The adapter's prop seam: call whenever the component's props change.
 	 */
 	updateProps(props: FlexiBoardProps): void {
-		this.#rawProps$(props);
+		// Adapters call this from inside their own effect, so it must be inert
+		// when nothing changed — an unconditional write can be re-entered by the
+		// invalidation it causes and spin forever.
+		//
+		// `config` is the only thing read off these props, so identity churn in
+		// sibling props (snippets, class) must never invalidate anything.
+		const previous = untracked(() => this.#rawProps$());
+
+		if (previous && shallowEqual(previous.config, props.config, 1)) {
+			return;
+		}
+
+		// Stored as a fresh object at both levels: the signal and the `config$`
+		// computed both dedupe on identity, so a mutated-in-place config would
+		// otherwise be swallowed and never reach targets or widgets.
+		this.#rawProps$({ ...props, config: props.config ? { ...props.config } : props.config });
 	}
 
 	/**

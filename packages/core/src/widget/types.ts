@@ -119,12 +119,41 @@ export type FlexiWidgetDefaults = {
 };
 
 export type FlexiWidgetConfiguration = FlexiWidgetDefaults & {
+	/**
+	 * A stable identifier for this widget, used for persistence and layout
+	 * import/export.
+	 */
 	id?: string;
+
+	/**
+	 * The registry key used to look up shared configuration for this widget.
+	 */
 	type?: string;
+
+	/**
+	 * The starting column (x-coordinate) of the widget.
+	 */
 	x?: number;
+
+	/**
+	 * The starting row (y-coordinate) of the widget.
+	 */
 	y?: number;
+
+	/**
+	 * The width of the widget in units.
+	 */
 	width?: number;
+
+	/**
+	 * The height of the widget in units.
+	 */
 	height?: number;
+
+	/**
+	 * Arbitrary metadata associated with this widget, carried through layout
+	 * export/import.
+	 */
 	metadata?: Record<string, any>;
 };
 

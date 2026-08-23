@@ -1,11 +1,19 @@
 <script module lang="ts">
-	import type { FlexiCommonProps, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration, FlexiWidgetController } from '@flexiboards/core';
+	import type { FlexiCommonProps, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration, FlexiWidgetController, InternalFlexiWidgetController } from '@flexiboards/core';
 	import { flexiwidget } from '../adapters/widget.js';
 	import { reactive } from '../adapter.svelte.js';
 
 	export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
 		Exclude<FlexiWidgetConfiguration, 'className' | 'snippet'> & {
+			/**
+			 * The class names to apply to this widget. Either a class value, or a
+			 * function deriving one from the widget's state.
+			 */
 			class?: FlexiWidgetClasses;
+
+			/**
+			 * The content rendered within the widget.
+			 */
 			children?: FlexiWidgetChildrenSnippet;
 		};
 </script>
@@ -25,14 +33,39 @@
 		...(children !== undefined && { snippet: children })
 	});
 
+	// The widget is created lazily by the target, so hold the controller in state
+	// and let the prop seam below run once it exists. The target always creates
+	// internal controllers; updateConfig lives on the internal type.
+	let createdWidget: InternalFlexiWidgetController | undefined = $state();
+
 	// Callback so that we still fulfil these props.
 	function onWidgetCreated(widget: FlexiWidgetController) {
+		createdWidget = widget as InternalFlexiWidgetController;
+
 		const publicWidget = reactive(widget);
 		controller = publicWidget;
 		onfirstcreate?.(publicWidget);
 	}
 
 	flexiwidget(config, onWidgetCreated);
+
+	// Prop seam — see FlexiBoard. updateConfig() merges only the keys that
+	// actually changed, so this neither clobbers state set imperatively on the
+	// controller nor writes anything when the props are unchanged.
+	//
+	// Snippets and inline functions are safe to compare by identity here: a
+	// component's setup runs once, so `{#snippet}` declarations and inline arrows
+	// are stable consts rather than per-render allocations. A snippet's *contents*
+	// were always reactive independently of this — it closes over the consumer's
+	// state and re-reads it when rendered — so what this adds is propagation when
+	// the consumer swaps in a structurally different snippet or class.
+	$effect(() => {
+		createdWidget?.updateConfig({
+			...propsConfig,
+			...(className !== undefined && { className }),
+			...(children !== undefined && { snippet: children })
+		});
+	});
 
 	// let derivedClassName = $derived.by(() => {
 	// 	if (typeof widget.className === 'function') {

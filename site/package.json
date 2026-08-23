@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:host": "vite dev --host",
-		"build": "vite build && pnpm run package",
+		"extract-api": "node scripts/extract-api.mjs",
+		"build": "node scripts/extract-api.mjs && vite build && pnpm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "pnpm run package",
@@ -46,6 +47,7 @@
 		"@sveltejs/vite-plugin-svelte": "^4.0.4",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.7",
+		"@types/d3-shape": "^3.1.8",
 		"@types/eslint": "^9.6.1",
 		"bits-ui": "2.9.4",
 		"clsx": "^2.1.1",
@@ -65,6 +67,7 @@
 		"tailwind-merge": "^3.3.0",
 		"tailwind-variants": "^0.2.1",
 		"tailwindcss": "^4.1.7",
+		"ts-morph": "^28.0.0",
 		"tw-animate-css": "^1.3.0",
 		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.24.0",
@@ -72,6 +75,7 @@
 		"vite": "^5.4.14"
 	},
 	"dependencies": {
+		"@flexiboards/svelte": "workspace:^",
 		"@melt-ui/svelte": "^0.86.6",
 		"d3-shape": "^3.2.0",
 		"formsnap": "^2.0.1",
@@ -83,7 +87,6 @@
 		"remark-toc": "^9.0.0",
 		"shiki": "^2.4.1",
 		"svelte-flexiboards": "workspace:^",
-		"@flexiboards/svelte": "workspace:^",
 		"svelte-sonner": "^1.0.2"
 	}
 }

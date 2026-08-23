@@ -12,6 +12,10 @@ export class FlexiDeleteController {
 	#pointerService: PointerService = getPointerService();
 	#eventBus: FlexiEventBus = getFlexiEventBus();
 	#unsubscribers: (() => void)[] = [];
+
+	/**
+	 * The DOM element bound to this deleter.
+	 */
 	ref: HTMLElement | null = null;
 
 	#inside$: Signal<boolean> = signal(false);
@@ -47,12 +51,18 @@ export class FlexiDeleteController {
 		this.#inside$(inside);
 	}
 
-	get isHovered() {
+	/**
+	 * Whether the deleter is currently being hovered by the pointer. Prefer
+	 * this over CSS hover, because it accounts for Flexiboards' keyboard-based
+	 * pointer.
+	 */
+	get isHovered(): boolean {
 		return this.#inside$();
 	}
 
 	/**
-	 * Cleanup method to be called when the deleter is destroyed
+	 * Cleans up the deleter's event subscriptions. Adapters call this when the
+	 * component is destroyed.
 	 */
 	destroy() {
 		// Clean up event subscriptions

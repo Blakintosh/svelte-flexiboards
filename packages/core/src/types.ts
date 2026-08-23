@@ -26,7 +26,15 @@ export type Position = {
 };
 
 export type FlexiCommonProps<T> = {
+	/**
+	 * The controller managing this component's state and behaviour. Bind to it
+	 * to access the component's imperative API.
+	 */
 	controller?: T;
+
+	/**
+	 * A callback that fires when the component's controller is first created.
+	 */
 	onfirstcreate?: (instance: T) => void;
 };
 

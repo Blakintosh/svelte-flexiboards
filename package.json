@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm -r build",
-		"build:packages": "pnpm -F \"./packages/**\" --parallel build",
+		"build:packages": "pnpm -F \"./packages/**\" -F \"!@flexiboards/react\" build",
 		"check": "pnpm build:packages && pnpm -r check",
 		"ci:publish": "pnpm build:packages && changeset publish",
 		"dev": "pnpm -r --parallel dev",

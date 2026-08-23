@@ -57,10 +57,16 @@ export type FlexiTargetDefaults = {
 type RequiredFlexiTargetProperties = Required<FlexiTargetDefaults>;
 
 export type FlexiTargetPartialConfiguration = FlexiTargetDefaults & {
+	/**
+	 * The default configuration for widgets within this target.
+	 */
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 
 export type FlexiTargetConfiguration = RequiredFlexiTargetProperties & {
+	/**
+	 * The default configuration for widgets within this target.
+	 */
 	widgetDefaults?: FlexiWidgetDefaults;
 };
 

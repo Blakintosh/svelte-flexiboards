@@ -18,12 +18,12 @@
 		}}
 	>
 		<FlexiWidget class="border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue">
-			{#snippet children({ widget, component, componentProps })}
+			{#snippet children({ widget })}
 				I'm at ({widget.x}, {widget.y})
 			{/snippet}
 		</FlexiWidget>
 		<FlexiWidget class="border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue">
-			{#snippet children({ widget, component, componentProps })}
+			{#snippet children({ widget })}
 				And I'm at ({widget.x}, {widget.y})
 			{/snippet}
 		</FlexiWidget>

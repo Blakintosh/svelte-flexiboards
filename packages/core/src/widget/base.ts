@@ -8,7 +8,8 @@ import type {
 	WidgetDraggability,
 	WidgetResizability
 } from '../types.js';
-import { computed, signal, trigger } from '../reactivity.js';
+import { computed, signal, trigger, untracked } from '../reactivity.js';
+import { changedKeys } from '../shared/prop-sync.js';
 import {
 	defaultTriggerConfig,
 	type FlexiWidgetChildrenSnippet,
@@ -37,6 +38,12 @@ export class FlexiWidgetController {
 		() => this.target?.config.widgetDefaults
 	);
 	#rawConfig$: Signal<FlexiWidgetConfiguration> = signal({} as FlexiWidgetConfiguration);
+
+	/**
+	 * The last config the adapter pushed in, used to tell an actual prop change
+	 * apart from state that was set imperatively on this controller.
+	 */
+	#lastSyncedConfig: FlexiWidgetConfiguration | undefined = undefined;
 
 	/**
 	 * Whether this widget is a shadow dropzone widget.
@@ -234,6 +241,46 @@ export class FlexiWidgetController {
 	}
 
 	/**
+	 * Updates the configuration backing this widget's reactive state.
+	 * The adapter's prop seam: call whenever the component's config props change.
+	 *
+	 * Merges only the keys that actually changed since the last sync, rather than
+	 * replacing wholesale. Two reasons: the raw config also holds registry
+	 * defaults and any values set imperatively (`widget.draggability = ...`),
+	 * which a wholesale replace would clobber; and staying inert when nothing
+	 * changed is what stops an adapter effect from re-entering itself.
+	 *
+	 * Lives here (protected) because it needs the private config fields;
+	 * exposed publicly via InternalFlexiWidgetController.updateConfig.
+	 */
+	protected syncConfig(config: FlexiWidgetConfiguration): void {
+		const previous = this.#lastSyncedConfig;
+		this.#lastSyncedConfig = { ...config };
+
+		// The constructor already seeded the raw config from this same object.
+		if (!previous) {
+			return;
+		}
+
+		const changed = changedKeys(previous, config, 1);
+
+		if (!changed.length) {
+			return;
+		}
+
+		const raw = untracked(() => this.#rawConfig$()) as Record<string, unknown>;
+		const source = config as Record<string, unknown>;
+
+		for (const key of changed) {
+			raw[key as string] = source[key as string];
+		}
+
+		// Mutated in place to preserve registry defaults, so subscribers need an
+		// explicit nudge — the signal's identity hasn't changed.
+		trigger(() => this.#rawConfig$());
+	}
+
+	/**
 	 * Whether the widget is draggable.
 	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
 	 */
@@ -308,7 +355,7 @@ export class FlexiWidgetController {
 	/**
 	 * The component that is rendered by this widget.
 	 */
-	get component() {
+	get component(): FlexiComponent | undefined {
 		return this.#config$().component;
 	}
 
@@ -332,7 +379,7 @@ export class FlexiWidgetController {
 	/**
 	 * The snippet that is rendered by this widget.
 	 */
-	get snippet() {
+	get snippet(): FlexiWidgetChildrenSnippet | undefined {
 		return this.#config$().snippet;
 	}
 

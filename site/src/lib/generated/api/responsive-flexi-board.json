@@ -1,0 +1,124 @@
+{
+	"component": "ResponsiveFlexiBoard",
+	"generatedFrom": [
+		"packages/svelte/src/components/responsive-flexi-board.svelte",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "ResponsiveFlexiBoardController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "config",
+			"type": "ResponsiveFlexiBoardConfiguration",
+			"description": "The configuration object for the responsive board."
+		},
+		{
+			"name": "lg",
+			"type": "Snippet",
+			"description": "Snippet for large breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "md",
+			"type": "Snippet",
+			"description": "Snippet for medium breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "sm",
+			"type": "Snippet",
+			"description": "Snippet for small breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "xs",
+			"type": "Snippet",
+			"description": "Snippet for extra-small breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "children",
+			"type": "Snippet<[BreakpointSnippetParams]>",
+			"description": "Children snippet used as fallback when no specific breakpoint snippet matches. Receives `{ currentBreakpoint: string }` as a parameter."
+		}
+	],
+	"controller": {
+		"name": "ResponsiveFlexiBoardController",
+		"properties": [
+			{
+				"name": "currentBreakpoint",
+				"type": "string",
+				"description": "The currently active breakpoint key.",
+				"readonly": true
+			},
+			{
+				"name": "definedBreakpoints",
+				"type": "string[]",
+				"description": "All breakpoint keys that have stored layouts.",
+				"readonly": true
+			},
+			{
+				"name": "configuredBreakpoints",
+				"type": "string[]",
+				"description": "All breakpoint keys from configuration.",
+				"readonly": true
+			}
+		],
+		"methods": [
+			{
+				"name": "importLayout",
+				"type": "(layout: ResponsiveFlexiLayout) => void",
+				"description": "Imports layouts for all breakpoints."
+			},
+			{
+				"name": "exportLayout",
+				"type": "() => ResponsiveFlexiLayout",
+				"description": "Exports layouts for all breakpoints."
+			},
+			{
+				"name": "getLayoutForBreakpoint",
+				"type": "(breakpoint: string) => FlexiLayout | undefined",
+				"description": "Gets the layout for a specific breakpoint."
+			},
+			{
+				"name": "setLayoutForBreakpoint",
+				"type": "(breakpoint: string, layout: FlexiLayout) => void",
+				"description": "Sets the layout for a specific breakpoint."
+			},
+			{
+				"name": "hasLayoutForBreakpoint",
+				"type": "(breakpoint: string) => boolean",
+				"description": "Checks if a layout exists for a specific breakpoint."
+			}
+		]
+	},
+	"types": {
+		"ResponsiveFlexiBoardConfiguration": [
+			{
+				"name": "breakpoints",
+				"type": "Record<string, number>",
+				"description": "Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels). Breakpoints are evaluated in descending order - the largest matching breakpoint wins. Use 'default' as the fallback when no breakpoint matches."
+			},
+			{
+				"name": "onBreakpointChange",
+				"type": "(newBreakpoint: string, oldBreakpoint: string) => void",
+				"description": "Callback fired when the active breakpoint changes."
+			},
+			{
+				"name": "onLayoutsChange",
+				"type": "(layouts: ResponsiveFlexiLayout) => void",
+				"description": "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts, including the updated current one."
+			},
+			{
+				"name": "loadLayouts",
+				"type": "() => ResponsiveFlexiLayout | undefined",
+				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready."
+			}
+		]
+	}
+}

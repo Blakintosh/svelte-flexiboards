@@ -15,10 +15,25 @@
 	import type { Component, Snippet } from 'svelte';
 	import { fromCore, reactive } from '../adapter.svelte.js';
 
-	let { widget }: RenderedFlexiWidgetProps = $props();
+	let { widget: widgetProp }: RenderedFlexiWidgetProps = $props();
+
+	// Snapshot the controller rather than reading it through the prop.
+	//
+	// `$props()` reads are lazy getters into the parent's state, and a parent can
+	// clear that state while this component is still mounted — FlexiAdd does
+	// exactly that the moment a dragged-in widget is released. Core's effects run
+	// synchronously on signal writes, so the very next write in that same release
+	// (setBounds, as the target places the widget) re-runs the bridged reads
+	// below. Reading `widget.x` through a getter that has already gone undefined
+	// throws, which aborts the remaining release subscribers — including the
+	// portal's cleanup, stranding the dragged widget in the portal.
+	//
+	// The controller is fixed for this component's lifetime regardless: the
+	// target's {#each} is keyed by widget.id, and FlexiAdd renders inside an {#if}.
+	const widget = widgetProp;
 
 	// Consumer-facing handle: snippet parameters must be reactive to read from user code.
-	const publicWidget = $derived(reactive(widget));
+	const publicWidget = reactive(widget);
 
 	const { onpointerdown, onkeydown } = renderedflexiwidget(widget);
 

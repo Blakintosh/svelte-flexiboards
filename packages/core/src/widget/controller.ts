@@ -17,7 +17,7 @@ import type {
 import { FlexiWidgetController } from './base.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
 import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.js';
-import type { FlexiWidgetConstructorParams } from './types.js';
+import type { FlexiWidgetConfiguration, FlexiWidgetConstructorParams } from './types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
@@ -58,6 +58,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	set mounted(value: boolean) {
 		this.#mounted$(value);
+	}
+
+	/**
+	 * The adapter's prop seam: syncs the component's config props into the
+	 * widget's reactive state. See FlexiWidgetController.syncConfig.
+	 */
+	updateConfig(config: FlexiWidgetConfiguration): void {
+		this.syncConfig(config);
 	}
 
 	/**

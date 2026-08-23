@@ -10,8 +10,19 @@ import { signal } from '../reactivity.js';
 export type FlexiAddWidgetFn = () => AdderWidgetConfiguration | null;
 
 export type AdderWidgetConfiguration = {
+	/**
+	 * The configuration of the widget that is created and grabbed.
+	 */
 	widget: FlexiWidgetConfiguration;
+
+	/**
+	 * The initial width of the grabbed widget in pixels.
+	 */
 	widthPx?: number;
+
+	/**
+	 * The initial height of the grabbed widget in pixels.
+	 */
 	heightPx?: number;
 };
 
@@ -19,6 +30,9 @@ export type FlexiAddClassFunction = (adder: FlexiAddController) => ClassValue;
 export type FlexiAddClasses = ClassValue | FlexiAddClassFunction;
 
 export interface FlexiAddController {
+	/**
+	 * The DOM element bound to this adder.
+	 */
 	ref: HTMLElement | null;
 }
 

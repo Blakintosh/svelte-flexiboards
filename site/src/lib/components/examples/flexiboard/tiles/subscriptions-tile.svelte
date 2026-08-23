@@ -42,7 +42,7 @@
 			x="month"
 			y="subs"
 			props={{
-				line: {
+				spline: {
 					curve: curveNatural,
 					class: 'stroke-[var(--color-subs)] stroke-2'
 				},

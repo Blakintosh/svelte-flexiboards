@@ -1,0 +1,210 @@
+{
+	"component": "FlexiTarget",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-target.svelte",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "FlexiTargetController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiTargetController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "header",
+			"type": "Snippet<[{ target: FlexiTargetController }]>",
+			"description": "The header content of the target, above the grid."
+		},
+		{
+			"name": "children",
+			"type": "Snippet",
+			"description": "The child content of the target, which should contain inner FlexiWidget definitions."
+		},
+		{
+			"name": "footer",
+			"type": "Snippet<[{ target: FlexiTargetController }]>",
+			"description": "The footer content of the target, below the grid."
+		},
+		{
+			"name": "containerClass",
+			"type": "string",
+			"description": "The class names to apply to the target's container element."
+		},
+		{
+			"name": "class",
+			"type": "string",
+			"description": "The class names to apply to the target's grid element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiTargetPartialConfiguration",
+			"description": "The configuration object for the target."
+		},
+		{
+			"name": "key",
+			"type": "string",
+			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported."
+		}
+	],
+	"controller": {
+		"name": "FlexiTargetController",
+		"properties": [
+			{
+				"name": "config",
+				"type": "FlexiTargetConfiguration",
+				"description": "The reactive configuration of the target."
+			},
+			{
+				"name": "providerWidgetDefaults",
+				"type": "FlexiWidgetDefaults",
+				"description": "The reactive default widget configuration passed through from the provider, if it exists."
+			},
+			{
+				"name": "prepared",
+				"type": "boolean",
+				"description": "Whether the target is prepared and ready to render widgets.",
+				"readonly": true
+			},
+			{
+				"name": "columns",
+				"type": "number",
+				"description": "The number of columns currently being used in the target grid. This value is readonly.",
+				"readonly": true
+			},
+			{
+				"name": "rows",
+				"type": "number",
+				"description": "The number of rows currently being used in the target grid. This value is readonly.",
+				"readonly": true
+			},
+			{
+				"name": "widgets",
+				"type": "ReactiveSet<FlexiWidgetController>",
+				"description": "The widgets currently in this target.",
+				"readonly": true
+			}
+		],
+		"methods": [
+			{
+				"name": "createWidget",
+				"type": "(config: FlexiWidgetConfiguration) => FlexiWidgetController | undefined",
+				"description": "Creates a new widget under this target."
+			}
+		]
+	},
+	"types": {
+		"FlexiTargetPartialConfiguration": [
+			{
+				"name": "rowSizing",
+				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
+				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target."
+			},
+			{
+				"name": "columnSizing",
+				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
+				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target."
+			},
+			{
+				"name": "layout",
+				"type": "TargetLayout",
+				"description": "The layout algorithm and parameters to use for the target grid."
+			},
+			{
+				"name": "widgetDefaults",
+				"type": "FlexiWidgetDefaults",
+				"description": "The default configuration for widgets within this target."
+			}
+		],
+		"FlexiWidgetDefaults": [
+			{
+				"name": "draggable",
+				"type": "boolean",
+				"description": "Whether the widget is draggable.",
+				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+			},
+			{
+				"name": "draggability",
+				"type": "'none' | 'movable' | 'full'",
+				"description": "The draggability of the widget."
+			},
+			{
+				"name": "resizability",
+				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+				"description": "The resizability of the widget."
+			},
+			{
+				"name": "width",
+				"type": "number",
+				"description": "The width of the widget in units.",
+				"deprecated": "This property does not work and will be removed in the next version."
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": "The height of the widget in units.",
+				"deprecated": "This property does not work and will be removed in the next version."
+			},
+			{
+				"name": "snippet",
+				"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+				"description": "The snippet that is rendered by this widget."
+			},
+			{
+				"name": "component",
+				"type": "Component",
+				"description": "The component that is rendered by this widget."
+			},
+			{
+				"name": "componentProps",
+				"type": "Record<string, any>",
+				"description": "The props applied to the component rendered, if it has one."
+			},
+			{
+				"name": "className",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"description": "The class names to apply to this widget."
+			},
+			{
+				"name": "transition",
+				"type": "FlexiWidgetTransitionConfiguration",
+				"description": "The transition configuration for this widget."
+			},
+			{
+				"name": "grabTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+			},
+			{
+				"name": "resizeTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+			},
+			{
+				"name": "minWidth",
+				"type": "number",
+				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "minHeight",
+				"type": "number",
+				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "maxWidth",
+				"type": "number",
+				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+			},
+			{
+				"name": "maxHeight",
+				"type": "number",
+				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+			}
+		]
+	}
+}

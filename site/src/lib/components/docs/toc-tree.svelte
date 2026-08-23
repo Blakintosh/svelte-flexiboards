@@ -8,7 +8,8 @@
 	export let level = 1;
 </script>
 
-<ul class={cn('m-0 flex list-none flex-col', level !== 1 && 'ml-2 border-l border-rule pl-3')}>
+<!-- Ruler ticks: a short rule marks each entry; the active tick lengthens and inks vermillion. -->
+<ul class={cn('m-0 flex list-none flex-col', level !== 1 && 'pl-[17px]')}>
 	{#if tree && tree.length}
 		{#each tree as heading, i (i)}
 			<li class="mt-0">
@@ -16,12 +17,17 @@
 					href="#{heading.id}"
 					use:melt={$item(heading.id)}
 					class={cn(
-						'block py-1.5 font-mono text-[12px] leading-snug text-body no-underline transition-colors duration-[120ms]',
+						'group flex items-center gap-2.5 py-1.5 font-mono text-[12px] leading-snug text-body no-underline transition-colors duration-[120ms]',
 						'hover:text-ink',
 						'data-[active]:text-vermillion'
 					)}
 				>
-					{@html heading.node.innerHTML}
+					{#if level === 1}
+						<span
+							class="h-px w-[7px] shrink-0 bg-rule transition-all duration-[120ms] group-data-[active]:w-[14px] group-data-[active]:bg-vermillion"
+						></span>
+					{/if}
+					<span class="min-w-0 break-all">{@html heading.node.innerHTML}</span>
 				</a>
 				{#if heading.children && heading.children.length}
 					<svelte:self tree={heading.children} level={level + 1} {activeHeadingIdxs} {item} />

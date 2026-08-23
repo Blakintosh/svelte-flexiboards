@@ -373,3 +373,24 @@
     linear-gradient(90deg, var(--graph) 1px, transparent 1px);
   background-size: 32px 32px;
 }
+
+/* Drafting-table plates: each h2 carries a § mark hanging in the left margin. */
+.docs-sections {
+  counter-reset: docs-section;
+}
+.docs-sections h2 {
+  position: relative;
+  padding-left: 2.125rem;
+  counter-increment: docs-section;
+}
+.docs-sections h2::before {
+  content: "§" counter(docs-section);
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}

@@ -8,7 +8,8 @@ import type {
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { InternalBoardLayoutChangeEvent } from '../internal-types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
-import { computed, effect, signal, trigger } from '../reactivity.js';
+import { computed, effect, signal, trigger, untracked } from '../reactivity.js';
+import { shallowEqual } from '../shared/prop-sync.js';
 import type { ReadonlySignal, Signal } from '../types.js';
 import { ReactiveMap } from '../shared/reactive-collections.js';
 
@@ -139,7 +140,9 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#previousBreakpoint: string = DEFAULT_BREAKPOINT;
 
 	constructor(props: ResponsiveFlexiBoardProps) {
-		this.#rawProps$(props);
+		// Normalised through the seam so identity never matches the caller's object
+		// — see InternalFlexiBoardController's constructor.
+		this.updateProps(props);
 		this.#eventBus = getFlexiEventBus();
 
 		// Subscribe to board layout changes
@@ -173,7 +176,15 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * The adapter's prop seam: call whenever the component's props change.
 	 */
 	updateProps(props: ResponsiveFlexiBoardProps): void {
-		this.#rawProps$(props);
+		// Inert when unchanged — see InternalFlexiBoardController.updateProps for
+		// why this guard is load-bearing rather than an optimisation.
+		const previous = untracked(() => this.#rawProps$());
+
+		if (previous && shallowEqual(previous.config, props.config, 1)) {
+			return;
+		}
+
+		this.#rawProps$({ ...props, config: props.config ? { ...props.config } : props.config });
 	}
 
 	/**

@@ -34,6 +34,7 @@ import {
 	type ReadonlySignal,
 	type Signal
 } from '../reactivity.js';
+import { shallowEqual } from '../shared/prop-sync.js';
 
 export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: ReactiveSet<InternalFlexiWidgetController> = new ReactiveSet();
@@ -88,6 +89,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#grid$: Signal<FlexiGrid | null> = signal(null);
 
 	#preGrabSnapshot: unknown | null = null;
+
+	/**
+	 * The widget the pre-grab snapshot was taken for. The snapshot predates the
+	 * grab, so restoring it brings that widget back — which must not happen once
+	 * the widget has been deleted.
+	 */
+	#preGrabSnapshotWidget: InternalFlexiWidgetController | null = null;
 	#gridSnapshot: unknown | null = null;
 
 	#registry$: ReadonlySignal<Record<string, FlexiRegistryEntry> | undefined> = computed(() =>
@@ -122,7 +130,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		config?: FlexiTargetPartialConfiguration
 	) {
 		this.provider$(provider);
-		this.#targetConfig$(config);
+		this.updateConfig(config);
 		this.key = key;
 		this.#eventBus = getFlexiEventBus();
 
@@ -222,6 +230,24 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return grid;
 	}
 
+	/**
+	 * Updates the configuration backing this target's reactive state.
+	 * The adapter's prop seam: call whenever the component's config prop changes.
+	 *
+	 * Inert when the config is unchanged, so it is safe to call from inside an
+	 * adapter effect — see InternalFlexiBoardController.updateProps.
+	 */
+	updateConfig(config?: FlexiTargetPartialConfiguration): void {
+		const previous = untracked(() => this.#targetConfig$());
+
+		if (shallowEqual(previous, config, 1)) {
+			return;
+		}
+
+		// Fresh identity so the `#config$` computed actually recomputes.
+		this.#targetConfig$(config ? { ...config } : config);
+	}
+
 	createWidget(config: FlexiWidgetConfiguration) {
 		const [x, y, width, height] = [config.x, config.y, config.width, config.height];
 
@@ -292,11 +318,25 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
-		// Clear the pre-grab snapshot only if the deleted widget is the one being grabbed/resized
-		// (prevents the board's safety net from restoring a widget that was intentionally removed)
-		// Note: We don't clear if a different widget is deleted during a grab operation
-		if (this.actionWidget?.widget === widget) {
+		// Drop the pre-grab snapshot if it was taken for this widget. The snapshot
+		// predates the grab, so the board's safety net would otherwise restore it
+		// in a microtask and bring the deleted widget's cells back — leaving it
+		// out of this.widgets (so nothing renders it) while it still occupies grid
+		// space and collides with everything around it.
+		//
+		// Keyed on the snapshot's own widget rather than actionWidget, because
+		// dropping onto a deleter means the pointer left the target first, and
+		// leaving already cleared actionWidget.
+		if (this.#preGrabSnapshotWidget === widget) {
 			this.forgetPreGrabSnapshot();
+		}
+
+		// If the widget is still mid-action here (deleted programmatically rather
+		// than via a deleter), end the action and drop the dropzone with it —
+		// otherwise our own widget:release subscriber runs next and drops the
+		// just-deleted widget straight back into the grid.
+		if (this.actionWidget?.widget === widget) {
+			this.cancelDrop();
 		}
 
 		// Apply any deferred operations like row collapsing now that the operation is complete
@@ -434,6 +474,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	forgetPreGrabSnapshot() {
 		this.#preGrabSnapshot = null;
+		this.#preGrabSnapshotWidget = null;
 	}
 
 	hasPreGrabSnapshot(): boolean {
@@ -501,6 +542,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
 		// we can restore the grid to its original state.
 		this.#preGrabSnapshot = this.grid.takeSnapshot();
+		this.#preGrabSnapshotWidget = event.widget;
 
 		// Remove the widget from the grid as it's now in a floating state.
 		this.grid.removeWidget(event.widget);
@@ -522,6 +564,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
 		// we can restore the grid to its original state.
 		this.#preGrabSnapshot = this.grid.takeSnapshot();
+		this.#preGrabSnapshotWidget = event.widget;
 
 		// Remove the widget from the grid as it's now in a floating state.
 		this.grid.removeWidget(event.widget);

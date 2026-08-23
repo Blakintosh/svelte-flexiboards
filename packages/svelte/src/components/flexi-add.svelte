@@ -7,8 +7,23 @@
 
 
 	export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
+		/**
+		 * The class names to apply to the adder's button element. Either a class
+		 * value, or a function deriving one from the adder's state.
+		 */
 		class?: FlexiAddClasses;
+
+		/**
+		 * The child content of the adder, containing the contents of the adder
+		 * button.
+		 */
 		children?: Snippet<[{ adder: FlexiAddController }]>;
+
+		/**
+		 * When the user interacts with the adder, this function allows you to
+		 * specify the configuration of the widget that is created and grabbed.
+		 * Return null to cancel the add.
+		 */
 		addWidget: FlexiAddWidgetFn;
 	};
 </script>

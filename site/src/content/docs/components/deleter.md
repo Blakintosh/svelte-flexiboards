@@ -7,25 +7,17 @@ published: true
 
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-    import HeadsUp from '$lib/components/docs/heads-up.svelte';
-    import Callout from '$lib/components/docs/callout.svelte';
+    import api from '$lib/generated/api/flexi-delete.json';
 </script>
+
+<!--
+  The tables below are generated from the package sources by
+  `site/scripts/extract-api.mjs` — edit the JSDoc in the source, not this page.
+-->
 
 ## FlexiDelete (component)
 
-<ApiReference title="Props" api={[
-{
-name: "class",
-type: "FlexiDeleteClasses",
-description: "The class names to apply to the deleter's container element."
-},
-{
-name: "children",
-type: "Snippet<[{ deleter: FlexiDeleteController }]>",
-description: "The content rendered inside of the deleter."
-}
-]} />
-
+<ApiReference title="Props" api={api.props} />
 
 ## FlexiDeleteController
 
@@ -33,10 +25,4 @@ description: "The content rendered inside of the deleter."
 
 The `FlexiDeleteController` allows you to access state information on the deleter.
 
-<ApiReference title="Properties" api={[
-{
-name: "isHovered",
-type: "boolean",
-description: "Whether the deleter is currently being hovered by the pointer. You should prefer the use of this to CSS hover, because it accounts for Flexiboards' keyboard-based pointer."
-}
-]} />
+<ApiReference title="Properties" api={api.controller.properties} />

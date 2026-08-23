@@ -4,6 +4,9 @@
 	export type BreakpointSnippetParams = { currentBreakpoint: string };
 
 	export type ResponsiveFlexiBoardProps = FlexiCommonProps<ResponsiveFlexiBoardController> & {
+		/**
+		 * The configuration object for the responsive board.
+		 */
 		config?: ResponsiveFlexiBoardConfiguration;
 		/**
 		 * Snippet for large breakpoint (no params - breakpoint is implicit).
@@ -48,6 +51,11 @@
 	const board = responsiveflexiboard({ config });
 	const publicBoard = reactive(board as ResponsiveFlexiBoardController);
 	controller = publicBoard;
+
+	// Prop seam — see FlexiBoard. Inert unless `config` actually changed.
+	$effect(() => {
+		board.updateProps({ config });
+	});
 
 	// Load layouts immediately so child FlexiBoards can access them
 	board.oninitialloadcomplete();

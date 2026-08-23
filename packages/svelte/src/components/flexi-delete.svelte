@@ -5,7 +5,15 @@
 	import { fromCore, reactive } from '../adapter.svelte.js';
 
 	export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
+		/**
+		 * The class names to apply to the deleter's container element. Either a
+		 * class value, or a function deriving one from the deleter's state.
+		 */
 		class?: FlexiDeleteClasses;
+
+		/**
+		 * The content rendered inside of the deleter.
+		 */
 		children?: Snippet<[{ deleter: FlexiDeleteController }]>;
 	};
 </script>

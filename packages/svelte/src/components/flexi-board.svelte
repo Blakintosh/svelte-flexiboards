@@ -3,8 +3,20 @@
 	import FlexiLayoutLoader from './flexi-layout-loader.svelte';
 
 	export type FlexiBoardProps = FlexiCommonProps<FlexiBoardController> & {
+		/**
+		 * The child content of the board, which should contain the inner
+		 * FlexiTarget and FlexiWidget components.
+		 */
 		children: Snippet;
+
+		/**
+		 * The configuration object for the board.
+		 */
 		config?: FlexiBoardConfiguration;
+
+		/**
+		 * The class names to apply to the board's root element.
+		 */
 		class?: ClassValue;
 	};
 </script>
@@ -27,6 +39,14 @@
 	onfirstcreate?.(publicBoard);
 
 	let assistiveTextId = generateUniqueId();
+
+	// Prop seam: push config changes into core. Safe to run as an effect because
+	// updateProps() is inert unless `config` actually changed, so the invalidation
+	// it causes can't feed back in and re-trigger this. Reads `props` only — never
+	// `publicBoard`, whose proxy reads would subscribe us to our own writes.
+	$effect(() => {
+		board.updateProps(props);
+	});
 
 	const style = $derived.by(fromCore(() => board.style));
 </script>

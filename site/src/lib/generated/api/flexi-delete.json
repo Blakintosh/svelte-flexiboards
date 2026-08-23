@@ -1,0 +1,54 @@
+{
+	"component": "FlexiDelete",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-delete.svelte",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "FlexiDeleteController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiDeleteController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "class",
+			"type": "ClassValue | ((deleter: FlexiDeleteController) => ClassValue)",
+			"description": "The class names to apply to the deleter's container element. Either a class value, or a function deriving one from the deleter's state."
+		},
+		{
+			"name": "children",
+			"type": "Snippet<[{ deleter: FlexiDeleteController }]>",
+			"description": "The content rendered inside of the deleter."
+		}
+	],
+	"controller": {
+		"name": "FlexiDeleteController",
+		"properties": [
+			{
+				"name": "ref",
+				"type": "HTMLElement | null",
+				"description": "The DOM element bound to this deleter."
+			},
+			{
+				"name": "isHovered",
+				"type": "boolean",
+				"description": "Whether the deleter is currently being hovered by the pointer. Prefer this over CSS hover, because it accounts for Flexiboards' keyboard-based pointer.",
+				"readonly": true
+			}
+		],
+		"methods": [
+			{
+				"name": "destroy",
+				"type": "() => void",
+				"description": "Cleans up the deleter's event subscriptions. Adapters call this when the component is destroyed."
+			}
+		]
+	},
+	"types": {}
+}

@@ -19,6 +19,27 @@
 	];
 
 	let drawerOpen = $state(false);
+	let stars = $state<number | null>(null);
+
+	function formatStars(count: number) {
+		return count >= 1000 ? `${(count / 1000).toFixed(1).replace(/\.0$/, '')}k` : `${count}`;
+	}
+
+	$effect(() => {
+		const cached = localStorage.getItem('gh-stars');
+		if (cached) {
+			const { count, at } = JSON.parse(cached);
+			stars = count;
+			if (Date.now() - at < 60 * 60 * 1000) return;
+		}
+		fetch('https://api.github.com/repos/blakintosh/svelte-flexiboards')
+			.then((res) => (res.ok ? res.json() : Promise.reject()))
+			.then((data) => {
+				stars = data.stargazers_count;
+				localStorage.setItem('gh-stars', JSON.stringify({ count: stars, at: Date.now() }));
+			})
+			.catch(() => {});
+	});
 
 	// The active item takes a 1px vermillion underline — never a fill.
 	function isActive(match: string) {
@@ -68,6 +89,9 @@
 				/>
 			</svg>
 			Star
+			{#if stars !== null}
+				<span class="font-mono text-xs text-body">{formatStars(stars)}</span>
+			{/if}
 		</Button>
 		<ThemeSelector />
 	</div>
@@ -131,6 +155,9 @@
 									/>
 								</svg>
 								Star on GitHub
+								{#if stars !== null}
+									<span class="font-mono text-xs text-body">{formatStars(stars)}</span>
+								{/if}
 							</Button>
 						</div>
 					</nav>

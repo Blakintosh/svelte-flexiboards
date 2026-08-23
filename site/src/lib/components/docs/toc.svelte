@@ -22,10 +22,8 @@
 	{/key}
 </nav>
 
-<!-- Provisional status reads as a dashed vermillion note, per the brand. -->
-<div class="border-l-2 border-vermillion bg-tint-accent px-3 py-2.5">
-	<span class="label block text-[10px] text-vermillion">Work in progress</span>
-	<p class="mt-1 font-mono text-[11px] leading-relaxed text-body">
-		These docs are still being drafted.
-	</p>
+<!-- Sheet legend: page metadata as ruled mono rows; draft status stays vermillion. -->
+<div class="flex flex-col gap-2 border-t border-rule pt-4 font-mono text-[10.5px] text-faint">
+	<div class="flex justify-between"><span>Sections</span><span class="text-body">{$headingsTree.length}</span></div>
+	<div class="flex justify-between"><span>Status</span><span class="text-vermillion">Draft</span></div>
 </div>
