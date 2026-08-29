@@ -15,7 +15,7 @@ In order to solve this, Flexiboards has a built-in system that allows you to ani
 
 ## Enabling Transitions
 
-Flexiboards has a built-in helper for quickly adding default transitions to your widgets, `simpleTransitionConfig()`. Apply this to the `transition` property of your widget [configuration](/docs/configuration) to get a basic set of animations for widget movement events.
+Flexiboards has built-in helpers for quickly adding default transitions to your widgets: `cssTransitionConfig()` (CSS transitions; `simpleTransitionConfig()` is a deprecated alias of the same thing) and `springTransitionConfig()` (a physics spring with a little bounce on drop). Apply either to the `transition` property of your widget [configuration](/docs/configuration) to get a set of animations for widget movement events.
 
 Here's how that looks, once applied:
 
@@ -82,7 +82,7 @@ For many sitations, this base configuration might suffice for you. However, we n
 
 ## Customising Transitions
 
-The `simpleTransitionConfig()` is just a wrapper that returns a default configuration for you. However, the actual schema for transition configurations is as follows:
+`cssTransitionConfig()` and `springTransitionConfig()` are just wrappers that return a default configuration for you. However, the actual schema for transition configurations is as follows:
 
 ```ts
 export type FlexiWidgetTransitionConfiguration = {
@@ -104,7 +104,9 @@ export type FlexiWidgetTransitionTypeConfiguration = {
 ```
 
 - `duration` controls how long the transition plays for, in milliseconds.
-- `easing` is any valid CSS easing function to determine the transition curve, including `cubic-bezier()`. For example, the `simpleTransitionConfig` uses `ease-in-out` for move and `ease-out` for drop.
+- `easing` is any valid CSS easing function to determine the transition curve, including `cubic-bezier()`. For example, `cssTransitionConfig` uses `ease-in-out` for move and `ease-out` for drop.
+
+Each entry may also be an animation adapter instead of a `{ duration, easing }` object. Flexiboards ships two: `cssTransition({ duration, easing })`, which is what the plain object resolves to, and `spring({ duration, bounce })`, a dependency-free spring using SwiftUI's parameterisation (`duration` in seconds is the response time; `bounce` from `0` for critically damped up to `1`). Mix them per event, e.g. a spring for `drop` and a CSS transition for `resize`.
 
 Note that if you omit either of the above properties, or the configuration object entirely, Flexiboards defaults to the behaviour of playing no transition for that scenario.
 

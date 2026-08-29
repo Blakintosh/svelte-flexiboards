@@ -6,7 +6,7 @@
 		FlexiWidget,
 		type AdderWidgetConfiguration,
 		type FlexiDeleteController,
-		spring,
+		springTransitionConfig,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
 	import {
@@ -22,11 +22,7 @@
 		widgetDefaults: {
 			draggable: true,
 			resizability: 'horizontal',
-			transition: {
-				move: spring({ duration: 0.15, bounce: 0.1 }),
-				drop: spring({ duration: 0.2, bounce: 0.3 }),
-				resize: { duration: 150, easing: 'ease-out' }
-			}
+			transition: springTransitionConfig()
 		}
 	});
 

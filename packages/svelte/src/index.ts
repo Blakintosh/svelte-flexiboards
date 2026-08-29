@@ -18,7 +18,9 @@ import { getFlexiwidgetCtx } from './adapters/widget.js';
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
+	cssTransitionConfig,
 	simpleTransitionConfig,
+	springTransitionConfig,
 	cssTransition,
 	spring
 } from '@flexiboards/core';
@@ -81,7 +83,9 @@ export {
 	type BreakpointSnippetParams,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
+	cssTransitionConfig,
 	simpleTransitionConfig,
+	springTransitionConfig,
 	cssTransition,
 	spring,
 	getFlexiwidgetCtx

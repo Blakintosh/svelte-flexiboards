@@ -7,6 +7,7 @@ import type {
 	FlexiWidgetTriggerConfiguration
 } from './types.js';
 import type { FlexiWidgetController } from './base.js';
+import { spring } from './animation.js';
 
 // TODO(adapter): removed flexiwidget — registers a widget configuration against the surrounding
 // FlexiTarget context (getInternalFlexitargetCtx) when a <FlexiWidget> component is created.
@@ -24,10 +25,10 @@ import type { FlexiWidgetController } from './base.js';
 // interpolator, asserting that it is defined.
 
 /**
- * A helper function to use ease-in-out transitions for move animations, and ease-out for drop animations.
+ * CSS-transition configuration: ease-in-out for move, ease-out for drop and resize, 150ms each.
  * @returns The configuration object.
  */
-function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
+function cssTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	return {
 		move: {
 			duration: 150,
@@ -44,6 +45,24 @@ function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	};
 }
 
+/**
+ * @deprecated Renamed to {@link cssTransitionConfig}; kept as an alias for backwards compatibility.
+ */
+const simpleTransitionConfig = cssTransitionConfig;
+
+/**
+ * A spring-based counterpart to cssTransitionConfig(): a quick, barely-overshooting move, a
+ * bouncier drop, and a critically damped resize.
+ * @returns The configuration object.
+ */
+function springTransitionConfig(): FlexiWidgetTransitionConfiguration {
+	return {
+		move: spring({ duration: 0.3, bounce: 0.1 }),
+		drop: spring({ duration: 0.4, bounce: 0.3 }),
+		resize: spring({ duration: 0.25, bounce: 0 })
+	};
+}
+
 export { InternalFlexiWidgetController } from './controller.js';
 export * from './types.js';
 export * from './events.js';
@@ -55,7 +74,9 @@ export * from './interpolation-utils.js';
 /* Exports to go to root index.ts */
 export {
 	type FlexiWidgetController,
+	cssTransitionConfig,
 	simpleTransitionConfig,
+	springTransitionConfig,
 	type FlexiWidgetChildrenSnippet,
 	type FlexiWidgetChildrenSnippetParameters,
 	type FlexiWidgetConfiguration,

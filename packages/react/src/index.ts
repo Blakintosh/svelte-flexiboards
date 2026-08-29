@@ -25,7 +25,9 @@ export { useFromCore } from './adapter.js';
 export {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
+	cssTransitionConfig,
 	simpleTransitionConfig,
+	springTransitionConfig,
 	cssTransition,
 	spring
 } from '@flexiboards/core';

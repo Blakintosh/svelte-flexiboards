@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { cssTransition, resolveAnimationAdapter, spring, type AnimationBox } from './animation.js';
+import { springTransitionConfig } from './index.js';
 
 const box = (n: number): AnimationBox => ({ left: n, top: n, width: n, height: n });
 
@@ -154,5 +155,14 @@ describe('spring', () => {
 		expect(emits.length).toBe(n);
 		expect(onSettle).toHaveBeenCalledOnce();
 		vi.unstubAllGlobals();
+	});
+});
+
+describe('springTransitionConfig', () => {
+	it('provides a spring adapter for every movement kind', () => {
+		const config = springTransitionConfig();
+		for (const kind of ['move', 'drop', 'resize'] as const) {
+			expect(resolveAnimationAdapter(config[kind])).toBe(config[kind]);
+		}
 	});
 });
