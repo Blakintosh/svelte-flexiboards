@@ -19,6 +19,10 @@ As Flexiboards is headless, it does not make any assumptions about the appearanc
 
 In this article, we discuss how you can either use Svelte snippets or pass a component prop to render content inside a FlexiWidget.
 
+### Provisional states
+
+While a widget is being dragged or resized, its controller exposes `isGrabbed`, `isResizing` and (on the preview in the grid) `isShadow`. It also exposes `dropRejected`: `true` whenever the widget is over a target that cannot place it where it is — the shadow is withdrawn, the cursor becomes `not-allowed`, and releasing sends the widget back to where it came from. Use it in a class function to make the state visible, e.g. `widget.dropRejected && 'opacity-30'`. The same flag is available on the target as `target.dropRejected`.
+
 ## Snippet-based
 
 Using [snippets](https://svelte.dev/docs/svelte/snippet) (specifically, `children`) is the most intuitive approach to rendering a widget. Simply put, you can put any elements or components as the content markup of your widget, like any other container component.
