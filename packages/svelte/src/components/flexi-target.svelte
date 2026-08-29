@@ -47,7 +47,7 @@
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
 	import type { FlexiCommonProps, FlexiTargetController, FlexiTargetPartialConfiguration } from '@flexiboards/core';
 	import { flexitarget } from '../adapters/target.js';
-	import { fromCore, reactive } from '../adapter.svelte.js';
+	import { fromCore, reactive, snapshotConfig } from '../adapter.svelte.js';
 	import type { ClassValue } from 'svelte/elements';
 
 	let {
@@ -62,7 +62,8 @@
 		onfirstcreate
 	}: FlexiTargetProps = $props();
 
-	const { target } = flexitarget(config, key);
+	// Snapshotted so core never aliases the live `$state` proxy (see snapshotConfig).
+	const { target } = flexitarget(snapshotConfig(config), key);
 
 	// Target created, allow the caller to access it (reactive consumer-facing handle).
 	const publicTarget = reactive(target as FlexiTargetController);
@@ -75,8 +76,10 @@
 	});
 
 	// Prop seam — see FlexiBoard. Inert unless `config` actually changed.
+	// snapshotConfig() reads every nested property, so in-place mutations of a
+	// `$state` config (e.g. `config.widgetDefaults.transition = …`) re-run this too.
 	$effect(() => {
-		target.updateConfig(config);
+		target.updateConfig(snapshotConfig(config));
 	});
 
 	// Bridge core-signal reads into Svelte's reactivity.

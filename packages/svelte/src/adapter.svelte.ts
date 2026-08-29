@@ -77,3 +77,64 @@ export function reactive<T extends object>(controller: T): T {
 	proxyCache.set(controller, proxy);
 	return proxy as T;
 }
+
+const objectPrototype = Object.prototype;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+	const proto = Object.getPrototypeOf(value);
+	return proto === objectPrototype || proto === null;
+}
+
+/**
+ * Deep-reads and shallow-clones the plain-object/array parts of a config value.
+ *
+ * Adapter prop seams push config into core from inside an `$effect`. Core compares
+ * against the config it last stored and memoises on core signals, so two things
+ * defeat an in-place mutation of a `$state` config (`config.widgetDefaults.transition = …`):
+ *
+ * - The effect only tracked the top-level `config` read, so it never re-runs.
+ *   Walking every nested property here registers each one as a dependency.
+ * - Core's stored copy shares nested objects with the live proxy, so comparing
+ *   "previous" against "next" compares the proxy with itself. Cloning the plain
+ *   objects and arrays gives core an independent snapshot to compare against.
+ *
+ * Functions, class instances, Maps, etc. (snippets, components, adapters, registries)
+ * are passed through by reference — they're identity-compared, never walked. This is
+ * `$state.snapshot` without the uncloneable-value warnings.
+ */
+export function snapshotConfig<T>(value: T): T {
+	return snapshotValue(value, new Map()) as T;
+}
+
+function snapshotValue(value: unknown, seen: Map<object, unknown>): unknown {
+	if (Array.isArray(value)) {
+		const cached = seen.get(value);
+		if (cached) {
+			return cached;
+		}
+		const copy: unknown[] = [];
+		seen.set(value, copy);
+		for (const item of value) {
+			copy.push(snapshotValue(item, seen));
+		}
+		return copy;
+	}
+
+	if (isPlainObject(value)) {
+		const cached = seen.get(value);
+		if (cached) {
+			return cached;
+		}
+		const copy: Record<string, unknown> = {};
+		seen.set(value, copy);
+		for (const key of Object.keys(value)) {
+			copy[key] = snapshotValue(value[key], seen);
+		}
+		return copy;
+	}
+
+	return value;
+}

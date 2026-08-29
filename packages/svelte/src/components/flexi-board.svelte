@@ -27,13 +27,14 @@
 	import { assistiveTextStyle, generateUniqueId, type FlexiBoardConfiguration, type FlexiBoardController } from '@flexiboards/core';
 	import type { FlexiCommonProps } from '@flexiboards/core';
 	import { flexiboard } from '../adapters/board.js';
-	import { fromCore, reactive } from '../adapter.svelte.js';
+	import { fromCore, reactive, snapshotConfig } from '../adapter.svelte.js';
 	import type { ClassValue } from 'svelte/elements';
 
 	let { controller = $bindable(), onfirstcreate, ...props }: FlexiBoardProps = $props();
 
 	// The adapter owns the board's lifecycle (boardEvents at mount, destroy at unmount).
-	const board = flexiboard(props);
+	// Config is snapshotted so core never aliases the live `$state` proxy (see snapshotConfig).
+	const board = flexiboard({ ...props, config: snapshotConfig(props.config) });
 	const publicBoard = reactive(board as FlexiBoardController);
 	controller = publicBoard;
 
@@ -45,8 +46,10 @@
 	// updateProps() is inert unless `config` actually changed, so the invalidation
 	// it causes can't feed back in and re-trigger this. Reads `props` only — never
 	// `publicBoard`, whose proxy reads would subscribe us to our own writes.
+	// snapshotConfig() reads every nested config property, so in-place mutations
+	// of a `$state` config re-run this seam as well as wholesale replacement.
 	$effect(() => {
-		board.updateProps(props);
+		board.updateProps({ ...props, config: snapshotConfig(props.config) });
 	});
 
 	const style = $derived.by(fromCore(() => board.style));
