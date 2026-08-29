@@ -19,6 +19,7 @@ import type { InternalFlexiTargetController } from '../target/controller.js';
 import { WidgetMoveInterpolator } from './interpolator.js';
 import type { WidgetMovementAnimation } from './animation.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetConstructorParams } from './types.js';
+import type { AnimationBox } from './animation.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 
 export class InternalFlexiWidgetController extends FlexiWidgetController {
@@ -40,6 +41,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 	#lastActionType: WidgetAction['action'] | null = null;
+	/**
+	 * What the widget looked like the instant its action was released or cancelled. The bounds
+	 * that follow may arrive after the action state is cleared and the portal clone torn down
+	 * (e.g. the board's restore-on-cancel microtask), so the animation reads its start from here.
+	 */
+	#releasedActionState: { action: WidgetAction['action']; rect: AnimationBox } | null = null;
+	/** Pixel size the widget had when its current resize began; the placeholder holds this, not the preview. */
+	#preResizeSizePx: { width: number; height: number } | null = null;
 	#interpolationAnimationHint: WidgetMovementAnimation | null = null;
 
 	#type?: string;
@@ -138,7 +147,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		const height = action.capturedHeightPx;
 		const width = action.capturedWidthPx;
 
-		return `pointer-events: none; user-select: none; cursor: grabbing; position: absolute; top: ${locationOffsetY}px; left: ${locationOffsetX}px; height: ${height}px; width: ${width}px;`;
+		const cursor = this.dropRejected ? 'not-allowed' : 'grabbing';
+		return `pointer-events: none; user-select: none; cursor: ${cursor}; position: absolute; top: ${locationOffsetY}px; left: ${locationOffsetX}px; height: ${height}px; width: ${width}px;`;
 	}
 
 	#getResizingWidgetStyle(action: WidgetResizeAction) {
@@ -239,7 +249,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		// Return the style string for the absolutely positioned widget
-		return `pointer-events: none; user-select: none; cursor: nwse-resize; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
+		const cursor = this.dropRejected ? 'not-allowed' : 'nwse-resize';
+		return `pointer-events: none; user-select: none; cursor: ${cursor}; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
 	}
 
 	constructor(params: FlexiWidgetConstructorParams) {
@@ -317,6 +328,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		this.#lastActionType = 'resize';
+		this.#preResizeSizePx = { width: event.capturedWidthPx, height: event.capturedHeightPx };
 
 		// We probably need to wait for the widget to be portalled before we can acquire its focus.
 		setTimeout(() => {
@@ -346,6 +358,28 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	}
 
 	/**
+	 * Records the current action and on-screen box before the action is released, so a
+	 * subsequent placement (drop, or restore after cancel) can still animate from it.
+	 * @internal
+	 */
+	captureReleaseState() {
+		const action = this.currentAction$();
+		const rect = this.ref?.getBoundingClientRect();
+		if (!action || !rect) {
+			return;
+		}
+
+		this.#releasedActionState = {
+			action: action.action,
+			rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+		};
+		// Outlives the release microtasks, but not an unrelated later placement.
+		setTimeout(() => {
+			this.#releasedActionState = null;
+		}, 0);
+	}
+
+	/**
 	 * Sets the bounds of the widget.
 	 * @internal
 	 * @param x The x-coordinate of the widget.
@@ -363,8 +397,11 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			this.x == x && this.y == y && this.width == width && this.height == height;
 
 		if (positionUnchanged) {
-			// Still interpolate for drop animations even when position is unchanged
-			if (interpolate && this.currentAction$()?.action === 'grab') {
+			// The grid units may be unchanged while the widget on screen is not: a grab that lands
+			// back on its own cell (or is cancelled) and a resize whose preview rounded back to
+			// the same size both still need to animate to the committed box.
+			const action = this.currentAction$()?.action ?? this.#releasedActionState?.action;
+			if (interpolate && (action === 'grab' || action === 'resize')) {
 				this.#interpolateMove(x, y, this.width, this.height, previousDimensions);
 			}
 			return;
@@ -397,6 +434,11 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return this.#lastActionType === 'resize' ? 'resize' : 'drop';
 		}
 
+		// Likewise for a placement that follows a release/cancel (e.g. a snapshot restore).
+		if (this.#releasedActionState) {
+			return this.#releasedActionState.action === 'resize' ? 'resize' : 'drop';
+		}
+
 		// Shadow/dropzone widgets can hint the desired interpolation mode even without an action state.
 		if (this.#interpolationAnimationHint) {
 			return this.#interpolationAnimationHint;
@@ -412,10 +454,16 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		height: number,
 		previousDimensions?: { width: number; height: number }
 	) {
-		const rect = this.ref?.getBoundingClientRect();
+		const rect = this.#releasedActionState?.rect ?? this.ref?.getBoundingClientRect();
 		if (!rect || !this.interpolator) {
 			return;
 		}
+
+		const animation = this.#getMovementAnimation();
+		// A resize renders the widget at the pointer-driven preview size, so the on-screen rect
+		// is the right place to animate *from* but not the size for the placeholder to hold.
+		const lockSize = animation === 'resize' ? (this.#preResizeSizePx ?? undefined) : undefined;
+		this.#preResizeSizePx = null;
 
 		this.interpolator.interpolateMove(
 			{
@@ -430,8 +478,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 				width: rect.width,
 				height: rect.height
 			},
-			this.#getMovementAnimation(),
-			previousDimensions
+			animation,
+			previousDimensions,
+			lockSize
 		);
 		this.isBeingDropped$(false);
 	}

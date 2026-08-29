@@ -375,6 +375,76 @@ describe('FreeFormFlexiGrid', () => {
 				expect(widget1.setBounds).toHaveBeenCalledWith(0, 1, widget1.width, widget1.height);
 			});
 
+			it('should not stack widgets that are displaced along the same row by a wide widget', () => {
+				const fixedGrid = new FreeFormFlexiGrid({} as InternalFlexiTargetController, {
+					layout: { type: 'free', minRows: 3, minColumns: 6, maxRows: 3, maxColumns: 6 },
+					rowSizing: 'auto',
+					columnSizing: 'auto'
+				});
+
+				// Row 1: two 1x1 widgets at columns 2 and 3; columns 4-5 are free.
+				const a = createMockWidget();
+				const b = createMockWidget();
+				fixedGrid.tryPlaceWidget(a, 2, 1, 1, 1);
+				fixedGrid.tryPlaceWidget(b, 3, 1, 1, 1);
+
+				// A 2x2 lands over them: both must shift right, into *different* columns.
+				const wide = createMockWidget();
+				expect(fixedGrid.tryPlaceWidget(wide, 2, 0, 2, 2)).toBe(true);
+
+				// ...and keep their order: a was left of b and stays left of b.
+				expect(a.x).toBe(4);
+				expect(b.x).toBe(5);
+			});
+
+			it('should keep the order of widgets displaced along the same column', () => {
+				const fixedGrid = new FreeFormFlexiGrid({} as InternalFlexiTargetController, {
+					layout: { type: 'free', minRows: 5, minColumns: 1, maxRows: 5, maxColumns: 1 },
+					rowSizing: 'auto',
+					columnSizing: 'auto'
+				});
+
+				const a = createMockWidget();
+				const b = createMockWidget();
+				fixedGrid.tryPlaceWidget(a, 0, 0, 1, 1);
+				fixedGrid.tryPlaceWidget(b, 0, 1, 1, 1);
+
+				// A 1x2 lands over both: they shift down, a still above b.
+				const tall = createMockWidget();
+				expect(fixedGrid.tryPlaceWidget(tall, 0, 0, 1, 2)).toBe(true);
+				expect(a.y).toBe(2);
+				expect(b.y).toBe(3);
+			});
+
+			it('should leave the grid untouched when a placement fails part-way through', () => {
+				const fixedGrid = new FreeFormFlexiGrid({} as InternalFlexiTargetController, {
+					layout: { type: 'free', minRows: 2, minColumns: 4, maxRows: 2, maxColumns: 4 },
+					rowSizing: 'auto',
+					columnSizing: 'auto'
+				});
+
+				// Row 0: a at column 1, b at column 2, immovable c at column 3. Row 1 is full.
+				const a = createMockWidget();
+				const b = createMockWidget();
+				const c = createMockWidget({ draggability: 'none' });
+				fixedGrid.tryPlaceWidget(a, 1, 0, 1, 1);
+				fixedGrid.tryPlaceWidget(b, 2, 0, 1, 1);
+				fixedGrid.tryPlaceWidget(c, 3, 0, 1, 1);
+				const filler = createMockWidget();
+				fixedGrid.tryPlaceWidget(filler, 0, 1, 4, 1);
+
+				// A 2x1 at column 0 pushes a onto b, b has nowhere to go: the whole move fails...
+				const wide = createMockWidget();
+				expect(fixedGrid.tryPlaceWidget(wide, 0, 0, 2, 1)).toBe(false);
+
+				// ...and nothing has moved, in the widgets or in the occupancy map.
+				expect(a.x).toBe(1);
+				expect(b.x).toBe(2);
+				const probe = createMockWidget();
+				expect(fixedGrid.tryPlaceWidget(probe, 0, 0, 1, 1)).toBe(true);
+				expect(a.x).toBe(1);
+			});
+
 			it('should maintain correct bitmaps when a full row is manipulated (issue #9)', () => {
 				const widget1 = createMockWidget();
 				const widget2 = createMockWidget();

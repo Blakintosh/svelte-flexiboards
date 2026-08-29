@@ -59,6 +59,7 @@ export class FlexiWidgetController {
 	 * Whether this widget is being resized.
 	 */
 	#isResizing$: ReadonlySignal<boolean> = computed(() => this.currentAction?.action == 'resize');
+	#dropRejected$: Signal<boolean> = signal(false);
 
 	/**
 	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
@@ -226,6 +227,19 @@ export class FlexiWidgetController {
 	 */
 	get isResizing() {
 		return this.#isResizing$();
+	}
+
+	/**
+	 * Whether the widget is being grabbed or resized over a target that cannot accept it where it
+	 * is: the drop would be rejected on release and the widget would return to where it came from.
+	 */
+	get dropRejected() {
+		return this.#dropRejected$();
+	}
+
+	/** @internal */
+	set dropRejected(value: boolean) {
+		this.#dropRejected$(value);
 	}
 
 	/**

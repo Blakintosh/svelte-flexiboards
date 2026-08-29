@@ -70,6 +70,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#dropzoneWidget$: Signal<InternalFlexiWidgetController | null> = signal(null);
 	#dropzoneWidgetDestroy: (() => void) | null = null;
 	#isDropzoneWidgetAdded$: Signal<boolean> = signal(false);
+	#dropRejected$: Signal<boolean> = signal(false);
+	/** The widget currently flagged as rejected, so the flag can be cleared after the action ends. */
+	#dropRejectedWidget: InternalFlexiWidgetController | null = null;
 
 	#mouseCellPosition$: Signal<Position> = signal({
 		x: 0,
@@ -715,6 +718,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
 		const added = this.grid.tryPlaceWidget(this.dropzoneWidget!, x, y, width, height, true);
+		this.#setDropRejected(!added);
 
 		if (added) {
 			this.widgets.add(this.dropzoneWidget!);
@@ -740,8 +744,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		const grid = this.grid;
 
-		// No change, no need to update.
+		// No change, no need to update — unless the last attempt failed, in which case the
+		// dropzone's bounds are stale (they still describe its last *successful* placement)
+		// and the position must be re-evaluated.
 		if (
+			this.#isDropzoneWidgetAdded$() &&
 			x === dropzoneWidget.x &&
 			y === dropzoneWidget.y &&
 			width === dropzoneWidget.width &&
@@ -754,6 +761,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
 		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
+		this.#setDropRejected(!added);
 
 		if (!added && this.#isDropzoneWidgetAdded$()) {
 			this.widgets.delete(this.dropzoneWidget!);
@@ -828,7 +836,32 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return { width: widget.width, height: widget.height };
 	}
 
+	/**
+	 * Records whether the action widget can be placed where it currently is, mirrors it onto
+	 * the widget so its own rendering can react, and announces the transition into rejection.
+	 */
+	#setDropRejected(rejected: boolean) {
+		const wasRejected = this.#dropRejected$();
+		this.#dropRejected$(rejected);
+
+		// The action widget may already be gone by the time the flag is cleared (a drop nulls it
+		// before the dropzone is removed), so the flagged widget is remembered separately.
+		if (this.#dropRejectedWidget && this.#dropRejectedWidget !== this.actionWidget?.widget) {
+			this.#dropRejectedWidget.dropRejected = false;
+			this.#dropRejectedWidget = null;
+		}
+		const widget = this.actionWidget?.widget;
+		if (widget) {
+			widget.dropRejected = rejected;
+			this.#dropRejectedWidget = rejected ? widget : null;
+		}
+		if (rejected && !wasRejected) {
+			this.provider$()?.announce('The widget cannot be placed here.');
+		}
+	}
+
 	#removeDropzoneWidget() {
+		this.#setDropRejected(false);
 		if (!this.dropzoneWidget) {
 			return;
 		}
@@ -937,6 +970,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 	set dropzoneWidget(value: InternalFlexiWidgetController | null) {
 		this.#dropzoneWidget$(value);
+	}
+
+	get dropRejected() {
+		return this.#dropRejected$();
 	}
 
 	get shouldRenderDropzoneWidget() {

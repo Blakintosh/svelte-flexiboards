@@ -20,6 +20,12 @@ export interface FlexiTargetController {
 	get prepared(): boolean;
 
 	/**
+	 * Whether a widget is currently being grabbed or resized over this target at a position
+	 * where it cannot be placed. Use it to signal that the drop will be rejected.
+	 */
+	get dropRejected(): boolean;
+
+	/**
 	 * Creates a new widget under this target.
 	 * @param config The configuration of the widget to create.
 	 * @returns The newly created widget if it could be placed, or undefined if not.

@@ -111,12 +111,18 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 
 		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
+			this.#rollbackOperations(operations, new Map());
 			return false;
 		}
 
-		// Apply the moves.
+		// The coordinate system already reflects every pending move; commit them to the widgets.
 		for (const operation of operations.values()) {
-			this.#doMoveOperation(operation.widget, operation);
+			operation.widget.setBounds(
+				operation.newX,
+				operation.newY,
+				operation.widget.width,
+				operation.widget.height
+			);
 		}
 
 		// Place the widget now that all other widgets have been moved out of the way.
@@ -143,9 +149,11 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			return false;
 		}
 
-		// Looking row-by-row, we can identify collisions using the bitmaps.
-		for (let i = newY; i < newY + height; i++) {
-			for (let j = newX; j < newX + width; j++) {
+		// Looking row-by-row, we can identify collisions using the bitmaps. Scan from the far
+		// corner back towards the origin: widgets are pushed right/down, so handling the
+		// farthest one first means nearer ones land behind it instead of leapfrogging it.
+		for (let i = newY + height - 1; i >= newY; i--) {
+			for (let j = newX + width - 1; j >= newX; j--) {
 				// Find the first column that a collision occurs on this row, if any.
 				const collidingWidget = this.#coordinateSystem.getCollidingWidgetIfAny(j, i);
 
@@ -158,85 +166,33 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					return false;
 				}
 
-				// Before relocating the colliding widget, remove it from the coordinate system so it can't collide with itself.
-				this.#coordinateSystem.removeWidget(collidingWidget);
+				// The widget may already have a pending move; collisions happen at wherever it currently sits.
+				const { x: currentX, y: currentY } = this.#pendingPositionOf(collidingWidget, operations);
+
+				// Take the colliding widget out of the coordinate system so it can't collide with itself.
+				this.#coordinateSystem.removeWidgetAt(collidingWidget, currentX, currentY);
 
 				// Try move the colliding widget along the x-axis if this is allowed and possible.
-				const xMove =
+				if (
 					displaceX &&
-					this.#resolveCollisions(
-						{
-							widget: collidingWidget,
-							x: newX + width,
-							y: collidingWidget.y,
-							width: collidingWidget.width,
-							height: collidingWidget.height
-						},
-						operations,
-						displaceX,
-						false
-					);
-
-				if (xMove) {
-					operations.set(collidingWidget, {
-						widget: collidingWidget,
-						newX: newX + width,
-						newY: collidingWidget.y,
-						oldX: collidingWidget.x,
-						oldY: collidingWidget.y
-					});
-					// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
-					this.#coordinateSystem.addWidget(
-						collidingWidget,
-						collidingWidget.x,
-						collidingWidget.y,
-						collidingWidget.width,
-						collidingWidget.height
-					);
+					this.#attemptDisplacement(collidingWidget, newX + width, currentY, operations, displaceX, false)
+				) {
 					continue;
 				}
 
 				// If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
-				const yMove =
+				if (
 					displaceY &&
-					this.#resolveCollisions(
-						{
-							widget: collidingWidget,
-							x: collidingWidget.x,
-							y: newY + height,
-							width: collidingWidget.width,
-							height: collidingWidget.height
-						},
-						operations,
-						false,
-						displaceY
-					);
-
-				if (yMove) {
-					operations.set(collidingWidget, {
-						widget: collidingWidget,
-						newX: collidingWidget.x,
-						newY: newY + height,
-						oldX: collidingWidget.x,
-						oldY: collidingWidget.y
-					});
-					// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
-					this.#coordinateSystem.addWidget(
-						collidingWidget,
-						collidingWidget.x,
-						collidingWidget.y,
-						collidingWidget.width,
-						collidingWidget.height
-					);
+					this.#attemptDisplacement(collidingWidget, currentX, newY + height, operations, false, displaceY)
+				) {
 					continue;
 				}
 
-				// Neither worked, we can't move the widget.
-				// this is a bit hacky but we need to add the widget back to the coordinate system in case the move doesn't happen.
+				// Neither worked: put the widget back where it was and let the caller unwind.
 				this.#coordinateSystem.addWidget(
 					collidingWidget,
-					collidingWidget.x,
-					collidingWidget.y,
+					currentX,
+					currentY,
 					collidingWidget.width,
 					collidingWidget.height
 				);
@@ -371,21 +327,82 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return [x, y, width ?? 1, height ?? 1];
 	}
 
-	#doMoveOperation(widget: InternalFlexiWidgetController, operation: MoveOperation) {
-		// TODO: Not sure yet whether we should be cleaning up a moved widget, we'll see.
-		// Pretty sure the thing that'll occupy its space always comes after, so this operation
-		// should be safe.
-		this.#coordinateSystem.removeWidget(widget);
+	/**
+	 * Where a widget currently sits during collision resolution: its pending move if it has one,
+	 * otherwise its committed bounds.
+	 */
+	#pendingPositionOf(
+		widget: InternalFlexiWidgetController,
+		operations: Map<FlexiWidgetController, MoveOperation>
+	): { x: number; y: number } {
+		const pending = operations.get(widget);
+		return pending ? { x: pending.newX, y: pending.newY } : { x: widget.x, y: widget.y };
+	}
 
-		// Place the widget in the new position.
-		this.#coordinateSystem.addWidget(
-			widget,
-			operation.newX,
-			operation.newY,
-			widget.width,
-			widget.height
+	/**
+	 * Tries to relocate a (currently removed) widget to (x, y), resolving whatever it collides with
+	 * there. On success the widget is placed in the coordinate system at the new position and the
+	 * move is recorded; on failure every change made during the attempt is rolled back.
+	 */
+	#attemptDisplacement(
+		widget: InternalFlexiWidgetController,
+		x: number,
+		y: number,
+		operations: Map<FlexiWidgetController, MoveOperation>,
+		displaceX: boolean,
+		displaceY: boolean
+	): boolean {
+		const previous = new Map(operations);
+
+		const resolved = this.#resolveCollisions(
+			{ widget, x, y, width: widget.width, height: widget.height },
+			operations,
+			displaceX,
+			displaceY
 		);
-		widget.setBounds(operation.newX, operation.newY, widget.width, widget.height);
+
+		if (!resolved) {
+			this.#rollbackOperations(operations, previous);
+			return false;
+		}
+
+		operations.set(widget, { widget, newX: x, newY: y, oldX: widget.x, oldY: widget.y });
+		this.#coordinateSystem.addWidget(widget, x, y, widget.width, widget.height);
+		return true;
+	}
+
+	/**
+	 * Undoes every move recorded in `operations` since `previous` was captured, both in the
+	 * coordinate system and in the map itself, leaving `operations` equal to `previous`.
+	 */
+	#rollbackOperations(
+		operations: Map<FlexiWidgetController, MoveOperation>,
+		previous: Map<FlexiWidgetController, MoveOperation>
+	) {
+		// Unwind in reverse insertion order so nested attempts are undone before their parents.
+		for (const [widget, operation] of [...operations.entries()].reverse()) {
+			const before = previous.get(widget);
+			if (before === operation) {
+				continue;
+			}
+
+			this.#coordinateSystem.removeWidgetAt(operation.widget, operation.newX, operation.newY);
+
+			const restoreX = before ? before.newX : operation.oldX;
+			const restoreY = before ? before.newY : operation.oldY;
+			this.#coordinateSystem.addWidget(
+				operation.widget,
+				restoreX,
+				restoreY,
+				operation.widget.width,
+				operation.widget.height
+			);
+		}
+
+		operations.clear();
+		for (const [widget, operation] of previous) {
+			operations.set(widget, operation);
+		}
 	}
 
 	adjustGridDimensionsToFit(x: number, y: number, width: number, height: number) {
@@ -512,7 +529,15 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	removeWidget(widget: InternalFlexiWidgetController) {
-		const { x, y, width, height } = widget;
+		this.removeWidgetAt(widget, widget.x, widget.y);
+	}
+
+	/**
+	 * Clears the region a widget occupies at an explicit position — needed while a move is
+	 * pending, when the coordinate system holds the widget somewhere other than its bounds say.
+	 */
+	removeWidgetAt(widget: InternalFlexiWidgetController, x: number, y: number) {
+		const { width, height } = widget;
 
 		const widgetXBitmap = this.getBitmap(x, width);
 

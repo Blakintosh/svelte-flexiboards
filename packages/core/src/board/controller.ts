@@ -24,7 +24,7 @@ import type {
 } from './types.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { InternalResponsiveFlexiBoardController } from '../responsive/controller.js';
-import { computed, signal, untracked } from '../reactivity.js';
+import { computed, signal, untracked, effect } from '../reactivity.js';
 import { shallowEqual } from '../shared/prop-sync.js';
 import type { Signal, ReadonlySignal } from '../types.js';
 
@@ -192,11 +192,24 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return '';
 		}
 
+		const cursor = this.#actionCursor();
+		return cursor ? `cursor: ${cursor};` : '';
+	}
+
+	/** The cursor for the action in flight, if any: reflects a rejected drop. */
+	#actionCursor(): string | null {
+		const currentWidgetAction = this.#currentWidgetAction$();
+		if (!currentWidgetAction) {
+			return null;
+		}
+		if (currentWidgetAction.widget.dropRejected) {
+			return 'not-allowed';
+		}
 		switch (currentWidgetAction.action) {
 			case 'grab':
-				return `cursor: grabbing;`;
+				return 'grabbing';
 			case 'resize':
-				return `cursor: nwse-resize;`;
+				return 'nwse-resize';
 		}
 	}
 
@@ -218,8 +231,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 		if (this.ref) {
 			const scrollbarWidth = this.ref.offsetWidth - this.ref.clientWidth;
-			if (scrollbarWidth > 0) {
-				const existingPadding = parseFloat(getComputedStyle(this.ref).paddingRight) || 0;
+			const style = getComputedStyle(this.ref);
+			// With `scrollbar-gutter: stable` the gutter survives `overflow: hidden`, so there is
+			// nothing to compensate for — padding as well would shift the content twice.
+			const gutterIsStable = style.scrollbarGutter?.includes('stable') ?? false;
+			if (scrollbarWidth > 0 && !gutterIsStable) {
+				const existingPadding = parseFloat(style.paddingRight) || 0;
 				this.#scrollbarCompensation$(existingPadding + scrollbarWidth);
 			}
 			this.#hasScrollbarCompensation$(true);
@@ -359,6 +376,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#originalOverscrollBehaviorY: string | null = null;
 	#originalTouchAction: string | null = null;
 	#originalUserSelect: string | null = null;
+	#cursorStyle: HTMLStyleElement | null = null;
+	#stopCursorEffect: (() => void) | null = null;
 
 	#lockViewport() {
 		this.#originalOverscrollBehaviorY = document.documentElement.style.overscrollBehaviorY;
@@ -368,6 +387,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		document.documentElement.style.overscrollBehaviorY = 'contain';
 		document.documentElement.style.touchAction = 'none';
 		document.documentElement.style.userSelect = 'none';
+
+		// The cursor is decided by whatever is under the pointer, which is rarely the board or
+		// the clone (it ignores pointer events), so the action's cursor is applied globally.
+		this.#cursorStyle = document.createElement('style');
+		document.head.appendChild(this.#cursorStyle);
+		this.#stopCursorEffect = effect(() => {
+			const cursor = this.#actionCursor();
+			this.#cursorStyle!.textContent = cursor ? `* { cursor: ${cursor} !important; }` : '';
+		});
 	}
 
 	#unlockViewport() {
@@ -375,6 +403,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			this.#originalOverscrollBehaviorY ?? 'auto';
 		document.documentElement.style.touchAction = this.#originalTouchAction ?? 'auto';
 		document.documentElement.style.userSelect = this.#originalUserSelect ?? 'auto';
+
+		this.#stopCursorEffect?.();
+		this.#stopCursorEffect = null;
+		this.#cursorStyle?.remove();
+		this.#cursorStyle = null;
 	}
 
 	handleWidgetRelease(event: InternalWidgetEvent) {
@@ -386,6 +419,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#unlockViewport();
 
 		const currentAction = this.#currentWidgetAction$()!;
+		// First handler to run: the portal clone is still on screen, so this is the moment to
+		// remember where the widget is before anything tears it down.
+		currentAction.widget.captureReleaseState();
 		// Capture source target before any handlers might change widget.internalTarget
 		const sourceTarget = currentAction.widget.internalTarget;
 
@@ -419,6 +455,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// Capture source target before releasing the action
 		const sourceTarget = this.#currentWidgetAction$()?.widget.internalTarget;
+		this.#currentWidgetAction$()?.widget.captureReleaseState();
 
 		this.#releaseCurrentWidgetAction();
 
