@@ -1,4 +1,5 @@
 import { FlexiGrid, type WidgetSnapshot } from './base.js';
+import type { Position } from '../types.js';
 import type { FlexiWidgetController } from '../widget/base.js';
 import type { FlexiTargetConfiguration } from '../target/types.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
@@ -109,6 +110,13 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 	#coordinateSystem: FlowGridCoordinateSystem = new FlowGridCoordinateSystem(this);
 	#dragSnapshot: FlowGridSnapshot | null = null;
+	/** 1D position the dragged widget occupied in this grid before it was grabbed, if it came from here. */
+	#dragOrigin1D: number | null = null;
+	/** Last slot resolved in "cell" mode, held while the pointer is over the shadow itself. */
+	#lastCellResolution: [number, number] | null = null;
+	/** The widget and side that produced #lastCellResolution, for direction hysteresis. */
+	#lastCellWidget: FlexiWidgetController | null = null;
+	#lastCellDropAfter = false;
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		super(target, targetConfig);
@@ -411,77 +419,127 @@ export class FlowFlexiGrid extends FlexiGrid {
 		this.columns = snapshot.columns;
 	}
 
-	override setDragSnapshot(snapshot: unknown): void {
+	override setDragSnapshot(snapshot: unknown, origin?: Position | null): void {
 		this.#dragSnapshot = snapshot as FlowGridSnapshot;
+		this.#dragOrigin1D = origin ? this.#coordinateSystem.to1D(origin.x, origin.y) : null;
+		this.#lastCellResolution = null;
+		this.#lastCellWidget = null;
 	}
 
 	override clearDragSnapshot(): void {
 		this.#dragSnapshot = null;
+		this.#dragOrigin1D = null;
+		this.#lastCellResolution = null;
+		this.#lastCellWidget = null;
 	}
 
 	mapRawCellToFinalCell(x: number, y: number): [number, number] {
-		const position = this.#coordinateSystem.getNormalisedHoverPosition(x, y);
+		return this.#mapCellToFinalCell(x, y);
+	}
 
-		// Without a drag snapshot, just return the normalized position directly.
+	/**
+	 * Resolves the hovered cell to an insertion slot like a sortable list: the whole hovered cell is
+	 * the target, and before/after is decided by the direction of travel relative to the dragged
+	 * widget's current slot rather than by where the pointer sits within the cell.
+	 */
+	#mapCellToFinalCell(x: number, y: number): [number, number] {
+		const coords = this.#coordinateSystem;
+		const hovered: [number, number] = [
+			Math.max(0, Math.min(Math.floor(x), this.columns - 1)),
+			Math.max(0, Math.min(Math.floor(y), this.rows - 1))
+		];
+
 		if (!this.#dragSnapshot) {
-			return position;
+			return hovered;
 		}
 
-		const position1D = this.#coordinateSystem.to1D(position[0], position[1]);
+		const hovered1D = coords.to1D(hovered[0], hovered[1]);
+		const [index, candidate] = coords.findNearestWidgetFrom2D(hovered[0], hovered[1]);
 
-		// Find the nearest widget to the cursor in the CURRENT (live) grid.
-		let [index, nearestWidget] = this.#coordinateSystem.findNearestWidgetFrom2D(
-			position[0],
-			position[1]
-		);
-
-		// If the nearest widget is the shadow, look at neighbors and pick the closest non-shadow.
-		if (nearestWidget && (nearestWidget as InternalFlexiWidgetController).isShadow) {
-			nearestWidget = null;
-
-			// Check the widget after the shadow first, then before.
-			if (
-				index + 1 < this.#widgets.length &&
-				!(this.#widgets[index + 1] as InternalFlexiWidgetController).isShadow
-			) {
-				nearestWidget = this.#widgets[index + 1];
-				index = index + 1;
-			} else if (
-				index - 1 >= 0 &&
-				!(this.#widgets[index - 1] as InternalFlexiWidgetController).isShadow
-			) {
-				nearestWidget = this.#widgets[index - 1];
-				index = index - 1;
+		// findNearestWidget may land on the widget just after the cell; the covering widget, if any, is
+		// the last one that starts at or before the hovered cell.
+		let covering: FlexiWidgetController | null = null;
+		for (const i of [index, index - 1]) {
+			const widget = i >= 0 ? this.#widgets[i] : undefined;
+			if (!widget) {
+				continue;
+			}
+			const start = coords.to1D(widget.x, widget.y);
+			if (start <= hovered1D && hovered1D < start + coords.getWidgetLength(widget)) {
+				covering = widget;
+				break;
 			}
 		}
 
-		// If we couldn't find a non-shadow widget, fall back to the normalized position.
-		if (!nearestWidget) {
-			return position;
+		// Over the shadow (or empty space): keep the current slot stable rather than flickering.
+		if (!covering || (covering as InternalFlexiWidgetController).isShadow) {
+			if (this.#lastCellResolution) {
+				return this.#lastCellResolution;
+			}
+			return this.#resolveCellFallback(hovered1D);
 		}
 
-		// Look up this widget in the snapshot by identity (same object reference).
-		const snapshotEntry = this.#dragSnapshot.widgets.find((s) => s.widget === nearestWidget);
+		const snapshotEntry = this.#dragSnapshot.widgets.find((s) => s.widget === covering);
 		if (!snapshotEntry) {
-			return position;
+			return hovered;
 		}
 
-		// Determine: is the cursor BEFORE or AFTER the midpoint of this widget in the current grid?
-		const widgetPosition1D = this.#coordinateSystem.to1D(nearestWidget.x, nearestWidget.y);
-		const widgetLength = this.#coordinateSystem.getWidgetLength(nearestWidget);
-		const widgetMidpoint1D = widgetPosition1D + widgetLength / 2;
+		const snapshotStart = coords.to1D(snapshotEntry.x, snapshotEntry.y);
+		const snapshotLength = this.isRowFlow ? snapshotEntry.width : snapshotEntry.height;
 
-		if (position1D < widgetMidpoint1D) {
-			// Cursor is before the widget → return the widget's snapshot position.
-			return [snapshotEntry.x, snapshotEntry.y];
-		} else {
-			// Cursor is at or after the widget → return snapshot position + widget length.
-			const snapshotCoords = this.#coordinateSystem;
-			const snapshotPosition1D =
-				snapshotCoords.to1D(snapshotEntry.x, snapshotEntry.y) +
-				(this.isRowFlow ? snapshotEntry.width : snapshotEntry.height);
-			return snapshotCoords.to2D(snapshotPosition1D);
+		// Direction of travel is relative to where the dragged widget currently sits (its shadow in the
+		// live grid), like a sortable list: hovering a widget past the shadow drops after it, one before
+		// the shadow drops before it. This keeps the original slot reachable. Before the shadow has been
+		// placed, fall back to the origin; widgets that shifted into the origin's slot were after it.
+		const shadow = this.#widgets.find((w) => (w as InternalFlexiWidgetController).isShadow);
+		const dropAfter = shadow
+			? coords.to1D(covering.x, covering.y) > coords.to1D(shadow.x, shadow.y)
+			: this.#dragOrigin1D !== null && snapshotStart >= this.#dragOrigin1D;
+
+		// Hysteresis: after resolving a side of a widget, that widget reflows and can land back under a
+		// stationary pointer on its other side (a widget taller than the shadow does this). Only flip
+		// sides on the same widget if the pointer actually travelled in the new direction.
+		if (
+			covering === this.#lastCellWidget &&
+			dropAfter !== this.#lastCellDropAfter &&
+			!this.#pointerTravelled(dropAfter) &&
+			this.#lastCellResolution
+		) {
+			return this.#lastCellResolution;
 		}
+
+		const resolved = coords.to2D(dropAfter ? snapshotStart + snapshotLength : snapshotStart);
+
+		this.#lastCellResolution = resolved;
+		this.#lastCellWidget = covering;
+		this.#lastCellDropAfter = dropAfter;
+		return resolved;
+	}
+
+	/**
+	 * Whether the pointer's last movement was along the flow (forwards if `forward`, else backwards).
+	 * Cross-axis movement only counts when the cross axis has more than one cell.
+	 */
+	#pointerTravelled(forward: boolean): boolean {
+		const { x: dx, y: dy } = this._pointerDelta;
+		const [main, cross, crossCells] = this.isRowFlow ? [dy, dx, this.columns] : [dx, dy, this.rows];
+		const travel = main !== 0 ? main : crossCells > 1 ? cross : 0;
+		return forward ? travel > 0 : travel < 0;
+	}
+
+	/** Empty space in "cell" mode resolves to the end of the snapshot, clamped to the hovered cell. */
+	#resolveCellFallback(hovered1D: number): [number, number] {
+		const coords = this.#coordinateSystem;
+		let end = 0;
+		for (const entry of this.#dragSnapshot!.widgets) {
+			end = Math.max(
+				end,
+				coords.to1D(entry.x, entry.y) + (this.isRowFlow ? entry.width : entry.height)
+			);
+		}
+		const resolved = coords.to2D(Math.min(hovered1D, end));
+		this.#lastCellResolution = resolved;
+		return resolved;
 	}
 
 	get rows(): number {
@@ -695,20 +753,6 @@ class FlowGridCoordinateSystem {
 		}
 
 		return this.#grid.rows;
-	}
-
-	getNormalisedHoverPosition(x: number, y: number): [number, number] {
-		if (this.#isRowFlow) {
-			if (Math.ceil(x) == this.#grid.columns && y % 1 > 0.5) {
-				return [0, Math.round(y)];
-			}
-			return [Math.min(Math.round(x), this.#grid.columns - 1), Math.floor(y)];
-		}
-
-		if (Math.ceil(y) == this.#grid.rows && x % 1 > 0.5) {
-			return [Math.round(x), 0];
-		}
-		return [Math.floor(x), Math.min(Math.round(y), this.#grid.rows - 1)];
 	}
 }
 

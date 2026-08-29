@@ -7,7 +7,7 @@
 		simpleTransitionConfig,
 		type FlexiBoardConfiguration,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import ProductCard, { type Product } from '$lib/components/examples/products/product-card.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';

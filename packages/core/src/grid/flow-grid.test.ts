@@ -738,173 +738,152 @@ describe('FlowFlexiGrid', () => {
 		});
 	});
 
-	describe('mapRawCellToFinalCell with drag snapshot', () => {
-		const createShadowWidget = (
-			x = 0,
-			y = 0,
-			width = 1,
-			height = 1
-		): InternalFlexiWidgetController => {
-			const widget = createMockWidget(x, y, width, height);
-			(widget as any).isShadow = true;
-			return widget;
+	describe('mapRawCellToFinalCell without a drag snapshot', () => {
+		it('floors to the hovered cell', () => {
+			expect(grid.mapRawCellToFinalCell(1.6, 0.4)).toEqual([1, 0]);
+		});
+
+		it('behaves as passthrough again once the drag snapshot is cleared', () => {
+			mockWidgetPlacement({ x: 0, y: 0 });
+			grid.setDragSnapshot(grid.takeSnapshot());
+			grid.clearDragSnapshot();
+			expect(grid.mapRawCellToFinalCell(1, 0)).toEqual([1, 0]);
+		});
+	});
+
+	describe('insert resolution', () => {
+		const makeGrid = () => new FlowFlexiGrid(mockTarget, targetConfig);
+
+		/**
+		 * Simulates a same-target drag: the grid held [A, X, B, C], X was grabbed (removed), leaving
+		 * A(0) B(1) C(2) in a 3-column row. X's origin was cell (1, 0).
+		 */
+		const setupSameTargetDrag = (cellGrid: FlowFlexiGrid) => {
+			const a = mockWidgetPlacement({ grid: cellGrid, x: 0, y: 0 });
+			const b = mockWidgetPlacement({ grid: cellGrid, x: 1, y: 0 });
+			const c = mockWidgetPlacement({ grid: cellGrid, x: 2, y: 0 });
+			cellGrid.setDragSnapshot(cellGrid.takeSnapshot(), { x: 1, y: 0 });
+			return { a, b, c };
 		};
 
-		it('should return normalized position when no drag snapshot is set', () => {
-			// No snapshot set, so mapRawCellToFinalCell should just pass through
-			const result = grid.mapRawCellToFinalCell(1, 0);
-			expect(result).toEqual([1, 0]);
+		it.each<[[number, number], [number, number], string]>([
+			// [hover, expected, why]
+			[[0, 0], [0, 0], 'A is before the origin → drop before A'],
+			[[1, 0], [2, 0], 'B shifted into the origin slot → was after → drop after B'],
+			[[2, 0], [0, 1], 'C is after the origin → drop after C (wraps to next row)'],
+			[[1, 1], [0, 1], 'empty space → end of the snapshot'],
+			[[1.9, 0.9], [2, 0], 'fractional coordinates floor to the hovered cell'],
+			[[2.7, 0.8], [0, 1], 'last column: no wrap to the next row from the bottom half']
+		])('hover %j → %j (%s)', (hover, expected) => {
+			const cellGrid = makeGrid();
+			setupSameTargetDrag(cellGrid);
+			expect(cellGrid.mapRawCellToFinalCell(hover[0], hover[1])).toEqual(expected);
 		});
 
-		it('should map cursor on first half of widget to before-position in snapshot', () => {
-			// Set up: 3-column grid with widget A(1-wide) at position 0
-			const a = createMockWidget(0, 0, 1, 1);
-			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+		it('drops before the hovered widget when dragging from another target (no origin)', () => {
+			const cellGrid = makeGrid();
+			mockWidgetPlacement({ grid: cellGrid, x: 0, y: 0 });
+			mockWidgetPlacement({ grid: cellGrid, x: 1, y: 0 });
+			cellGrid.setDragSnapshot(cellGrid.takeSnapshot(), null);
 
-			// Take a snapshot (A is at position 0)
-			const snapshot = grid.takeSnapshot();
-
-			// Now simulate a shadow (2-wide) being placed at position 0, displacing A to position 2
-			const shadow = createShadowWidget(0, 0, 2, 1);
-			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
-
-			// A should now be at position 2 in the live grid
-			expect(a.x).toBe(2);
-			expect(a.y).toBe(0);
-
-			// Set the drag snapshot
-			grid.setDragSnapshot(snapshot);
-
-			// Cursor at (2, 0) — on A in the live grid. A is 1-wide, so midpoint is 2.5.
-			// position1D (2) < midpoint (2.5) → "before" → returns A's snapshot position (0, 0).
-			const result = grid.mapRawCellToFinalCell(2, 0);
-			expect(result).toEqual([0, 0]);
+			expect(cellGrid.mapRawCellToFinalCell(1, 0)).toEqual([1, 0]);
 		});
 
-		it('should map cursor past widget midpoint to after-position in snapshot', () => {
-			// Set up: 3-column grid with widget A(2-wide) at position 0
-			const a = createMockWidget(0, 0, 2, 1);
-			grid.tryPlaceWidget(a, 0, 0, 2, 1);
+		it.each<[number, [number, number], [number, number], string]>([
+			[0, [1, 0], [1, 0], 'shadow at 0: A (live 1) is past it → after A = the original slot'],
+			[0, [2, 0], [2, 0], 'shadow at 0: B (live 2) is past it → after B'],
+			[3, [2, 0], [2, 0], 'shadow at 3: C (live 2) is before it → before C'],
+			[3, [0, 0], [0, 0], 'shadow at 3: A (live 0) is before it → before A']
+		])(
+			'direction is relative to the shadow (shadow@%s, hover %j → %j: %s)',
+			(shadowAt, hover, expected) => {
+				const cellGrid = makeGrid();
+				setupSameTargetDrag(cellGrid);
+				const shadow = createMockWidget(0, 0, 1, 1);
+				(shadow as any).isShadow = true;
+				cellGrid.tryPlaceWidget(shadow, shadowAt % 3, Math.floor(shadowAt / 3), 1, 1);
+				expect(cellGrid.mapRawCellToFinalCell(hover[0], hover[1])).toEqual(expected);
+			}
+		);
 
-			const snapshot = grid.takeSnapshot();
+		describe('direction hysteresis on the same widget', () => {
+			/** 1-column list: A(0) B(1) C(2); dragged came from between A and B; shadow placed after C. */
+			const setupList = () => {
+				const list = new FlowFlexiGrid(mockTarget, {
+					...targetConfig,
+					layout: {
+						type: 'flow',
+						flowAxis: 'row',
+						placementStrategy: 'append',
+						rows: 4,
+						columns: 1
+					}
+				});
+				mockWidgetPlacement({ grid: list, x: 0, y: 0 });
+				mockWidgetPlacement({ grid: list, x: 0, y: 1 });
+				mockWidgetPlacement({ grid: list, x: 0, y: 2 });
+				list.setDragSnapshot(list.takeSnapshot(), { x: 0, y: 1 });
+				const shadow = createMockWidget(0, 3, 1, 1);
+				(shadow as any).isShadow = true;
+				list.tryPlaceWidget(shadow, 0, 3, 1, 1);
+				return list;
+			};
+			const setDelta = (g: FlowFlexiGrid, x: number, y: number) =>
+				((g as any)._pointerDelta = { x, y });
 
-			// Shadow (1-wide) placed at position 0 pushes A to position 1
-			const shadow = createShadowWidget(0, 0, 1, 1);
-			grid.tryPlaceWidget(shadow, 0, 0, 1, 1);
-
-			expect(a.x).toBe(1);
-			expect(a.y).toBe(0);
-
-			grid.setDragSnapshot(snapshot);
-
-			// Cursor at (2, 0) → 1D pos 2. A is at live pos 1, width 2, midpoint = 1 + 1 = 2.
-			// position1D (2) < midpoint (2) → false → "after"
-			// A in snapshot is at (0,0) width 2, so after = 0 + 2 = 2 → (2, 0).
-			const result = grid.mapRawCellToFinalCell(2, 0);
-			expect(result).toEqual([2, 0]);
-		});
-
-		it('should map cursor over shadow to nearest non-shadow using midpoint logic', () => {
-			// Set up: 3-column grid with widget A(1-wide) at position 0
-			const a = createMockWidget(0, 0, 1, 1);
-			grid.tryPlaceWidget(a, 0, 0, 1, 1);
-
-			const snapshot = grid.takeSnapshot();
-
-			// Shadow (2-wide) placed at position 0 pushes A to position 2
-			const shadow = createShadowWidget(0, 0, 2, 1);
-			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
-
-			grid.setDragSnapshot(snapshot);
-
-			// Cursor at (1, 0) → 1D pos 1, over the shadow.
-			// Nearest non-shadow neighbor is A at live pos 2, midpoint 2.5.
-			// 1 < 2.5 → "before" → returns A's snapshot position (0, 0).
-			const result = grid.mapRawCellToFinalCell(1, 0);
-			expect(result).toEqual([0, 0]);
-		});
-
-		it('should map correctly in multi-column grid without crossing row boundaries', () => {
-			// 3-column grid with A(1-wide) at position 0, B(1-wide) at position 1
-			const a = createMockWidget(0, 0, 1, 1);
-			grid.tryPlaceWidget(a, 0, 0, 1, 1);
-
-			const b = createMockWidget(1, 0, 1, 1);
-			grid.tryPlaceWidget(b, 1, 0, 1, 1);
-
-			// Snapshot: A at (0,0) width 1, B at (1,0) width 1
-			const snapshot = grid.takeSnapshot();
-
-			// Shadow (2-wide) placed at position 0 pushes A to (2,0) and B wraps to (0,1)
-			const shadow = createShadowWidget(0, 0, 2, 1);
-			grid.tryPlaceWidget(shadow, 0, 0, 2, 1);
-
-			expect(a.x).toBe(2);
-			expect(a.y).toBe(0);
-			expect(b.x).toBe(0);
-			expect(b.y).toBe(1);
-
-			grid.setDragSnapshot(snapshot);
-
-			// Cursor at (0, 1) → 1D pos 3, over B in the live grid.
-			// B is 1-wide at live pos 3, midpoint = 3.5.
-			// position1D (3) < midpoint (3.5) → "before" → returns B's snapshot position (1, 0).
-			// This is the key: without snapshot-based mapping, a 1D subtraction would have produced
-			// an incorrect result that crosses row boundaries in multi-column layouts.
-			const result = grid.mapRawCellToFinalCell(0, 1);
-			expect(result).toEqual([1, 0]);
-		});
-
-		it('should allow placing before first widget in 1-column grid', () => {
-			// 1-column, 3-row grid — simulates mobile/narrow view
-			const narrowGrid = new FlowFlexiGrid(mockTarget, {
-				...targetConfig,
-				layout: {
-					...(targetConfig.layout as FlowTargetLayout),
-					columns: 1,
-					rows: 3
-				}
+			it('does not flip sides on the same widget without pointer travel in that direction', () => {
+				const list = setupList();
+				// Hover C (live row 2, before the shadow at row 3) → before C.
+				expect(list.mapRawCellToFinalCell(0, 2)).toEqual([0, 2]);
+				// Simulate C reflowing under the pointer to after the shadow: shadow now at 2, C at 3.
+				const c = list.widgets[2];
+				const shadow = list.widgets[3];
+				list.removeWidget(shadow);
+				list.tryPlaceWidget(shadow, 0, 2, 1, 1);
+				expect(c.y).toBe(3);
+				// Pointer hasn't moved down (sideways only, single column) → hold "before C".
+				setDelta(list, 5, 0);
+				expect(list.mapRawCellToFinalCell(0, 3)).toEqual([0, 2]);
+				// Pointer genuinely moves down → accept "after C".
+				setDelta(list, 0, 3);
+				expect(list.mapRawCellToFinalCell(0, 3)).toEqual([0, 3]);
 			});
 
-			const a = createMockWidget(0, 0, 1, 1);
-			narrowGrid.tryPlaceWidget(a, 0, 0, 1, 1);
-			const b = createMockWidget(0, 1, 1, 1);
-			narrowGrid.tryPlaceWidget(b, 0, 1, 1, 1);
-
-			// Snapshot: A(0,0), B(0,1)
-			const snapshot = narrowGrid.takeSnapshot();
-
-			// Place shadow at (0,1) — pushes B to (0,2)
-			const shadow = createShadowWidget(0, 0, 1, 1);
-			narrowGrid.tryPlaceWidget(shadow, 0, 1, 1, 1);
-
-			expect(shadow.x).toBe(0);
-			expect(shadow.y).toBe(1);
-			expect(b.x).toBe(0);
-			expect(b.y).toBe(2);
-
-			narrowGrid.setDragSnapshot(snapshot);
-
-			// Cursor at (0.6, 0.2) — in the first cell, past x midpoint but clearly in the
-			// top portion of the first row. In a 1-col grid, x should be irrelevant.
-			// Should map to (0, 0) = before A in the snapshot.
-			const result = narrowGrid.mapRawCellToFinalCell(0.6, 0.2);
-			expect(result).toEqual([0, 0]);
+			it('flips freely when a different widget is hovered', () => {
+				const list = setupList();
+				expect(list.mapRawCellToFinalCell(0, 2)).toEqual([0, 2]); // before C
+				setDelta(list, 0, 0);
+				expect(list.mapRawCellToFinalCell(0, 0)).toEqual([0, 0]); // before A, new widget
+			});
 		});
 
-		it('should clear the drag snapshot', () => {
-			const a = createMockWidget(0, 0, 1, 1);
-			grid.tryPlaceWidget(a, 0, 0, 1, 1);
+		it('holds the last resolved slot while hovering the shadow', () => {
+			const cellGrid = makeGrid();
+			setupSameTargetDrag(cellGrid);
 
-			const snapshot = grid.takeSnapshot();
-			grid.setDragSnapshot(snapshot);
+			// Shadow lands at 0, displacing A→1, B→2, C→3.
+			const shadow = createMockWidget(0, 0, 1, 1);
+			(shadow as any).isShadow = true;
+			cellGrid.tryPlaceWidget(shadow, 0, 0, 1, 1);
 
-			// Clear it
-			grid.clearDragSnapshot();
+			expect(cellGrid.mapRawCellToFinalCell(2, 0)).toEqual([2, 0]); // B → after B
+			expect(cellGrid.mapRawCellToFinalCell(0, 0)).toEqual([2, 0]); // shadow → unchanged
+		});
 
-			// Now should behave as passthrough
-			const result = grid.mapRawCellToFinalCell(1, 0);
-			expect(result).toEqual([1, 0]);
+		it('both halves of a tile resolve identically (no midpoint quantisation)', () => {
+			const cellGrid = makeGrid();
+			setupSameTargetDrag(cellGrid);
+			expect(cellGrid.mapRawCellToFinalCell(1.1, 0)).toEqual(
+				cellGrid.mapRawCellToFinalCell(1.9, 0)
+			);
+		});
+
+		it('resets held state when the drag snapshot is cleared', () => {
+			const cellGrid = makeGrid();
+			setupSameTargetDrag(cellGrid);
+			cellGrid.mapRawCellToFinalCell(2, 0);
+			cellGrid.clearDragSnapshot();
+			expect(cellGrid.mapRawCellToFinalCell(0.5, 0.5)).toEqual([0, 0]);
 		});
 	});
 });

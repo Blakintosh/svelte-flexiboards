@@ -35,6 +35,8 @@ export type FlowTargetLayout = {
   - When set to `prepend`, widgets will be added to the beginning of the grid.
 - `disallowInsert`: When set to `true`, widgets dropped in the grid will not be inserted based on the pointer position, and instead will use the `placementStrategy`.
 - `flowAxis`: The axis that widgets are placed along.
+
+While dragging, the whole hovered cell is the drop target, like a sortable list: dropping onto a widget places the dragged widget after it when moving forwards and before it when moving backwards, so dragging one tile onto another swaps them. Changing side on the same widget requires real pointer travel, so widgets reflowing under a still pointer never make the target flicker.
 - `maxFlowAxis`: The maximum number of widgets that can be placed along the flow axis.
 - `rows`: The number of rows that the grid should have.
 - `columns`: The number of columns that the grid should have.

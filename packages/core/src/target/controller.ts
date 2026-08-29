@@ -1,4 +1,4 @@
-import { FlexiGrid } from '../grid/base.js';
+import { FlexiGrid, type WidgetSnapshot } from '../grid/base.js';
 import { FlowFlexiGrid } from '../grid/flow-grid.js';
 import type {
 	InternalTargetEvent,
@@ -682,6 +682,18 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		trigger(this.#mouseCellPosition$);
 	}
 
+	/** Where the action widget sat in this grid before it was grabbed, if it came from here. */
+	#dragOrigin(): Position | null {
+		const widget = this.actionWidget?.widget;
+		if (!widget || this.#preGrabSnapshotWidget !== widget) {
+			return null;
+		}
+		const entry = (this.#preGrabSnapshot as { widgets?: WidgetSnapshot[] } | null)?.widgets?.find(
+			(s) => s.widget === widget
+		);
+		return entry ? { x: entry.x, y: entry.y } : null;
+	}
+
 	#createDropzoneWidget() {
 		if (this.dropzoneWidget || !this.actionWidget) {
 			return;
@@ -690,7 +702,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// Take a snapshot of the grid so we can restore its state if the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
-		grid.setDragSnapshot(this.#gridSnapshot);
+		grid.setDragSnapshot(this.#gridSnapshot, this.#dragOrigin());
 
 		// TODO: Not sure why the $effect.root is needed, but it is.
 		this.#dropzoneWidgetDestroy = effectScope(() => {

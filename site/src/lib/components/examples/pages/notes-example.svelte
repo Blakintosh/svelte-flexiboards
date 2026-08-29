@@ -5,7 +5,7 @@
 		FlexiWidget,
 		simpleTransitionConfig,
 		type FlexiBoardController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 

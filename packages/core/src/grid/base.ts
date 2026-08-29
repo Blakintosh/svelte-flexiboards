@@ -1,3 +1,4 @@
+import type { Position } from '../types.js';
 import { getPointerService, GridDimensionTracker, PointerService } from '../shared/utils.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
 import type { FlexiTargetConfiguration, TargetSizing } from '../target/types.js';
@@ -52,7 +53,11 @@ export abstract class FlexiGrid {
 	 * Stores a drag snapshot so that mapRawCellToFinalCell can map cursor positions
 	 * through the snapshot's widget positions instead of the live (displaced) grid.
 	 */
-	setDragSnapshot(snapshot: unknown): void {}
+	/**
+	 * @param origin The cell the dragged widget occupied in this grid before being grabbed, if it
+	 * originated here. Lets layouts resolve drops by direction of travel.
+	 */
+	setDragSnapshot(snapshot: unknown, origin?: Position | null): void {}
 
 	/**
 	 * Clears the stored drag snapshot.
@@ -103,10 +108,18 @@ export abstract class FlexiGrid {
 		return sizing({ target: this._target, grid: this });
 	}
 
+	/** Pointer movement (px) since the previous pointer update; layouts may use it for hysteresis. */
+	protected _pointerDelta: Position = { x: 0, y: 0 };
+	#lastClientPosition: Position | null = null;
+
 	#updatePointerPosition(clientX: number, clientY: number) {
 		if (!this.ref) {
 			return;
 		}
+
+		const last = this.#lastClientPosition;
+		this._pointerDelta = last ? { x: clientX - last.x, y: clientY - last.y } : { x: 0, y: 0 };
+		this.#lastClientPosition = { x: clientX, y: clientY };
 
 		const rawCell = this._dimensionTracker.getCellFromPointerPosition(clientX, clientY);
 

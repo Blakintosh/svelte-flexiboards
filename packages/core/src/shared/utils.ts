@@ -814,6 +814,11 @@ export class GridDimensionTracker {
 		this.#pointerPosition.x = clientX;
 		this.#pointerPosition.y = clientY;
 
+		// Reordering widgets of unequal size swaps row/column track sizes without changing the
+		// grid's own size or track count, so neither the ResizeObserver nor the rows/columns effect
+		// fires. Remeasure here (a no-op when nothing changed) so the mapping never uses stale tracks.
+		this.updateGridDimensions();
+
 		const dimensions = this.#dimensions$();
 
 		let xCell = findCell(
