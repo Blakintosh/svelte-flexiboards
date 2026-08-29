@@ -15,6 +15,6 @@ export default defineConfig({
 		// on one side, core's synchronous signal effects on the other. Bugs there
 		// are invisible to core's own (DOM-free) suite.
 		environment: 'happy-dom',
-		include: ['tests/**/*.{test,spec}.{js,ts}']
+		include: ['tests/**/*.{test,spec}.{js,ts}', 'src/**/*.{test,spec}.{js,ts}']
 	}
 });

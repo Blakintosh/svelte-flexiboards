@@ -18,7 +18,9 @@ import { getFlexiwidgetCtx } from './adapters/widget.js';
 import {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	simpleTransitionConfig
+	simpleTransitionConfig,
+	cssTransition,
+	spring
 } from '@flexiboards/core';
 
 // All public types come from core; the Svelte-specific component prop types
@@ -80,5 +82,7 @@ export {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	simpleTransitionConfig,
+	cssTransition,
+	spring,
 	getFlexiwidgetCtx
 };

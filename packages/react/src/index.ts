@@ -25,7 +25,9 @@ export { useFromCore } from './adapter.js';
 export {
 	immediateTriggerConfig,
 	longPressTriggerConfig,
-	simpleTransitionConfig
+	simpleTransitionConfig,
+	cssTransition,
+	spring
 } from '@flexiboards/core';
 
 // All public types come from core; the React-specific component prop types

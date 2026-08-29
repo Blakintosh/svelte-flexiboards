@@ -3,12 +3,19 @@ import type { Position, ReadonlySignal, Signal } from '../types.js';
 import type { FlexiWidgetController } from './base.js';
 import type { FlexiWidgetTransitionConfiguration } from './types.js';
 import { getPlaceholderMinDimensionLocks, type InterpolationSize } from './interpolation-utils.js';
-import { computed, signal, trigger } from '../reactivity.js';
+import { computed, signal } from '../reactivity.js';
+import {
+	resolveAnimationAdapter,
+	type AnimationBox,
+	type AnimationHandle,
+	type WidgetMovementAnimation
+} from './animation.js';
 
 export class WidgetMoveInterpolator {
 	active$: Signal<boolean> = signal(false);
 
-	#timeout?: ReturnType<typeof setTimeout>;
+	/** The adapter handle driving the current animation, if any. */
+	#handle$: Signal<AnimationHandle<AnimationBox> | undefined> = signal(undefined);
 
 	#provider$: Signal<InternalFlexiBoardController> = signal({} as InternalFlexiBoardController);
 
@@ -28,14 +35,13 @@ export class WidgetMoveInterpolator {
 		lockMinHeight: true
 	});
 
-	#interpolatedWidgetPosition$: Signal<InterpolationPosition> = signal({
+	#interpolatedWidgetPosition$: Signal<AnimationBox> = signal({
 		left: 0,
 		top: 0,
 		width: 1,
 		height: 1
 	});
 
-	#inInitialFrame$: Signal<boolean> = signal(false);
 	#animation$: Signal<WidgetMovementAnimation> = signal('move');
 
 	#widget$: Signal<FlexiWidgetController> = signal({} as FlexiWidgetController);
@@ -44,14 +50,10 @@ export class WidgetMoveInterpolator {
 	);
 
 	widgetStyle$: ReadonlySignal<string> = computed(() => {
-		const transitionConfig = this.#getTransitionConfigForAnimation(this.#animation$());
-		const interpolatedPosition = this.#interpolatedWidgetPosition$();
+		const extra = this.#handle$()?.extraStyle?.() ?? '';
+		const { top, left, width, height } = this.#interpolatedWidgetPosition$();
 
-		if (this.#inInitialFrame$() || !transitionConfig?.duration || !transitionConfig?.easing) {
-			return `position: absolute; top: ${interpolatedPosition.top}px; left: ${interpolatedPosition.left}px; width: ${interpolatedPosition.width}px; height: ${interpolatedPosition.height}px;`;
-		}
-
-		return `transition: all ${transitionConfig.duration}ms ${transitionConfig.easing}; position: absolute; top: ${interpolatedPosition.top}px; left: ${interpolatedPosition.left}px; width: ${interpolatedPosition.width}px; height: ${interpolatedPosition.height}px;`;
+		return `${extra ? extra + ' ' : ''}position: absolute; top: ${top}px; left: ${left}px; width: ${width}px; height: ${height}px;`;
 	});
 
 	placeholderStyle$: ReadonlySignal<string> = computed(() => {
@@ -83,7 +85,7 @@ export class WidgetMoveInterpolator {
 
 	interpolateMove(
 		newDimensions: Dimensions,
-		oldPosition: InterpolationPosition,
+		oldPosition: AnimationBox,
 		animation: WidgetMovementAnimation = 'move',
 		previousDimensions?: InterpolationSize
 	) {
@@ -93,8 +95,8 @@ export class WidgetMoveInterpolator {
 		}
 
 		// If a config hasn't been set for this animation, then don't animate.
-		const transitionConfig = this.#getTransitionConfigForAnimation(animation);
-		if (!transitionConfig || !transitionConfig.duration || !transitionConfig.easing) {
+		const adapter = resolveAnimationAdapter(this.#getTransitionConfigForAnimation(animation));
+		if (!adapter) {
 			return;
 		}
 
@@ -108,15 +110,11 @@ export class WidgetMoveInterpolator {
 		);
 
 		const isInterruption = this.active$();
-		clearTimeout(this.#timeout);
-
 		const interpolatedPosition = this.#interpolatedWidgetPosition$();
 
 		if (isInterruption) {
-			// INTERRUPTION PATH - only update target, keep transition flowing
-			// Don't change #animation to preserve CSS transition property
-			// Don't reset #interpolatedWidgetPosition
-
+			// INTERRUPTION PATH - keep the running handle; the placeholder's style change will
+			// retarget it via onPlaceholderMove.
 			this.#placeholderPosition$({
 				x: newDimensions.x,
 				y: newDimensions.y,
@@ -127,65 +125,72 @@ export class WidgetMoveInterpolator {
 				lockMinWidth: minDimensionLocks.lockMinWidth,
 				lockMinHeight: minDimensionLocks.lockMinHeight
 			});
-		} else {
-			// INITIAL MOVE PATH - set up starting position, then animate
-			this.#inInitialFrame$(true); // Disable CSS transition for initial position
-			this.active$(true);
-			this.#animation$(animation);
-			this.#notifyStart();
-
-			this.#placeholderPosition$({
-				x: newDimensions.x,
-				y: newDimensions.y,
-				width: newDimensions.width,
-				height: newDimensions.height,
-				heightPx: oldPosition.height,
-				widthPx: oldPosition.width,
-				lockMinWidth: minDimensionLocks.lockMinWidth,
-				lockMinHeight: minDimensionLocks.lockMinHeight
-			});
-
-			interpolatedPosition.top =
-				oldPosition.top - containerRect.top + (this.#containerRef$()?.scrollTop ?? 0);
-			interpolatedPosition.left =
-				oldPosition.left - containerRect.left + (this.#containerRef$()?.scrollLeft ?? 0);
-			interpolatedPosition.width = oldPosition.width;
-			interpolatedPosition.height = oldPosition.height;
-
-			// updated in place, manually trigger reactivity.
-			trigger(() => this.#interpolatedWidgetPosition$());
+			return;
 		}
 
-		// Reset timeout for both paths
-		requestAnimationFrame(() => {
-			this.#timeout = setTimeout(() => {
+		// INITIAL MOVE PATH - start a new animation from the widget's current box.
+		this.active$(true);
+		this.#animation$(animation);
+		this.#notifyStart();
+
+		this.#placeholderPosition$({
+			x: newDimensions.x,
+			y: newDimensions.y,
+			width: newDimensions.width,
+			height: newDimensions.height,
+			heightPx: oldPosition.height,
+			widthPx: oldPosition.width,
+			lockMinWidth: minDimensionLocks.lockMinWidth,
+			lockMinHeight: minDimensionLocks.lockMinHeight
+		});
+
+		const from: AnimationBox = {
+			top: oldPosition.top - containerRect.top + (this.#containerRef$()?.scrollTop ?? 0),
+			left: oldPosition.left - containerRect.left + (this.#containerRef$()?.scrollLeft ?? 0),
+			width: oldPosition.width,
+			height: oldPosition.height
+		};
+
+		const handle = adapter.start(from, {
+			kind: animation,
+			emit: (current) => this.#interpolatedWidgetPosition$({ ...current }),
+			onSettle: () => {
+				// Ignore settles from a handle that has since been replaced.
+				if (this.#handle$() !== handle) {
+					return;
+				}
+				this.#handle$(undefined);
 				this.active$(false);
 				this.#animation$('move');
 				this.#notifyEnd();
-			}, transitionConfig.duration);
+			}
 		});
+		this.#handle$(handle);
+	}
+
+	/** Cancels any running animation. */
+	stop() {
+		this.#handle$()?.stop();
+		this.#handle$(undefined);
+		this.active$(false);
+		this.#animation$('move');
 	}
 
 	onPlaceholderMove(rect: DOMRect) {
+		// Wait a frame so the starting box has painted before retargeting.
 		requestAnimationFrame(() => {
-			this.#inInitialFrame$(false);
-
-			// Now finalise the position.
 			const containerRect = this.#containerRef$()?.getBoundingClientRect();
-			if (!containerRect) {
+			const handle = this.#handle$();
+			if (!containerRect || !handle) {
 				return;
 			}
 
-			const interpolatedPosition = this.#interpolatedWidgetPosition$();
-			interpolatedPosition.top =
-				rect.top - containerRect.top + (this.#containerRef$()?.scrollTop ?? 0);
-			interpolatedPosition.left =
-				rect.left - containerRect.left + (this.#containerRef$()?.scrollLeft ?? 0);
-			interpolatedPosition.width = rect.width;
-			interpolatedPosition.height = rect.height;
-
-			// updated in place, manually trigger reactivity.
-			trigger(() => this.#interpolatedWidgetPosition$());
+			handle.setTarget({
+				top: rect.top - containerRect.top + (this.#containerRef$()?.scrollTop ?? 0),
+				left: rect.left - containerRect.left + (this.#containerRef$()?.scrollLeft ?? 0),
+				width: rect.width,
+				height: rect.height
+			});
 		});
 	}
 
@@ -225,16 +230,7 @@ export class WidgetMoveInterpolator {
 	}
 }
 
-export type WidgetMovementAnimation = 'move' | 'drop' | 'resize';
-
 type Dimensions = Position & {
-	width: number;
-	height: number;
-};
-
-type InterpolationPosition = {
-	left: number;
-	top: number;
 	width: number;
 	height: number;
 };

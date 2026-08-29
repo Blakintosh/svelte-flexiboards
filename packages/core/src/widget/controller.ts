@@ -16,7 +16,8 @@ import type {
 } from '../internal-types.js';
 import { FlexiWidgetController } from './base.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
-import { WidgetMoveInterpolator, type WidgetMovementAnimation } from './interpolator.js';
+import { WidgetMoveInterpolator } from './interpolator.js';
+import type { WidgetMovementAnimation } from './animation.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetConstructorParams } from './types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 

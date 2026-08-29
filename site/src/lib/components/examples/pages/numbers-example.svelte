@@ -5,13 +5,15 @@
 		FlexiTarget,
 		FlexiWidget,
 		type AdderWidgetConfiguration,
+		type FlexiDeleteController,
+		spring,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import {
 		FlexiAdd,
 		type FlexiBoardConfiguration,
 		type FlexiBoardController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import NumberTile from '$lib/components/examples/numbers/number-tile.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import Trash2 from 'lucide-svelte/icons/trash-2';
@@ -19,7 +21,12 @@
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
 			draggable: true,
-			resizability: 'horizontal'
+			resizability: 'horizontal',
+			transition: {
+				move: spring({ duration: 0.15, bounce: 0.1 }),
+				drop: spring({ duration: 0.2, bounce: 0.3 }),
+				resize: { duration: 150, easing: 'ease-out' }
+			}
 		}
 	});
 
@@ -93,7 +100,7 @@
 				y={2}
 			/>
 		</FlexiTarget>
-		<FlexiDelete class={(deleter) => [
+		<FlexiDelete class={(deleter: FlexiDeleteController) => [
 			'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint duration-[120ms] lg:size-40',
 			deleter.isHovered && 'border-vermillion bg-tint-accent text-vermillion'
 		]}>

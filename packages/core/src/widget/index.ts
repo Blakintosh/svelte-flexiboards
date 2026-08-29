@@ -49,6 +49,7 @@ export * from './types.js';
 export * from './events.js';
 export * from './triggers.js';
 export * from './interpolator.js';
+export * from './animation.js';
 export * from './interpolation-utils.js';
 
 /* Exports to go to root index.ts */

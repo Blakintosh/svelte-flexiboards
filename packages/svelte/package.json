@@ -31,6 +31,11 @@
 			"svelte": "./dist/index.js",
 			"import": "./dist/index.js",
 			"require": "./dist/index.js"
+		},
+		"./motion": {
+			"types": "./dist/motion.svelte.d.ts",
+			"svelte": "./dist/motion.svelte.js",
+			"import": "./dist/motion.svelte.js"
 		}
 	},
 	"peerDependencies": {

@@ -1,3 +1,4 @@
+import type { AnimationAdapter, AnimationBox, CssTransitionConfiguration } from './animation.js';
 import type { FlexiComponent, FlexiContent } from '../types.js';
 
 import type { FlexiWidgetController } from './base.js';
@@ -18,10 +19,13 @@ export type FlexiWidgetChildrenSnippet = FlexiContent;
 export type FlexiWidgetClassFunction<TClass = unknown> = (widget: FlexiWidgetController) => TClass;
 export type FlexiWidgetClasses<TClass = unknown> = TClass | FlexiWidgetClassFunction<TClass>;
 
-export type FlexiWidgetTransitionTypeConfiguration = {
-	duration?: number;
-	easing?: string;
-};
+/**
+ * How a widget animates for one kind of movement: either a plain `{ duration, easing }`
+ * (a CSS transition) or an {@link AnimationAdapter}.
+ */
+export type FlexiWidgetTransitionTypeConfiguration =
+	| CssTransitionConfiguration
+	| AnimationAdapter<AnimationBox>;
 
 export type FlexiWidgetTransitionConfiguration = {
 	move?: FlexiWidgetTransitionTypeConfiguration;
