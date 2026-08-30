@@ -45,6 +45,16 @@ export class WidgetMoveInterpolator {
 
 	#animation$: Signal<WidgetMovementAnimation> = signal('move');
 
+	/**
+	 * True while the widget's element is hosted in the board's portal for the
+	 * flight. A drop starts outside the board's box (wherever the pointer let
+	 * go), and the board locks `overflow: hidden` during interpolations — so an
+	 * in-grid flight would clip at the board edge and paint behind later
+	 * siblings. The portal is fixed, full-viewport and z-indexed above the app,
+	 * which solves both; the element returns to the grid when the flight ends.
+	 */
+	#portalled$: Signal<boolean> = signal(false);
+
 	#widget$: Signal<FlexiWidgetController> = signal({} as FlexiWidgetController);
 	#transitionConfig$: ReadonlySignal<FlexiWidgetTransitionConfiguration> = computed(
 		() => this.#widget$()?.transitionConfig
@@ -53,8 +63,28 @@ export class WidgetMoveInterpolator {
 	widgetStyle$: ReadonlySignal<string> = computed(() => {
 		const extra = this.#handle$()?.extraStyle?.() ?? '';
 		const { top, left, width, height } = this.#interpolatedWidgetPosition$();
+		const prefix = extra ? extra + ' ' : '';
 
-		return `${extra ? extra + ' ' : ''}position: absolute; top: ${top}px; left: ${left}px; width: ${width}px; height: ${height}px;`;
+		// While portalled, positions resolve against the portal's fixed,
+		// viewport-filling container — so convert the containing-block box back
+		// into viewport space (the inverse of #toBox), re-read each frame so
+		// scrolling mid-flight stays accurate.
+		if (this.#portalled$()) {
+			const block = this.#containingBlock();
+			if (block) {
+				const blockRect = block.getBoundingClientRect();
+				const viewportTop = top + blockRect.top + block.clientTop - block.scrollTop;
+				const viewportLeft = left + blockRect.left + block.clientLeft - block.scrollLeft;
+				// `pointer-events: auto` undoes the portal container's `none` so a
+				// flight stays grabbable mid-air, exactly like an in-grid one.
+				return `${prefix}position: absolute; top: ${viewportTop}px; left: ${viewportLeft}px; width: ${width}px; height: ${height}px; pointer-events: auto;`;
+			}
+		}
+
+		// The widget keeps an elevated z-index for the whole flight — without it, an
+		// absolutely-positioned widget mid-interpolation paints behind any sibling
+		// that follows it in the DOM.
+		return `${prefix}position: absolute; top: ${top}px; left: ${left}px; width: ${width}px; height: ${height}px; z-index: 2;`;
 	});
 
 	placeholderStyle$: ReadonlySignal<string> = computed(() => {
@@ -136,6 +166,17 @@ export class WidgetMoveInterpolator {
 		}
 
 		// INITIAL MOVE PATH - start a new animation from the widget's current box.
+		// A resize restart interrupts the previous leg mid-flight: an axis the latest step deems
+		// "unchanged" may still be animating from that leg, so freezing its min-lock at the
+		// current on-screen (interpolated) size would strand it there until the placeholder
+		// unmounts — carry the previous placeholder's locks and px through instead.
+		const resizeRestart = restart && animation === 'resize' && this.#animation$() === 'resize';
+		const previousPlaceholder = this.#placeholderPosition$();
+		const lockMinWidth =
+			minDimensionLocks.lockMinWidth && (!resizeRestart || previousPlaceholder.lockMinWidth);
+		const lockMinHeight =
+			minDimensionLocks.lockMinHeight && (!resizeRestart || previousPlaceholder.lockMinHeight);
+
 		if (restart) {
 			// Still active from the board's point of view: swap the handle without re-notifying.
 			this.#handle$()?.stop();
@@ -151,10 +192,10 @@ export class WidgetMoveInterpolator {
 			y: newDimensions.y,
 			width: newDimensions.width,
 			height: newDimensions.height,
-			heightPx: lockSize?.height ?? oldPosition.height,
-			widthPx: lockSize?.width ?? oldPosition.width,
-			lockMinWidth: minDimensionLocks.lockMinWidth,
-			lockMinHeight: minDimensionLocks.lockMinHeight
+			heightPx: lockSize?.height ?? (resizeRestart ? previousPlaceholder.heightPx : oldPosition.height),
+			widthPx: lockSize?.width ?? (resizeRestart ? previousPlaceholder.widthPx : oldPosition.width),
+			lockMinWidth,
+			lockMinHeight
 		});
 
 		const from = this.#toBox(oldPosition);
@@ -171,12 +212,19 @@ export class WidgetMoveInterpolator {
 					return;
 				}
 				this.#handle$(undefined);
+				this.#endPortalFlight();
 				this.active$(false);
 				this.#animation$('move');
 				this.#notifyEnd();
 			}
 		});
 		this.#handle$(handle);
+
+		// A drop lands from wherever the pointer let go — host the flight in the
+		// portal so it can't clip at the board edge or slip behind siblings.
+		if (animation === 'drop') {
+			this.#hostFlightInPortal(handle);
+		}
 
 		// On a restart the placeholder is already mounted, and its style may not change (e.g. a
 		// cancel back to the same cell), so the new handle is given its target explicitly.
@@ -193,8 +241,8 @@ export class WidgetMoveInterpolator {
 	#containingBlock(): HTMLElement | undefined {
 		// The grid is the one element guaranteed to be mounted: the widget's own element may not
 		// exist yet (a drop creates it) and the placeholder only mounts once the animation starts.
-		const grid = (this.#widget$() as InternalFlexiWidgetController | undefined)?.internalTarget?.grid
-			?.ref;
+		const grid = (this.#widget$() as InternalFlexiWidgetController | undefined)?.internalTarget
+			?.grid?.ref;
 		if (grid) {
 			const positioned =
 				typeof getComputedStyle === 'function' && getComputedStyle(grid).position !== 'static';
@@ -207,7 +255,12 @@ export class WidgetMoveInterpolator {
 	}
 
 	/** Converts a viewport rect into a box in the containing block's coordinate space. */
-	#toBox(rect: { top: number; left: number; width: number; height: number }): AnimationBox | undefined {
+	#toBox(rect: {
+		top: number;
+		left: number;
+		width: number;
+		height: number;
+	}): AnimationBox | undefined {
 		const block = this.#containingBlock();
 		if (!block) {
 			return undefined;
@@ -222,10 +275,47 @@ export class WidgetMoveInterpolator {
 		};
 	}
 
+	/**
+	 * Moves the widget's freshly-mounted flight element into the portal. Deferred
+	 * a frame: on a drop the target mounts a new element for the widget, so the
+	 * ref only exists after the current flush.
+	 */
+	#hostFlightInPortal(handle: AnimationHandle<AnimationBox>) {
+		const portal = this.#provider$()?.portal;
+		if (!portal || typeof requestAnimationFrame !== 'function') {
+			return;
+		}
+		requestAnimationFrame(() => {
+			// The flight may already be over or replaced.
+			if (this.#handle$() !== handle) {
+				return;
+			}
+			if (portal.hostInterpolatingWidget(this.#widget$())) {
+				this.#portalled$(true);
+			}
+		});
+	}
+
+	/** Returns a portalled flight element to its place in the grid. */
+	#endPortalFlight() {
+		if (!this.#portalled$()) {
+			return;
+		}
+		this.#portalled$(false);
+		const widget = this.#widget$();
+		// A re-grab mid-flight keeps the element in the portal — it is now the
+		// grabbed element, and the portal's own release handling owns its return.
+		if (widget.isGrabbed || widget.isResizing) {
+			return;
+		}
+		this.#provider$()?.portal?.returnWidgetFromPortal(widget);
+	}
+
 	/** Cancels any running animation. */
 	stop() {
 		this.#handle$()?.stop();
 		this.#handle$(undefined);
+		this.#endPortalFlight();
 		this.active$(false);
 		this.#animation$('move');
 	}
