@@ -1,42 +1,73 @@
 <script lang="ts">
 	/*
-	  Ink field, paper text, muted-blue prompt, vermillion block caret. The caret
+	  Ink field, paper text, muted-blue prompt, fx-accent block caret. The caret
 	  is the only animation permitted in a static block.
+
+	  On a framework switch the command dissolves — blurring and loosening its
+	  letter-spacing — and the replacement condenses back out of the blur
+	  (`swap-out` / `swap-in` in app.css), 100ms behind the picker.
 	*/
 	import Check from 'lucide-svelte/icons/check';
+	import Copy from 'lucide-svelte/icons/copy';
+	import { framework } from './framework.svelte';
 
-	let {
-		command,
-		class: className = ''
-	}: { command: string; class?: string } = $props();
+	let { command, class: className = '' }: { command: string; class?: string } = $props();
 
 	let copied = $state(false);
+	let copyTimer: ReturnType<typeof setTimeout>;
+
+	const phase = $derived(framework.swap);
 
 	async function copy() {
 		await navigator.clipboard.writeText(command);
 		copied = true;
-		setTimeout(() => (copied = false), 2000);
+		clearTimeout(copyTimer);
+		copyTimer = setTimeout(() => (copied = false), 3000);
 	}
 </script>
 
-<div class="flex items-stretch border border-ink font-mono {className}">
+<div class="border-ink flex items-stretch border font-mono {className}">
 	<!-- `text-on-ink`, not `text-paper`: the field ground never inverts, so its
 	     text must not either. -->
-	<div class="flex flex-1 items-center gap-3 bg-field px-[18px] py-[14px] text-[15px] text-on-ink">
+	<div class="bg-field text-on-ink flex flex-1 items-center gap-3 px-[18px] py-[14px] text-[15px]">
 		<span class="text-on-ink-faint">$</span>
-		<span class="truncate">{command}</span>
-		<span class="animate-fb-blink h-4 w-2 shrink-0 bg-vermillion" aria-hidden="true"></span>
+		{#key command}
+			<span
+				class="truncate [--swap-delay:100ms] {phase === 'out'
+					? 'swap-out'
+					: phase === 'in'
+						? 'swap-in'
+						: ''}"
+			>
+				{command}
+			</span>
+		{/key}
+		<span
+			class="bg-fx-accent h-4 w-2 shrink-0 [--swap-delay:100ms] {phase === 'out'
+				? 'swap-out'
+				: phase === 'in'
+					? 'swap-in'
+					: 'animate-fb-blink'}"
+			aria-hidden="true"
+		></span>
 	</div>
 	<button
 		type="button"
 		onclick={copy}
-		class="label flex items-center gap-2 border-l border-ink px-[18px] text-xs tracking-[0.1em] text-body transition-colors duration-[120ms] hover:bg-tint hover:text-ink"
+		aria-label="Copy install command"
+		class="ui border-ink text-body hover:bg-tint hover:text-ink flex items-center border-l px-[18px] transition-colors duration-[120ms]"
 	>
-		{#if copied}
-			<Check class="size-3.5" />
-			Copied
-		{:else}
-			Copy
-		{/if}
+		<!-- The icon swap condenses out of a short blur; the press squashes it. -->
+		{#key copied}
+			<span
+				class="ease-snap flex transition-transform duration-[130ms] active:scale-[0.78] motion-safe:animate-[fb-blurin_320ms_var(--ease-snap)]"
+			>
+				{#if copied}
+					<Check class="size-4" />
+				{:else}
+					<Copy class="size-4" />
+				{/if}
+			</span>
+		{/key}
 	</button>
 </div>
