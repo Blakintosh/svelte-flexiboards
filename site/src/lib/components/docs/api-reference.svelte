@@ -25,8 +25,8 @@
 
 <!--
   API tables are rules only — no zebra striping, no radius. Prop names take
-  vermillion, types drafting blue, prose the body grey. Deprecated members are
-  greyed out with their notice flagged vermillion.
+  fx-accent, types drafting blue, prose the body grey. Deprecated members are
+  greyed out with their notice flagged fx-accent.
 -->
 <div class="not-prose my-8">
 	<h3 class="label mb-3 text-[10px] text-faint" data-toc-ignore>
@@ -44,7 +44,7 @@
 						<code
 							class="font-mono text-[13px] {item.deprecated
 								? 'text-faint line-through'
-								: 'text-vermillion'}">{item.name}</code
+								: 'text-fx-accent'}">{item.name}</code
 						>
 						{#if item.bindable}
 							<span class="label border border-rule px-1 py-px text-[9px] text-faint">bindable</span>
@@ -65,7 +65,7 @@
 				{/if}
 				{#if item.deprecated}
 					<p class="m-0 text-[13px] leading-relaxed text-body">
-						<span class="label mr-1.5 text-[9px] text-vermillion">Deprecated</span>{item.deprecated}
+						<span class="label mr-1.5 text-[9px] text-fx-accent">Deprecated</span>{item.deprecated}
 					</p>
 				{/if}
 			</div>

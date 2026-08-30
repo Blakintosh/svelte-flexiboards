@@ -4,7 +4,7 @@
 		FlexiTarget,
 		FlexiWidget,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 </script>
 
 <div class="not-prose">
@@ -24,8 +24,8 @@
 					return [
 						'w-64 border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue',
 						widget.isShadow && 'opacity-50',
-						// A grabbed widget is provisional: dashed vermillion on tint-accent.
-						widget.isGrabbed && 'border-dashed border-vermillion bg-tint-accent text-vermillion'
+						// A grabbed widget is provisional: dashed fx-accent on tint-accent.
+						widget.isGrabbed && 'border-dashed border-fx-accent bg-tint-accent text-fx-accent'
 					];
 				}
 			}

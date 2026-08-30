@@ -9,7 +9,7 @@ published: true
 	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
     import FlexiBoardExample from '$lib/components/docs/overview/flexiboard-example.svelte';
 
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 </script>
 
 ## Installation
@@ -17,15 +17,15 @@ published: true
 Flexiboards is available from npm, and can be installed using your preferred package manager:
 
 ```
-npm install svelte-flexiboards
+npm install @flexiboards/svelte
 ```
 
 ```
-pnpm add svelte-flexiboards
+pnpm add @flexiboards/svelte
 ```
 
 ```
-yarn add svelte-flexiboards
+yarn add @flexiboards/svelte
 ```
 
 Flexiboards was built from the ground up to be a Svelte 5 library, so it is incompatible with Svelte 4 or earlier.
@@ -46,7 +46,7 @@ Here's how you would create a board like this in Svelte, using Flexiboards:
 		FlexiTarget,
 		FlexiWidget,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 </script>
 
 <div class="not-prose">

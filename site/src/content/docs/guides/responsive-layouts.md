@@ -27,7 +27,7 @@ The simplest approach is to use a single `children` snippet that receives the cu
 		ResponsiveFlexiBoard,
 		FlexiBoard,
 		FlexiTarget
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 </script>
 
 <ResponsiveFlexiBoard config={{ breakpoints: { lg: 1024, md: 768 } }}>
@@ -125,7 +125,7 @@ When using `ResponsiveFlexiBoard`, use the responsive controller's `importLayout
 
 ```svelte
 <script lang="ts">
-	import { ResponsiveFlexiBoard, type ResponsiveFlexiBoardController } from 'svelte-flexiboards';
+	import { ResponsiveFlexiBoard, type ResponsiveFlexiBoardController } from '@flexiboards/svelte';
 
 	let responsiveBoard: ResponsiveFlexiBoardController;
 

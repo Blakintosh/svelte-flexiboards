@@ -47,7 +47,7 @@ The following code creates us a basic flow grid with a list layout:
 
 ```svelte example title="1D Flow Grid"
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 </script>
 
 <FlexiBoard class="size-72 rounded-xl border p-8 lg:size-96">
@@ -89,7 +89,7 @@ The below example demonstrates this behaviour, where we have a row flow grid wit
 
 ```svelte example title="2D Flow Grid"
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 </script>
 
 <FlexiBoard class="size-72 rounded-xl border p-8 lg:size-96">

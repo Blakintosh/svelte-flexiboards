@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 </script>
 
 <FlexiBoard class="size-72 border border-ink bg-panel p-8 lg:size-96">

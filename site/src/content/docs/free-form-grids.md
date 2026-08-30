@@ -45,7 +45,7 @@ The following code creates us a basic free-form grid with a non-expandable 2x2 l
 
 ```svelte example title="Free Grid"
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 </script>
 
 <FlexiBoard class="size-72 rounded-xl border p-8 lg:size-96">

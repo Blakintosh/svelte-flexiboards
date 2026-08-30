@@ -31,7 +31,7 @@ The below example demonstrates us creating the Kanban board that we desired earl
 
 ```svelte example
 <script>
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 
 	const targetClass = 'w-64 lg:w-48 border rounded-md p-3 min-h-48 lg:min-h-72';
 	const gridClass = 'gap-2';
@@ -102,7 +102,7 @@ Flexiboards is designed to provide common drag-and-drop logic, regardless of the
 
 ```svelte example
 <script>
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
 
 	const targetClass = 'w-64 lg:w-48 border rounded-md p-3 min-h-48 lg:min-h-72';
 	const gridClass = 'gap-2';

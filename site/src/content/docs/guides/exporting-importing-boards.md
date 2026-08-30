@@ -28,7 +28,7 @@ When exporting, Flexiboards saves only the widget's `type` (a string key) rather
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/svelte';
 	import ChartWidget from './chart-widget.svelte';
 	import TableWidget from './table-widget.svelte';
 
@@ -70,7 +70,7 @@ Use the `exportLayout()` method on the board controller to get the current layou
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardController } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
 
 	let board: FlexiBoardController;
 
@@ -127,7 +127,7 @@ Use the `importLayout()` method to restore a saved layout:
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardController, type FlexiLayout } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardController, type FlexiLayout } from '@flexiboards/svelte';
 
 	let board: FlexiBoardController;
 
@@ -159,7 +159,7 @@ For the common case of loading a layout when the board first renders, use the `l
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration, type FlexiLayout } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardConfiguration, type FlexiLayout } from '@flexiboards/svelte';
 
 	const boardConfig: FlexiBoardConfiguration = {
 		registry: {
@@ -192,7 +192,7 @@ For automatic persistence whenever the layout changes, use the `onLayoutChange` 
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/svelte';
 	import { browser } from '$app/environment';
 
 	const STORAGE_KEY = 'my-dashboard-layout';
@@ -261,7 +261,7 @@ Access metadata in your widget component:
 ```svelte
 <!-- chart-widget.svelte -->
 <script lang="ts">
-	import { getFlexiwidgetCtx } from 'svelte-flexiboards';
+	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
 
 	const widget = getFlexiwidgetCtx();
 

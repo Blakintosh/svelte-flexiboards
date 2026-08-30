@@ -19,7 +19,7 @@ Here's an example of using it to access the controller of a `FlexiBoard`:
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardController } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
 
 	let { layout } = $props();
 
@@ -48,7 +48,7 @@ Returning to our example of loading a layout, here's how you would do it using t
 
 ```svelte
 <script lang="ts">
-	import { FlexiBoard, type FlexiBoardController } from 'svelte-flexiboards';
+	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
 
 	let { layout } = $props();
 

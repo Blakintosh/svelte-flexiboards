@@ -22,8 +22,8 @@
 	{/key}
 </nav>
 
-<!-- Sheet legend: page metadata as ruled mono rows; draft status stays vermillion. -->
+<!-- Sheet legend: page metadata as ruled mono rows; draft status stays fx-accent. -->
 <div class="flex flex-col gap-2 border-t border-rule pt-4 font-mono text-[10.5px] text-faint">
 	<div class="flex justify-between"><span>Sections</span><span class="text-body">{$headingsTree.length}</span></div>
-	<div class="flex justify-between"><span>Status</span><span class="text-vermillion">Draft</span></div>
+	<div class="flex justify-between"><span>Status</span><span class="text-fx-accent">Draft</span></div>
 </div>

@@ -8,7 +8,7 @@
 
 <!--
   Drafting-table contents: numbered section labels, items ruled off by a left
-  border, and the active page flagged with a vermillion square in the margin.
+  border, and the active page flagged with a fx-accent square in the margin.
 -->
 <nav class={cn('flex min-h-0 flex-col', className)}>
 	<div class="mb-4 flex items-center gap-2 text-[10px] label text-faint">
@@ -31,11 +31,11 @@
 						aria-current={isActive ? 'page' : undefined}
 						class={cn(
 							'relative py-1.5 font-mono text-[12.5px] leading-snug no-underline transition-colors duration-[120ms]',
-							isActive ? 'text-vermillion' : 'text-body hover:text-ink'
+							isActive ? 'text-fx-accent' : 'text-body hover:text-ink'
 						)}
 					>
 						{#if isActive}
-							<span class="absolute -left-[15.5px] top-1/2 size-[5px] -translate-y-1/2 bg-vermillion"
+							<span class="absolute -left-[15.5px] top-1/2 size-[5px] -translate-y-1/2 bg-fx-accent"
 							></span>
 						{/if}
 						<span class="block truncate">{docPage.title}</span>

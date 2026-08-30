@@ -17,7 +17,7 @@
 
 	/*
 	  Two grounds only: a note is blue on tint, anything that must be noticed is
-	  vermillion on tint-accent. The kicker carries the variant name in the label
+	  fx-accent on tint-accent. The kicker carries the variant name in the label
 	  voice; there is no icon, because the border already does that job.
 	*/
 	const config = {
@@ -26,13 +26,13 @@
 		note: { title: 'Note', classes: 'border-blue bg-tint', kickerClass: 'text-blue' },
 		warning: {
 			title: 'Heads up',
-			classes: 'border-vermillion bg-tint-accent',
-			kickerClass: 'text-vermillion'
+			classes: 'border-fx-accent bg-tint-accent',
+			kickerClass: 'text-fx-accent'
 		},
 		danger: {
 			title: 'Warning',
-			classes: 'border-vermillion bg-tint-accent',
-			kickerClass: 'text-vermillion'
+			classes: 'border-fx-accent bg-tint-accent',
+			kickerClass: 'text-fx-accent'
 		}
 	};
 

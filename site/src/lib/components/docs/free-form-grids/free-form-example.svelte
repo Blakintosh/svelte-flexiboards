@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, type FlexiWidgetController } from '@flexiboards/svelte';
 </script>
 
 <FlexiBoard class="size-72 border border-ink bg-panel p-8 lg:size-96">
@@ -22,7 +22,7 @@
 			y={0}
 			class="border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue"
 		>
-			{#snippet children({ widget })}
+			{#snippet children({ widget }: { widget: FlexiWidgetController })}
 				I'm at ({widget.x}, {widget.y})
 			{/snippet}
 		</FlexiWidget>

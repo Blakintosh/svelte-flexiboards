@@ -23,7 +23,7 @@ Here's how that looks, once applied:
 <script lang="ts">
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from '@flexiboards/svelte';
 	import { untrack } from 'svelte';
 
 	let enableTransitions: boolean = $state(true);
@@ -116,7 +116,7 @@ The below example puts this customisability into use:
 <script lang="ts">
 	import { Slider } from '$lib/components/ui/slider/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from '@flexiboards/svelte';
 	import { untrack } from 'svelte';
 
 	let duration: number = $state(150);

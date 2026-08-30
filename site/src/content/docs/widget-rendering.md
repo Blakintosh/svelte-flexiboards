@@ -64,7 +64,7 @@ Note that in this scenario, you cannot get the `widget` controller as simply as 
 ```svelte
 <!-- my-component.svelte -->
 <script>
-	import { getFlexiwidgetCtx } from 'svelte-flexiboards';
+	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
 
 	const widget = getFlexiwidgetCtx();
 </script>
