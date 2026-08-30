@@ -70,10 +70,30 @@ export class FlexiPortalController {
 	}
 
 	/**
+	 * Hosts a widget's in-grid element in the portal for the duration of a drop
+	 * flight, so the interpolation can't clip at the board's overflow lock or
+	 * paint behind later siblings. Returns whether the element was taken; the
+	 * interpolator returns it via returnWidgetFromPortal when the flight ends.
+	 */
+	hostInterpolatingWidget(widget: FlexiWidgetController): boolean {
+		if (!this.#containerElement || !widget.ref || this.#widgetRefs.has(widget)) {
+			return false;
+		}
+		this.moveWidgetToPortal(widget);
+		return this.#widgetRefs.has(widget);
+	}
+
+	/**
 	 * Moves a widget's DOM element to the portal container
 	 */
 	moveWidgetToPortal(widget: FlexiWidgetController) {
 		if (!widget.ref) {
+			return;
+		}
+
+		// Already hosted (e.g. a widget re-grabbed mid-flight): keep the original
+		// record — overwriting it would make the portal its own return target.
+		if (this.#widgetRefs.has(widget)) {
 			return;
 		}
 
