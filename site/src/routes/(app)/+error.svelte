@@ -3,8 +3,8 @@
 </script>
 
 <div class="grid h-full w-full place-items-center">
-	<div class="flex max-w-[48ch] flex-col items-start gap-4 border-l-2 border-vermillion pl-6">
-		<span class="label text-[10px] text-vermillion">Error {page.status}</span>
+	<div class="flex max-w-[48ch] flex-col items-start gap-4 border-l-2 border-fx-accent pl-6">
+		<span class="label text-[10px] text-fx-accent">Error {page.status}</span>
 		<h1 class="m-0 font-serif text-[62px] font-semibold leading-none tracking-[-0.02em] text-ink">
 			{page.status}
 		</h1>

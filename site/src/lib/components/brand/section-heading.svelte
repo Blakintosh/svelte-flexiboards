@@ -18,6 +18,6 @@
 		{@render children()}
 	</svelte:element>
 	{#if number}
-		<span class="label text-[11px] text-faint">§ {number}</span>
+		<span class="label text-faint text-[11px]">§ {number}</span>
 	{/if}
 </div>

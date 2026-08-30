@@ -34,7 +34,7 @@
 			heading: 'Project',
 			links: [
 				{ label: 'GitHub', href: 'https://github.com/Blakintosh/svelte-flexiboards' },
-				{ label: 'npm', href: 'https://www.npmjs.com/package/svelte-flexiboards' },
+				{ label: 'npm', href: 'https://www.npmjs.com/package/@flexiboards/svelte' },
 				{ label: 'Examples', href: '/examples' }
 			]
 		}
@@ -71,7 +71,7 @@
 						{#each column.links as link (link.href)}
 							<a
 								href={link.href}
-								class="w-fit transition-colors duration-[120ms] hover:text-vermillion"
+								class="w-fit transition-colors duration-[120ms] hover:text-fx-accent"
 								target={link.href.startsWith('http') ? '_blank' : undefined}
 							>
 								{link.label}
@@ -89,7 +89,7 @@
 			<span class="normal-case tracking-normal">
 				Made by <a
 					href="https://github.com/Blakintosh"
-					class="text-body transition-colors duration-[120ms] hover:text-vermillion"
+					class="text-body transition-colors duration-[120ms] hover:text-fx-accent"
 					target="_blank">Blakintosh</a
 				>
 			</span>

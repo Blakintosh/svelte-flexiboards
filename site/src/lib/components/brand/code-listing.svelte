@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	/*
 	  Blueprint code listing: ink ground, mono, 1px border. Component names take
-	  vermillion, props pale blue, strings sage, punctuation muted.
+	  fx-accent, props pale blue, strings sage, punctuation muted.
 
 	  The highlighter is deliberately tiny — these listings are hand-authored
 	  marketing snippets, not arbitrary input. Docs code goes through Shiki.
@@ -10,7 +10,7 @@
 		s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 	const FAINT = 'text-on-ink-faint';
-	const NAME = 'text-vermillion';
+	const NAME = 'text-fx-accent';
 	const PROP = 'text-on-ink-blue';
 	const STRING = 'text-on-ink-sage';
 
@@ -48,6 +48,7 @@
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { framework } from './framework.svelte';
 
 	let {
 		caption,
@@ -55,18 +56,46 @@
 		source,
 		children,
 		class: className = ''
-	}: { caption: string; lang?: string; source: string; children?: Snippet; class?: string } =
-		$props();
+	}: {
+		caption: string;
+		lang?: string;
+		source: string;
+		children?: Snippet;
+		class?: string;
+	} = $props();
+
+	// Animate the listing only when it changes, never on first paint.
+	let swapped = $state(false);
+	$effect(() => {
+		source;
+		return () => (swapped = true);
+	});
+
+	/*
+	  Framework-switch dissolve: while the store stages the swap, the old
+	  listing blurs out and the new one condenses in, trailing the install
+	  command (see `swap-out`/`swap-in` in app.css).
+	*/
+	const phase = $derived(framework.swap);
+	const phased = $derived(phase === 'out' ? 'swap-out' : phase === 'in' ? 'swap-in' : '');
 </script>
 
-<div class="bg-field font-mono text-[13.5px] leading-[1.75] text-on-ink {className}">
-	<div class="label mb-4.5 flex items-center justify-between gap-4 text-[11px] text-on-ink-faint">
+<div class="bg-field text-on-ink font-mono text-[13.5px] leading-[1.75] {className}">
+	<div class="label text-on-ink-faint mb-4.5 flex items-center justify-between gap-4 text-[11px]">
 		<span>{caption}</span>
 		{#if lang}
-			<span class="text-vermillion">{lang}</span>
+			<span class="text-fx-accent inline-block {phased}">{lang}</span>
 		{/if}
 	</div>
 	<!-- Source is a module-local constant, never user input. -->
-	<pre class="m-0 overflow-x-auto whitespace-pre">{@html highlightMarkup(source)}</pre>
-	{@render children?.()}
+	{#key source}
+		<pre
+			class="m-0 {phase ? phased : swapped ? 'animate-fb-in' : ''} overflow-x-auto whitespace-pre"
+			style="--swap-delay: 200ms">{@html highlightMarkup(source)}</pre>
+	{/key}
+	{#if children}
+		<div class={phased} style="--swap-delay: 260ms">
+			{@render children()}
+		</div>
+	{/if}
 </div>

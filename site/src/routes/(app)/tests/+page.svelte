@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
-	import type { FlexiBoardConfiguration, FlexiWidgetController } from 'svelte-flexiboards';
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
+	import type { FlexiBoardConfiguration, FlexiWidgetController } from '@flexiboards/svelte';
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
@@ -11,15 +11,15 @@
 
 	const widgetClass = (widget: FlexiWidgetController) => [
 		'label grid place-items-center p-4 text-[11px]',
-		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent text-vermillion',
-		widget.isGrabbed && 'border border-vermillion bg-vermillion text-white',
+		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent text-fx-accent',
+		widget.isGrabbed && 'border border-fx-accent bg-fx-accent text-white',
 		!widget.isShadow && !widget.isGrabbed && 'border border-blue bg-tint text-blue'
 	];
 
 	const widgets = Array.from({ length: 12 }, (_, i) => `Widget ${i + 1}`);
 </script>
 
-<p class="mt-10 text-center"><span class="label text-[11px] text-vermillion">Test sheet</span></p>
+<p class="mt-10 text-center"><span class="label text-[11px] text-fx-accent">Test sheet</span></p>
 
 <h1 class="mt-3 text-center font-serif text-[30px] text-ink">Flow scroll offset</h1>
 
