@@ -43,7 +43,7 @@
 		},
 		{
 			"name": "config",
-			"type": "FlexiTargetPartialConfiguration",
+			"type": "FlexiTargetPartialConfiguration<ClassValue>",
 			"description": "The configuration object for the target."
 		},
 		{
@@ -69,6 +69,12 @@
 				"name": "prepared",
 				"type": "boolean",
 				"description": "Whether the target is prepared and ready to render widgets.",
+				"readonly": true
+			},
+			{
+				"name": "dropRejected",
+				"type": "boolean",
+				"description": "Whether a widget is currently being grabbed or resized over this target at a position where it cannot be placed. Use it to signal that the drop will be rejected.",
 				"readonly": true
 			},
 			{
@@ -117,7 +123,7 @@
 			},
 			{
 				"name": "widgetDefaults",
-				"type": "FlexiWidgetDefaults",
+				"type": "FlexiWidgetDefaults<TClass>",
 				"description": "The default configuration for widgets within this target."
 			}
 		],
@@ -167,7 +173,7 @@
 			},
 			{
 				"name": "className",
-				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<TClass>",
 				"description": "The class names to apply to this widget."
 			},
 			{

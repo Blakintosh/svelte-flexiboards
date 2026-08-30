@@ -1,6 +1,6 @@
 /**
  * Blueprint listing colours for Shiki: ink ground, pale body text, component
- * names in vermillion, props in pale blue, strings in sage, comments and
+ * names in fx-accent, props in pale blue, strings in sage, comments and
  * punctuation faint.
  *
  * This is the one place the brand values are written out as literal hexes

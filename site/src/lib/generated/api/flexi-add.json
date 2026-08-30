@@ -18,7 +18,7 @@
 		},
 		{
 			"name": "class",
-			"type": "ClassValue | ((adder: FlexiAddController) => ClassValue)",
+			"type": "ClassValue | ((adder: FlexiAddController) => ClassValue)<ClassValue>",
 			"description": "The class names to apply to the adder's button element. Either a class value, or a function deriving one from the adder's state."
 		},
 		{
@@ -37,7 +37,7 @@
 		"properties": [
 			{
 				"name": "ref",
-				"type": "HTMLElement | null",
+				"type": "HTMLElement | undefined",
 				"description": "The DOM element bound to this adder."
 			}
 		],
@@ -47,7 +47,7 @@
 		"AdderWidgetConfiguration": [
 			{
 				"name": "widget",
-				"type": "FlexiWidgetConfiguration",
+				"type": "FlexiWidgetConfiguration<TClass>",
 				"description": "The configuration of the widget that is created and grabbed."
 			},
 			{

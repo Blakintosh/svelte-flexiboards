@@ -18,113 +18,113 @@
 		},
 		{
 			"name": "draggable",
-			"type": "boolean",
+			"type": "boolean | undefined",
 			"description": "Whether the widget is draggable.",
 			"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
 		},
 		{
 			"name": "draggability",
-			"type": "'none' | 'movable' | 'full'",
+			"type": "'none' | 'movable' | 'full' | undefined",
 			"description": "The draggability of the widget."
 		},
 		{
 			"name": "resizability",
-			"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+			"type": "'none' | 'horizontal' | 'vertical' | 'both' | undefined",
 			"description": "The resizability of the widget."
 		},
 		{
 			"name": "width",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The width of the widget in units."
 		},
 		{
 			"name": "height",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The height of the widget in units."
 		},
 		{
 			"name": "snippet",
-			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+			"type": "unknown",
 			"description": "The snippet that is rendered by this widget."
 		},
 		{
 			"name": "component",
-			"type": "Component",
+			"type": "unknown",
 			"description": "The component that is rendered by this widget."
 		},
 		{
 			"name": "componentProps",
-			"type": "Record<string, any>",
+			"type": "Record<string, any> | undefined",
 			"description": "The props applied to the component rendered, if it has one."
 		},
 		{
 			"name": "className",
-			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<ClassValue> | undefined",
 			"description": "The class names to apply to this widget."
 		},
 		{
 			"name": "transition",
-			"type": "FlexiWidgetTransitionConfiguration",
+			"type": "FlexiWidgetTransitionConfiguration | undefined",
 			"description": "The transition configuration for this widget."
 		},
 		{
 			"name": "grabTrigger",
-			"type": "FlexiWidgetTriggerConfiguration",
+			"type": "FlexiWidgetTriggerConfiguration | undefined",
 			"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
 		},
 		{
 			"name": "resizeTrigger",
-			"type": "FlexiWidgetTriggerConfiguration",
+			"type": "FlexiWidgetTriggerConfiguration | undefined",
 			"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
 		},
 		{
 			"name": "minWidth",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
 		},
 		{
 			"name": "minHeight",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
 		},
 		{
 			"name": "maxWidth",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
 		},
 		{
 			"name": "maxHeight",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
 		},
 		{
 			"name": "id",
-			"type": "string",
+			"type": "string | undefined",
 			"description": "A stable identifier for this widget, used for persistence and layout import/export."
 		},
 		{
 			"name": "type",
-			"type": "string",
+			"type": "string | undefined",
 			"description": "The registry key used to look up shared configuration for this widget."
 		},
 		{
 			"name": "x",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The starting column (x-coordinate) of the widget."
 		},
 		{
 			"name": "y",
-			"type": "number",
+			"type": "number | undefined",
 			"description": "The starting row (y-coordinate) of the widget."
 		},
 		{
 			"name": "metadata",
-			"type": "Record<string, any>",
+			"type": "Record<string, any> | undefined",
 			"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
 		},
 		{
 			"name": "class",
-			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+			"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<ClassValue>",
 			"description": "The class names to apply to this widget. Either a class value, or a function deriving one from the widget's state.",
 			"bindable": true
 		},
@@ -164,6 +164,11 @@
 				"type": "boolean",
 				"description": "Whether this widget is being resized.",
 				"readonly": true
+			},
+			{
+				"name": "dropRejected",
+				"type": "boolean",
+				"description": "Whether the widget is being grabbed or resized over a target that cannot accept it where it is: the drop would be rejected on release and the widget would return to where it came from."
 			},
 			{
 				"name": "currentAction",
@@ -233,7 +238,7 @@
 			},
 			{
 				"name": "className",
-				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"type": "unknown",
 				"description": "The class name that is applied to this widget."
 			},
 			{
@@ -372,7 +377,7 @@
 			},
 			{
 				"name": "className",
-				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<TClass>",
 				"description": "The class names to apply to this widget."
 			},
 			{

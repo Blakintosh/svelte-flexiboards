@@ -23,7 +23,7 @@
 		},
 		{
 			"name": "config",
-			"type": "FlexiBoardConfiguration",
+			"type": "FlexiBoardConfiguration<ClassValue>",
 			"description": "The configuration object for the board."
 		},
 		{
@@ -42,7 +42,7 @@
 			},
 			{
 				"name": "ref",
-				"type": "HTMLElement | null",
+				"type": "HTMLElement | undefined",
 				"description": "The reactive DOM reference to the board's root element."
 			},
 			{
@@ -74,7 +74,7 @@
 		"FlexiBoardConfiguration": [
 			{
 				"name": "widgetDefaults",
-				"type": "FlexiWidgetDefaults",
+				"type": "FlexiWidgetDefaults<TClass>",
 				"description": "The default configuration for widgets within this board."
 			},
 			{
@@ -89,7 +89,7 @@
 			},
 			{
 				"name": "registry",
-				"type": "Record<string, FlexiRegistryEntry>",
+				"type": "Record<string, FlexiRegistryEntry<TClass>>",
 				"description": "A registry of widget types, mapping type keys to shared widget configuration. Widgets reference an entry via their `type`."
 			},
 			{
@@ -166,7 +166,7 @@
 			},
 			{
 				"name": "className",
-				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<TClass>",
 				"description": "The class names to apply to this widget."
 			},
 			{
