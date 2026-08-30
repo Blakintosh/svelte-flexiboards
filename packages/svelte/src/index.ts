@@ -90,3 +90,6 @@ export {
 	spring,
 	getFlexiwidgetCtx
 };
+
+// Re-exported so adapter consumers can type target header/footer snippet params.
+export type { FlexiTargetController } from '@flexiboards/core';
