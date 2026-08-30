@@ -1,55 +1,15 @@
 <script lang="ts">
 	import {
 		FlexiBoard,
-		FlexiWidget,
-		FlexiTarget,
 		simpleTransitionConfig,
 		type FlexiBoardController
-	} from 'svelte-flexiboards';
-	import { Button } from '$lib/components/ui/button';
-	import * as Tabs from '$lib/components/ui/tabs';
+	} from '@flexiboards/svelte';
 	import FlexionKanbanList from './flexion-kanban-list.svelte';
-
-	import FolderDot from 'lucide-svelte/icons/folder-dot';
-	import Archive from 'lucide-svelte/icons/archive';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Plus from 'lucide-svelte/icons/plus';
 
 	let board: FlexiBoardController | undefined = $state();
 </script>
 
-<nav class="flex w-full min-w-0 justify-between border-b border-rule">
-	<ul class="flex w-full min-w-0 gap-2">
-		<li>
-			<!-- The active tab takes a vermillion rule, not a fill. -->
-			<Button variant="ghost" class="-mb-px border-b border-vermillion text-ink">
-				<FolderDot />
-				Active
-			</Button>
-		</li>
-		<li>
-			<Button variant="ghost">
-				<Archive />
-				Archived
-			</Button>
-		</li>
-	</ul>
-
-	<ul class="flex gap-2">
-		<li>
-			<Button variant="ghost" size="icon">
-				<Ellipsis />
-			</Button>
-		</li>
-		<li>
-			<Button size={'sm'}>
-				<Plus />
-				Add
-			</Button>
-		</li>
-	</ul>
-</nav>
-
+<!-- No tabs or Add toolbar: this block is a task list inside a page, not an app shell. -->
 <FlexiBoard
 	config={{
 		targetDefaults: {
@@ -63,28 +23,32 @@
 			transition: simpleTransitionConfig()
 		}
 	}}
-	class="flex flex-col lg:flex-row w-full min-w-0 items-center lg:items-start justify-center gap-12 px-4 py-4"
+	class="flex w-full min-w-0 flex-col items-center justify-center gap-8 py-2 lg:flex-row lg:items-start lg:justify-start lg:gap-8"
 	bind:controller={board}
 >
 	<FlexionKanbanList
-		category="today"
-		categoryLabel="Today"
+		category="doing"
+		categoryLabel="Doing"
 		bgClass="bg-tint text-blue"
 		dotClass="bg-blue"
-		items={['Eggs', 'Bread', 'Milk']}
+		items={[
+			{ label: 'Ship React adapter docs' },
+			{ label: 'Record drag-demo video' },
+			{ label: 'Fix drop flicker' }
+		]}
 	/>
 	<FlexionKanbanList
-		category="tomorrow"
-		categoryLabel="Tomorrow"
+		category="next"
+		categoryLabel="Next"
 		bgClass="bg-tint-2 text-body"
 		dotClass="bg-faint"
-		items={['Fish', 'Chips']}
+		items={[{ label: 'Launch blog post' }, { label: 'Update comparison table' }]}
 	/>
 	<FlexionKanbanList
-		category="never"
-		categoryLabel="Never"
-		bgClass="bg-tint-accent text-vermillion"
-		dotClass="bg-vermillion"
-		items={['Pasta', 'Ice cream']}
+		category="done"
+		categoryLabel="Done"
+		bgClass="bg-tint-2 text-ink"
+		dotClass="bg-ink"
+		items={[{ label: '0.4.0 released', done: true }]}
 	/>
 </FlexiBoard>

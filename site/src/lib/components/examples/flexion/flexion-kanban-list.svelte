@@ -4,7 +4,8 @@
 		categoryLabel: string;
 		bgClass: string;
 		dotClass: string;
-		items: string[];
+		// Items carry a done flag; completed work is struck through, not hidden.
+		items: { label: string; done?: boolean }[];
 	};
 </script>
 
@@ -22,7 +23,7 @@
 		type FlexiWidgetChildrenSnippet,
 		type FlexiWidgetChildrenSnippetParameters,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import { twMerge } from 'tailwind-merge';
 
 	let { category, categoryLabel, bgClass, dotClass, items }: FlexionKanbanListProps = $props();
@@ -48,7 +49,7 @@
 		adding = false;
 
 		target!.createWidget({
-			className: 'border border-blue bg-tint px-4 py-2 text-[13px] text-blue',
+			className: 'border border-rule bg-panel px-4 py-2 text-[13px] text-ink',
 			snippet: widgetChildren,
 			componentProps: {
 				content: newItem
@@ -68,7 +69,7 @@
 {/snippet}
 
 <FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>
-	{#snippet header({ target })}
+	{#snippet header({ target }: { target: FlexiTargetController })}
 		<!-- Column headings are labels: mono, uppercase, with a square status tick. -->
 		<div class="mb-4 flex items-center gap-4">
 			<h3 class={twMerge('label inline-flex items-center gap-2 px-3 py-1 text-[10px]', bgClass)}>
@@ -82,16 +83,17 @@
 		<FlexiWidget
 			class={(widget: FlexiWidgetController) => {
 				return cn(
-					'border border-blue bg-tint px-4 py-2 text-[13px] text-blue',
-					widget.isGrabbed && 'border-vermillion opacity-60',
-					widget.isShadow && 'border-dashed border-vermillion bg-tint-accent opacity-70'
+					'border border-rule bg-panel px-4 py-2 text-[13px] text-ink',
+					item.done && 'text-faint line-through',
+					widget.isGrabbed && 'border-fx-accent opacity-60',
+					widget.isShadow && 'border-dashed border-fx-accent bg-tint-accent opacity-70'
 				);
 			}}
 		>
-			{item}
+			{item.label}
 		</FlexiWidget>
 	{/each}
-	{#snippet footer({ target })}
+	{#snippet footer({ target }: { target: FlexiTargetController })}
 		{#if !adding}
 			<Button onclick={onClickAdd} variant={'ghost'}>
 				<Plus />

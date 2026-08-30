@@ -21,7 +21,7 @@
 </script>
 
 <script lang="ts">
-	import { getFlexiwidgetCtx } from 'svelte-flexiboards';
+	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
@@ -42,18 +42,32 @@
 
 	let isWide = $derived(widget.width > 1);
 
-	// Fills mean shipped, so a live promotion is the only accent here.
-	const badgeVariants: Record<
-		ProductBadge,
-		{ variant: 'default' | 'secondary' | 'accent'; label: string }
-	> = {
-		sale: { variant: 'accent', label: 'Sale' },
-		new: { variant: 'default', label: 'New' },
-		bestseller: { variant: 'secondary', label: 'Bestseller' }
-	};
-
 	// Card frames are 1px rules that firm up on hover — never a shadow or a lift.
-	const cardClass = 'group relative flex h-full overflow-hidden border-rule bg-panel shadow-none transition-colors duration-[120ms] hover:border-ink';
+	const cardClass =
+		'group relative flex h-full overflow-hidden border-rule bg-panel shadow-none transition-colors duration-[120ms] hover:border-ink';
+
+	// At rest a card is only its product. Grab, menu and resize chrome fades in on
+	// hover, and on focus-within so keyboard users can still reach it.
+	const chromeClass =
+		'z-10 opacity-0 transition-opacity duration-[120ms] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none';
+
+	// One badge per card: a live promotion is the only thing worth a fill. The
+	// rest ("Featured", "New", "Bestseller") is demoted to the category line.
+	let discount = $derived(
+		product.originalPrice
+			? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+			: 0
+	);
+	let saleLabel = $derived(discount > 0 ? `Sale −${discount}%` : 'Sale');
+	let qualifier = $derived(
+		product.featured
+			? 'Featured'
+			: product.badge === 'new'
+				? 'New'
+				: product.badge === 'bestseller'
+					? 'Bestseller'
+					: null
+	);
 
 	function formatReviewCount(count: number): string {
 		if (count >= 1000) {
@@ -65,7 +79,7 @@
 	function getStockStatus(stock: number): { label: string; class: string; bar: string } {
 		if (stock > 50) return { label: 'In stock', class: 'text-blue', bar: 'bg-blue' };
 		if (stock > 10) return { label: 'Low stock', class: 'text-body', bar: 'bg-faint' };
-		return { label: 'Limited', class: 'text-vermillion', bar: 'bg-vermillion' };
+		return { label: 'Limited', class: 'text-fx-accent', bar: 'bg-fx-accent' };
 	}
 
 	let stockStatus = $derived(getStockStatus(product.stock));
@@ -79,22 +93,33 @@
 	</div>
 {/snippet}
 
-{#snippet rating(compact: boolean)}
-	{#if compact}
-		<div class="mt-1.5 flex items-center gap-1">
-			<Star class="size-3 fill-ink text-ink" />
-			<span class="font-mono text-[11px] text-ink">{product.rating}</span>
-			<span class="font-mono text-[11px] text-faint">({formatReviewCount(product.reviewCount)})</span>
-		</div>
-	{:else}
-		<div class="mt-2 flex items-center gap-1">
-			{#each Array(5) as _, i}
-				<Star class="size-4 {i < Math.round(product.rating) ? 'fill-ink text-ink' : 'text-rule'}" />
-			{/each}
-			<span class="ml-1 font-mono text-[11px] text-faint">
-				{product.rating} ({formatReviewCount(product.reviewCount)})
-			</span>
-		</div>
+<!-- One star and the number: five glyphs said no more than one did. -->
+{#snippet rating(large: boolean)}
+	<div class="mt-1.5 flex items-center gap-1.5">
+		<Star class="{large ? 'size-3.5' : 'size-3'} fill-ink text-ink" />
+		<span class="font-mono text-[11px] text-ink">{product.rating}</span>
+		<span class="font-mono text-[11px] text-faint">
+			{#if large}
+				· {product.reviewCount.toLocaleString()} reviews · {product.stock} units
+			{:else}
+				({formatReviewCount(product.reviewCount)})
+			{/if}
+		</span>
+		{#if !large}
+			<span class="ml-auto size-1.5 shrink-0 {stockStatus.bar}"></span>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet categoryLine()}
+	<p class="label truncate text-[10px] text-faint">
+		{product.category}{qualifier ? ` · ${qualifier}` : ''}
+	</p>
+{/snippet}
+
+{#snippet saleBadge(position: string)}
+	{#if product.badge === 'sale'}
+		<Badge variant="accent" class="absolute {position}">{saleLabel}</Badge>
 	{/if}
 {/snippet}
 
@@ -104,6 +129,7 @@
 			{#snippet child({ props })}
 				<Button variant="ghost" size="icon" class="size-7" {...props}>
 					<MoreVertical class="size-4" />
+					<span class="sr-only">Product actions</span>
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
@@ -114,7 +140,7 @@
 				<DropdownMenu.Item><Copy class="mr-2 size-4" />Duplicate</DropdownMenu.Item>
 			{/if}
 			<DropdownMenu.Separator />
-			<DropdownMenu.Item class="text-vermillion">
+			<DropdownMenu.Item class="text-fx-accent">
 				<Trash2 class="mr-2 size-4" />Delete
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
@@ -124,173 +150,121 @@
 {#if phone}
 	<!-- Phone: Full-width vertical card -->
 	<Card.Root class="{cardClass} flex-col">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
+		<div class="absolute top-2 left-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10 bg-paper">
+		<div class="absolute top-2 right-2 bg-paper {chromeClass}">
 			{@render controls()}
 		</div>
 
 		<!-- Placeholder (top) -->
 		<div class="relative h-28 shrink-0 border-b border-rule">
 			{@render thumbnail('size-12')}
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute bottom-2 left-2">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
+			{@render saleBadge('bottom-2 left-2')}
 		</div>
 
 		<!-- Content (bottom) -->
 		<div class="flex min-h-0 flex-1 flex-col p-3">
 			<div class="flex items-center gap-2">
-				<p class="label text-[10px] text-faint">{product.category}</p>
+				{@render categoryLine()}
 				<span class="label text-[10px] {stockStatus.class}">{stockStatus.label}</span>
 			</div>
 			<h3 class="mt-1 font-serif text-base leading-tight text-ink">{product.name}</h3>
 
 			{@render rating(false)}
 
-			<!-- Price -->
-			<div class="mt-auto pt-2">
-				<div class="flex items-baseline gap-2">
-					<span class="font-mono text-xl text-ink">£{product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="font-mono text-[11px] text-faint line-through"
-							>£{product.originalPrice.toFixed(2)}</span
-						>
-						<span class="label text-[10px] text-vermillion">
-							-{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-						</span>
-					{/if}
-				</div>
+			<!-- Price sits on a hairline shelf at the foot of the card. -->
+			<div class="mt-auto flex items-baseline gap-2 border-t border-rule pt-2.5">
+				<span class="font-mono text-xl text-ink">£{product.price.toFixed(2)}</span>
+				{#if product.originalPrice}
+					<span class="font-mono text-[11px] text-faint line-through">
+						£{product.originalPrice.toFixed(2)}
+					</span>
+				{/if}
 			</div>
 		</div>
 	</Card.Root>
 {:else if isWide}
-	<!-- Wide card layout: horizontal -->
+	<!-- Wide (featured) card layout: horizontal -->
 	<Card.Root class="{cardClass} flex-row">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
+		<div class="absolute top-2 left-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10 bg-paper">
+		<div class="absolute top-2 right-2 bg-paper {chromeClass}">
 			{@render controls()}
 		</div>
 
-		<!-- Resizer - bottom right -->
-		<div class="absolute right-2 bottom-2 z-10">
+		<div class="absolute right-2 bottom-2 {chromeClass}">
 			<Resizer size={16} />
 		</div>
 
 		<!-- Placeholder (left) -->
 		<div class="relative w-2/5 shrink-0 border-r border-rule">
 			{@render thumbnail('size-16')}
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute top-3 left-3">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
-			{#if product.featured}
-				<Badge variant="outline" class="absolute bottom-3 left-3 border-ink bg-paper text-ink">
-					Featured
-				</Badge>
-			{/if}
+			{@render saleBadge('top-3 left-3')}
 		</div>
 
 		<!-- Content (right) -->
-		<div class="flex flex-1 flex-col p-4 pr-12">
-			<div class="flex items-center gap-2">
-				<p class="label text-[10px] text-faint">{product.category}</p>
-				<span class="text-faint">·</span>
+		<div class="flex min-h-0 flex-1 flex-col p-4 pr-12">
+			{@render categoryLine()}
+			<h3 class="mt-1.5 truncate font-serif text-[19px] leading-tight text-ink">{product.name}</h3>
+
+			{@render rating(true)}
+
+			<!-- Stock bar is reserved for the featured card, where there is room to read it. -->
+			<div class="mt-3 flex items-center gap-2">
+				<div class="h-1.5 flex-1 overflow-hidden bg-tint">
+					<div class="h-full {stockStatus.bar}" style="width: {Math.min(product.stock, 100)}%"></div>
+				</div>
 				<span class="label text-[10px] {stockStatus.class}">{stockStatus.label}</span>
 			</div>
-			<h3 class="mt-1 truncate font-serif text-[19px] leading-tight text-ink">{product.name}</h3>
 
-			{@render rating(false)}
-
-			<!-- Stock indicator -->
-			<div class="mt-2 flex items-center gap-2">
-				<div class="h-1.5 flex-1 overflow-hidden bg-tint">
-					<div
-						class="h-full {stockStatus.bar}"
-						style="width: {Math.min(product.stock, 100)}%"
-					></div>
-				</div>
-				<span class="font-mono text-[11px] text-faint">{product.stock} units</span>
-			</div>
-
-			<!-- Price -->
-			<div class="mt-auto pt-4">
-				<div class="flex items-baseline gap-2">
-					<span class="font-mono text-2xl text-ink">£{product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="font-mono text-[11px] text-faint line-through">
-							£{product.originalPrice.toFixed(2)}
-						</span>
-						<span class="label text-[10px] text-vermillion">
-							-{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-						</span>
-					{/if}
-				</div>
+			<div class="mt-auto flex items-baseline gap-2.5 border-t border-rule pt-3">
+				<span class="font-mono text-2xl text-ink">£{product.price.toFixed(2)}</span>
+				{#if product.originalPrice}
+					<span class="font-mono text-xs text-faint line-through">
+						£{product.originalPrice.toFixed(2)}
+					</span>
+				{/if}
 			</div>
 		</div>
 	</Card.Root>
 {:else}
 	<!-- Narrow card layout: vertical (tablet/desktop 1x1) -->
 	<Card.Root class="{cardClass} flex-col">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
+		<div class="absolute top-2 left-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10 bg-paper">
+		<div class="absolute top-2 right-2 bg-paper {chromeClass}">
 			{@render controls()}
 		</div>
 
-		<!-- Resizer - bottom right -->
-		<div class="absolute right-2 bottom-2 z-10">
+		<div class="absolute right-2 bottom-2 {chromeClass}">
 			<Resizer size={16} />
 		</div>
 
 		<!-- Placeholder (top) -->
 		<div class="relative h-24 shrink-0 border-b border-rule lg:h-28">
 			{@render thumbnail('size-10')}
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute bottom-2 left-2">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
+			{@render saleBadge('bottom-2 left-2')}
 		</div>
 
 		<!-- Content (bottom) -->
-		<div class="flex min-h-0 flex-1 flex-col px-2.5 pt-1.5 pb-2">
-			<div class="min-w-0 pr-6">
-				<div class="flex items-center gap-1.5">
-					<p class="label truncate text-[10px] text-faint">{product.category}</p>
-					<span class="size-1.5 shrink-0 {stockStatus.bar}"></span>
-				</div>
-				<h3 class="line-clamp-2 font-serif text-[13px] leading-tight text-ink">{product.name}</h3>
+		<div class="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-2">
+			<div class="min-w-0">
+				{@render categoryLine()}
+				<h3 class="mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight text-ink">
+					{product.name}
+				</h3>
 			</div>
 
-			{@render rating(true)}
+			{@render rating(false)}
 
-			<!-- Price -->
-			<div class="mt-auto">
-				<div class="flex items-baseline gap-1">
-					<span class="font-mono text-base text-ink">£{product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="font-mono text-[10px] text-faint line-through">
-							£{product.originalPrice.toFixed(2)}
-						</span>
-					{/if}
-				</div>
+			<div class="mt-auto border-t border-rule pt-2">
+				<span class="font-mono text-base text-ink">£{product.price.toFixed(2)}</span>
 			</div>
 		</div>
 	</Card.Root>

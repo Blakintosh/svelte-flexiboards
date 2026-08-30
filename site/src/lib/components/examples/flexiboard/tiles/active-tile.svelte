@@ -1,75 +1,15 @@
-<script module lang="ts">
-	export type ActiveTileProps = {
-		count: string;
-		change: string;
-		isWide?: boolean;
-		chartOnly?: boolean;
-	};
-</script>
-
 <script lang="ts">
 	import TrendingUp from 'lucide-svelte/icons/trending-up';
-	import Activity from 'lucide-svelte/icons/activity';
-	import * as Chart from '$lib/components/ui/chart/index.js';
-	import { BarChart } from 'layerchart';
-	import ChartContainer from '$lib/components/ui/chart/chart-container.svelte';
-
-	let { count, change, isWide = false, chartOnly = false }: ActiveTileProps = $props();
-
-	const isPositive = change.startsWith('+');
-
-	// Chart data - active users by browser
-	const chartData = [
-		{ browser: 'Chrome', users: 245 },
-		{ browser: 'Safari', users: 156 },
-		{ browser: 'Firefox', users: 89 },
-		{ browser: 'Edge', users: 47 },
-		{ browser: 'Zen', users: 36 }
-	];
-
-	const chartConfig = {
-		users: { label: 'Users', color: 'var(--chart-4)' }
-	} satisfies Chart.ChartConfig;
 </script>
 
-{#if chartOnly}
-	<!-- Chart only mode for wide layout right side -->
-	<ChartContainer config={chartConfig} class="!aspect-auto h-full w-full">
-		<BarChart
-			data={chartData}
-			x="browser"
-			y="users"
-			props={{
-				bars: {
-					radius: 0,
-					fill: 'var(--color-users)',
-					'fill-opacity': 0.8
-				},
-				xAxis: {
-					format: (v: string) => v.slice(0, 2)
-				},
-				yAxis: { format: () => '' }
-			}}
-		>
-			{#snippet tooltip()}
-				<Chart.Tooltip labelKey="browser" />
-			{/snippet}
-		</BarChart>
-	</ChartContainer>
-{:else}
-	<!-- Stats display -->
-	<div class="flex flex-col gap-2">
-		<div class="flex items-center gap-2">
-			<span class="font-mono text-3xl text-ink lg:text-4xl">{count}</span>
-			<Activity class="size-5 text-blue" />
-		</div>
-		<div class="flex items-center gap-1.5">
-			{#if isPositive}
-				<TrendingUp class="size-3.5 text-blue" />
-				<p class="font-mono text-[11px] text-blue">{change}</p>
-			{:else}
-				<p class="font-mono text-[11px] text-faint">{change}</p>
-			{/if}
-		</div>
+<div class="flex flex-col gap-2">
+	<div class="flex items-center gap-2.5">
+		<span class="text-ink font-mono text-[32px] leading-none lg:text-4xl">573</span>
+		<!-- The permitted loop on this sheet: a caret marking a live count. Stilled under reduced motion. -->
+		<span class="bg-fx-accent animate-fb-blink block size-2"></span>
 	</div>
-{/if}
+	<div class="flex items-center gap-1.5">
+		<TrendingUp class="text-blue size-3.5" />
+		<p class="text-blue font-mono text-[11px]">+201 / hr</p>
+	</div>
+</div>

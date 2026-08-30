@@ -26,10 +26,10 @@
 		}
 	});
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed vermillion.
+	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-vermillion opacity-60'
+		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
+		widget.isGrabbed && 'border border-fx-accent opacity-60'
 	];
 
 	function addWidget(): AdderWidgetConfiguration {
@@ -62,7 +62,7 @@
 	>
 		<FlexiAdd
 			{addWidget}
-			class={'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint transition-colors duration-[120ms] hover:border-ink hover:text-ink lg:size-40'}
+			class={'ui text-xs flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-faint transition-colors duration-[120ms] hover:border-ink hover:text-ink lg:size-40'}
 		>
 			<Plus class="mb-2 size-8 lg:size-12" />
 			Add a random number
@@ -97,8 +97,8 @@
 			/>
 		</FlexiTarget>
 		<FlexiDelete class={(deleter: FlexiDeleteController) => [
-			'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint duration-[120ms] lg:size-40',
-			deleter.isHovered && 'border-vermillion bg-tint-accent text-vermillion'
+			'ui text-xs flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-faint duration-[120ms] lg:size-40',
+			deleter.isHovered && 'border-fx-accent bg-tint-accent text-fx-accent'
 		]}>
 			<Trash2 class="mb-2 size-8 lg:size-12" />
 			Delete

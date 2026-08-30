@@ -66,9 +66,9 @@
 		}, 2000);
 	}
 
-	// Tabs are square mono labels; the active one takes a vermillion underline.
+	// Tabs are square mono labels; the active one takes a fx-accent underline.
 	const triggerClass =
-		'label relative rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 text-[11px] text-faint shadow-none transition-colors duration-[120ms] focus-visible:ring-0 hover:text-ink data-[state=active]:border-b-vermillion data-[state=active]:text-ink data-[state=active]:shadow-none';
+		'ui relative rounded-none border-0 border-b-2 border-b-transparent bg-transparent px-4 pb-2 pt-2 text-xs text-faint shadow-none transition-colors duration-[120ms] focus-visible:ring-0 hover:text-ink data-[state=active]:border-b-fx-accent data-[state=active]:text-ink data-[state=active]:shadow-none';
 </script>
 
 <Tabs.Root value={'preview'} class="relative mt-4">
@@ -90,7 +90,7 @@
 			class="not-prose code-block group relative max-h-160 overflow-clip border border-ink bg-field"
 		>
 			<button
-				class="label absolute right-3 top-3 z-10 border border-on-ink-faint/40 bg-field p-2 text-on-ink-faint opacity-0 transition-colors duration-[120ms] hover:text-on-ink focus:outline-hidden focus:ring-1 focus:ring-vermillion group-hover:opacity-100"
+				class="absolute right-3 top-3 z-10 border border-on-ink-faint/40 bg-field p-2 text-on-ink-faint opacity-0 transition-colors duration-[120ms] hover:text-on-ink focus:outline-hidden focus:ring-1 focus:ring-fx-accent group-hover:opacity-100"
 				onclick={copyCode}
 				aria-label="Copy code to clipboard"
 			>

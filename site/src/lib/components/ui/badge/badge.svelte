@@ -10,13 +10,13 @@
 				/* stable */
 				default: "bg-ink text-paper [a&]:hover:bg-blue [a&]:hover:text-white",
 				/* preview */
-				accent: "bg-vermillion text-white [a&]:hover:bg-vermillion-hover",
-				destructive: "bg-vermillion text-white [a&]:hover:bg-vermillion-hover",
+				accent: "bg-fx-accent text-white [a&]:hover:bg-fx-accent-hover",
+				destructive: "bg-fx-accent text-white [a&]:hover:bg-fx-accent-hover",
 				secondary: "bg-tint text-ink [a&]:hover:bg-rule",
 				/* planned */
 				outline: "border-rule text-faint [a&]:hover:border-ink [a&]:hover:text-ink",
 				/* deprecated */
-				deprecated: "border-dashed border-vermillion text-vermillion",
+				deprecated: "border-dashed border-fx-accent text-fx-accent",
 			},
 		},
 		defaultVariants: {

@@ -1,121 +1,251 @@
-<script module lang="ts">
-	type DashboardRegistryItem = {
-		component: Component;
-		componentProps: Record<string, unknown>;
-	};
-</script>
-
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from 'svelte-flexiboards';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-    import { AspectRatio } from "$lib/components/ui/aspect-ratio";
-    import { Button } from "$lib/components/ui/button";
-    import ArrowLeft from 'lucide-svelte/icons/arrow-left';
+	import { FlexiBoard, FlexiTarget, cssTransitionConfig } from '@flexiboards/svelte';
+	import { Button } from '$lib/components/ui/button';
+	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 
-
-	import AppSidebar from '$lib/components/examples/flexiboard/app-sidebar.svelte';
-	import type { FlexiBoardConfiguration, FlexiBoardController } from 'svelte-flexiboards';
-	import DashboardTile from '$lib/components/examples/flexiboard/dashboard-tile.svelte';
-	import { untrack, type Component } from 'svelte';
+	import type { FlexiBoardConfiguration } from '@flexiboards/svelte';
 	import BrightnessSlider from '$lib/components/examples/flexspressive/brightness-slider.svelte';
 	import Tile from '$lib/components/examples/flexspressive/tile.svelte';
 	import Wifi from 'lucide-svelte/icons/wifi';
 	import Bluetooth from 'lucide-svelte/icons/bluetooth';
 	import Pencil from 'lucide-svelte/icons/pencil';
-	import { BluetoothOff, CircleOff, Flashlight, FlashlightOff, Moon, MoonStar, Navigation, NavigationOff, Plane, PlaneLanding, RefreshCw, RefreshCwOff, Share, Wallet, WifiOff } from 'lucide-svelte';
+	import {
+		BluetoothOff,
+		CircleOff,
+		Flashlight,
+		FlashlightOff,
+		Moon,
+		MoonStar,
+		Navigation,
+		NavigationOff,
+		Plane,
+		PlaneLanding,
+		RefreshCw,
+		RefreshCwOff,
+		Share,
+		Wallet,
+		WifiOff
+	} from 'lucide-svelte';
 	import { createFlexspressiveEditor } from '$lib/components/examples/flexspressive/index.svelte';
 
-    const editor = createFlexspressiveEditor();
+	const editor = createFlexspressiveEditor();
 
-    let editMode = $derived(editor.editMode);
+	let editMode = $derived(editor.editMode);
 
-	let boardConfig: FlexiBoardConfiguration = $state({
+	// Snap, don't float: the CSS defaults, with the resize snap pulled to 160ms
+	// so a tile widening under the nub lands as fast as the fill it sits beside.
+	const boardConfig: FlexiBoardConfiguration = {
 		widgetDefaults: {
 			draggable: false,
 			resizability: 'none',
-            transition: simpleTransitionConfig()
+			transition: {
+				...cssTransitionConfig(),
+				resize: { duration: 160, easing: 'ease-out' }
+			}
 		}
-	});
-
-	let onBoardReady = (board: FlexiBoardController) => {};
+	};
 </script>
 
-<!-- The handset is a drawn frame: 1px ink, square corners, mono readouts. -->
-<div class="flex flex-col items-stretch mx-auto aspect-[9/18] gap-0.5 h-full py-8 border border-ink bg-panel px-6 text-sm">
-    {#if !editMode}
-        <div class="flex justify-between items-center">
-            <h1 class="font-mono text-3xl text-ink">
-                9:30
-            </h1>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="label text-[10px] text-faint">
-                Tue, 19 Jul
-            </span>
-            <span class="label text-[10px] text-faint">
-                Until 10:00
-            </span>
-        </div>
-        <BrightnessSlider />
-    {:else}
-        <div class="flex gap-4 items-center mb-4">
-            <Button size={"icon"} variant={"outline"} class={"cursor-pointer"} onclick={() => editor.editMode = false}>
-                <ArrowLeft class="size-5" />
-                <span class="sr-only">Go back</span>
-            </Button>
-            <h1 class="font-serif text-[19px] text-ink">
-                Edit tiles
-            </h1>
-        </div>
-        <p class="text-center text-[13px] text-body mb-4">
-            Select tiles to rearrange and resize
-        </p>
-    {/if}
+<!--
+	The handset is a drawn figure on the graph-paper sheet, flanked by margin
+	annotations that explain the two states it can be in. The flanks are dropped
+	below lg, where there is no room for them beside a 308px handset.
+-->
+<div
+	class="graph-paper border-ink bg-paper flex h-full w-full items-center justify-center gap-9 overflow-hidden border p-4"
+>
+	<div class="hidden w-[170px] shrink-0 flex-col gap-6 text-right lg:flex">
+		<div>
+			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">Free grid · 4 × 4</div>
+			<p class="text-body text-xs leading-relaxed">
+				Tiles pack horizontally; a resize pushes neighbours aside.
+			</p>
+		</div>
+		<div>
+			<div class="label border-fx-accent text-fx-accent mb-1.5 border-b pb-1 text-[10px]">
+				Editing tile
+			</div>
+			<p class="text-body text-xs leading-relaxed">
+				Tap in edit mode: dashed frame, fx-accent resize nub, drag free.
+			</p>
+		</div>
+	</div>
 
-    <FlexiBoard config={boardConfig}>
-        <FlexiTarget config={{
-            layout: {
-                type: 'free',
-                minColumns: 4,
-                maxColumns: 4,
-                minRows: 4,
-                maxRows: 4,
-                packing: 'horizontal'
-            },
-            rowSizing: 'minmax(0, 1fr)'
-        }} class="gap-2">
-            <Tile title="Internet" on x={0} y={0} width={2} height={1} onIcon={Wifi} offIcon={WifiOff}/>
-            <Tile title="Bluetooth" on={false} x={2} y={0} width={2} height={1} onIcon={Bluetooth} offIcon={BluetoothOff}/>
-            <Tile title="Flashlight" on={true} x={0} y={1} width={1} height={1} onIcon={Flashlight} offIcon={FlashlightOff}/>
-            <Tile title="Modes" on={false} x={1} y={1} width={1} height={1} onIcon={CircleOff} offIcon={CircleOff}/>
-            <Tile title="Sharedrop" on={false} x={2} y={1} width={2} height={1} onIcon={Share} offIcon={Share}/>
-            <Tile title="Airplane Mode" on={false} x={0} y={2} width={2} height={1} onIcon={Plane} offIcon={PlaneLanding}/>
-            <Tile title="Auto-Rotate" on={true} x={2} y={2} width={2} height={1} onIcon={RefreshCw} offIcon={RefreshCwOff}/>
-            <Tile title="Wallet" on={true} x={0} y={3} width={2} height={1} onIcon={Wallet} offIcon={Wallet}/>
-            <Tile title="Location" on={true} x={2} y={3} width={1} height={1} onIcon={Navigation} offIcon={NavigationOff}/>
-            <Tile title="Night Light" on={false} x={3} y={3} width={1} height={1} onIcon={MoonStar} offIcon={Moon}/>
-        </FlexiTarget>
-    </FlexiBoard>
-    {#if !editMode}
-        <div class="flex justify-between items-center my-2">
-            <p class="w-16 font-mono text-[11px] text-faint">
-                16
-            </p>
-            <div class="flex items-center gap-1">
-                <div class="h-2 w-4 bg-ink"></div>
-                <div class="size-2 bg-rule"></div>
-            </div>
-            <div class="w-16 flex justify-end">
-                <Button size={"icon"} variant={"ghost"} class={"cursor-pointer"} onclick={() => editor.editMode = true}>
-                    <Pencil class="size-5" />
-                    <span class="sr-only">Edit tiles</span>
-                </Button>
-            </div>
-        </div>
-    {/if}
-    <div class="flex flex-col items-center justify-end grow">
-        <div class="h-1 w-32 bg-ink"></div>
-    </div>
+	<!-- 1px ink, square corners, mono readouts. -->
+	<div
+		class="border-ink bg-panel flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 border px-[18px] pt-5 pb-3 text-sm"
+	>
+		{#if !editMode}
+			<div class="flex items-center justify-between">
+				<h1 class="text-ink font-mono text-3xl leading-none">9:30</h1>
+			</div>
+			<div class="flex items-center justify-between">
+				<span class="label text-faint text-[9px]">Tue, 19 Jul</span>
+				<span class="label text-faint text-[9px]">Until 10:00</span>
+			</div>
+			<BrightnessSlider />
+		{:else}
+			<div class="mb-4 flex items-center gap-4">
+				<Button
+					size={'icon'}
+					variant={'outline'}
+					class={'cursor-pointer'}
+					onclick={() => (editor.editMode = false)}
+				>
+					<ArrowLeft class="size-5" />
+					<span class="sr-only">Go back</span>
+				</Button>
+				<h1 class="text-ink font-serif text-[19px]">Edit tiles</h1>
+			</div>
+			<p class="text-body mb-4 text-center text-[13px]">Select tiles to rearrange and resize</p>
+		{/if}
+
+		<!-- Uniform 46px rhythm: rows are fixed, so a tile is the same height wherever it lands. -->
+		<FlexiBoard config={boardConfig}>
+			<FlexiTarget
+				config={{
+					layout: {
+						type: 'free',
+						minColumns: 4,
+						maxColumns: 4,
+						minRows: 4,
+						maxRows: 4,
+						packing: 'horizontal'
+					},
+					rowSizing: '46px'
+				}}
+				class="gap-[7px]"
+			>
+				<Tile title="Internet" on x={0} y={0} width={2} height={1} onIcon={Wifi} offIcon={WifiOff} />
+				<Tile
+					title="Bluetooth"
+					on={false}
+					x={2}
+					y={0}
+					width={2}
+					height={1}
+					onIcon={Bluetooth}
+					offIcon={BluetoothOff}
+				/>
+				<Tile
+					title="Flashlight"
+					on={true}
+					x={0}
+					y={1}
+					width={1}
+					height={1}
+					onIcon={Flashlight}
+					offIcon={FlashlightOff}
+				/>
+				<Tile
+					title="Modes"
+					on={false}
+					x={1}
+					y={1}
+					width={1}
+					height={1}
+					onIcon={CircleOff}
+					offIcon={CircleOff}
+				/>
+				<Tile
+					title="Sharedrop"
+					on={false}
+					x={2}
+					y={1}
+					width={2}
+					height={1}
+					onIcon={Share}
+					offIcon={Share}
+				/>
+				<Tile
+					title="Airplane Mode"
+					on={false}
+					x={0}
+					y={2}
+					width={2}
+					height={1}
+					onIcon={Plane}
+					offIcon={PlaneLanding}
+				/>
+				<Tile
+					title="Auto-Rotate"
+					on={true}
+					x={2}
+					y={2}
+					width={2}
+					height={1}
+					onIcon={RefreshCw}
+					offIcon={RefreshCwOff}
+				/>
+				<Tile
+					title="Wallet"
+					on={true}
+					x={0}
+					y={3}
+					width={2}
+					height={1}
+					onIcon={Wallet}
+					offIcon={Wallet}
+				/>
+				<Tile
+					title="Location"
+					on={true}
+					x={2}
+					y={3}
+					width={1}
+					height={1}
+					onIcon={Navigation}
+					offIcon={NavigationOff}
+				/>
+				<Tile
+					title="Night Light"
+					on={false}
+					x={3}
+					y={3}
+					width={1}
+					height={1}
+					onIcon={MoonStar}
+					offIcon={Moon}
+				/>
+			</FlexiTarget>
+		</FlexiBoard>
+		{#if !editMode}
+			<div class="my-2 flex items-center justify-between">
+				<p class="text-faint w-16 font-mono text-[10px]">16</p>
+				<div class="flex items-center gap-1">
+					<div class="bg-ink h-2 w-4"></div>
+					<div class="bg-rule size-2"></div>
+				</div>
+				<div class="flex w-16 justify-end">
+					<Button
+						size={'icon'}
+						variant={'ghost'}
+						class={'cursor-pointer'}
+						onclick={() => (editor.editMode = true)}
+					>
+						<Pencil class="size-5" />
+						<span class="sr-only">Edit tiles</span>
+					</Button>
+				</div>
+			</div>
+		{/if}
+		<div class="flex grow flex-col items-center justify-end">
+			<div class="bg-ink h-1 w-[110px]"></div>
+		</div>
+	</div>
+
+	<div class="hidden w-[170px] shrink-0 flex-col gap-6 lg:flex">
+		<div>
+			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">On = ink fill</div>
+			<p class="text-body text-xs leading-relaxed">
+				State is a fill, never a colour swap; off tiles sit in the tint.
+			</p>
+		</div>
+		<div>
+			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">Brightness</div>
+			<p class="text-body text-xs leading-relaxed">
+				A gauge: ink in a ruled trough, fx-accent thumb.
+			</p>
+		</div>
+	</div>
 </div>

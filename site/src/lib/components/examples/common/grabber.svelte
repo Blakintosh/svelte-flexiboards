@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-	import { FlexiGrab } from 'svelte-flexiboards';
+	import { FlexiGrab } from '@flexiboards/svelte';
 	import { cn } from '$lib/utils.js';
 	import GripVertical from 'lucide-svelte/icons/grip-vertical';
 
@@ -16,7 +16,7 @@
 <!-- Vermillion means movement: the grab handle turns accent the moment it is touched. -->
 <FlexiGrab
 	class={cn(
-		'shrink-0 p-1.5 text-faint transition-colors duration-[120ms] hover:bg-tint hover:text-vermillion active:bg-tint-accent active:text-vermillion',
+		'shrink-0 p-1.5 text-faint transition-colors duration-[120ms] hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
 		className
 	)}
 >

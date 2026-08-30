@@ -1,10 +1,11 @@
+<script lang="ts">
+	let { label, content }: { label?: string; content?: string } = $props();
+</script>
+
 <!-- A note callout: 2px blue rule, tinted ground, never italic. -->
 <blockquote
-	class="border-l-2 border-blue bg-tint px-4 py-3 text-[13px] leading-relaxed text-body lg:text-[14.5px]"
+	class="max-w-[68ch] border-l-2 border-blue bg-tint px-4 py-3 text-[13px] leading-relaxed text-body lg:text-[13.5px]"
 >
-	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-	labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
-	nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit
-	esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
-	in culpa qui officia deserunt mollit anim id est laborum.
+	{#if label}<strong class="text-ink">{label}</strong>{/if}
+	{content}
 </blockquote>

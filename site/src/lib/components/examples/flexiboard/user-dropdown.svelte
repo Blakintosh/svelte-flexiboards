@@ -6,17 +6,17 @@
 
 <Sidebar.Menu>
 	<Sidebar.MenuItem>
-		<Sidebar.MenuButton size="lg" class="w-full hover:bg-tint data-[state=open]:bg-tint">
+		<Sidebar.MenuButton size="lg" class="hover:bg-tint data-[state=open]:bg-tint w-full">
 			<div class="flex w-full items-center gap-3">
-				<Avatar.Root class="size-8 border border-rule">
+				<Avatar.Root class="border-rule size-8 border">
 					<Avatar.Image src="https://github.com/blakintosh.png" alt="Blakintosh" />
-					<Avatar.Fallback class="bg-tint font-mono text-ink">B</Avatar.Fallback>
+					<Avatar.Fallback class="bg-tint text-ink font-mono">B</Avatar.Fallback>
 				</Avatar.Root>
 				<div class="flex flex-1 flex-col items-start text-left">
-					<span class="text-[13px] text-ink">Blakintosh</span>
-					<span class="label text-[10px] text-faint">Free plan</span>
+					<span class="text-ink text-[13px]">Blakintosh</span>
+					<span class="label text-faint text-[10px]">Free plan</span>
 				</div>
-				<ChevronsUpDown class="size-4 text-faint" />
+				<ChevronsUpDown class="text-faint size-4" />
 			</div>
 		</Sidebar.MenuButton>
 	</Sidebar.MenuItem>

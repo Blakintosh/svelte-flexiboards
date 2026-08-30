@@ -1,4 +1,4 @@
-import { FlexiBoard, FlexiAdd, FlexiTarget, FlexiWidget, FlexiDelete } from "@flexiboards/react";
+import { FlexiBoard, FlexiAdd, FlexiTarget, FlexiWidget, FlexiDelete, springTransitionConfig } from "@flexiboards/react";
 import type { AdderWidgetConfiguration, FlexiWidgetController, FlexiBoardConfiguration } from "@flexiboards/react";
 import { clsx } from 'clsx';
 import { NumberTile } from "../numbers/number-tile";
@@ -9,14 +9,15 @@ export default function NumbersExample() {
 	const boardConfig: FlexiBoardConfiguration = {
 		widgetDefaults: {
 			draggable: true,
-			resizability: 'horizontal'
+			resizability: 'horizontal',
+			transition: springTransitionConfig()
 		}
 	};
     
-	// Anything provisional — the drop preview, the widget in hand — is dashed vermillion.
+	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
 	const className = (widget: FlexiWidgetController) => clsx([
-		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-vermillion opacity-60'
+		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
+		widget.isGrabbed && 'border border-fx-accent opacity-60'
 	]);
 
 	function addWidget(): AdderWidgetConfiguration {
@@ -84,7 +85,7 @@ export default function NumbersExample() {
                 </FlexiTarget>
                 <FlexiDelete className={(deleter) => clsx([
                     'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint duration-[120ms] lg:size-40',
-                    deleter.isHovered && 'border-vermillion bg-tint-accent text-vermillion'
+                    deleter.isHovered && 'border-fx-accent bg-tint-accent text-fx-accent'
                 ])}>
                     {() => <>
                         <Trash2 className="mb-2 size-8 lg:size-12" />

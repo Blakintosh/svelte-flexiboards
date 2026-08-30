@@ -37,13 +37,24 @@
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<Sidebar.Group>
+			<!-- Pages are the real navigation; the group label is an eyebrow, not a heading. -->
+			<Sidebar.GroupLabel class="label text-[10px] text-faint">Pages</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="border-l-2 border-vermillion bg-tint pl-4 text-ink">My First Page</Sidebar.MenuButton>
+						<Sidebar.MenuButton class="border-l-2 border-fx-accent bg-tint pl-4 text-ink"
+							>Launch plan — 0.5</Sidebar.MenuButton
+						>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="pl-4 text-body hover:bg-tint hover:text-ink">Another Page</Sidebar.MenuButton>
+						<Sidebar.MenuButton class="pl-4 text-body hover:bg-tint hover:text-ink"
+							>Meeting notes</Sidebar.MenuButton
+						>
+					</Sidebar.MenuItem>
+					<Sidebar.MenuItem>
+						<Sidebar.MenuButton class="pl-4 text-body hover:bg-tint hover:text-ink"
+							>Roadmap</Sidebar.MenuButton
+						>
 					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>

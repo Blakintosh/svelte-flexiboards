@@ -5,60 +5,32 @@
 	import LayoutDashboard from 'lucide-svelte/icons/layout-dashboard';
 	import ArrowRightLeft from 'lucide-svelte/icons/arrow-right-left';
 	import ChartArea from 'lucide-svelte/icons/chart-area';
-	import Bell from 'lucide-svelte/icons/bell';
-	import Plus from 'lucide-svelte/icons/plus';
-	import Settings from 'lucide-svelte/icons/settings';
 	import Layers from 'lucide-svelte/icons/layers';
 </script>
 
-<Sidebar.Root class="absolute h-full border-r border-rule bg-paper">
-	<Sidebar.Header class="border-b border-rule px-2 py-4">
+<Sidebar.Root class="border-rule bg-paper absolute h-full border-r">
+	<Sidebar.Header class="border-rule border-b px-2 py-4">
 		<div class="flex items-center gap-3 px-2">
-			<div class="flex size-8 items-center justify-center bg-ink text-paper">
+			<div class="bg-ink text-paper flex size-8 items-center justify-center">
 				<Layers class="size-4" />
 			</div>
 			<div class="flex flex-col">
-				<span class="font-serif text-sm text-ink">Flexiboard</span>
-				<span class="label text-[10px] text-faint">Dashboard</span>
+				<span class="text-ink font-serif text-sm">Flexiboard</span>
+				<!-- The tenant, not the page: the sheet's fig band already names the view. -->
+				<span class="label text-faint text-[10px]">Acme Analytics</span>
 			</div>
 		</div>
 	</Sidebar.Header>
 
+	<!-- One group, three destinations. The demo is the board, not the nav. -->
 	<Sidebar.Content class="px-2 py-4">
-		<!-- Quick actions -->
 		<Sidebar.Group>
-			<Sidebar.GroupLabel class="label mb-2 px-2 text-[10px] text-faint">
-				Quick Actions
-			</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="text-body hover:bg-tint hover:text-ink">
-							<Plus class="size-4" />
-							<span>New dashboard</span>
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="text-body hover:bg-tint hover:text-ink">
-							<Settings class="size-4" />
-							<span>Settings</span>
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
-				</Sidebar.Menu>
-			</Sidebar.GroupContent>
-		</Sidebar.Group>
-
-		<!-- Main navigation -->
-		<Sidebar.Group class="mt-4">
-			<Sidebar.GroupLabel class="label mb-2 px-2 text-[10px] text-faint">
-				Navigation
-			</Sidebar.GroupLabel>
-			<Sidebar.GroupContent>
-				<Sidebar.Menu>
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="border-l-2 border-vermillion bg-tint text-ink">
+						<Sidebar.MenuButton class="border-fx-accent bg-tint text-ink border-l-2">
 							<LayoutDashboard class="size-4" />
-							<span>Dashboard</span>
+							<span>Overview</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
 					<Sidebar.MenuItem>
@@ -73,22 +45,12 @@
 							<span>Reports</span>
 						</Sidebar.MenuButton>
 					</Sidebar.MenuItem>
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton class="text-body hover:bg-tint hover:text-ink">
-							<div class="relative">
-								<Bell class="size-4" />
-								<!-- A pending notification is a state, so it takes a small vermillion tick. -->
-								<span class="absolute -top-1 -right-1 block size-1.5 bg-vermillion"></span>
-							</div>
-							<span>Notifications</span>
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
 
-	<Sidebar.Footer class="border-t border-rule p-2">
+	<Sidebar.Footer class="border-rule border-t p-2">
 		<UserDropdown />
 	</Sidebar.Footer>
 </Sidebar.Root>

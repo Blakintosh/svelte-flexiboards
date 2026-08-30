@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { onMount, untrack, type Component, type Snippet } from "svelte";
-    import { FlexiResize, FlexiWidget, getFlexiwidgetCtx, type FlexiWidgetProps } from "svelte-flexiboards";
+    import { FlexiResize, FlexiWidget, getFlexiwidgetCtx, type FlexiWidgetProps } from "@flexiboards/svelte";
 	import { getFlexspressiveEditor } from "./index.svelte";
 
     export type TileProps = FlexiWidgetProps & {
@@ -64,22 +64,26 @@
     })
 </script>
 
-<!-- On is an ink fill, off is a tinted box; the tile being edited takes vermillion. -->
+<!--
+    State is a fill, never a colour swap: on is ink, off is a tinted box, and the
+    fill survives edit mode so both readings stay legible at once. The tile being
+    edited takes the fx-accent dashed frame.
+-->
 <button class={[
-    on && !editMode && 'bg-ink text-paper',
-    (!on || editMode) && 'border border-rule bg-tint text-body',
-    editingTile && 'border border-dashed border-vermillion bg-tint-accent text-vermillion',
+    on && !editingTile && 'bg-ink text-paper',
+    !on && !editingTile && 'border border-rule bg-tint text-body',
+    editingTile && 'border border-dashed border-fx-accent bg-tint-accent text-fx-accent',
     widget.isShadow && 'opacity-40',
-    'h-12 grid place-items-center justify-items-center w-full cursor-pointer transition-colors duration-[120ms] relative'
+    'h-full grid place-items-center justify-items-center w-full cursor-pointer transition-colors duration-[120ms] relative'
 ]} {onclick} bind:this={node}>
     <span class="sr-only">Toggle {title}</span>
     <div class={[
-        widget.width == 2 && "flex items-center gap-4 px-4 w-full",
-        widget.width == 1 && "flex items-center justify-center px-4 w-full",
+        widget.width == 2 && "flex items-center gap-2.5 px-3 w-full",
+        widget.width == 1 && "flex items-center justify-center px-3 w-full",
         "min-w-0"
         ]}>
         {#if Icon}
-            <div class="size-6 [&>svg]:size-6">
+            <div class="size-[18px] [&>svg]:size-[18px]">
                 {#if on}
                     <Icon />
                 {:else}
@@ -88,7 +92,7 @@
             </div>
         {/if}
         {#if widget.width == 2}
-            <h4 class="label text-[10px] truncate">{title}</h4>
+            <h4 class="label text-[9px] truncate">{title}</h4>
         {/if}
     </div>
 
@@ -97,7 +101,7 @@
         <FlexiResize
             class="absolute top-[50%] right-0 translate-y-[-50%] translate-x-[50%] grid place-items-center p-2 lg:p-0"
         >
-            <span class="pointer-events-none block w-2 h-4 bg-vermillion"></span>
+            <span class="pointer-events-none block w-1.5 h-4 bg-fx-accent"></span>
         </FlexiResize>
     {/if}
 </button>

@@ -46,7 +46,8 @@
 					</li>
 				</ul>
 
-				<span class="label text-[10px] text-faint">My First Page</span>
+				<span class="label text-[10px] text-faint">Launch plan — 0.5</span>
+				<span class="font-mono text-[10px] text-faint">Edited 2h ago</span>
 			</div>
 
 			<ul class="flex items-center gap-2">
@@ -75,13 +76,33 @@
 				bind:controller={board}
 				class="overflow-y-auto py-8 2xl:pl-8 2xl:pr-16"
 			>
-				<h1 class="mb-8 pl-8 font-serif text-[30px] text-ink 2xl:text-[38px]">My First Page</h1>
-				<FlexiTarget key="page" class="gap-8">
-					<FlexionBlockContainer component={FlexionTextBlock} />
+				<h1 class="mb-8 pl-8 font-serif text-[30px] text-ink 2xl:text-[38px]">Launch plan — 0.5</h1>
+				<!-- Real page content: the copy explains the demo the reader is dragging. -->
+				<FlexiTarget key="page" class="gap-6">
+					<FlexionBlockContainer
+						component={FlexionTextBlock}
+						props={{
+							content:
+								'The 0.5 release lands the React adapter and the new drop resolver. Everything below is drag-sortable — blocks are Flexiboards widgets on a one-column flow grid, so the page itself is the demo.'
+						}}
+					/>
+					<FlexionBlockContainer component={FlexionHeadingBlock} props={{ content: 'This week' }} />
 					<FlexionBlockContainer component={FlexionKanbanBlock} />
-					<FlexionBlockContainer component={FlexionHeadingBlock} />
-					<FlexionBlockContainer component={FlexionQuoteBlock} />
-					<FlexionBlockContainer component={FlexionTextBlock} />
+					<FlexionBlockContainer
+						component={FlexionQuoteBlock}
+						props={{
+							label: 'Decision:',
+							content:
+								'we ship 0.5 when the resolver passes the reversal test on touch. No date-driven launches.'
+						}}
+					/>
+					<FlexionBlockContainer
+						component={FlexionTextBlock}
+						props={{
+							content:
+								'Rollout: npm first, then the docs switchover. Keep 0.4 docs published for a month behind a version picker.'
+						}}
+					/>
 				</FlexiTarget>
 			</FlexiBoard>
 		</article>

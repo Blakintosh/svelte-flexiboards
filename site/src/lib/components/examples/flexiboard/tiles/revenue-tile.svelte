@@ -1,76 +1,38 @@
-<script module lang="ts">
-	export type RevenueTileProps = {
-		amount: string;
-		change: string;
-		isWide?: boolean;
-		chartOnly?: boolean;
-	};
-</script>
-
 <script lang="ts">
-	import TrendingUp from 'lucide-svelte/icons/trending-up';
-	import TrendingDown from 'lucide-svelte/icons/trending-down';
-	import * as Chart from '$lib/components/ui/chart/index.js';
-	import { AreaChart } from 'layerchart';
-	import { curveNatural } from 'd3-shape';
-	import ChartContainer from '$lib/components/ui/chart/chart-container.svelte';
-
-	let { amount, change, isWide = false, chartOnly = false }: RevenueTileProps = $props();
-
-	const isPositive = change.startsWith('+');
-
-	// Chart data
-	const chartData = [
-		{ month: 'Jan', revenue: 18600 },
-		{ month: 'Feb', revenue: 30500 },
-		{ month: 'Mar', revenue: 23700 },
-		{ month: 'Apr', revenue: 27300 },
-		{ month: 'May', revenue: 40900 },
-		{ month: 'Jun', revenue: 45200 }
-	];
-
-	const chartConfig = {
-		revenue: { label: 'Revenue', color: 'var(--chart-2)' }
-	} satisfies Chart.ChartConfig;
+	// Six monthly readings, drawn straight as an SVG plate rather than a chart
+	// library: the sheet wants hairlines and a single marked endpoint, not axes.
+	const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+	const points = [135, 98, 118, 104, 52, 38];
+	const line = points.map((y, i) => `${(i / (points.length - 1)) * 600},${y}`).join(' ');
+	// The plot is stretched to the plate, so the endpoint marker is drawn in HTML
+	// instead of SVG — a circle in a non-uniform viewBox would come out an ellipse.
+	const endTop = (points[points.length - 1] / 170) * 100;
 </script>
 
-{#if chartOnly}
-	<!-- Chart only mode for wide layout right side -->
-	<ChartContainer config={chartConfig} class="!aspect-auto h-full w-full">
-		<AreaChart
-			data={chartData}
-			x="month"
-			y="revenue"
-			props={{
-				area: {
-					curve: curveNatural,
-					fill: 'var(--color-revenue)',
-					'fill-opacity': 0.3,
-					line: { class: 'stroke-[var(--color-revenue)] stroke-2' }
-				},
-				xAxis: {
-					format: (v: string) => v.slice(0, 1)
-				},
-				yAxis: { format: () => '' }
-			}}
-		>
-			{#snippet tooltip()}
-				<Chart.Tooltip labelKey="month" />
-			{/snippet}
-		</AreaChart>
-	</ChartContainer>
-{:else}
-	<!-- Stats display -->
-	<div class="flex flex-col gap-2">
-		<div class="font-mono text-3xl text-ink lg:text-4xl">{amount}</div>
-		<div class="flex items-center gap-1.5">
-			{#if isPositive}
-				<TrendingUp class="size-3.5 text-blue" />
-				<p class="font-mono text-[11px] text-blue">{change}</p>
-			{:else}
-				<TrendingDown class="size-3.5 text-vermillion" />
-				<p class="font-mono text-[11px] text-vermillion">{change}</p>
-			{/if}
-		</div>
+<div class="flex min-h-0 flex-1 flex-col">
+	<div class="relative mt-2 min-h-16 flex-1">
+		<svg viewBox="0 0 600 170" preserveAspectRatio="none" class="h-full w-full">
+			<polygon points="{line} 600,170 0,170" class="fill-blue opacity-20" />
+			<polyline
+				points={line}
+				fill="none"
+				stroke-width="2.5"
+				vector-effect="non-scaling-stroke"
+				class="stroke-blue"
+			/>
+		</svg>
+		<!-- The latest reading is the live one, so it takes the accent. -->
+		<span
+			class="bg-fx-accent absolute right-0 block size-2 -translate-y-1/2"
+			style="top: {endTop}%"
+		></span>
 	</div>
-{/if}
+	<div class="mt-1.5 flex justify-between">
+		{#each months as month, i (month)}
+			<span
+				class="font-mono text-[10px] {i === months.length - 1 ? 'text-fx-accent' : 'text-faint'}"
+				>{month}</span
+			>
+		{/each}
+	</div>
+</div>

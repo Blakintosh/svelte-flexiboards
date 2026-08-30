@@ -6,12 +6,12 @@
 		FlexiWidget,
 		type AdderWidgetConfiguration,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import {
 		FlexiAdd,
 		type FlexiBoardConfiguration,
 		type FlexiBoardController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
 	import FlowTile from '$lib/components/examples/flow/flow-tile.svelte';
 
 	let boardConfig: FlexiBoardConfiguration = $state({
@@ -21,10 +21,10 @@
 		}
 	});
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed vermillion.
+	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'border border-dashed border-vermillion bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-vermillion opacity-60'
+		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
+		widget.isGrabbed && 'border border-fx-accent opacity-60'
 	];
 
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;

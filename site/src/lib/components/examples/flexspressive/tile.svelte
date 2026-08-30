@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { untrack, type Component, type Snippet } from "svelte";
-    import { FlexiResize, FlexiWidget, type FlexiWidgetProps } from "svelte-flexiboards";
+    import { FlexiResize, FlexiWidget, type FlexiWidgetProps } from "@flexiboards/svelte";
 	import { getFlexspressiveEditor } from "./index.svelte";
 	import TileContents from "./tile-contents.svelte";
 
