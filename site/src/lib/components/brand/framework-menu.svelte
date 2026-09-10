@@ -111,8 +111,8 @@
 						</span>
 						<span class="flex-1">
 							{fw.label}
-							{#if fw.status === 'preview'}
-								<span class="text-faint text-[11px] font-medium">(preview)</span>
+							{#if fw.status !== 'stable'}
+								<span class="text-faint text-[11px] font-medium">({fw.status})</span>
 							{/if}
 						</span>
 						{#if framework.selected === fw.id}

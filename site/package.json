@@ -4,13 +4,13 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"predev": "node scripts/build-llms-docs.mjs",
+		"predev": "node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs",
 		"dev": "vite dev",
 		"dev:host": "vite dev --host",
 		"extract-api": "node scripts/extract-api.mjs",
 		"build-llms-docs": "node scripts/build-llms-docs.mjs",
-		"generate": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs",
-		"build": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && vite build && pnpm run package",
+		"generate": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs",
+		"build": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs && vite build && pnpm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "pnpm run package",
@@ -19,7 +19,8 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"e2e": "playwright test",
-		"e2e:ui": "playwright test --ui"
+		"e2e:ui": "playwright test --ui",
+		"build-registry": "node scripts/build-registry.mjs"
 	},
 	"files": [
 		"dist",

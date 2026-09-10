@@ -49,7 +49,7 @@
 		},
 		{
 			"name": "class",
-			"type": "ClassValue",
+			"type": "string",
 			"description": "Classes for the grid element (the place for `gap-*`)."
 		},
 		{

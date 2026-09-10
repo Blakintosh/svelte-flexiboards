@@ -27,3 +27,4 @@ src/lib/generated/llms/
 # Playwright
 playwright-report/
 test-results/
+static/r/

@@ -5,14 +5,14 @@ export type Framework = 'svelte' | 'react';
 export type FrameworkMeta = {
 	id: Framework;
 	label: string;
-	/** Sentence case, rides the label in the picker. Null once an adapter is stable. */
-	status: 'stable' | 'preview';
+	/** Rides the label in the picker as "(new)" or "(preview)"; 'stable' shows nothing. */
+	status: 'stable' | 'new' | 'preview';
 	package: string;
 };
 
 export const frameworks: FrameworkMeta[] = [
 	{ id: 'svelte', label: 'Svelte', status: 'stable', package: '@flexiboards/svelte' },
-	{ id: 'react', label: 'React', status: 'stable', package: '@flexiboards/react' }
+	{ id: 'react', label: 'React', status: 'new', package: '@flexiboards/react' }
 ];
 
 /** Frameworks with no adapter yet: faint mono text in the picker, never a tab. */

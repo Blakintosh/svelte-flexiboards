@@ -62,8 +62,8 @@
 		>
 			<Icon size={14} aria-hidden="true" />
 			{fw.label}
-			{#if fw.status === 'preview'}
-				<span class="text-faint text-[11px] font-medium tracking-[0.04em]">(preview)</span>
+			{#if fw.status !== 'stable'}
+				<span class="text-faint text-[11px] font-medium tracking-[0.04em]">({fw.status})</span>
 			{/if}
 		</button>
 	{/each}
@@ -88,9 +88,9 @@
 				>
 					<Icon size={14} aria-hidden="true" />
 					{fw.label}
-					{#if fw.status === 'preview'}
+					{#if fw.status !== 'stable'}
 						<span class="text-on-ink-blue text-[11px] font-medium tracking-[0.04em]">
-							(preview)
+							({fw.status})
 						</span>
 					{/if}
 				</div>
