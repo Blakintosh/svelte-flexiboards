@@ -212,6 +212,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return added;
 	}
 
+	/**
+	 * Returns the target's grid, creating it if it doesn't exist yet. The grid
+	 * controller is pure placement logic (its DOM element attaches later via
+	 * `grid.ref`), so it can be created before the grid component renders —
+	 * initial widget creation needs it ahead of that during SSR.
+	 */
+	ensureGrid() {
+		return this.#grid$() ?? this.createGrid();
+	}
+
 	createGrid() {
 		if (this.#grid$()) {
 			console.warn(
@@ -283,7 +293,51 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return undefined;
 		}
 
+		// A widget added after the initial load, and not as part of an import,
+		// is a layout change in its own right.
+		if (this.prepared && !this.#importing) {
+			this.#eventBus.dispatch('layout:changed', { board: this.provider$() });
+		}
+
 		return widget;
+	}
+
+	/**
+	 * Takes a widget out of this target's grid and bookkeeping without deleting
+	 * it, so it can be placed elsewhere. @internal
+	 */
+	detachWidget(widget: InternalFlexiWidgetController) {
+		this.grid.removeWidget(widget);
+		this.widgets.delete(widget);
+		this.#updateOrderedWidgets();
+		this.forgetPreGrabSnapshot();
+		this.applyGridPostCompletionOperations();
+	}
+
+	/**
+	 * Places a widget in this target's grid at a position (or wherever the grid
+	 * puts it when none is given). @internal
+	 */
+	attachWidget(
+		widget: InternalFlexiWidgetController,
+		x?: number,
+		y?: number,
+		width?: number,
+		height?: number
+	): boolean {
+		const added = this.#tryAddWidget(widget, x, y, width ?? widget.width, height ?? widget.height);
+		if (added) {
+			this.applyGridPostCompletionOperations();
+		}
+		return added;
+	}
+
+	clear(): void {
+		for (const widget of [...this.internalWidgets]) {
+			if (!widget.isShadow) {
+				widget.delete();
+			}
+		}
 	}
 
 	registerWidget(
@@ -353,7 +407,18 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * Widgets with types not found in the registry will be skipped with a warning.
 	 * @param layout The layout to import.
 	 */
+	#importing = false;
+
 	importLayout(layout: FlexiWidgetLayoutEntry[]) {
+		this.#importing = true;
+		try {
+			this.#importLayout(layout);
+		} finally {
+			this.#importing = false;
+		}
+	}
+
+	#importLayout(layout: FlexiWidgetLayoutEntry[]) {
 		if (!this.registry) {
 			console.warn(
 				'importLayout(): no registry provided, cannot import layout. Provide a registry to the FlexiBoard component.'
@@ -400,13 +465,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 			// Likely much more information than needed, but we've got it.
 			for (const widget of this.internalWidgets) {
-				if (!widget.type) {
-					console.warn('exportLayout(): widget has no type, it will be skipped.');
-					continue;
-				}
-
 				const entry: FlexiWidgetLayoutEntry = {
-					type: widget.type,
+					...(widget.type !== undefined && { type: widget.type }),
 					width: widget.width,
 					height: widget.height,
 					x: widget.x,
@@ -507,8 +567,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		widget.isBeingDropped = true;
 
 		// Try to formally place the widget in the grid, which will also serve as a final check that
-		// the drop is possible.
-		const result = this.#tryAddWidget(widget, x, y, width, height);
+		// the drop is possible. The consumer's canDrop gets the last word before the grid.
+		const result =
+			this.#consumerAllows(widget, x, y, width, height) &&
+			this.#tryAddWidget(widget, x, y, width, height);
 		if (!result) {
 			widget.isBeingDropped = false;
 		}
@@ -653,14 +715,45 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#removeDropzoneWidget();
 	}
 
+	/**
+	 * Resets the target to its pre-render state. Server-only: Svelte's SSR
+	 * compiles any component that writes to a `bind:` into a settle loop that
+	 * renders it again and keeps only the final payload — but this controller
+	 * lives outside the payload, so without a reset the repeated render would
+	 * re-register and re-create every widget on top of the first pass's,
+	 * server-rendering each of them twice.
+	 */
+	resetForRepeatedServerRender() {
+		this.#initialWidgetRegistrations.length = 0;
+		this.widgets.clear();
+		this.#grid$()?.clear();
+		this.#updateOrderedWidgets();
+		this.#prepared$(false);
+	}
+
 	oninitialloadcomplete() {
+		// Initial creation can run before the grid component has rendered (the
+		// SSR/first-pass ordering); placement needs the grid controller now.
+		this.ensureGrid();
+
 		// Consume the queue so a repeated call (e.g. React StrictMode re-running
 		// a mount effect) cannot create duplicate widgets.
 		const registrations = this.#initialWidgetRegistrations.splice(0);
-		for (const registration of registrations) {
-			const widget = this.createWidget(registration.config);
-			if (widget && registration.onCreated) {
-				registration.onCreated(widget);
+
+		// A configured initialLayout is data the caller already has (e.g.
+		// fetched in a server load), so it takes this target's place in the
+		// render pass — server and client alike — instead of the declared
+		// widgets. The queue is still consumed above so declared registrations
+		// can't leak into a later load.
+		const initialLayout = untracked(() => this.provider$()?.initialLayoutFor(this.key));
+		if (initialLayout) {
+			this.importLayout(initialLayout);
+		} else {
+			for (const registration of registrations) {
+				const widget = this.createWidget(registration.config);
+				if (widget && registration.onCreated) {
+					registration.onCreated(widget);
+				}
 			}
 		}
 
@@ -697,6 +790,17 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		return entry ? { x: entry.x, y: entry.y } : null;
 	}
 
+	/** The board's `canDrop`, if the consumer gave one; the preview shows its verdict. */
+	#consumerAllows(
+		widget: InternalFlexiWidgetController,
+		x: number,
+		y: number,
+		width: number,
+		height: number
+	): boolean {
+		return this.provider$()?.canDrop(widget, this, { x, y, width, height }) ?? true;
+	}
+
 	#createDropzoneWidget() {
 		if (this.dropzoneWidget || !this.actionWidget) {
 			return;
@@ -717,7 +821,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		let [x, y, width, height] = this.#getDropzoneLocation(this.actionWidget);
 
-		const added = this.grid.tryPlaceWidget(this.dropzoneWidget!, x, y, width, height, true);
+		const added =
+			this.#consumerAllows(this.actionWidget.widget, x, y, width, height) &&
+			this.grid.tryPlaceWidget(this.dropzoneWidget!, x, y, width, height, true);
 		this.#setDropRejected(!added);
 
 		if (added) {
@@ -760,7 +866,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		grid.removeWidget(dropzoneWidget);
 		grid.restoreFromSnapshot(this.#gridSnapshot!);
 
-		const added = grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
+		const added =
+			this.#consumerAllows(actionWidget.widget, x, y, width, height) &&
+			grid.tryPlaceWidget(dropzoneWidget, x, y, width, height, true);
 		this.#setDropRejected(!added);
 
 		if (!added && this.#isDropzoneWidgetAdded$()) {

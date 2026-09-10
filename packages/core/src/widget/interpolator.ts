@@ -45,6 +45,9 @@ export class WidgetMoveInterpolator {
 
 	#animation$: Signal<WidgetMovementAnimation> = signal('move');
 
+	/** The box the running animation was last pointed at, to skip no-op retargets. */
+	#lastTarget: AnimationBox | undefined;
+
 	/**
 	 * True while the widget's element is hosted in the board's portal for the
 	 * flight. A drop starts outside the board's box (wherever the pointer let
@@ -219,18 +222,68 @@ export class WidgetMoveInterpolator {
 			}
 		});
 		this.#handle$(handle);
+		this.#lastTarget = undefined;
+		this.#trackPlaceholder(handle);
 
-		// A drop lands from wherever the pointer let go — host the flight in the
-		// portal so it can't clip at the board edge or slip behind siblings.
-		if (animation === 'drop') {
+		// A drop released outside the board's box flies in across its edge, which
+		// the overflow lock would clip — boards that need that (portalDropFlights)
+		// host the flight in the viewport portal. Everyone else flies in-grid, so
+		// the flight clips and stacks with the board like any sibling, which is
+		// what a scrollable board expects.
+		if (animation === 'drop' && this.#provider$()?.portalDropFlights) {
 			this.#hostFlightInPortal(handle);
 		}
 
 		// On a restart the placeholder is already mounted, and its style may not change (e.g. a
 		// cancel back to the same cell), so the new handle is given its target explicitly.
 		if (restart && this.ref) {
-			this.onPlaceholderMove(this.ref.getBoundingClientRect());
+			this.onPlaceholderMove();
 		}
+	}
+
+	/**
+	 * Points the running animation at `to`, unless it already is: adapters may
+	 * restart their clock on every setTarget, so identical boxes are dropped.
+	 */
+	#retarget(handle: AnimationHandle<AnimationBox>, to: AnimationBox) {
+		const last = this.#lastTarget;
+		if (
+			last &&
+			Math.abs(last.top - to.top) < 0.5 &&
+			Math.abs(last.left - to.left) < 0.5 &&
+			Math.abs(last.width - to.width) < 0.5 &&
+			Math.abs(last.height - to.height) < 0.5
+		) {
+			return;
+		}
+		this.#lastTarget = to;
+		handle.setTarget(to);
+	}
+
+	/**
+	 * Follows the placeholder for the life of the flight. Its box can change
+	 * without its own style changing — the grid reflows around it as the drop
+	 * preview leaves, siblings' flights end and their placeholders unmount — and
+	 * none of that is observable through mutations, so it is re-measured each
+	 * frame and the animation retargeted when it has moved.
+	 */
+	#trackPlaceholder(handle: AnimationHandle<AnimationBox>) {
+		if (typeof requestAnimationFrame !== 'function') {
+			return;
+		}
+		const tick = () => {
+			if (this.#handle$() !== handle) {
+				return;
+			}
+			if (this.ref) {
+				const to = this.#toBox(this.ref.getBoundingClientRect());
+				if (to) {
+					this.#retarget(handle, to);
+				}
+			}
+			requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
 	}
 
 	/**
@@ -320,16 +373,20 @@ export class WidgetMoveInterpolator {
 		this.#animation$('move');
 	}
 
-	onPlaceholderMove(rect: DOMRect) {
-		// Wait a frame so the starting box has painted before retargeting.
+	onPlaceholderMove(rect?: DOMRect) {
+		// Wait a frame so the starting box has painted before retargeting — and
+		// measure *then*, not now: between the placeholder mounting and the next
+		// frame the grid reflows (the drop preview unmounts, siblings settle), so
+		// a box captured at mount aims the flight at where the slot used to be.
 		requestAnimationFrame(() => {
 			const handle = this.#handle$();
-			const to = this.#toBox(rect);
+			const measured = this.ref?.getBoundingClientRect() ?? rect;
+			const to = measured && this.#toBox(measured);
 			if (!handle || !to) {
 				return;
 			}
 
-			handle.setTarget(to);
+			this.#retarget(handle, to);
 		});
 	}
 
@@ -337,7 +394,7 @@ export class WidgetMoveInterpolator {
 		this.ref = ref;
 
 		// Now that we're mounted, start moving our widget.
-		this.onPlaceholderMove(this.ref.getBoundingClientRect());
+		this.onPlaceholderMove();
 
 		// However, if the widget moves again before timeout, we need to track and update the position.
 		this.#observer = new MutationObserver((mutations) => {
@@ -347,7 +404,7 @@ export class WidgetMoveInterpolator {
 
 			for (const mutation of mutations) {
 				if (mutation.type == 'attributes' && mutation.attributeName == 'style') {
-					this.onPlaceholderMove(this.ref.getBoundingClientRect());
+					this.onPlaceholderMove();
 				}
 			}
 		});

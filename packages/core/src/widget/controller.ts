@@ -1,5 +1,10 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
-import { generateUniqueId, getPointerService, type PointerService } from '../shared/utils.js';
+import {
+	generateUniqueId,
+	getLayoutRect,
+	getPointerService,
+	type PointerService
+} from '../shared/utils.js';
 import type {
 	ReadonlySignal,
 	Signal,
@@ -16,6 +21,7 @@ import type {
 } from '../internal-types.js';
 import { FlexiWidgetController } from './base.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
+import type { FlexiTargetController } from '../target/base.js';
 import { WidgetMoveInterpolator } from './interpolator.js';
 import type { WidgetMovementAnimation } from './animation.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetConstructorParams } from './types.js';
@@ -133,7 +139,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 	#getPlacedWidgetStyle() {
 		if (!this.interpolator?.active$()) {
-			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};`;
+			// The shadow sits under anything mid-interpolation (z: 2) by rule, not
+			// DOM order — otherwise the stack order flickers as elements re-sort.
+			const layer = this.isShadow ? ' z-index: 1;' : '';
+			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};${layer}`;
 		}
 
 		return this.interpolator.widgetStyle$();
@@ -363,8 +372,16 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * @internal
 	 */
 	captureReleaseState() {
+		// Idempotent within a release: the board and the portal both capture, in
+		// whichever order the bus has them, and the first capture is the one taken
+		// while the element is still where the user let go of it.
+		if (this.#releasedActionState) {
+			return;
+		}
 		const action = this.currentAction$();
-		const rect = this.ref?.getBoundingClientRect();
+		// Layout rect: a decorative grab transform (tilt/scale) transitions out on
+		// release, so the placement animation should start from the laid-out box.
+		const rect = this.ref ? getLayoutRect(this.ref) : undefined;
 		if (!action || !rect) {
 			return;
 		}
@@ -454,7 +471,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		height: number,
 		previousDimensions?: { width: number; height: number }
 	) {
-		const rect = this.#releasedActionState?.rect ?? this.ref?.getBoundingClientRect();
+		const rect =
+			this.#releasedActionState?.rect ?? (this.ref ? getLayoutRect(this.ref) : undefined);
 		if (!rect || !this.interpolator) {
 			return;
 		}
@@ -541,6 +559,14 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return this.#resizers;
 	}
 
+	moveTo({ target, x, y }: { target?: FlexiTargetController; x?: number; y?: number }): boolean {
+		const to = (target as InternalFlexiTargetController | undefined) ?? this.internalTarget;
+		if (!to) {
+			return false;
+		}
+		return to.provider$().placeWidget(this, to, x, y);
+	}
+
 	/**
 	 * Deletes this widget from its target and board.
 	 */
@@ -604,6 +630,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	 * Whether the widget should draw a placeholder widget in the DOM.
 	 */
 	get shouldDrawPlaceholder() {
+		return this.interpolator?.active$() ?? false;
+	}
+
+	override get isInterpolating() {
 		return this.interpolator?.active$() ?? false;
 	}
 

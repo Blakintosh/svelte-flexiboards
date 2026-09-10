@@ -135,9 +135,13 @@ export class AutoScrollService {
 	#unsubscribers: (() => void)[] = [];
 	#stopEffects: (() => void)[] = [];
 
-	constructor(ref: Signal<HTMLElement | undefined>) {
+	/** Board-level opt-out (FlexiBoardConfiguration.autoScroll); read per action so config changes apply live. */
+	#enabled: () => boolean;
+
+	constructor(ref: Signal<HTMLElement | undefined>, enabled: () => boolean = () => true) {
 		this.#eventBus = getFlexiEventBus();
 		this.#ref$ = ref;
+		this.#enabled = enabled;
 
 		// Update scrollable containers when ref changes
 		this.#stopEffects.push(
@@ -160,6 +164,9 @@ export class AutoScrollService {
 	}
 
 	startAutoScroll(event: InternalWidgetEvent) {
+		if (!this.#enabled()) {
+			return;
+		}
 		this.shouldAutoScroll$(true);
 	}
 
@@ -907,6 +914,66 @@ export const assistiveTextStyleObject = {
 	whiteSpace: 'nowrap',
 	borderWidth: '0'
 } as const;
+
+/**
+ * Reads an element's border box as laid out, ignoring any CSS transform set on
+ * the element itself (`transform`, `rotate`, `scale`, `translate`).
+ *
+ * `getBoundingClientRect()` includes transforms, so a decorative grab tilt or
+ * scale on a widget would otherwise corrupt offset and size calculations. When
+ * any such property is present, the transforms are neutralised inline, the rect
+ * read, and the inline styles restored — all synchronously before the next
+ * paint, so nothing flashes on screen. Costs one forced reflow, and only when a
+ * transform exists; untransformed elements take the fast path.
+ */
+export function getLayoutRect(element: HTMLElement): DOMRect {
+	// Resolve getComputedStyle from the element's own realm (the widget may live
+	// inside an iframe); fall back to gBCR where no window exists (tests).
+	const view = element.ownerDocument?.defaultView;
+	if (!view?.getComputedStyle) {
+		return element.getBoundingClientRect();
+	}
+
+	const computed = view.getComputedStyle(element);
+	const hasTransform =
+		computed.transform !== 'none' ||
+		computed.rotate !== 'none' ||
+		computed.scale !== 'none' ||
+		computed.translate !== 'none';
+
+	if (!hasTransform) {
+		return element.getBoundingClientRect();
+	}
+
+	// `!important` inline declarations outrank running CSS animations (plain
+	// inline styles do not), so a mid-animation scale/rotate can't leak into the
+	// measurement. `transition: none` is forced too, so neither the override nor
+	// its restore can start a transition. The animation's clock keeps running —
+	// nothing paints between these writes and the restore.
+	const inline = element.style;
+	const properties = ['transition', 'transform', 'rotate', 'scale', 'translate'] as const;
+	const previous = properties.map((property) => ({
+		property,
+		value: inline.getPropertyValue(property),
+		priority: inline.getPropertyPriority(property)
+	}));
+
+	for (const property of properties) {
+		inline.setProperty(property, 'none', 'important');
+	}
+
+	const rect = element.getBoundingClientRect();
+
+	for (const { property, value, priority } of previous) {
+		if (value) {
+			inline.setProperty(property, value, priority);
+		} else {
+			inline.removeProperty(property);
+		}
+	}
+
+	return rect;
+}
 
 export function getElementMidpoint(element: HTMLElement) {
 	const rect = element.getBoundingClientRect();

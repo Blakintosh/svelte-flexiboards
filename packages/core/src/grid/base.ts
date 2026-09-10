@@ -65,7 +65,15 @@ export abstract class FlexiGrid {
 	clearDragSnapshot(): void {}
 
 	_target: InternalFlexiTargetController;
-	_targetConfig: FlexiTargetConfiguration;
+	/**
+	 * The target's live configuration: sizing changes pushed through the
+	 * adapter's prop seam show up in the grid's style. (The layout itself is
+	 * fixed for the grid's lifetime — each grid class snapshots it at
+	 * construction.)
+	 */
+	get _targetConfig(): FlexiTargetConfiguration {
+		return this._target.config;
+	}
 
 	#mouseCellPosition$: Signal<{ x: number; y: number }> = signal({
 		x: 0,
@@ -82,7 +90,6 @@ export abstract class FlexiGrid {
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
 		this._target = target;
-		this._targetConfig = targetConfig;
 
 		this._dimensionTracker = new GridDimensionTracker(this, targetConfig);
 

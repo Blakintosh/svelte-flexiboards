@@ -28,8 +28,22 @@ export type FlexiWidgetTransitionTypeConfiguration =
 	| AnimationAdapter<AnimationBox>;
 
 export type FlexiWidgetTransitionConfiguration = {
+	/**
+	 * Plays when a widget moves between cells of a grid, including when it is pushed aside by another widget.
+	 * Omit to play no animation.
+	 */
 	move?: FlexiWidgetTransitionTypeConfiguration;
+
+	/**
+	 * Plays when a grabbed widget is released and settles into its cell.
+	 * Omit to play no animation.
+	 */
 	drop?: FlexiWidgetTransitionTypeConfiguration;
+
+	/**
+	 * Plays when a widget is released from a resize and settles at its new size.
+	 * Omit to play no animation.
+	 */
 	resize?: FlexiWidgetTransitionTypeConfiguration;
 };
 
@@ -51,18 +65,6 @@ export type FlexiWidgetDefaults<TClass = unknown> = {
 	 * The resizability of the widget.
 	 */
 	resizability?: WidgetResizability;
-
-	/**
-	 * The width of the widget in units.
-	 * @deprecated This property does not work and will be removed in the next version.
-	 */
-	width?: number;
-
-	/**
-	 * The height of the widget in units.
-	 * @deprecated This property does not work and will be removed in the next version.
-	 */
-	height?: number;
 
 	/**
 	 * The snippet that is rendered by this widget.

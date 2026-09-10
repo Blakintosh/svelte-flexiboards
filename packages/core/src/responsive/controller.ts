@@ -10,6 +10,7 @@ import type { InternalBoardLayoutChangeEvent } from '../internal-types.js';
 import type { InternalFlexiBoardController } from '../board/controller.js';
 import { computed, effect, signal, trigger, untracked } from '../reactivity.js';
 import { shallowEqual } from '../shared/prop-sync.js';
+import { isSsrEnvironment } from '../shared/ssr.js';
 import type { ReadonlySignal, Signal } from '../types.js';
 import { ReactiveMap } from '../shared/reactive-collections.js';
 
@@ -120,6 +121,12 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Falls back to 'default' if no breakpoint matches.
 	 */
 	#currentBreakpoint$: ReadonlySignal<string> = computed(() => {
+		// No media query can match on the server — use the configured stand-in
+		// so the server-rendered layout matches the most likely viewport.
+		if (isSsrEnvironment()) {
+			return this.config$()?.ssrBreakpoint ?? DEFAULT_BREAKPOINT;
+		}
+
 		// Check breakpoints in descending order (largest first)
 		for (const [key] of this.#sortedBreakpoints$()) {
 			const query = this.#mediaQueries.get(key);
@@ -359,6 +366,13 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		}
 		this.#ready = true;
 
+		// Not on the server — loadLayouts callbacks read client storage. The
+		// server renders the declared layouts, flagged via layoutPending; the
+		// client's init pass runs this again and imports.
+		if (isSsrEnvironment()) {
+			return;
+		}
+
 		const loadLayoutsFn = this.config$()?.loadLayouts;
 		if (loadLayoutsFn) {
 			const layouts = loadLayoutsFn();
@@ -366,6 +380,76 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 				this.importLayout(layouts);
 			}
 		}
+		this.#clientLayoutsResolved$(true);
+	}
+
+	#clientLayoutsResolved$: Signal<boolean> = signal(false);
+
+	/**
+	 * Whether the layouts are provisional — `loadLayouts` is configured but
+	 * hasn't run yet (always, during a server render). See
+	 * InternalFlexiBoardController.layoutPending.
+	 */
+	get layoutPending(): boolean {
+		if (this.#clientLayoutsResolved$()) {
+			return false;
+		}
+		return !!this.config$()?.loadLayouts;
+	}
+
+	/**
+	 * The breakpoint this render is assuming without confirmation, or null once
+	 * it's real. Non-null only while server-rendering: the server can't match a
+	 * media query, so whatever breakpoint it renders (ssrBreakpoint, else
+	 * 'default') is a guess. Adapters emit it into the markup
+	 * (data-flexi-pending), which lets a stylesheet make the guess
+	 * honest — e.g. veil the board except under a media query matching the
+	 * guessed breakpoint's own range. On the client matchMedia answers
+	 * immediately, so this is null from the first client render.
+	 */
+	get breakpointPending(): string | null {
+		if (!isSsrEnvironment()) {
+			return null;
+		}
+		return this.ssrAssumedBreakpoint;
+	}
+
+	/**
+	 * The breakpoint a server render assumes (ssrBreakpoint, else 'default') —
+	 * environment-independent, unlike breakpointPending. Adapters use it to
+	 * keep suspense markup identical between the server render and the
+	 * client's hydration pass.
+	 */
+	get ssrAssumedBreakpoint(): string {
+		return this.config$()?.ssrBreakpoint ?? DEFAULT_BREAKPOINT;
+	}
+
+	/**
+	 * The viewport width range in which `key` is the active breakpoint:
+	 * from its own threshold up to (exclusive) the next larger one. The
+	 * 'default' breakpoint's range is everything below the smallest
+	 * threshold. Null for unknown keys. Used to generate the media query
+	 * that decides whether a served breakpoint guess matched the viewport.
+	 */
+	rangeForBreakpoint(key: string): { minWidth?: number; maxWidth?: number } | null {
+		// Sorted descending by threshold.
+		const sorted = this.#sortedBreakpoints$();
+
+		if (key === DEFAULT_BREAKPOINT) {
+			const smallest = sorted[sorted.length - 1];
+			return smallest ? { maxWidth: Number(smallest[1]) } : {};
+		}
+
+		const index = sorted.findIndex(([k]) => k === key);
+		if (index === -1) {
+			return null;
+		}
+
+		const nextLarger = sorted[index - 1];
+		return {
+			minWidth: Number(sorted[index][1]),
+			...(nextLarger ? { maxWidth: Number(nextLarger[1]) } : {})
+		};
 	}
 
 	/**

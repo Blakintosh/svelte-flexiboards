@@ -62,8 +62,26 @@ export type ResponsiveFlexiBoardConfiguration = {
 	onLayoutsChange?: ResponsiveFlexiLayoutChangeFn;
 
 	/**
+	 * Layouts to render from instead of the widgets declared in markup, as a
+	 * plain value keyed by breakpoint. The active breakpoint's layout is
+	 * applied during the initial render pass on both the server and the
+	 * client, like FlexiBoardConfiguration.initialLayout. A configured
+	 * `loadLayouts` still runs on the client and overrides this.
+	 */
+	initialLayouts?: ResponsiveFlexiLayout;
+
+	/**
 	 * Function to load initial layouts on mount.
-	 * Called once when the responsive board is ready.
+	 * Called once when the responsive board is ready. Not invoked during
+	 * server rendering. Use `initialLayouts` for layouts the server has.
 	 */
 	loadLayouts?: ResponsiveFlexiLoadLayoutFn;
+
+	/**
+	 * The breakpoint to assume while server-rendering, where no media query can
+	 * match. Pick the most common viewport for the page (usually the desktop
+	 * breakpoint); the client corrects to the real breakpoint at hydration.
+	 * Without it, a server render falls back to the 'default' breakpoint.
+	 */
+	ssrBreakpoint?: string;
 };

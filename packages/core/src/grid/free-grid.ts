@@ -965,11 +965,51 @@ type FreeGridPacking = 'none' | 'horizontal' | 'vertical';
 
 export type FreeFormTargetLayout = {
 	type: 'free';
+
+	/**
+	 * The minimum number of rows the grid should have. The grid never shrinks below this.
+	 * @default 1
+	 */
 	minRows?: number;
+
+	/**
+	 * The minimum number of columns the grid should have. The grid never shrinks below this.
+	 * @default 1
+	 */
 	minColumns?: number;
+
+	/**
+	 * The maximum number of rows the grid may expand to. Set equal to `minRows` to fix the row count.
+	 * @default Infinity
+	 */
 	maxRows?: number;
+
+	/**
+	 * The maximum number of columns the grid may expand to, capped at 32. Set equal to `minColumns` to fix the column count.
+	 * @default Infinity
+	 */
 	maxColumns?: number;
+
+	/**
+	 * Whether the grid collapses to remove empty rows and columns, and where.
+	 *
+	 * - "none" never collapses.
+	 * - "leading" collapses empty rows/columns at the start of the grid.
+	 * - "trailing" collapses empty rows/columns at the end of the grid.
+	 * - "endings" collapses at either end.
+	 * - "any" collapses any empty row/column.
+	 * @default "none"
+	 */
 	collapsibility?: FreeGridCollapsibility;
+
+	/**
+	 * Whether widgets are packed towards an edge after each change, closing gaps.
+	 *
+	 * - "none" leaves widgets where they were placed.
+	 * - "horizontal" slides widgets left as far as they can go, left-most first.
+	 * - "vertical" slides widgets up as far as they can go, top-most first.
+	 * @default "none"
+	 */
 	packing?: FreeGridPacking;
 };
 type DerivedFreeFormTargetLayout = Required<FreeFormTargetLayout>;

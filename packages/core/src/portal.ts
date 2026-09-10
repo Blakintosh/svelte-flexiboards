@@ -65,6 +65,12 @@ export class FlexiPortalController {
 			return;
 		}
 
+		// The element is about to leave the portal, and the flight that follows
+		// must start from where it is now. Whether the widget's board has already
+		// captured that depends on bus subscription order — a board created after
+		// this portal (a nested board mounted later, as React does) runs after it —
+		// so the capture is made here, where the move actually happens.
+		event.widget.captureReleaseState();
 		this.returnWidgetFromPortal(event.widget);
 		this.#hasPortalledWidget = false;
 	}

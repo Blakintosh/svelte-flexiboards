@@ -34,8 +34,9 @@
 		"alien-signals": "3.2.1"
 	},
 	"devDependencies": {
-		"vitest": "^3.0.7",
-		"typescript": "^5.0.0"
+		"happy-dom": "^20.11.2",
+		"typescript": "^5.0.0",
+		"vitest": "^3.0.7"
 	},
 	"type": "module",
 	"exports": {

@@ -33,6 +33,11 @@ export interface FlexiTargetController {
 	createWidget(config: FlexiWidgetConfiguration): FlexiWidgetController | undefined;
 
 	/**
+	 * Deletes every widget in this target. Fires `onWidgetDelete` per widget.
+	 */
+	clear(): void;
+
+	/**
 	 * The number of columns currently being used in the target grid.
 	 * This value is readonly.
 	 */

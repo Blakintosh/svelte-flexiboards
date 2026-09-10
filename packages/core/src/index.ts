@@ -21,5 +21,6 @@ export * from './portal.js';
 
 // Shared infrastructure used by adapter composition roots.
 export * from './shared/event-bus.js';
+export * from './shared/ssr.js';
 export * from './shared/reactive-collections.js';
 export * from './shared/utils.js';

@@ -1,3 +1,4 @@
+import type { InternalFlexiBoardController } from '../board/controller.js';
 import type {
 	InternalAdderWidgetReadyEvent,
 	InternalBoardLayoutChangeEvent,
@@ -9,6 +10,7 @@ import type {
 	InternalWidgetResizingEvent
 } from '../internal-types.js';
 import type { PointerMovedEvent } from '../types.js';
+import { isSsrEnvironment } from './ssr.js';
 
 export interface EventMap {
 	'widget:grabbed': InternalWidgetGrabbedEvent;
@@ -26,6 +28,8 @@ export interface EventMap {
 	'pointer:moved': PointerMovedEvent;
 	// Fired when a board's layout changes (widget moved, resized, added, or removed)
 	'board:layoutchange': InternalBoardLayoutChangeEvent;
+	// A programmatic change (createWidget, moveTo, clear) that should count as a layout change
+	'layout:changed': { board: InternalFlexiBoardController };
 	// Fired when a responsive controller imports a new layout
 	'responsive:layoutimport': InternalResponsiveLayoutImportEvent;
 }
@@ -67,6 +71,15 @@ export class FlexiEventBus {
 		eventName: K,
 		listener: EventListener<EventMap[K]>
 	): () => void {
+		// The bus is a module-level singleton, but SSR never runs unmount hooks —
+		// a subscription made while server-rendering would pin its whole
+		// controller tree in memory for the life of the server process. Events
+		// only ever fire from user interaction, so on the server the
+		// subscription would also never be called: drop it.
+		if (isSsrEnvironment()) {
+			return () => {};
+		}
+
 		if (!this.listeners[eventName]) {
 			this.listeners[eventName] = [];
 		}

@@ -1,5 +1,6 @@
 import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import { isSsrEnvironment } from '../shared/ssr.js';
 import type { FlexiPortalController } from '../portal.js';
 import { AutoScrollService, getPointerService, type PointerService } from '../shared/utils.js';
 import { InternalFlexiTargetController } from '../target/controller.js';
@@ -42,12 +43,20 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#ref$: Signal<HTMLElement | undefined> = signal(undefined);
 
 	#pointerService: PointerService = getPointerService();
-	#autoScrollService: AutoScrollService = new AutoScrollService(this.#ref$);
+	#autoScrollService: AutoScrollService = new AutoScrollService(
+		this.#ref$,
+		() => this.config$()?.autoScroll ?? true
+	);
 
 	#rawProps$: Signal<FlexiBoardProps | undefined> = signal(undefined);
 	config$: ReadonlySignal<FlexiBoardConfiguration | undefined> = computed(
 		() => this.#rawProps$()?.config
 	);
+
+	/** Whether drop flights should be hosted in the viewport portal (see FlexiBoardConfiguration.portalDropFlights). */
+	get portalDropFlights(): boolean {
+		return this.config$()?.portalDropFlights ?? false;
+	}
 
 	registry$: ReadonlySignal<Record<string, FlexiRegistryEntry> | undefined> = computed(
 		() => this.#rawProps$()?.config?.registry
@@ -111,6 +120,34 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			// Layout change events
 			this.#eventBus.subscribe('widget:dropped', this.#onLayoutChange.bind(this)),
 			this.#eventBus.subscribe('widget:delete', this.#onLayoutChange.bind(this)),
+			this.#eventBus.subscribe('layout:changed', this.#onLayoutChange.bind(this)),
+
+			// Consumer callbacks. Subscribed last among the board's own handlers,
+			// so they observe the committed state.
+			this.#eventBus.subscribe('widget:grabbed', (event) => {
+				if (event.board === this) {
+					this.config$()?.onWidgetGrab?.({ widget: event.widget, target: event.target });
+				}
+			}),
+			this.#eventBus.subscribe('widget:dropped', (event) => {
+				if (event.board === this && event.newTarget) {
+					this.config$()?.onWidgetDrop?.({
+						widget: event.widget,
+						sourceTarget: event.oldTarget,
+						target: event.newTarget
+					});
+				}
+			}),
+			this.#eventBus.subscribe('widget:cancel', (event) => {
+				if (event.board === this) {
+					this.config$()?.onWidgetCancel?.({ widget: event.widget, target: event.target });
+				}
+			}),
+			this.#eventBus.subscribe('widget:delete', (event) => {
+				if (event.board === this) {
+					this.config$()?.onWidgetDelete?.({ widget: event.widget, target: event.target });
+				}
+			}),
 
 			// Responsive layout import events
 			this.#eventBus.subscribe('responsive:layoutimport', this.#onResponsiveLayoutImport.bind(this))
@@ -266,7 +303,15 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		// Use the existing target if it exists.
 		if (this.#targets.has(key)) {
-			return this.#targets.get(key)!;
+			const existing = this.#targets.get(key)!;
+			// A repeat claim during SSR is Svelte's bind: settle loop rendering
+			// the target's component again — only that new render's payload is
+			// kept, so the target must shed the first pass's widgets or every
+			// one of them would be server-rendered twice.
+			if (isSsrEnvironment()) {
+				existing.resetForRepeatedServerRender();
+			}
+			return existing;
 		}
 
 		const target = new InternalFlexiTargetController(this, key, config);
@@ -330,6 +375,11 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.#captureScrollbarWidthIfNeeded();
 
+		// Move the pointer to the grab point before the action exists. The move
+		// dispatches synchronously, and a target the pointer thereby enters must
+		// NOT get a widget:entertarget yet: the widget's own target hasn't run its
+		// grab handling (removing the widget from its grid) and would snapshot
+		// the grid with the widget still in it, to restore later as a phantom.
 		if (event.clientX !== undefined && event.clientY !== undefined) {
 			this.#pointerService.updatePosition(event.clientX, event.clientY);
 		}
@@ -343,6 +393,20 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			capturedWidthPx: event.capturedWidthPx
 		};
 		this.#currentWidgetAction$(action);
+
+		// A target the pointer already rests in saw no entertarget (there was no
+		// action then). The widget's own target handles the grab itself; a foreign
+		// one — a keyboard grab jumping the pointer from wherever the mouse rested,
+		// an adder whose button sits over a board — must be told, or it never
+		// shows the drop preview and refuses the release.
+		const hovered = this.hoveredTarget;
+		if (hovered && hovered !== event.widget.internalTarget) {
+			this.#eventBus.dispatch('widget:entertarget', {
+				board: this,
+				target: hovered,
+				widget: event.widget
+			});
+		}
 
 		this.#lockViewport();
 
@@ -480,6 +544,69 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 	}
 
+	#clientLayoutResolved$: Signal<boolean> = signal(false);
+
+	/**
+	 * Whether this board's layout is provisional: a `loadLayout` (or, under a
+	 * ResponsiveFlexiBoard, `loadLayouts`) is configured but hasn't run yet.
+	 * True for the whole of a server render — those callbacks read client
+	 * storage, so the server emits the declared layout as a stand-in — and on
+	 * the client until the initial load resolves during init. Adapters surface
+	 * it in the markup so styles can skeleton the provisional layout.
+	 */
+	get layoutPending(): boolean {
+		if (this.#responsiveController) {
+			return this.#responsiveController.layoutPending;
+		}
+		if (this.#clientLayoutResolved$()) {
+			return false;
+		}
+		return !!this.config$()?.loadLayout;
+	}
+
+	/**
+	 * The breakpoint this render is assuming without confirmation, or null.
+	 * Non-null only for a board under a ResponsiveFlexiBoard during a server
+	 * render — see InternalResponsiveFlexiBoardController.breakpointPending.
+	 */
+	get breakpointPending(): string | null {
+		return this.#responsiveController?.breakpointPending ?? null;
+	}
+
+	/**
+	 * The breakpoint a server render of this board assumes, or null when not
+	 * under a ResponsiveFlexiBoard. Environment-independent — see
+	 * InternalResponsiveFlexiBoardController.ssrAssumedBreakpoint.
+	 */
+	get ssrAssumedBreakpoint(): string | null {
+		return this.#responsiveController?.ssrAssumedBreakpoint ?? null;
+	}
+
+	/**
+	 * The viewport range in which `key` is the active breakpoint, for
+	 * suspense media query generation. Null outside a responsive context.
+	 */
+	breakpointRange(key: string): { minWidth?: number; maxWidth?: number } | null {
+		return this.#responsiveController?.rangeForBreakpoint(key) ?? null;
+	}
+
+	/**
+	 * The configured initial layout entries for a target, if any. Consulted by
+	 * targets during initial widget creation — within the render pass, so it
+	 * holds on the server too. Under a ResponsiveFlexiBoard, the parent's
+	 * `initialLayouts` for this board's breakpoint takes precedence.
+	 */
+	initialLayoutFor(targetKey: string): FlexiWidgetLayoutEntry[] | undefined {
+		if (this.#responsiveController && this.breakpoint) {
+			const fromParent =
+				this.#responsiveController.config$()?.initialLayouts?.[this.breakpoint]?.[targetKey];
+			if (fromParent) {
+				return fromParent;
+			}
+		}
+		return this.config$()?.initialLayout?.[targetKey];
+	}
+
 	oninitialloadcomplete() {
 		this.#ready = true;
 
@@ -487,6 +614,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		if (this.#storedLoadLayout) {
 			this.#importLayoutInternal(this.#storedLoadLayout);
 			this.#storedLoadLayout = undefined;
+			this.#clientLayoutResolved$(true);
 			return;
 		}
 
@@ -500,7 +628,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			// Fall through to loadLayout callback if no stored layout for this breakpoint
 		}
 
-		// Check for loadLayout in config (for non-responsive boards OR first-time breakpoint)
+		// Check for loadLayout in config (for non-responsive boards OR first-time breakpoint).
+		// Not on the server: loadLayout callbacks typically read client storage
+		// (localStorage etc.), which doesn't exist there. The server renders the
+		// declared layout — flagged via layoutPending — and the client's own
+		// init pass re-runs this and imports.
+		if (isSsrEnvironment()) {
+			return;
+		}
 		const loadLayoutFn = this.config$()?.loadLayout;
 		if (loadLayoutFn) {
 			const layout = loadLayoutFn();
@@ -508,6 +643,8 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				this.#importLayoutInternal(this.#normalizeLayout(layout));
 			}
 		}
+		// Resolved even when nothing was stored: the declared layout is now final.
+		this.#clientLayoutResolved$(true);
 	}
 
 	/**
@@ -624,6 +761,51 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * @param from The target to move the widget from.
 	 * @param to The target to move the widget to.
 	 */
+	/**
+	 * Whether the consumer's `canDrop` (if any) allows this placement. The grid's
+	 * own rules are checked separately by the caller.
+	 */
+	canDrop(
+		widget: InternalFlexiWidgetController,
+		target: InternalFlexiTargetController,
+		box: { x: number; y: number; width: number; height: number }
+	): boolean {
+		const check = untracked(() => this.config$()?.canDrop);
+		return check ? check({ widget, target, ...box }) : true;
+	}
+
+	/**
+	 * Places a widget at a position in a target through the controller API
+	 * (no user interaction): the mechanism behind `widget.moveTo()`.
+	 * @returns Whether the widget could be placed. On failure it stays put.
+	 */
+	placeWidget(
+		widget: InternalFlexiWidgetController,
+		to: InternalFlexiTargetController,
+		x?: number,
+		y?: number
+	): boolean {
+		const from = widget.internalTarget;
+		const previous = { x: widget.x, y: widget.y, width: widget.width, height: widget.height };
+
+		if (from) {
+			from.detachWidget(widget);
+		}
+
+		if (to.attachWidget(widget, x, y)) {
+			this.#eventBus.dispatch('layout:changed', { board: this });
+			return true;
+		}
+
+		// Put it back exactly where it was.
+		from?.attachWidget(widget, previous.x, previous.y, previous.width, previous.height);
+		return false;
+	}
+
+	clear(): void {
+		this.#targets.forEach((target) => target.clear());
+	}
+
 	moveWidget(
 		widget: InternalFlexiWidgetController,
 		from: InternalFlexiTargetController | undefined,

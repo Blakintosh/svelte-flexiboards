@@ -1,6 +1,6 @@
 import type { InternalFlexiBoardController } from '../board/controller.js';
 import { FlexiEventBus, getFlexiEventBus } from '../shared/event-bus.js';
-import { getElementMidpoint, isGrabPointerEvent } from '../shared/utils.js';
+import { getElementMidpoint, getLayoutRect, isGrabPointerEvent } from '../shared/utils.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
 import type { InternalFlexiWidgetController } from './controller.js';
 import { WidgetPointerEventWatcher } from './triggers.js';
@@ -123,7 +123,9 @@ function dispatchGrab(
 		return;
 	}
 
-	const rect = widget.ref?.getBoundingClientRect();
+	// Layout rect, not gBCR: a decorative transform on the widget (grab tilt,
+	// hover scale) must not skew the captured size or pointer offsets.
+	const rect = getLayoutRect(widget.ref);
 	if (!rect) {
 		return;
 	}
@@ -166,7 +168,7 @@ function dispatchKeyDownResize(
 	event.stopPropagation();
 	event.preventDefault();
 
-	const rect = widget.ref.getBoundingClientRect();
+	const rect = getLayoutRect(widget.ref);
 	if (!rect) {
 		return;
 	}

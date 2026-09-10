@@ -1,7 +1,7 @@
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import type { InternalFlexiWidgetController } from './controller.js';
 import type { FlexiWidgetTriggerConfiguration } from './types.js';
-import { isGrabPointerEvent } from '../shared/utils.js';
+import { getLayoutRect, isGrabPointerEvent } from '../shared/utils.js';
 import { computed, signal } from '../reactivity.js';
 import type { ReadonlySignal, Signal } from '../types.js';
 
@@ -145,7 +145,9 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
-		const rect = ref.getBoundingClientRect();
+		// Layout rect, not gBCR — see getLayoutRect: user transforms on the widget
+		// must not skew grab/resize offset math.
+		const rect = getLayoutRect(ref);
 		if (!rect) {
 			return;
 		}

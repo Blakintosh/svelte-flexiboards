@@ -22,6 +22,26 @@ import {
 
 export class FlexiWidgetController {
 	/**
+	 * Deletes this widget from its target and board. Fires the board's
+	 * `onWidgetDelete` and `onLayoutChange`.
+	 */
+	delete(): void {
+		throw new Error('delete() is only available on a mounted widget.');
+	}
+
+	/**
+	 * Moves this widget through the controller API, with no user interaction:
+	 * to a position in its own target, to another target (at a position, or
+	 * wherever that target's grid puts it), or both. Runs the grid's placement
+	 * rules but not `canDrop`, which is for user drops. Fires `onLayoutChange`.
+	 * @returns Whether the widget could be placed. On failure it stays put.
+	 */
+	moveTo(options: { target?: FlexiTargetController; x?: number; y?: number }): boolean {
+		void options;
+		throw new Error('moveTo() is only available on a mounted widget.');
+	}
+
+	/**
 	 * The target this widget is under. This is not defined if the widget has not yet been dropped in the board.
 	 */
 	#target$: Signal<FlexiTargetController | undefined> = signal(undefined);
@@ -83,11 +103,6 @@ export class FlexiWidgetController {
 			this.#targetWidgetDefaults$()?.resizability ??
 			this.#providerWidgetDefaults$()?.resizability ??
 			'none',
-		draggable:
-			this.#rawConfig$().draggable ??
-			this.#targetWidgetDefaults$()?.draggable ??
-			this.#providerWidgetDefaults$()?.draggable ??
-			true,
 		draggability:
 			this.#rawConfig$().draggability ??
 			this.#targetWidgetDefaults$()?.draggability ??
@@ -109,6 +124,11 @@ export class FlexiWidgetController {
 					: 'none'
 				: undefined) ??
 			'full',
+		// Derived from the resolved draggability (which already folds the legacy
+		// boolean in) so `draggability: 'none'` really does read as not draggable.
+		get draggable() {
+			return this.draggability !== 'none';
+		},
 		className:
 			this.#rawConfig$().className ??
 			this.#targetWidgetDefaults$()?.className ??
@@ -240,6 +260,15 @@ export class FlexiWidgetController {
 	/** @internal */
 	set dropRejected(value: boolean) {
 		this.#dropRejected$(value);
+	}
+
+	/**
+	 * Whether the widget is currently animating to a new position or size, e.g.
+	 * mid drop flight. Useful for styling that should only apply at rest, such as
+	 * hover effects that would otherwise fire as the widget lands under the pointer.
+	 */
+	get isInterpolating() {
+		return false;
 	}
 
 	/**
