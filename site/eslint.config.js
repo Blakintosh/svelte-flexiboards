@@ -28,6 +28,6 @@ export default ts.config(
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/']
+		ignores: ['build/', '.svelte-kit/', '.vercel/', 'dist/', 'src/lib/generated/', 'static/r/', 'playwright-report/', 'test-results/']
 	}
 );
