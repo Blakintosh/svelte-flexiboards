@@ -1,12 +1,7 @@
-import { FlexiBoard, FlexiAdd, FlexiTarget, FlexiWidget, FlexiDelete } from '@flexiboards/react';
-import type {
-	AdderWidgetConfiguration,
-	FlexiWidgetController,
-	FlexiBoardConfiguration
-} from '@flexiboards/react';
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
+import type { FlexiWidgetController, FlexiBoardConfiguration } from '@flexiboards/react';
 import { clsx } from 'clsx';
 import { FlowTile } from '../flow/flow-tile';
-import { Plus, Trash2 } from 'lucide-react';
 
 export default function FlowExample() {
 	const boardConfig: FlexiBoardConfiguration = {

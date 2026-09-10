@@ -16,11 +16,9 @@
 	import X from 'lucide-svelte/icons/x';
 
 	import {
-		FlexiAdd,
 		FlexiTarget,
 		FlexiWidget,
 		type FlexiTargetController,
-		type FlexiWidgetChildrenSnippet,
 		type FlexiWidgetChildrenSnippetParameters,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
@@ -100,7 +98,7 @@
 			{item.label}
 		</FlexiWidget>
 	{/each}
-	{#snippet footer({ target }: { target: FlexiTargetController })}
+	{#snippet footer()}
 		{#if !adding}
 			<Button onclick={onClickAdd} variant={'ghost'} class="rounded-full">
 				<Plus />

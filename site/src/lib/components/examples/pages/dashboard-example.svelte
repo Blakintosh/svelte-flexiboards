@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { BreakpointSnippetParams } from '@flexiboards/svelte';
 	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
 	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import {
@@ -187,7 +186,7 @@
 					</FlexiBoard>
 				{/snippet}
 
-				{#snippet children({ currentBreakpoint }: BreakpointSnippetParams)}
+				{#snippet children()}
 					<FlexiBoard class={'min-h-0 grow overflow-y-auto overflow-x-clip'} config={boardConfig}>
 						{#snippet suspense(_: FlexiBoardSuspenseReason)}
 							<BoardSkeleton bars={4} class="" />

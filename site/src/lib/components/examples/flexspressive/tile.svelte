@@ -1,19 +1,18 @@
 <script module lang="ts">
-	import { untrack, type Component, type Snippet } from 'svelte';
-	import { FlexiResize, FlexiWidget, type FlexiWidgetProps } from '@flexiboards/svelte';
-	import { getFlexspressiveEditor } from './index.svelte';
+	import type { Icon } from 'lucide-svelte';
+	import { FlexiWidget, type FlexiWidgetProps } from '@flexiboards/svelte';
 	import TileContents from './tile-contents.svelte';
 
 	export type TileProps = FlexiWidgetProps & {
 		title: string;
 		on: boolean;
-		onIcon?: any;
-		offIcon?: any;
+		onIcon?: typeof Icon;
+		offIcon?: typeof Icon;
 	};
 </script>
 
 <script lang="ts">
-	let { title, on = $bindable(), onIcon: Icon, offIcon: OffIcon, ...props }: TileProps = $props();
+	let { title, on = $bindable(), onIcon: OnIcon, offIcon: OffIcon, ...props }: TileProps = $props();
 </script>
 
 <FlexiWidget
@@ -26,7 +25,7 @@
 	componentProps={{
 		title,
 		on,
-		onIcon: Icon,
+		onIcon: OnIcon,
 		offIcon: OffIcon
 	}}
 />

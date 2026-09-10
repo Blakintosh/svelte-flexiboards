@@ -425,6 +425,8 @@
 					/>
 					<strong class="text-ink font-bold">{pages[data.slug].title}</strong>
 					<span aria-hidden="true">—</span>
+					<!-- Our own example descriptions, written in the pages module. -->
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html pages[data.slug].description}
 				</span>
 

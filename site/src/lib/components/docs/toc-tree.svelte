@@ -27,6 +27,8 @@
 							class="bg-rule group-data-[active]:bg-fx-accent h-px w-[7px] shrink-0 transition-all duration-[120ms] group-data-[active]:w-[14px]"
 						></span>
 					{/if}
+					<!-- The heading's own rendered markup (inline code), copied from the page. -->
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					<span class="min-w-0 break-all">{@html heading.node.innerHTML}</span>
 				</a>
 				{#if heading.children && heading.children.length}

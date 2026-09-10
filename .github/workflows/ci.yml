@@ -42,6 +42,8 @@ jobs:
 
       - name: Site check (includes generated API tables and Markdown docs)
         run: pnpm -C site extract-api && pnpm -C site check
+      - name: Lint
+        run: pnpm lint
 
   e2e:
     name: Browser tests

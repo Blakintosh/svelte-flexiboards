@@ -22,7 +22,7 @@
 
 	type CodeExampleProps = {
 		src: string;
-		meta: Record<string, any>;
+		meta: { lang?: string } & Record<string, unknown>;
 		example: Snippet;
 		code: Snippet;
 	};
@@ -103,6 +103,8 @@
 			{#await highlightedCodePromise}
 				<p class="label text-on-ink-faint m-0 px-6 py-4 text-[10px]">Loading listing</p>
 			{:then highlightedHtml}
+				<!-- Shiki output from our own source files. -->
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html highlightedHtml}
 			{:catch error}
 				<p class="text-on-ink m-0 px-6 py-4 font-mono text-[12.5px]">

@@ -1,24 +1,20 @@
 <script module lang="ts">
-	import { onMount, untrack, type Component, type Snippet } from 'svelte';
-	import {
-		FlexiResize,
-		FlexiWidget,
-		getFlexiwidgetCtx,
-		type FlexiWidgetProps
-	} from '@flexiboards/svelte';
+	import { onMount, untrack } from 'svelte';
+	import type { Icon } from 'lucide-svelte';
+	import { FlexiResize, getFlexiwidgetCtx, type FlexiWidgetProps } from '@flexiboards/svelte';
 	import { getFlexspressiveEditor } from './index.svelte';
 	import { cn } from '$lib/utils';
 
 	export type TileProps = FlexiWidgetProps & {
 		title: string;
 		on: boolean;
-		onIcon?: any;
-		offIcon?: any;
+		onIcon?: typeof Icon;
+		offIcon?: typeof Icon;
 	};
 </script>
 
 <script lang="ts">
-	let { title, on = $bindable(), onIcon: Icon, offIcon: OffIcon, ...props }: TileProps = $props();
+	let { title, on = $bindable(), onIcon: OnIcon, offIcon: OffIcon, ...props }: TileProps = $props();
 
 	const editor = getFlexspressiveEditor();
 	const widget = getFlexiwidgetCtx();
@@ -98,10 +94,10 @@
 			'min-w-0'
 		]}
 	>
-		{#if Icon}
+		{#if OnIcon}
 			<div class="size-[18px] [&>svg]:size-[18px]">
 				{#if on}
-					<Icon />
+					<OnIcon />
 				{:else}
 					<OffIcon />
 				{/if}

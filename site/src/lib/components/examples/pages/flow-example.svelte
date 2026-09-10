@@ -1,17 +1,11 @@
 <script lang="ts">
 	import {
 		FlexiBoard,
-		FlexiDelete,
 		FlexiTarget,
 		FlexiWidget,
-		type AdderWidgetConfiguration,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
-	import {
-		FlexiAdd,
-		type FlexiBoardConfiguration,
-		type FlexiBoardController
-	} from '@flexiboards/svelte';
+	import { type FlexiBoardConfiguration, type FlexiBoardController } from '@flexiboards/svelte';
 	import FlowTile from '$lib/components/examples/flow/flow-tile.svelte';
 
 	let boardConfig: FlexiBoardConfiguration = $state({

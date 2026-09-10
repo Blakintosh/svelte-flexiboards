@@ -292,7 +292,6 @@
 		drag-and-drop library should let you drag on its own front page. Only the
 		accent bar is draggable; the ink and blue bars are the logo, fixed.
 	-->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="animate-fb-rise relative self-start [--rise:18px] [animation-delay:280ms]"
 		onpointerdowncapture={() => (heroTouched = true)}

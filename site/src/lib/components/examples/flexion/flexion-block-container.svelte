@@ -9,6 +9,8 @@
 	import Grabber from '../common/grabber.svelte';
 
 	type FlexionBlockContainerProps = {
+		// Any block component; each takes its own props, so the shell cannot name them.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		component?: Component<any>;
 		// Content for the block component; blocks are otherwise identical shells.
 		props?: Record<string, unknown>;
@@ -16,7 +18,7 @@
 </script>
 
 <script lang="ts">
-	let { component: Component, props = {} }: FlexionBlockContainerProps = $props();
+	let { component: Block, props = {} }: FlexionBlockContainerProps = $props();
 </script>
 
 <FlexiWidget
@@ -33,7 +35,7 @@
 		<Grabber size={16} class="shrink-0 py-1 group-hover:opacity-100 lg:opacity-0" />
 
 		<div class="w-full min-w-0 grow">
-			<Component {...props} />
+			<Block {...props} />
 		</div>
 
 		<!-- The affordance teaches itself on hover; no tooltip, no persistent chrome. -->

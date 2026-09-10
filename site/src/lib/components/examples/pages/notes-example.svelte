@@ -2,7 +2,6 @@
 	import {
 		FlexiBoard,
 		FlexiTarget,
-		FlexiWidget,
 		simpleTransitionConfig,
 		type FlexiBoardController
 	} from '@flexiboards/svelte';

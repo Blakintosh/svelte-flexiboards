@@ -67,7 +67,7 @@
 	// Animate the listing only when it changes, never on first paint.
 	let swapped = $state(false);
 	$effect(() => {
-		source;
+		void source;
 		return () => (swapped = true);
 	});
 
@@ -88,11 +88,13 @@
 		{/if}
 	</div>
 	<!-- Source is a module-local constant, never user input. -->
+	<!-- eslint-disable svelte/no-at-html-tags -->
 	{#key source}
 		<pre
 			class="m-0 {phase ? phased : swapped ? 'animate-fb-in' : ''} overflow-x-auto whitespace-pre"
 			style="--swap-delay: 200ms">{@html highlightMarkup(source)}</pre>
 	{/key}
+	<!-- eslint-enable svelte/no-at-html-tags -->
 	{#if children}
 		<div class={phased} style="--swap-delay: 260ms">
 			{@render children()}

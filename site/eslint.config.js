@@ -19,15 +19,39 @@ export default ts.config(
 		}
 	},
 	{
+		rules: {
+			// Underscore-prefixed names are deliberate placeholders (snippet params, `_` in map callbacks).
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+			]
+		}
+	},
+	{
 		files: ['**/*.svelte'],
 
 		languageOptions: {
 			parserOptions: {
 				parser: ts.parser
 			}
+		},
+		rules: {
+			// svelte-check already reports compiler warnings; here only compile errors fail.
+			'svelte/valid-compile': ['error', { ignoreWarnings: true }],
+			// DOM types such as ParentNode come from TypeScript, which handles undefined names.
+			'no-undef': 'off'
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', '.vercel/', 'dist/', 'src/lib/generated/', 'static/r/', 'playwright-report/', 'test-results/']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'.vercel/',
+			'dist/',
+			'src/lib/generated/',
+			'static/r/',
+			'playwright-report/',
+			'test-results/'
+		]
 	}
 );

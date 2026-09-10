@@ -38,7 +38,7 @@ export type FieldKindSpec = {
  * The minimum a widget controller has to look like for this example to drive it.
  * Structurally satisfied by both `FlexiWidgetController` adapters.
  */
-export type FieldWidgetHandle = { metadata: Record<string, any> | undefined };
+export type FieldWidgetHandle = { metadata: Record<string, unknown> | undefined };
 
 export type FieldEntry = {
 	uid: string;

@@ -50,7 +50,7 @@
 
 	// Close drawer on navigation
 	$effect(() => {
-		page.url.pathname;
+		void page.url.pathname;
 		drawerOpen = false;
 	});
 </script>
