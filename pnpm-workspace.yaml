@@ -4,3 +4,5 @@ packages:
 allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true
+overrides:
+  '@types/node': ^22.13.5

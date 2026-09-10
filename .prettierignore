@@ -9,3 +9,4 @@ site/playwright-report
 site/test-results
 .changeset/*.md
 /site/src/lib/components/ui/select/select-trigger.svelte
+site/static/r/
