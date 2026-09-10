@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	let { data } = $props();
 
 	let host: HTMLDivElement;
 
-	onMount(() => {
+	// An effect keyed on the slug, not onMount: SvelteKit reuses this page
+	// component when only the slug changes, so a client-side navigation
+	// between two React examples must swap the React root too.
+	$effect(() => {
+		const slug = data.slug;
 		let root: import('react-dom/client').Root | undefined;
 		let cancelled = false;
 
@@ -14,7 +16,7 @@
 		Promise.all([
 			import('react'),
 			import('react-dom/client'),
-			import(`$lib/react-components/examples/pages/${data.slug}-example.tsx`)
+			import(`$lib/react-components/examples/pages/${slug}-example.tsx`)
 		]).then(([{ createElement, StrictMode }, { createRoot }, { default: Example }]) => {
 			if (cancelled) return;
 

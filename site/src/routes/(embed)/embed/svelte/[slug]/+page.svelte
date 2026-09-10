@@ -12,7 +12,12 @@
 	import LauncherExample from '$lib/components/examples/pages/launcher-example.svelte';
 	import PlaylistExample from '$lib/components/examples/pages/playlist-example.svelte';
 
+	import { browser } from '$app/environment';
+	import { ssrSlugs } from '../../shared';
+
 	let { data } = $props();
+	// See ssrSlugs: only opted-in examples render on the server.
+	const render = $derived(browser || ssrSlugs.includes(data.slug));
 
 	const examples = {
 		dashboard: DashboardExample,
@@ -37,5 +42,7 @@
 </svelte:head>
 
 <div class="flex h-full w-full items-stretch">
-	<ExampleComponent />
+	{#if render}
+		<ExampleComponent />
+	{/if}
 </div>

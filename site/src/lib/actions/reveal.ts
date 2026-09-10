@@ -4,7 +4,7 @@ import type { Action } from 'svelte/action';
   Scroll reveal: adds `is-seen` once the element enters the lower ~88% of the
   viewport, once only. Fail-visible — if the observer never fires (print,
   unsupported, hidden tab), a timeout reveals it anyway. The motion itself is
-  the `.reveal` utility in app.css; `delay` staggers siblings and `rise` scales
+  the `.reveal` class in the splash page's styles; `delay` staggers siblings and `rise` scales
   the travel by importance (a lead card moves more than the ones after it).
 */
 export type RevealOptions = number | { delay?: number; rise?: number };

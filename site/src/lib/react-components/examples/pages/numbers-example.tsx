@@ -8,16 +8,18 @@ export default function NumbersExample() {
 
 	const boardConfig: FlexiBoardConfiguration = {
 		widgetDefaults: {
-			draggable: true,
+			draggability: 'full',
 			resizability: 'horizontal',
 			transition: springTransitionConfig()
 		}
 	};
     
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview is dashed fx-accent; the widget in hand reads as a
+	// lifted card, not an accent outline.
 	const className = (widget: FlexiWidgetController) => clsx([
-		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-fx-accent opacity-60'
+		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'shadow-lift rotate-[2.5deg]'
 	]);
 
 	function addWidget(): AdderWidgetConfiguration {
@@ -38,7 +40,7 @@ export default function NumbersExample() {
         <main className="flex h-full min-h-0 w-full flex-col gap-8 bg-paper px-12 py-8 lg:px-16">
             <header className="flex shrink-0 items-baseline justify-between gap-4">
                 <h1 className="font-serif text-2xl text-ink lg:text-[30px]">Numbers</h1>
-                <span className="label text-[10px] text-faint">3 × 3 · free · add and delete</span>
+                <span className="text-[11.5px] font-semibold text-faint">3 × 3 · free grid · add and delete</span>
             </header>
 
             <FlexiBoard
@@ -47,7 +49,7 @@ export default function NumbersExample() {
             >
                 <FlexiAdd
                     addWidget={addWidget}
-                    className={'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint transition-colors duration-[120ms] hover:border-ink hover:text-ink lg:size-40'}
+                    className={'ui flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed border-rule-soft bg-stage p-4 text-center text-xs text-faint transition-colors duration-[120ms] hover:border-ink hover:bg-tint hover:text-ink lg:size-40'}
                 >
                     {() => <>
                         <Plus className="mb-2 size-8 lg:size-12" />
@@ -56,7 +58,7 @@ export default function NumbersExample() {
                 </FlexiAdd>
                 <FlexiTarget
                     keyName="target"
-                    className={'aspect-square h-64 gap-2 border border-ink bg-panel p-4 lg:h-128 lg:gap-6'}
+                    className={'aspect-square h-64 gap-2 rounded-[14px] border border-rule-soft bg-panel p-4 shadow-card lg:h-128 lg:gap-6'}
                     config={{
                         rowSizing: 'minmax(0, 1fr)',
                         layout: {
@@ -84,8 +86,8 @@ export default function NumbersExample() {
                     />
                 </FlexiTarget>
                 <FlexiDelete className={(deleter) => clsx([
-                    'label flex size-32 flex-col items-center justify-center border border-dashed border-rule bg-tint-2 p-4 text-center text-[10px] text-faint duration-[120ms] lg:size-40',
-                    deleter.isHovered && 'border-fx-accent bg-tint-accent text-fx-accent'
+                    'ui flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed border-rule-soft bg-stage p-4 text-center text-xs text-faint transition-colors duration-[120ms] lg:size-40',
+                    deleter.isHovered && 'border-fx-accent/50 bg-tint-accent text-fx-accent-hover'
                 ])}>
                     {() => <>
                         <Trash2 className="mb-2 size-8 lg:size-12" />
