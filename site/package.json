@@ -4,14 +4,17 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
+		"predev": "node scripts/build-llms-docs.mjs",
 		"dev": "vite dev",
 		"dev:host": "vite dev --host",
 		"extract-api": "node scripts/extract-api.mjs",
-		"build": "node scripts/extract-api.mjs && vite build && pnpm run package",
+		"build-llms-docs": "node scripts/build-llms-docs.mjs",
+		"generate": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs",
+		"build": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && vite build && pnpm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "pnpm run package",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "node scripts/build-llms-docs.mjs && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint ."
@@ -74,7 +77,8 @@
 		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.24.0",
 		"vaul-svelte": "1.0.0-next.7",
-		"vite": "^5.4.14"
+		"vite": "^5.4.14",
+		"@eslint/js": "^9.20.0"
 	},
 	"dependencies": {
 		"@flexiboards/react": "workspace:^",
