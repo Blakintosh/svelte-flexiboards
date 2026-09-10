@@ -111,13 +111,18 @@
 			},
 			{
 				"name": "importLayout",
-				"type": "(layout: FlexiLayout) => void",
-				"description": "Imports a widget layout into the board."
+				"type": "(layout: FlexiLayout | FlexiLayoutEnvelope) => void",
+				"description": "Imports a widget layout into the board: a bare layout, or the `{ version, layout }` envelope that `exportLayoutEnvelope()` returns."
 			},
 			{
 				"name": "exportLayout",
 				"type": "() => FlexiLayout",
 				"description": "Exports the current widget layout of the board."
+			},
+			{
+				"name": "exportLayoutEnvelope",
+				"type": "() => FlexiLayoutEnvelope",
+				"description": "Exports the layout with its format version, the shape to persist so a later release can migrate it on import."
 			},
 			{
 				"name": "clear",
@@ -182,6 +187,21 @@
 				"name": "onWidgetDelete",
 				"type": "(event: FlexiWidgetEvent) => void",
 				"description": "Called when a widget is deleted, by dropping it on a FlexiDelete or by calling `widget.delete()`."
+			},
+			{
+				"name": "onWidgetResize",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when a resize the user was making commits. The widget's `width` and `height` are already final."
+			},
+			{
+				"name": "onWidgetEnterTarget",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when a widget being moved is carried over a target, which then shows a drop preview for it."
+			},
+			{
+				"name": "onWidgetLeaveTarget",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when a widget being moved leaves the target it was over."
 			},
 			{
 				"name": "canDrop",
@@ -289,7 +309,7 @@
 			{
 				"name": "id",
 				"type": "string",
-				"description": "A stable identifier for this widget, preserved through export and import. Optional."
+				"description": "A stable identifier for this widget. Always present in an export: the id you gave the widget, or a generated one. Round-trips through import."
 			},
 			{
 				"name": "type",

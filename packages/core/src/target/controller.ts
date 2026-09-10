@@ -124,7 +124,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#targetConfig$()?.columnSizing ??
 			this.#providerTargetDefaults$()?.columnSizing ??
 			'minmax(0, 1fr)',
-		widgetDefaults: this.#targetConfig$()?.widgetDefaults
+		widgetDefaults: this.#targetConfig$()?.widgetDefaults,
+		canDrop: this.#targetConfig$()?.canDrop
 	}));
 
 	constructor(
@@ -344,6 +345,15 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		config: FlexiWidgetConfiguration,
 		onCreated?: (widget: FlexiWidgetController) => void
 	) {
+		if (this.prepared) {
+			// The declared widgets were already turned into controllers; a declaration
+			// arriving now (a FlexiWidget rendered conditionally, later) would sit in
+			// the queue forever. Say so rather than fail silently.
+			console.warn(
+				`FlexiWidget declared after target "${this.key}" loaded: it will not be created. ` +
+					'Declare widgets before the first render, or add them with target.createWidget().'
+			);
+		}
 		this.#initialWidgetRegistrations.push({ config, onCreated });
 	}
 
@@ -474,10 +484,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 					metadata: widget.metadata
 				};
 
-				// Only include id if user provided one
-				if (widget.userProvidedId) {
-					entry.id = widget.userProvidedId;
-				}
+				// An id is always exported: the one the consumer gave, else the
+				// generated one, so a stored layout can be reconciled entry by entry.
+				entry.id = widget.userProvidedId ?? widget.id;
 
 				result.push(entry);
 			}
@@ -655,6 +664,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 
 		const actionWidget = this.actionWidget;
+		const action = actionWidget.action;
 
 		// Capture the original source target BEFORE tryDropWidget updates the widget target
 		const originalSourceTarget = actionWidget.widget.internalTarget;
@@ -669,7 +679,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			widget: actionWidget.widget,
 			board: this.provider$(),
 			oldTarget: originalSourceTarget,
-			newTarget: this
+			newTarget: this,
+			action
 		});
 	}
 
@@ -797,7 +808,12 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		width: number,
 		height: number
 	): boolean {
-		return this.provider$()?.canDrop(widget, this, { x, y, width, height }) ?? true;
+		const box = { x, y, width, height };
+		const targetRule = untracked(() => this.config.canDrop);
+		if (targetRule && !targetRule({ widget, target: this, ...box })) {
+			return false;
+		}
+		return this.provider$()?.canDrop(widget, this, box) ?? true;
 	}
 
 	#createDropzoneWidget() {

@@ -93,7 +93,8 @@ target.createWidget({ type: 'card', metadata: { id } });  // undefined if it can
 target.clear();
 board.clear();
 board.importLayout(saved);              // the load; does not fire onLayoutChange
-const layout = board.exportLayout();    // { [targetKey]: [{ type?, id?, x, y, width, height, metadata }] }
+const layout = board.exportLayout();    // { [targetKey]: [{ type?, id, x, y, width, height, metadata }] }
+const stored = board.exportLayoutEnvelope(); // { version, layout }: persist this; importLayout accepts either
 ```
 
 A widget needs a `type` that exists in the board's `registry` to be re-rendered on import. Untyped widgets are still exported but skipped on import. Put your own identifiers in `metadata`.
@@ -106,20 +107,23 @@ Board config callbacks, all fired after the change is committed:
 const config = {
 	onWidgetGrab: ({ widget, target }) => {},
 	onWidgetDrop: ({ widget, sourceTarget, target }) => {},   // sourceTarget undefined for a FlexiAdd drop
+	onWidgetResize: ({ widget, target }) => {},
 	onWidgetCancel: ({ widget, target }) => {},
 	onWidgetDelete: ({ widget, target }) => {},
+	onWidgetEnterTarget: ({ widget, target }) => {},                // hover styling for the candidate column
+	onWidgetLeaveTarget: ({ widget, target }) => {},
 	canDrop: ({ widget, target, x, y, width, height }) => true, // false shows a rejected preview and refuses the release
 	onLayoutChange: (layout) => save(layout)                   // debounced
 };
 ```
 
-`canDrop` guards the user; `moveTo` ignores it on purpose.
+`canDrop` guards the user; `moveTo` ignores it on purpose. A target config can carry its own `canDrop` for rules that belong to one list.
 
 ## Rules that bite
 
 - React: keep `config` objects and class functions referentially stable (module scope, `useMemo`, or `useState`). A fresh object each render pushes an update into the board every render.
 - React: `onfirstcreate` fires after the first commit, so it may `setState`. To render from a controller held in state, pass it through `useReactive(controller)`; it accepts `undefined` until the controller arrives.
-- Widgets are created once, when the target first loads. A `FlexiWidget` you add to the tree later is not created; use `target.createWidget()` or `FlexiAdd` for runtime additions.
+- Widgets are created once, when the target first loads. A `FlexiWidget` you add to the tree later is not created (a console warning says so); use `target.createWidget()` or `FlexiAdd` for runtime additions.
 - Widgets are grabbed by their body unless a `FlexiGrab` is inside them; then only the handle grabs, and the body's text stays selectable. `FlexiResize` works the same way for resizing. Both render a `<button>`.
 - A board nested inside another board's widget works (kanban block inside a page). Each board is independent; a `FlexiTarget` belongs to the nearest `FlexiBoard`.
 - The keyboard drives a virtual pointer: Enter grabs, arrow keys move it, Enter drops, Escape cancels. Do not add your own key handlers on the widget for those keys.

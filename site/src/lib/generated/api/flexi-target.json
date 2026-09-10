@@ -170,6 +170,11 @@
 				"description": "The layout algorithm and parameters to use for the target grid."
 			},
 			{
+				"name": "canDrop",
+				"type": "(check: FlexiDropCheck) => boolean",
+				"description": "See FlexiTargetConfiguration.canDrop."
+			},
+			{
 				"name": "widgetDefaults",
 				"type": "FlexiWidgetDefaults<TClass>",
 				"description": "The default configuration for widgets within this target."

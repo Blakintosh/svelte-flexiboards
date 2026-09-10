@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { act } from 'react';
+import { act, createRef } from 'react';
 import {
 	FlexiBoard,
 	FlexiTarget,
@@ -131,6 +131,20 @@ describe('widget rendering', () => {
 		// Core's placed style is a CSS string; it must survive the object conversion.
 		expect(cell.style.gridColumnStart || cell.style.gridColumn).not.toBe('');
 		expect(document.querySelector('.board')!.getAttribute('role')).toBe('application');
+	});
+});
+
+describe('board ref', () => {
+	it('forwards ref to the root element', () => {
+		const ref = createRef<HTMLDivElement>();
+		mounted = mount(
+			<FlexiBoard ref={ref} className="board">
+				<FlexiTarget keyName="left" config={freeLayout} />
+			</FlexiBoard>,
+			{ strict: true }
+		);
+		expect(ref.current).toBe(document.querySelector('.board'));
+		expect(ref.current?.getAttribute('role')).toBe('application');
 	});
 });
 

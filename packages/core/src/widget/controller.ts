@@ -111,7 +111,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return this.style$();
 	}
 
-	readonly id = generateUniqueId('flexiwidget-');
+	// Unique within the page and, thanks to the random suffix, very unlikely to
+	// collide with ids from an earlier session once exported and stored.
+	readonly id = generateUniqueId('flexiwidget-') + '-' + Math.random().toString(36).slice(2, 8);
 
 	#getCursorStyle() {
 		if (!this.mounted) {

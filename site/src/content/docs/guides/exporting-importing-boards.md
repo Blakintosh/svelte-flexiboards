@@ -151,6 +151,12 @@ When exporting, Flexiboards saves only the widget's `type` (a string key) rather
 
 A widget declared without a `type` is still exported, with its position and `metadata`, so nothing you have is lost. It is skipped on import, since the registry has nothing to render it with, and a warning says so.
 
+Every exported entry carries an `id`: the one you gave the widget, or a generated one. It round-trips through import, so you can match stored entries to your own records without inventing an identifier in `metadata`.
+
+## Versioning what you store
+
+`exportLayout()` returns the bare layout, which is what most code passes around. For storage, prefer `exportLayoutEnvelope()`, which wraps it as `{ version, layout }` with the current `LAYOUT_FORMAT_VERSION`. `importLayout()` and `loadLayout` accept either shape. Today there is one version, so the envelope costs nothing; when the format changes, the version is what lets a later release migrate what you stored instead of misreading it.
+
 <Only svelte>
 
 ```svelte

@@ -1,3 +1,4 @@
+import { isLayoutEnvelope, LAYOUT_FORMAT_VERSION, type FlexiLayoutEnvelope } from './types.js';
 import type { AriaPoliteness, FlexiAnnouncerController } from '../announcer.js';
 import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
 import { isSsrEnvironment } from '../shared/ssr.js';
@@ -130,12 +131,25 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 				}
 			}),
 			this.#eventBus.subscribe('widget:dropped', (event) => {
-				if (event.board === this && event.newTarget) {
-					this.config$()?.onWidgetDrop?.({
-						widget: event.widget,
-						sourceTarget: event.oldTarget,
-						target: event.newTarget
-					});
+				if (event.board !== this || !event.newTarget) return;
+				if (event.action === 'resize') {
+					this.config$()?.onWidgetResize?.({ widget: event.widget, target: event.newTarget });
+					return;
+				}
+				this.config$()?.onWidgetDrop?.({
+					widget: event.widget,
+					sourceTarget: event.oldTarget,
+					target: event.newTarget
+				});
+			}),
+			this.#eventBus.subscribe('widget:entertarget', (event) => {
+				if (event.board === this) {
+					this.config$()?.onWidgetEnterTarget?.({ widget: event.widget, target: event.target });
+				}
+			}),
+			this.#eventBus.subscribe('widget:leavetarget', (event) => {
+				if (event.board === this) {
+					this.config$()?.onWidgetLeaveTarget?.({ widget: event.widget, target: event.target });
 				}
 			}),
 			this.#eventBus.subscribe('widget:cancel', (event) => {
@@ -653,14 +667,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * **Note**: If this board is under a ResponsiveFlexiBoard, prefer using
 	 * `responsiveBoard.importLayout()` to import layouts for all breakpoints.
 	 */
-	importLayout(layout: FlexiLayout) {
+	importLayout(layout: FlexiLayout | FlexiLayoutEnvelope) {
 		if (this.#responsiveController) {
 			console.warn(
 				'importLayout() called directly on a FlexiBoard under ResponsiveFlexiBoard. ' +
 					'Use responsiveBoard.importLayout() instead to import layouts for all breakpoints.'
 			);
 		}
-		this.#importLayoutInternal(layout);
+		this.#importLayoutInternal(this.#normalizeLayout(layout));
 	}
 
 	/**
@@ -682,7 +696,14 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		});
 	}
 
-	#normalizeLayout(layout: FlexiLayout | FlexiWidgetLayoutEntry[]): FlexiLayout {
+	#normalizeLayout(
+		layout: FlexiLayout | FlexiLayoutEnvelope | FlexiWidgetLayoutEntry[]
+	): FlexiLayout {
+		// A persisted envelope: today there is one format version, so it unwraps;
+		// this is where a later version would migrate.
+		if (isLayoutEnvelope(layout)) {
+			return layout.layout;
+		}
 		// If it's an array, assume single target (first one)
 		if (Array.isArray(layout)) {
 			const firstTargetKey = this.#targets.keys().next().value;
@@ -804,6 +825,10 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 	clear(): void {
 		this.#targets.forEach((target) => target.clear());
+	}
+
+	exportLayoutEnvelope(): FlexiLayoutEnvelope {
+		return { version: LAYOUT_FORMAT_VERSION, layout: this.exportLayout() };
 	}
 
 	moveWidget(

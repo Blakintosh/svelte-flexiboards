@@ -1,3 +1,4 @@
+import type { FlexiDropCheck } from '../board/types.js';
 import type { FreeFormTargetLayout } from '../grid/free-grid.js';
 import type { FlexiGrid } from '../grid/base.js';
 import type { FlowTargetLayout } from '../grid/flow-grid.js';
@@ -57,6 +58,8 @@ export type FlexiTargetDefaults = {
 type RequiredFlexiTargetProperties = Required<FlexiTargetDefaults>;
 
 export type FlexiTargetPartialConfiguration<TClass = unknown> = FlexiTargetDefaults & {
+	/** See FlexiTargetConfiguration.canDrop. */
+	canDrop?: (check: FlexiDropCheck) => boolean;
 	/**
 	 * The default configuration for widgets within this target.
 	 */
@@ -68,6 +71,13 @@ export type FlexiTargetConfiguration<TClass = unknown> = RequiredFlexiTargetProp
 	 * The default configuration for widgets within this target.
 	 */
 	widgetDefaults?: FlexiWidgetDefaults<TClass>;
+
+	/**
+	 * Decides whether a widget may be placed at a position in this target, on
+	 * top of the board's own `canDrop`. Return false to refuse. Runs while the
+	 * user hovers (the drop preview shows the rejection) and again on release.
+	 */
+	canDrop?: (check: FlexiDropCheck) => boolean;
 };
 
 export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;

@@ -193,7 +193,8 @@ Once you hold a controller you can change the board without a drag. These calls 
 | `target.createWidget(config)` | Adds a widget. Returns `undefined` if it cannot be placed. |
 | `target.clear()` | Deletes every widget in the target. |
 | `board.clear()` | Deletes every widget in every target. |
-| `board.importLayout(layout)` | Replaces the whole board from a saved layout. Does not fire `onLayoutChange`; it is the load, not a change. |
+| `board.importLayout(layout)` | Replaces the whole board from a saved layout, bare or in the `{ version, layout }` envelope. Does not fire `onLayoutChange`; it is the load, not a change. |
+| `board.exportLayoutEnvelope()` | The layout with its format version, the shape to persist. See [Exporting & Importing](/docs/guides/exporting-importing-boards). |
 
 ```ts
 // Move the first "done" card back into "doing", at the top.
@@ -261,10 +262,12 @@ Keep `config` at module scope or in `useMemo`; a fresh object each render pushes
 | `onWidgetDrop` | A moved or resized widget lands. `sourceTarget` is where it came from; it is `undefined` for a widget that arrived through a `FlexiAdd`. |
 | `onWidgetCancel` | The user presses Escape, or lets go where nothing accepts the widget. The widget is back where it started. |
 | `onWidgetDelete` | A widget is dropped on a `FlexiDelete`, or `widget.delete()` is called. |
+| `onWidgetResize` | A resize the user was making commits. |
+| `onWidgetEnterTarget`, `onWidgetLeaveTarget` | A widget being moved is carried over a target, or leaves it. Useful for styling a column while it is the candidate. |
 | `canDrop` | While the user hovers and again on release. Return `false` to refuse; the drop preview shows the rejection and the widget returns to its origin. |
 | `onLayoutChange` | Any of the above changes the layout, and any call from the table in the previous section. Debounced, with the exported layout. |
 
-`canDrop` runs alongside the grid's own rules (bounds, collisions, size limits), which apply whether or not you provide it.
+`canDrop` runs alongside the grid's own rules (bounds, collisions, size limits), which apply whether or not you provide it. A target's own configuration can carry a `canDrop` too, for rules that belong to one list rather than the board; both must agree.
 
 ## Controller APIs
 

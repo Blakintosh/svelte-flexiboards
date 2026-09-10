@@ -57,7 +57,7 @@ Every export from v0.4 is still exported from `@flexiboards/svelte` under the sa
 
 ### Controller actions and interaction callbacks
 
-Widgets gained `delete()` and `moveTo()`, targets and boards gained `clear()`, and `onLayoutChange` now also fires for changes made through these calls and `createWidget()`. The board configuration takes `onWidgetGrab`, `onWidgetDrop`, `onWidgetCancel`, `onWidgetDelete` and `canDrop`. See [Controllers](/docs/controllers#changing-the-board-from-code). Exported layouts now include widgets that have no `type` (previously they were skipped with a warning), so `FlexiWidgetLayoutEntry.type` is optional; code that reads it should handle `undefined`.
+Widgets gained `delete()` and `moveTo()`, targets and boards gained `clear()`, and `onLayoutChange` now also fires for changes made through these calls and `createWidget()`. The board configuration takes `onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget`, `onWidgetLeaveTarget` and `canDrop`; a target configuration takes its own `canDrop`. Exported entries always carry an `id`, and `exportLayoutEnvelope()` adds a format version for storage. In React, `FlexiBoard` forwards `ref` to its root element, and a `FlexiWidget` declared after its target has loaded now logs a warning instead of being ignored silently. See [Controllers](/docs/controllers#changing-the-board-from-code). Exported layouts now include widgets that have no `type` (previously they were skipped with a warning), so `FlexiWidgetLayoutEntry.type` is optional; code that reads it should handle `undefined`.
 
 Nothing here requires a change, but these are the additions a v0.4 project is most likely to want:
 

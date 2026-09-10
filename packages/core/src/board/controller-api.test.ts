@@ -3,7 +3,11 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { InternalFlexiBoardController } from './controller.js';
 import { getFlexiEventBus } from '../shared/event-bus.js';
 import { getPointerService } from '../shared/utils.js';
-import type { FlexiBoardConfiguration, FlexiDropCheck } from './types.js';
+import {
+	LAYOUT_FORMAT_VERSION,
+	type FlexiBoardConfiguration,
+	type FlexiDropCheck
+} from './types.js';
 
 /*
   The controller API a consumer reaches from a hook or `onfirstcreate`:
@@ -203,5 +207,131 @@ describe('controller API', () => {
 		expect(b.widgets.has(w)).toBe(false);
 		expect(a.widgets.has(w)).toBe(true);
 		expect([w.x, w.y]).toEqual([0, 0]);
+	});
+
+	it('exports an id for every widget and round-trips it', () => {
+		const { board, a } = setup();
+		const given = a.createWidget({
+			type: 't',
+			id: 'mine',
+			x: 0,
+			y: 0,
+			width: 1,
+			height: 1
+		} as any)!;
+		const generated = a.createWidget({ type: 't', x: 1, y: 0, width: 1, height: 1 } as any)!;
+		const exported = board.exportLayout().a;
+		expect(exported.map((e) => e.id)).toEqual(['mine', generated.id]);
+		expect(generated.id).toMatch(/^flexiwidget-\d+-[a-z0-9]+$/);
+
+		board.importLayout({ a: exported });
+		const again = [...a.widgets].map((w) => w.userProvidedId);
+		expect(again).toEqual(['mine', generated.id]);
+		expect(given.userProvidedId).toBe('mine');
+	});
+
+	it('imports and exports the versioned envelope', () => {
+		const { board, a } = setup();
+		a.createWidget({ type: 't', x: 2, y: 2, width: 1, height: 1 } as any);
+		const envelope = board.exportLayoutEnvelope();
+		expect(envelope.version).toBe(LAYOUT_FORMAT_VERSION);
+		expect(envelope.layout.a).toHaveLength(1);
+
+		board.importLayout({
+			version: 1,
+			layout: { a: [{ type: 't', x: 0, y: 0, width: 1, height: 1 }] }
+		});
+		expect([...a.widgets].map((w) => [w.x, w.y])).toEqual([[0, 0]]);
+	});
+
+	it('lets a target refuse a drop on top of the board rule', async () => {
+		const { board, a, b, bus, pointer } = setup();
+		b.updateConfig({
+			layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 },
+			canDrop: () => false
+		} as any);
+		const w = a.createWidget({ type: 't', x: 0, y: 0, width: 1, height: 1 } as any)!;
+		pointer.updatePosition(50, 50);
+		bus.dispatch('widget:grabbed', {
+			board,
+			target: a,
+			widget: w,
+			clientX: 50,
+			clientY: 50,
+			xOffset: 0,
+			yOffset: 0,
+			capturedWidthPx: 100,
+			capturedHeightPx: 100
+		} as any);
+		pointer.updatePosition(450, 50);
+		expect(b.dropRejected).toBe(true);
+		bus.dispatch('widget:release', { board, target: b, widget: w } as any);
+		await Promise.resolve();
+		expect(a.widgets.has(w)).toBe(true);
+		expect(b.widgets.has(w)).toBe(false);
+	});
+
+	it('reports enter and leave as a widget is carried over targets', () => {
+		const onWidgetEnterTarget = vi.fn();
+		const onWidgetLeaveTarget = vi.fn();
+		const { board, a, b, bus, pointer } = setup({ onWidgetEnterTarget, onWidgetLeaveTarget });
+		const w = a.createWidget({ type: 't', x: 0, y: 0, width: 1, height: 1 } as any)!;
+		pointer.updatePosition(50, 50);
+		bus.dispatch('widget:grabbed', {
+			board,
+			target: a,
+			widget: w,
+			clientX: 50,
+			clientY: 50,
+			xOffset: 0,
+			yOffset: 0,
+			capturedWidthPx: 100,
+			capturedHeightPx: 100
+		} as any);
+		pointer.updatePosition(350, 50); // between the targets
+		expect(onWidgetLeaveTarget).toHaveBeenLastCalledWith({ widget: w, target: a });
+		pointer.updatePosition(450, 50);
+		expect(onWidgetEnterTarget).toHaveBeenLastCalledWith({ widget: w, target: b });
+		bus.dispatch('widget:cancel', { board, target: b, widget: w } as any);
+	});
+
+	it('reports a committed resize separately from a drop', () => {
+		const onWidgetDrop = vi.fn();
+		const onWidgetResize = vi.fn();
+		const { board, a, bus, pointer } = setup({ onWidgetDrop, onWidgetResize });
+		const w = a.createWidget({
+			type: 't',
+			x: 0,
+			y: 0,
+			width: 1,
+			height: 1,
+			resizability: 'both'
+		} as any)!;
+		pointer.updatePosition(100, 100);
+		bus.dispatch('widget:resizing', {
+			board,
+			target: a,
+			widget: w,
+			offsetX: 0,
+			offsetY: 0,
+			clientX: 100,
+			clientY: 100,
+			left: 0,
+			top: 0,
+			capturedWidthPx: 100,
+			capturedHeightPx: 100
+		} as any);
+		pointer.updatePosition(250, 250);
+		bus.dispatch('widget:release', { board, target: a, widget: w } as any);
+		expect(onWidgetResize).toHaveBeenCalledWith({ widget: w, target: a });
+		expect(onWidgetDrop).not.toHaveBeenCalled();
+	});
+
+	it('warns when a widget is declared after its target has loaded', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const { a } = setup();
+		a.registerWidget({ width: 1, height: 1 } as any);
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('declared after target "a" loaded'));
+		warn.mockRestore();
 	});
 });

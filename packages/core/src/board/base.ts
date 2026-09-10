@@ -1,7 +1,7 @@
 import type { WidgetAction } from '../types.js';
 import type { FlexiTargetController } from '../target/base.js';
 import type { FlexiWidgetController } from '../widget/base.js';
-import type { FlexiLayout } from './types.js';
+import type { FlexiLayout, FlexiLayoutEnvelope } from './types.js';
 
 export interface FlexiBoardController {
 	/**
@@ -57,16 +57,23 @@ export interface FlexiBoardController {
 	): void;
 
 	/**
-	 * Imports a widget layout into the board.
+	 * Imports a widget layout into the board: a bare layout, or the
+	 * `{ version, layout }` envelope that `exportLayoutEnvelope()` returns.
 	 * @param layout The widget layout to import.
 	 */
-	importLayout(layout: FlexiLayout): void;
+	importLayout(layout: FlexiLayout | FlexiLayoutEnvelope): void;
 
 	/**
 	 * Exports the current widget layout of the board.
 	 * @returns The current widget layout of the board.
 	 */
 	exportLayout(): FlexiLayout;
+
+	/**
+	 * Exports the layout with its format version, the shape to persist so a
+	 * later release can migrate it on import.
+	 */
+	exportLayoutEnvelope(): FlexiLayoutEnvelope;
 
 	/**
 	 * Deletes every widget in every target of this board. Fires `onWidgetDelete`

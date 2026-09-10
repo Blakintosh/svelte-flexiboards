@@ -115,6 +115,23 @@ export type FlexiBoardConfiguration<TClass = unknown> = {
 	onWidgetDelete?: (event: FlexiWidgetEvent) => void;
 
 	/**
+	 * Called when a resize the user was making commits. The widget's `width`
+	 * and `height` are already final.
+	 */
+	onWidgetResize?: (event: FlexiWidgetEvent) => void;
+
+	/**
+	 * Called when a widget being moved is carried over a target, which then
+	 * shows a drop preview for it.
+	 */
+	onWidgetEnterTarget?: (event: FlexiWidgetEvent) => void;
+
+	/**
+	 * Called when a widget being moved leaves the target it was over.
+	 */
+	onWidgetLeaveTarget?: (event: FlexiWidgetEvent) => void;
+
+	/**
 	 * Decides whether a widget may be placed at a position. Called while the
 	 * user hovers (so the drop preview can show a rejection) and again on
 	 * release. Return false to refuse: the widget stays where it was.
@@ -153,7 +170,10 @@ export type FlexiRegistryEntry<TClass = unknown> = Omit<
 >;
 
 export type FlexiWidgetLayoutEntry = {
-	/** A stable identifier for this widget, preserved through export and import. Optional. */
+	/**
+	 * A stable identifier for this widget. Always present in an export: the id you
+	 * gave the widget, or a generated one. Round-trips through import.
+	 */
 	id?: string;
 	/**
 	 * The registry key that says how to render this widget. Exported even when
@@ -175,4 +195,33 @@ export type FlexiWidgetLayoutEntry = {
 
 export type FlexiLayout = Record<string, FlexiWidgetLayoutEntry[]>;
 
-export type FlexiLoadLayoutFn = () => FlexiLayout | FlexiWidgetLayoutEntry[] | undefined;
+/**
+ * The layout format version this release exports. Store it next to a layout
+ * (see FlexiLayoutEnvelope) so a later release can migrate what it reads.
+ */
+export const LAYOUT_FORMAT_VERSION = 1;
+
+/**
+ * A layout with its format version, the shape to persist. `importLayout` and
+ * `loadLayout` accept this as well as a bare FlexiLayout.
+ */
+export type FlexiLayoutEnvelope = {
+	version: number;
+	layout: FlexiLayout;
+};
+
+export function isLayoutEnvelope(value: unknown): value is FlexiLayoutEnvelope {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		'version' in value &&
+		'layout' in value &&
+		typeof (value as FlexiLayoutEnvelope).version === 'number'
+	);
+}
+
+export type FlexiLoadLayoutFn = () =>
+	| FlexiLayout
+	| FlexiLayoutEnvelope
+	| FlexiWidgetLayoutEntry[]
+	| undefined;

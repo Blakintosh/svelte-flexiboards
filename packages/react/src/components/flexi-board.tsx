@@ -6,7 +6,15 @@ import {
 	type FlexiBoardController,
 	type FlexiBoardProps as FlexiBoardPropsPrimitive
 } from '@flexiboards/core';
-import { useCallback, useEffect, useId, useSyncExternalStore, type ReactNode } from 'react';
+import {
+	forwardRef,
+	useCallback,
+	useEffect,
+	useId,
+	useSyncExternalStore,
+	type ForwardedRef,
+	type ReactNode
+} from 'react';
 import { FlexiBoardContext } from '../adapters/board.js';
 import { useInternalResponsiveFlexiBoardOrNull } from '../adapters/responsive.js';
 import { controllerRef, useOnceCommitted, useSingleRef, type FlexiCommonProps } from '../adapters/utils.js';
@@ -40,7 +48,14 @@ export type FlexiBoardProps = Omit<FlexiBoardPropsPrimitive<string>, 'class' | '
 	suspense?: (reason: FlexiBoardSuspenseReason) => ReactNode;
 };
 
-export function FlexiBoard({ children, className, config, onfirstcreate, suspense }: FlexiBoardProps) {
+/**
+ * The board. Forwards `ref` to its root element; the controller itself comes
+ * from `onfirstcreate` or `useFlexiBoard()`.
+ */
+export const FlexiBoard = forwardRef(function FlexiBoard(
+	{ children, className, config, onfirstcreate, suspense }: FlexiBoardProps,
+	forwarded: ForwardedRef<HTMLDivElement>
+) {
 	// A board nested under a ResponsiveFlexiBoard registers against it.
 	const responsiveParent = useInternalResponsiveFlexiBoardOrNull();
 
@@ -127,7 +142,11 @@ export function FlexiBoard({ children, className, config, onfirstcreate, suspens
 			<FlexiBoardContext.Provider value={board}>
 				<div
 					className={className}
-					ref={controllerRef(board)}
+					ref={(el) => {
+						controllerRef(board)(el);
+						if (typeof forwarded === 'function') forwarded(el);
+						else if (forwarded) forwarded.current = el;
+					}}
 					style={parseStyleString(styleString)}
 					role="application"
 					aria-label="Interactive drag-and-drop interface"
@@ -152,4 +171,4 @@ export function FlexiBoard({ children, className, config, onfirstcreate, suspens
 			</FlexiBoardContext.Provider>
 		</FlexiEventBusProvider>
 	);
-}
+});
