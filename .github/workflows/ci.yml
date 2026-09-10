@@ -27,6 +27,7 @@ jobs:
 
       # The adapters and the site consume the built packages.
       - run: pnpm -C packages/core build
+      - run: pnpm -C packages/testing build
       - run: pnpm -C packages/svelte build
       - run: pnpm -C packages/react build
 
@@ -56,7 +57,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -C packages/core build && pnpm -C packages/svelte build && pnpm -C packages/react build
+      - run: pnpm -C packages/core build && pnpm -C packages/testing build && pnpm -C packages/svelte build && pnpm -C packages/react build
       - run: pnpm -C site exec playwright install --with-deps chromium
       - name: Playwright
         run: pnpm -C site e2e

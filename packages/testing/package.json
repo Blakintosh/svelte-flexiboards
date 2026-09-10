@@ -1,18 +1,15 @@
 {
-	"name": "@flexiboards/core",
+	"name": "@flexiboards/testing",
 	"version": "1.0.0",
-	"description": "Framework-agnostic core library for Flexiboards.",
+	"description": "Helpers for testing Flexiboards boards in a DOM that has no layout (happy-dom, jsdom).",
 	"scripts": {
-		"dev": "tsc -w --noEmit",
-		"dev:host": "pnpm dev",
 		"build": "tsc",
 		"check": "tsc --noEmit",
 		"test": "vitest run"
 	},
 	"files": [
 		"dist",
-		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
+		"!dist/**/*.test.*"
 	],
 	"publishConfig": {
 		"access": "public"
@@ -28,9 +25,6 @@
 		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
 	},
 	"homepage": "https://github.com/Blakintosh/svelte-flexiboards#readme",
-	"dependencies": {
-		"alien-signals": "3.2.1"
-	},
 	"devDependencies": {
 		"happy-dom": "^20.11.2",
 		"typescript": "^5.0.0",

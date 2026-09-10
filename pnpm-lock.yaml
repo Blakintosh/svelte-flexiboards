@@ -73,6 +73,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.8.1(jiti@2.4.2)(supports-color@7.2.0))
+      '@flexiboards/testing':
+        specifier: workspace:^
+        version: link:../testing
       '@types/node':
         specifier: ^22.13.5
         version: 22.13.5
@@ -119,6 +122,9 @@ importers:
         specifier: workspace:^
         version: link:../core
     devDependencies:
+      '@flexiboards/testing':
+        specifier: workspace:^
+        version: link:../testing
       '@sveltejs/adapter-auto':
         specifier: ^3.0.0
         version: 3.3.1(@sveltejs/kit@2.17.2(@sveltejs/vite-plugin-svelte@4.0.4(supports-color@7.2.0)(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)))(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)))
@@ -155,6 +161,18 @@ importers:
       vite:
         specifier: ^5.0.11
         version: 5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)
+      vitest:
+        specifier: ^3.0.7
+        version: 3.0.7(@types/node@22.13.5)(happy-dom@20.11.2)(lightningcss@1.33.0)(supports-color@7.2.0)
+
+  packages/testing:
+    devDependencies:
+      happy-dom:
+        specifier: ^20.11.2
+        version: 20.11.2
+      typescript:
+        specifier: ^5.0.0
+        version: 5.7.3
       vitest:
         specifier: ^3.0.7
         version: 3.0.7(@types/node@22.13.5)(happy-dom@20.11.2)(lightningcss@1.33.0)(supports-color@7.2.0)

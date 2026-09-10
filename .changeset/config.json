@@ -3,7 +3,9 @@
 	"changelog": "@changesets/cli/changelog",
 	"commit": false,
 	"fixed": [],
-	"linked": [["@flexiboards/core", "@flexiboards/svelte", "@flexiboards/react"]],
+	"linked": [
+		["@flexiboards/core", "@flexiboards/svelte", "@flexiboards/react", "@flexiboards/testing"]
+	],
 	"access": "public",
 	"baseBranch": "main",
 	"updateInternalDependencies": "patch",

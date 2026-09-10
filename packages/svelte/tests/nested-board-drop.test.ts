@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
 import type { FlexiBoardController, FlexiWidgetController } from '@flexiboards/core';
+import { layoutGrid, rect, setRect } from '@flexiboards/testing';
 import NestedBoard from './fixtures/nested-board.svelte';
 
 /*
@@ -12,70 +13,19 @@ import NestedBoard from './fixtures/nested-board.svelte';
 */
 
 let component: Record<string, any> | undefined;
-const originalComputed = window.getComputedStyle;
-
-class MockResizeObserver {
-	static instances = new Set<MockResizeObserver>();
-	constructor(private cb: ResizeObserverCallback) {}
-	observe() {
-		MockResizeObserver.instances.add(this);
-	}
-	unobserve() {}
-	disconnect() {
-		MockResizeObserver.instances.delete(this);
-	}
-	static fire() {
-		for (const o of MockResizeObserver.instances) o.cb([], o as unknown as ResizeObserver);
-	}
-}
-
-/** Real geometry for a 3×3 grid of 100px cells at (left, top) — see the React helpers. */
-function layoutGrid(grid: HTMLElement, left: number, top: number) {
-	const box = (l: number, t: number, w = 100, h = 100) =>
-		({ left: l, top: t, width: w, height: h, right: l + w, bottom: t + h }) as DOMRect;
-	grid.getBoundingClientRect = () => box(left, top, 300, 300);
-	for (const cell of Array.from(grid.querySelectorAll<HTMLElement>('[role="cell"]'))) {
-		const x = Number(cell.getAttribute('aria-colindex'));
-		const y = Number(cell.getAttribute('aria-rowindex'));
-		cell.getBoundingClientRect = () => box(left + x * 100, top + y * 100);
-	}
-	window.getComputedStyle = ((el: Element, pseudo?: string | null) => {
-		const style = originalComputed.call(window, el, pseudo);
-		if (el !== grid) return style;
-		const tracks: Record<string, string> = {
-			'grid-template-columns': '100px 100px 100px',
-			'grid-template-rows': '100px 100px 100px',
-			'grid-column-gap': '0px',
-			'grid-row-gap': '0px'
-		};
-		return new Proxy(style, {
-			get(t, k) {
-				if (k === 'getPropertyValue')
-					return (name: string) => tracks[name] ?? t.getPropertyValue(name);
-				const v = Reflect.get(t, k);
-				return typeof v === 'function' ? v.bind(t) : v;
-			}
-		});
-	}) as typeof window.getComputedStyle;
-	MockResizeObserver.fire();
-	flushSync();
-}
+let restoreStyle: (() => void) | undefined;
 
 beforeEach(() => {
 	vi.stubGlobal('requestAnimationFrame', () => 0);
-	vi.stubGlobal('ResizeObserver', MockResizeObserver);
 });
 
 afterEach(() => {
 	if (component) unmount(component);
 	component = undefined;
 	document.body.innerHTML = '';
-	window.getComputedStyle = originalComputed;
+	restoreStyle?.();
 	vi.unstubAllGlobals();
 });
-
-const box = (left: number, top: number, width = 100, height = 100) =>
-	({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
 
 describe('drop inside a nested board', () => {
 	it('starts the flight from where the widget was released', () => {
@@ -96,10 +46,9 @@ describe('drop inside a nested board', () => {
 		const inner = document.querySelector<HTMLElement>('.inner')!;
 		const grid = inner.querySelector<HTMLElement>('[role="grid"]')!;
 		const el = inner.querySelector<HTMLElement>('[role="cell"]')!;
-		document.querySelector<HTMLElement>('.outer')!.getBoundingClientRect = () =>
-			box(0, 0, 600, 600);
-		inner.getBoundingClientRect = () => box(300, 300, 300, 300);
-		layoutGrid(grid, 300, 300);
+		setRect(document.querySelector<HTMLElement>('.outer')!, { width: 600, height: 600 });
+		setRect(inner, { left: 300, top: 300, width: 300, height: 300 });
+		restoreStyle = layoutGrid(100, { grid, left: 300, top: 300 });
 
 		el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 		flushSync();
@@ -112,7 +61,8 @@ describe('drop inside a nested board', () => {
 
 		// In hand over the inner grid's far cell. Back in the grid, the same
 		// in-hand absolute style would read somewhere else entirely.
-		el.getBoundingClientRect = () => (portal.contains(el) ? box(500, 500) : box(800, 800));
+		el.getBoundingClientRect = () =>
+			portal.contains(el) ? rect({ left: 500, top: 500 }) : rect({ left: 800, top: 800 });
 		window.dispatchEvent(new PointerEvent('pointermove', { clientX: 550, clientY: 550 }));
 		flushSync();
 
