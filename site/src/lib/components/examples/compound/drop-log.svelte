@@ -31,14 +31,14 @@
 		<li
 			aria-live="polite"
 			class={cn(
-				'border-rule bg-tint-2 flex min-w-0 items-baseline justify-between gap-2 border border-l-2 px-2 py-1 transition-colors duration-[120ms] lg:px-3',
-				flashed === board.scope && 'border-l-fx-accent bg-tint-accent'
+				'border-rule-soft bg-tint-2 flex min-w-0 items-baseline justify-between gap-2 rounded-[10px] border px-2.5 py-1.5 transition-colors duration-[120ms] lg:px-3',
+				flashed === board.scope && 'border-fx-accent/40 bg-tint-accent'
 			)}
 		>
 			<span
 				class={cn(
 					'truncate font-mono text-[10px] lg:text-[11px]',
-					flashed === board.scope ? 'text-fx-accent' : 'text-ink'
+					flashed === board.scope ? 'text-fx-accent-hover' : 'text-ink'
 				)}
 			>
 				{board.name}
@@ -46,7 +46,7 @@
 			<span
 				class={cn(
 					'shrink-0 font-mono text-[9px] lg:text-[10px]',
-					flashed === board.scope ? 'text-fx-accent' : 'text-faint'
+					flashed === board.scope ? 'text-fx-accent-hover' : 'text-faint'
 				)}
 			>
 				<span class="hidden sm:inline">{board.geometry} · </span>drops {drops[board.scope]}

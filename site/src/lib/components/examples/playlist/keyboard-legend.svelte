@@ -14,8 +14,10 @@
 {#snippet keycap(label: string)}
 	<kbd
 		class={cn(
-			'label border px-1.5 py-0.5 text-[10px] leading-none',
-			moving ? 'border-fx-accent bg-tint-accent text-fx-accent' : 'border-rule text-faint'
+			'inline-flex items-center rounded-[7px] border px-1.5 py-0.5 font-mono text-[10px] leading-none font-semibold',
+			moving
+				? 'border-fx-accent/50 bg-tint-accent text-fx-accent-hover'
+				: 'border-rule-soft text-faint'
 		)}
 	>
 		{label}
@@ -28,9 +30,9 @@
 	aria-live channel (FlexiAnnouncer), so this stays a visual affordance only.
 -->
 <div
-	class="border-rule flex shrink-0 flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between"
+	class="border-rule-soft flex shrink-0 flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between"
 >
-	<span class={cn('label text-[10px]', moving ? 'text-fx-accent' : 'text-faint')}>
+	<span class={cn('text-[11.5px] font-semibold', moving ? 'text-fx-accent' : 'text-faint')}>
 		{moving ? `Moving · ${movingTitle}` : 'Reorder the queue'}
 	</span>
 
@@ -39,24 +41,24 @@
 			<span class="flex items-center gap-1">
 				{@render keycap('↑')}
 				{@render keycap('↓')}
-				<span class="label text-faint ml-0.5 text-[10px]">move</span>
+				<span class="text-faint ml-0.5 text-[11px] font-semibold">move</span>
 			</span>
 			<span class="flex items-center gap-1">
 				{@render keycap('↵')}
-				<span class="label text-faint ml-0.5 text-[10px]">drop</span>
+				<span class="text-faint ml-0.5 text-[11px] font-semibold">drop</span>
 			</span>
 			<span class="flex items-center gap-1">
 				{@render keycap('Esc')}
-				<span class="label text-faint ml-0.5 text-[10px]">cancel</span>
+				<span class="text-faint ml-0.5 text-[11px] font-semibold">cancel</span>
 			</span>
 		{:else}
 			<span class="flex items-center gap-1">
 				{@render keycap('Tab')}
-				<span class="label text-faint ml-0.5 text-[10px]">a handle</span>
+				<span class="text-faint ml-0.5 text-[11px] font-semibold">a handle</span>
 			</span>
 			<span class="flex items-center gap-1">
 				{@render keycap('↵')}
-				<span class="label text-faint ml-0.5 text-[10px]">grab</span>
+				<span class="text-faint ml-0.5 text-[11px] font-semibold">grab</span>
 			</span>
 		{/if}
 	</div>

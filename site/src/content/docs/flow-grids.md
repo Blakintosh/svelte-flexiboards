@@ -6,44 +6,12 @@ published: true
 ---
 
 <script lang="ts">
-	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
-	import FlowExample from '$lib/components/docs/flow-grids/flow-example.svelte';
-	import Flow2DExample from '$lib/components/docs/flow-grids/flow-2d-example.svelte';
+	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-## Introduction
+A flow grid keeps widgets in order and packs them densely, like a list. Set a target's `layout.type` to `'flow'` to get one:
 
-Flow grids are a _dense_ grid layout, where widgets are placed relative to each other in an ordered manner. The configuration of the flow grid then determines the layout of the ordered widgets.
-
-The `layout` property of a `FlexiTarget`'s configuration (see [FlexiTarget](/docs/components/target)) allows you to define a FlexiTarget that uses a flow layout. It is an object with the following properties:
-
-```ts
-export type FlowTargetLayout = {
-	type: 'flow';
-	placementStrategy: 'append' | 'prepend';
-	disallowInsert?: boolean;
-	flowAxis: 'row' | 'column';
-	maxFlowAxis?: number;
-	rows?: number;
-	columns?: number;
-};
-```
-
-- `type`: The type of layout to use, where `flow` defines a flow grid.
-- `placementStrategy`: The strategy to use when placing widgets without coordinates into the grid (or when insertion is disallowed).
-  - When set to `append`, widgets will be added to the end of the grid (default).
-  - When set to `prepend`, widgets will be added to the beginning of the grid.
-- `disallowInsert`: When set to `true`, widgets dropped in the grid will not be inserted based on the pointer position, and instead will use the `placementStrategy`.
-- `flowAxis`: The axis that widgets are placed along.
-
-While dragging, the whole hovered cell is the drop target, like a sortable list: dropping onto a widget places the dragged widget after it when moving forwards and before it when moving backwards, so dragging one tile onto another swaps them. Changing side on the same widget requires real pointer travel, so widgets reflowing under a still pointer never make the target flicker.
-- `maxFlowAxis`: The maximum number of widgets that can be placed along the flow axis.
-- `rows`: The number of rows that the grid should have.
-- `columns`: The number of columns that the grid should have.
-
-## Example
-
-The following code creates us a basic flow grid with a list layout:
+<Only svelte>
 
 ```svelte example title="1D Flow Grid"
 <script lang="ts">
@@ -79,13 +47,75 @@ The following code creates us a basic flow grid with a list layout:
 </FlexiBoard>
 ```
 
+</Only>
+
+<Only react>
+
+```tsx example title="1D Flow Grid"
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
+
+export function FlowGrid() {
+	return (
+		<FlexiBoard className="size-72 rounded-xl border p-8 lg:size-96">
+			<FlexiTarget
+				className="h-full w-full gap-4 lg:gap-6"
+				containerClassName="w-full h-full"
+				config={{
+					rowSizing: 'minmax(0, 1fr)',
+					layout: {
+						type: 'flow',
+						rows: 4,
+						columns: 1,
+						placementStrategy: 'append',
+						flowAxis: 'row'
+					}
+				}}
+			>
+				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+					{({ widget }) => (
+						<>
+							I'm at ({widget.x}, {widget.y})
+						</>
+					)}
+				</FlexiWidget>
+				<FlexiWidget className="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground">
+					{({ widget }) => (
+						<>
+							And I'm at ({widget.x}, {widget.y})
+						</>
+					)}
+				</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
+}
+```
+
+</Only>
+
+Both widgets sit in a single column. Drag one onto the other and they swap; drop into an empty cell and the rest reflow to close the gap.
+
+## When to use a flow grid
+
+Use a flow grid when order matters more than position: Kanban columns, sortable lists, and galleries. Widgets never have gaps between them, and a widget dropped into the grid takes an index rather than coordinates. For dashboards where widgets live at fixed coordinates, use a [free-form grid](/docs/free-form-grids).
+
+## Configuring the flow
+
+Three properties shape a flow grid:
+
+- `flowAxis` chooses whether widgets run along rows (`'row'`) or columns (`'column'`).
+- `placementStrategy` decides where a widget lands when it is added without a position: `'append'` at the end, `'prepend'` at the start.
+- `rows` and `columns` fix the grid's size. Leave one open and the grid grows along the flow axis, capped by `maxFlowAxis` if you set it.
+
+Every property, with its type and default, is in the [FlowTargetLayout reference](/docs/components/target#flowtargetlayout).
+
 ## Extension to 2D
 
-Flow grids can also enforce an ordered layout that spans two dimensions. When the cross dimension (in the opposite direction to your flow direction, i.e. columns for row flow and rows for column flow) is greater than `1`, this occurs.
+When the cross dimension (columns for row flow, rows for column flow) is greater than 1, the flow wraps across it. Widgets fill the cross dimension as far as they can while keeping their order, so a widget that cannot fit in the current row leaves a gap and starts the next one.
 
-In this scenario, widgets will attempt to fill the cross dimension as much as possible, but they will also respect the order they've been put in. For example, in row flow, if a widget is unable to fit within its current row, it will leave a gap and span to the next row instead.
+Below, widget `B` has a width of 2, so it always takes a row of its own. Placed after `A` or `C`, it would not fit beside them.
 
-The below example demonstrates this behaviour, where we have a row flow grid with widgets of varying widths. Notice how widget `B` of width `2` is always placed on its own row, because when placed after `A` or `C` of width `1`, it would not fit besides them on the grid.
+<Only svelte>
 
 ```svelte example title="2D Flow Grid"
 <script lang="ts">
@@ -116,15 +146,49 @@ The below example demonstrates this behaviour, where we have a row flow grid wit
 </FlexiBoard>
 ```
 
-## Considerations
+</Only>
 
-Flow grids have some main considerations:
+<Only react>
 
-- When providing the dimensions of a FlexiWidget that is part of a flow grid, any flow-axis dimension (width for column flow, height for row flow) provided is ignored. The flow-axis dimension is fixed to 1 in order to provide a consistent experience.
-- However, when row/column sizing is set to `auto` or similar, you can have FlexiWidgets of different sizes on the flow axis, and the sizing of that cell will adjust for it.
+```tsx example title="2D Flow Grid"
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
 
-## More Examples
+export function FlowGrid2D() {
+	return (
+		<FlexiBoard className="size-72 rounded-xl border p-8 lg:size-96">
+			<FlexiTarget
+				className="h-full w-full gap-4 lg:gap-6"
+				containerClassName="w-full h-full"
+				config={{
+					rowSizing: 'minmax(0, 1fr)',
+					layout: {
+						type: 'flow',
+						rows: 4,
+						columns: 2,
+						placementStrategy: 'append',
+						flowAxis: 'row'
+					}
+				}}
+			>
+				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">A</FlexiWidget>
+				<FlexiWidget className="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground" width={2}>
+					B
+				</FlexiWidget>
+				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">C</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
+}
+```
 
-If you would like to see any further examples of flow grids in action, be sure to check out the open-source [Notes](/examples/notes) (1D with nesting) and [Flow](/examples/flow) (2D) examples, which are built using flow grids.
+</Only>
 
-_NB: If you have a better idea for an 2D flow grid example than 'Flow', please reach out and let us know! We'd love to have cool, real-world examples of Flexiboards in action._
+## Examples
+
+The [Notes](/examples/notes) example uses nested 1D flow grids, and [Flow](/examples/flow) is a 2D flow grid.
+
+## Gotchas
+
+- **Flow-axis size is always 1.** A widget's `height` in row flow (or `width` in column flow) is ignored. With `rowSizing` or `columnSizing` set to `auto`, cells still stretch to fit content of different sizes.
+- **Drop targets are whole cells.** Dropping onto a widget places the dragged widget after it when moving forwards and before it when moving backwards. Changing side on the same widget needs real pointer travel, so widgets reflowing under a still pointer never flicker.
+- **Insertion can be disabled.** Set `disallowInsert: true` and every drop uses `placementStrategy` instead of the pointer position, which suits "add to end" inboxes.

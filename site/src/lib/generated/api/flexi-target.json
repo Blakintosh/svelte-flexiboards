@@ -2,6 +2,7 @@
 	"component": "FlexiTarget",
 	"generatedFrom": [
 		"packages/svelte/src/components/flexi-target.svelte",
+		"packages/react/src/components/flexi-target.tsx",
 		"packages/core/src"
 	],
 	"props": [
@@ -48,6 +49,48 @@
 		},
 		{
 			"name": "key",
+			"type": "string",
+			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiTargetController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "header",
+			"type": "ReactNode | ((params: { target: FlexiTargetController }) => ReactNode)",
+			"description": "The header content of the target, above the grid."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode",
+			"description": "The child content of the target, which should contain inner FlexiWidget definitions."
+		},
+		{
+			"name": "footer",
+			"type": "ReactNode | ((params: { target: FlexiTargetController }) => ReactNode)",
+			"description": "The footer content of the target, below the grid."
+		},
+		{
+			"name": "containerClassName",
+			"type": "string",
+			"description": "The class names to apply to the target's container element."
+		},
+		{
+			"name": "className",
+			"type": "string",
+			"description": "The class names to apply to the target's grid element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiTargetPartialConfiguration",
+			"description": "The configuration object for the target."
+		},
+		{
+			"name": "keyName",
 			"type": "string",
 			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported."
 		}
@@ -101,6 +144,11 @@
 				"name": "createWidget",
 				"type": "(config: FlexiWidgetConfiguration) => FlexiWidgetController | undefined",
 				"description": "Creates a new widget under this target."
+			},
+			{
+				"name": "clear",
+				"type": "() => void",
+				"description": "Deletes every widget in this target. Fires `onWidgetDelete` per widget."
 			}
 		]
 	},
@@ -143,18 +191,6 @@
 				"name": "resizability",
 				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
 				"description": "The resizability of the widget."
-			},
-			{
-				"name": "width",
-				"type": "number",
-				"description": "The width of the widget in units.",
-				"deprecated": "This property does not work and will be removed in the next version."
-			},
-			{
-				"name": "height",
-				"type": "number",
-				"description": "The height of the widget in units.",
-				"deprecated": "This property does not work and will be removed in the next version."
 			},
 			{
 				"name": "snippet",
@@ -210,6 +246,86 @@
 				"name": "maxHeight",
 				"type": "number",
 				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+			}
+		],
+		"FlowTargetLayout": [
+			{
+				"name": "type",
+				"type": "'flow'",
+				"description": ""
+			},
+			{
+				"name": "placementStrategy",
+				"type": "'append' | 'prepend'",
+				"description": "Specifies how widgets should be added when no coordinates are specified. - \"append\" will add a widget after the last widget in the grid. - \"prepend\" will add a widget before the first widget in the grid."
+			},
+			{
+				"name": "disallowInsert",
+				"type": "boolean",
+				"description": "When set to true, the grid will ignore coordinates provided when adding widgets and instead default to the placement strategy's behaviour."
+			},
+			{
+				"name": "flowAxis",
+				"type": "'row' | 'column'",
+				"description": "The axis that widgets are placed along. - When set to \"row\", widgets are added along the columns of a row before wrapping to the next row. - When set to \"column\", widgets are added along the rows of a column before wrapping to the next column."
+			},
+			{
+				"name": "maxFlowAxis",
+				"type": "number",
+				"description": "The maximum number of rows or columns that can be used depending on what the flow axis is set to. - When flowAxis is set to \"row\", the grid will not allow more rows than this value. - When flowAxis is set to \"column\", the grid will not allow more columns than this value."
+			},
+			{
+				"name": "rows",
+				"type": "number",
+				"description": "The number of rows that the grid should have."
+			},
+			{
+				"name": "columns",
+				"type": "number",
+				"description": "The number of columns that the grid should have."
+			}
+		],
+		"FreeFormTargetLayout": [
+			{
+				"name": "type",
+				"type": "'free'",
+				"description": ""
+			},
+			{
+				"name": "minRows",
+				"type": "number",
+				"description": "The minimum number of rows the grid should have. The grid never shrinks below this.",
+				"default": "1"
+			},
+			{
+				"name": "minColumns",
+				"type": "number",
+				"description": "The minimum number of columns the grid should have. The grid never shrinks below this.",
+				"default": "1"
+			},
+			{
+				"name": "maxRows",
+				"type": "number",
+				"description": "The maximum number of rows the grid may expand to. Set equal to `minRows` to fix the row count.",
+				"default": "Infinity"
+			},
+			{
+				"name": "maxColumns",
+				"type": "number",
+				"description": "The maximum number of columns the grid may expand to, capped at 32. Set equal to `minColumns` to fix the column count.",
+				"default": "Infinity"
+			},
+			{
+				"name": "collapsibility",
+				"type": "'none' | 'leading' | 'trailing' | 'endings' | 'any'",
+				"description": "Whether the grid collapses to remove empty rows and columns, and where. - \"none\" never collapses. - \"leading\" collapses empty rows/columns at the start of the grid. - \"trailing\" collapses empty rows/columns at the end of the grid. - \"endings\" collapses at either end. - \"any\" collapses any empty row/column.",
+				"default": "\"none\""
+			},
+			{
+				"name": "packing",
+				"type": "'none' | 'horizontal' | 'vertical'",
+				"description": "Whether widgets are packed towards an edge after each change, closing gaps. - \"none\" leaves widgets where they were placed. - \"horizontal\" slides widgets left as far as they can go, left-most first. - \"vertical\" slides widgets up as far as they can go, top-most first.",
+				"default": "\"none\""
 			}
 		]
 	}

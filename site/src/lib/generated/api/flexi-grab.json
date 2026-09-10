@@ -1,0 +1,33 @@
+{
+	"component": "FlexiGrab",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-grab.svelte",
+		"packages/react/src/components/flexi-grab.tsx",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "children",
+			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+			"description": "The content of the handle. Receives the surrounding widget's controller."
+		},
+		{
+			"name": "class",
+			"type": "ClassValue",
+			"description": "Classes applied to the rendered button."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "className",
+			"type": "string | ((widget: FlexiWidgetController) => string)",
+			"description": "Classes applied to the rendered button: a string, or a function deriving one from the widget's state."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode | ((params: { widget: FlexiWidgetController }) => ReactNode)",
+			"description": "The content of the handle. Plain JSX, or a function receiving the surrounding widget's controller."
+		}
+	],
+	"types": {}
+}

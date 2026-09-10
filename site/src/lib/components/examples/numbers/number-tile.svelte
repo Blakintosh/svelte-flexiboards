@@ -8,9 +8,9 @@
 	let { number }: NumberTileProps = $props();
 </script>
 
-<!-- Numbers are mono, always. Placed widgets get a blue rule on tint. -->
+<!-- Numbers are mono, always. Placed widgets get a soft blue rule on tint. -->
 <div
-	class="flex h-full items-center justify-center border border-blue bg-tint p-4 font-mono text-2xl text-blue"
+	class="flex h-full items-center justify-center rounded-[10px] border border-blue/30 bg-tint p-4 font-mono text-2xl text-blue"
 >
 	{number}
 </div>

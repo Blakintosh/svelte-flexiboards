@@ -62,23 +62,21 @@
 	<figure
 		class={[
 			entering && 'plate-in',
-			'border-rule bg-panel relative flex h-full w-full cursor-grab flex-col border p-1.5 active:cursor-grabbing'
+			'border-rule-soft bg-panel shadow-card relative flex h-full w-full cursor-grab flex-col rounded-[14px] border p-1.5 active:cursor-grabbing'
 		]}
 		style="--plate-index: {meta.index ?? 0}"
 		onanimationend={() => (entering = false)}
 	>
-		<div class="relative min-h-0 flex-1 overflow-hidden">
+		<div class="relative min-h-0 flex-1 overflow-hidden rounded-[9px]">
 			<PlateArtwork {motif} {pair} />
 
 			<!-- Resizing is movement too, so the corner mark answers in fx-accent. -->
 			<FlexiResize
 				class={[
-					'absolute right-0.5 bottom-0.5 p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
+					'absolute right-1 bottom-1 rounded-[7px] p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
 					'focus-visible:text-fx-accent focus-visible:outline-fx-accent hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
-					// Mid-resize the mark is the live control, so it takes a fx-accent frame.
-					widget.isResizing
-						? 'bg-tint-accent text-fx-accent border-fx-accent border'
-						: 'bg-panel/85 text-faint'
+					// Mid-resize the mark is the live control, so it takes a soft accent fill.
+					widget.isResizing ? 'bg-tint-accent text-fx-accent' : 'bg-panel/85 text-faint'
 				]}
 			>
 				<MoveDiagonal2 size={14} />
@@ -87,7 +85,7 @@
 		</div>
 
 		<figcaption class="mt-1.5 flex shrink-0 items-baseline justify-between gap-2 px-0.5">
-			<span class="label text-faint truncate text-[9px]">
+			<span class="text-faint truncate text-[10px] font-semibold">
 				{widget.isResizing ? bounds : caption}
 			</span>
 			<span

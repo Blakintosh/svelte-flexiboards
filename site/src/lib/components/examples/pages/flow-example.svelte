@@ -16,15 +16,16 @@
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
-			draggable: true,
+			draggability: 'full',
 			resizability: 'horizontal'
 		}
 	});
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview reads as a dashed accent outline; the widget in hand
+	// lifts off the sheet instead of taking an accent border.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-fx-accent opacity-60'
+		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'rounded-[10px] shadow-lift opacity-90'
 	];
 
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
@@ -33,7 +34,7 @@
 <main class="flex h-full min-h-0 w-full flex-col gap-8 bg-paper px-12 py-8 lg:px-16">
 	<header class="flex shrink-0 items-baseline justify-between gap-4">
 		<h1 class="font-serif text-2xl text-ink lg:text-[30px]">Flow</h1>
-		<span class="label text-[10px] text-faint">3 × 3 · flow · row axis</span>
+		<span class="font-mono text-[11px] text-faint">3 × 3 · flow · row axis</span>
 	</header>
 
 	<FlexiBoard
@@ -43,7 +44,7 @@
 	>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-64 gap-2 border border-ink bg-panel p-4 lg:h-128 lg:gap-6'}
+			class={'aspect-square h-64 gap-2 rounded-[14px] border border-rule-soft bg-panel p-4 shadow-card lg:h-128 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 6rem)',
 				layout: {

@@ -1,5 +1,7 @@
 <script module lang="ts">
 	import type { FlexiLayout, FlexiWidgetLayoutEntry } from '@flexiboards/svelte';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import type { KanbanCardData } from '$lib/components/examples/kanban/kanban-card.svelte';
 
 	type ColumnKey = 'backlog' | 'progress' | 'review' | 'done';
@@ -203,7 +205,7 @@
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
 	import { browser } from '$app/environment';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import Grabber from '$lib/components/examples/common/grabber.svelte';
 	import Sheet from '$lib/components/examples/common/sheet.svelte';
 	import KanbanCard from '$lib/components/examples/kanban/kanban-card.svelte';
@@ -358,20 +360,23 @@
 		resetToken += 1;
 	}
 
-	// Anything provisional — the drop preview, the widget in hand — is fx-accent.
+	// Anything provisional — the drop preview — stays fx-accent; the widget in
+	// hand instead picks up a lifted shadow (the tilt lives on the card contents).
 	const cardClass = (widget: FlexiWidgetController) => [
-		'min-w-0 cursor-grab border border-rule bg-panel px-3 py-2.5 transition-colors duration-[120ms] select-none hover:border-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent',
-		// In hand: a fx-accent outline (the tilt lives on the card contents).
-		widget.isGrabbed && 'border-fx-accent opacity-85',
-		widget.isShadow && 'border-dashed border-fx-accent bg-tint-accent opacity-70 [&>*]:invisible'
+		'min-w-0 cursor-grab rounded-[14px] border border-rule-soft bg-panel px-3.5 py-3 shadow-card transition-shadow duration-[120ms] select-none hover:shadow-card-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent',
+		widget.isGrabbed && 'shadow-lift opacity-85',
+		widget.isShadow &&
+			'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent shadow-none [&>*]:invisible'
 	];
 
 	// The heading is a status chip plus its count in the margin; the widget
-	// itself is only the frame, so it carries no border until it is in motion.
+	// itself is only the frame, so it carries no fill until it is in motion,
+	// when it picks up the same lifted-card treatment as a card.
 	const headClass = (widget: FlexiWidgetController) => [
-		'flex min-w-0 items-center gap-2.5 border border-transparent py-0.5 select-none',
-		widget.isGrabbed && 'border-fx-accent bg-panel opacity-85',
-		widget.isShadow && 'border-dashed border-fx-accent bg-tint-accent opacity-70 [&>*]:invisible'
+		'flex min-w-0 items-center gap-2.5 rounded-[10px] border border-transparent px-1.5 py-1 transition-shadow duration-[120ms] select-none',
+		widget.isGrabbed && 'bg-panel shadow-lift opacity-90',
+		widget.isShadow &&
+			'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent [&>*]:invisible'
 	];
 
 	const cardsConfig: FlexiBoardConfiguration = {
@@ -418,8 +423,8 @@
 		}
 	};
 
-	// The archive tray *is* the sheet's bottom annotation band: an ink-topped
-	// paper strip, going fx-accent only while a card is held over it.
+	// The archive tray *is* the sheet's bottom annotation band: a soft-ruled
+	// strip, going fx-accent only while a card is held over it.
 	// Status chips: cool tints for the flow, ink for Done, faint for Backlog.
 	const CHIPS: Record<ColumnKey, { chip: string; tick: string }> = {
 		backlog: { chip: 'bg-tint-2 text-body', tick: 'bg-faint' },
@@ -429,7 +434,7 @@
 	};
 
 	const trayClass = (deleter: FlexiDeleteController) => [
-		'flex shrink-0 items-center gap-3 border-t border-ink bg-paper px-4 py-2.5 text-faint transition-colors duration-[120ms] lg:px-8',
+		'flex shrink-0 items-center gap-3 border-t border-rule-faint bg-panel px-4 py-2.5 text-faint transition-colors duration-[120ms] lg:px-8',
 		deleter.isHovered && 'bg-tint-accent text-fx-accent'
 	];
 </script>
@@ -438,9 +443,9 @@
 	{@const key = String(widget.metadata?.key ?? '') as ColumnKey}
 	{@const chip = CHIPS[key] ?? CHIPS.backlog}
 	<Grabber size={14} />
-	<span class="label flex min-w-0 items-center gap-2 px-3 py-1 text-[10px] {chip.chip}">
-		<!-- Square tick, the flexion vocabulary's status mark. -->
-		<span class="size-2 shrink-0 {chip.tick}"></span>
+	<span class="flex min-w-0 items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold {chip.chip}">
+		<!-- The status tick, a small dot. -->
+		<span class="size-2 shrink-0 rounded-full {chip.tick}"></span>
 		<span class="min-w-0 truncate">{widget.metadata?.title ?? ''}</span>
 	</span>
 	<!-- The count hangs in the margin beside the chip, not inside it. -->
@@ -448,10 +453,10 @@
 {/snippet}
 
 <main class="bg-paper text-ink flex h-full min-h-0 w-full flex-col p-3 lg:p-6">
-	<!-- Draftsman sheet: the board is a numbered figure on graph paper. -->
+	<!-- The board sheet: a live card count sits in the caption band. -->
 	<Sheet
 		class="min-h-0 flex-1"
-		fig="Fig 14 · Sprint board · 4 flow targets · append"
+		fig="Sprint board · 4 flow targets · append"
 		aside="{totalCards} cards · 2 boards"
 	>
 		<header class="flex shrink-0 items-baseline justify-between gap-3 px-4 pt-5 lg:px-8">
@@ -467,7 +472,7 @@
 			<Button
 				variant="outline"
 				size="icon"
-				class="bg-paper size-[34px] shrink-0"
+				class="bg-paper border-rule-soft size-[34px] shrink-0 rounded-full"
 				onclick={reset}
 				title="Reset board"
 			>
@@ -487,6 +492,9 @@
 				config={cardsConfig}
 				bind:controller={cardsBoard}
 			>
+				{#snippet suspense(_: FlexiBoardSuspenseReason)}
+					<BoardSkeleton bars={4} class="px-4 pt-5 lg:px-8" />
+				{/snippet}
 				<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pt-5 pb-3 lg:px-8">
 					<!--
 						Board B — the column headings. A second, independent FlexiBoard
@@ -513,7 +521,7 @@
 					-->
 					<div class="grid shrink-0 grid-cols-[repeat(4,minmax(216px,1fr))] items-start gap-4">
 						{#each SEED_ORDER as key (key)}
-							<!-- No column ground: the cards sit straight on the sheet's graph paper. -->
+							<!-- No column ground: the cards sit straight on the sheet's surface. -->
 							<div class="flex min-w-0 flex-col" style:order={slots[key]}>
 								<FlexiTarget
 									{key}
@@ -521,7 +529,7 @@
 									containerClass="flex min-w-0 flex-col"
 									class={cn(
 										'min-h-24 content-start gap-2',
-										counts[key] === 0 && 'border-rule border border-dashed'
+										counts[key] === 0 && 'border-rule-soft rounded-[14px] border border-dashed'
 									)}
 								/>
 								<!-- Below the drop rectangle, so the composer never steals a drop. -->
@@ -539,18 +547,18 @@
 					{#snippet children()}
 						<Archive class="size-4 shrink-0" />
 						{#if undoLayout}
-							<span class="label min-w-0 truncate text-[10px]">1 card archived</span>
+							<span class="min-w-0 truncate text-[11.5px] font-semibold">1 card archived</span>
 							<Button
 								variant="ghost"
 								size="sm"
-								class="text-ink hover:bg-tint ml-auto h-7 shrink-0 gap-1.5 px-2"
+								class="text-ink hover:bg-tint ml-auto h-7 shrink-0 gap-1.5 rounded-full px-2"
 								onclick={undoArchive}
 							>
 								<Undo2 class="size-3.5" />
 								<span class="ui text-xs">Undo</span>
 							</Button>
 						{:else}
-							<span class="label min-w-0 truncate text-[10px]"
+							<span class="min-w-0 truncate text-[11.5px] font-semibold"
 								>Archive<span class="hidden sm:inline">&nbsp;— drag a card here</span></span
 							>
 						{/if}

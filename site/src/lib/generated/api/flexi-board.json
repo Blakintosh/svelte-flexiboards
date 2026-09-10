@@ -2,6 +2,7 @@
 	"component": "FlexiBoard",
 	"generatedFrom": [
 		"packages/svelte/src/components/flexi-board.svelte",
+		"packages/react/src/components/flexi-board.tsx",
 		"packages/core/src"
 	],
 	"props": [
@@ -30,6 +31,38 @@
 			"name": "class",
 			"type": "ClassValue",
 			"description": "The class names to apply to the board's root element."
+		},
+		{
+			"name": "suspense",
+			"type": "Snippet<[FlexiBoardSuspenseReason]>",
+			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout that hasn't been imported yet, or an unconfirmed responsive breakpoint guess. Server-rendered alongside the board and toggled by generated CSS, so it applies from the very first paint; it unmounts once the layout is confirmed at hydration."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "config",
+			"type": "FlexiBoardConfiguration<string> | undefined",
+			"description": ""
+		},
+		{
+			"name": "children",
+			"type": "ReactNode",
+			"description": "The child content of the board, which should contain the inner FlexiTarget and FlexiWidget components."
+		},
+		{
+			"name": "className",
+			"type": "string",
+			"description": "The class names to apply to the board's root element."
+		},
+		{
+			"name": "suspense",
+			"type": "(reason: FlexiBoardSuspenseReason) => ReactNode",
+			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout that hasn't been imported yet, or an unconfirmed responsive breakpoint guess. Server-rendered alongside the board and toggled by generated CSS, so it applies from the very first paint; it unmounts once the layout is confirmed after mount."
 		}
 	],
 	"controller": {
@@ -50,6 +83,24 @@
 				"type": "string",
 				"description": "The breakpoint that the board corresponds to, if the board is responsive.",
 				"readonly": true
+			},
+			{
+				"name": "layoutPending",
+				"type": "boolean",
+				"description": "Whether the board's rendered layout is provisional: a `loadLayout` (or `loadLayouts`) is configured but hasn't run yet. True throughout a server render and during hydration until the stored layout is imported. Adapters expose it in the markup (`data-flexi-pending=\"layout\"`) so a skeleton or veil can cover the stand-in layout.",
+				"readonly": true
+			},
+			{
+				"name": "breakpointPending",
+				"type": "string | null",
+				"description": "The breakpoint this render is assuming without confirmation, or null once it's real. Non-null only for a board under a ResponsiveFlexiBoard during a server render, where the rendered breakpoint is a guess. Adapters emit it as `data-flexi-pending=\"<key>\"` (unless layoutPending takes priority) so a stylesheet can veil the board only when the viewport doesn't match the guess.",
+				"readonly": true
+			},
+			{
+				"name": "currentWidgetAction",
+				"type": "WidgetAction | null",
+				"description": "The move or resize the user is in the middle of, or null when idle. Reactive: read it during render to react to a drag starting and ending.",
+				"readonly": true
 			}
 		],
 		"methods": [
@@ -67,6 +118,11 @@
 				"name": "exportLayout",
 				"type": "() => FlexiLayout",
 				"description": "Exports the current widget layout of the board."
+			},
+			{
+				"name": "clear",
+				"type": "() => void",
+				"description": "Deletes every widget in every target of this board. Fires `onWidgetDelete` per widget and `onLayoutChange` once."
 			}
 		]
 	},
@@ -93,14 +149,56 @@
 				"description": "A registry of widget types, mapping type keys to shared widget configuration. Widgets reference an entry via their `type`."
 			},
 			{
+				"name": "initialLayout",
+				"type": "FlexiLayout",
+				"description": "A layout to render from instead of the widgets declared in markup, as a plain value keyed by target. Applied during the initial render pass on both the server and the client, so a layout fetched in a server `load` (e.g. from a database) server-renders at its final positions with no pending window. Requires a `registry` to resolve each entry's `type`. Targets without an entry here fall back to their declared widgets. A configured `loadLayout` still runs on the client and overrides this."
+			},
+			{
 				"name": "loadLayout",
 				"type": "() => FlexiLayout | FlexiWidgetLayoutEntry[] | undefined",
-				"description": "Function to load an initial layout on mount. Called once when the board is ready."
+				"description": "Function to load an initial layout on mount. Called once when the board is ready. Not invoked during server rendering. Use `initialLayout` for layouts the server already has."
 			},
 			{
 				"name": "onLayoutChange",
 				"type": "(layout: FlexiLayout) => void",
-				"description": "Callback fired when the board's layout changes (widget moved, resized, added, or removed)."
+				"description": "Callback fired when the board's layout changes (widget moved, resized, added, or removed), whether by the user or through the controller API. Debounced; receives the exported layout."
+			},
+			{
+				"name": "onWidgetGrab",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when the user picks a widget up (by pointer or keyboard)."
+			},
+			{
+				"name": "onWidgetDrop",
+				"type": "(event: FlexiWidgetDropEvent) => void",
+				"description": "Called when a widget the user was moving or resizing lands in a target. Fires after the placement is committed, so the widget's `x`, `y`, `width`, `height` and `target` are already final."
+			},
+			{
+				"name": "onWidgetCancel",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when the user cancels a move or resize (Escape, or releasing where nothing accepts the widget); the widget is back where it started."
+			},
+			{
+				"name": "onWidgetDelete",
+				"type": "(event: FlexiWidgetEvent) => void",
+				"description": "Called when a widget is deleted, by dropping it on a FlexiDelete or by calling `widget.delete()`."
+			},
+			{
+				"name": "canDrop",
+				"type": "(check: FlexiDropCheck) => boolean",
+				"description": "Decides whether a widget may be placed at a position. Called while the user hovers (so the drop preview can show a rejection) and again on release. Return false to refuse: the widget stays where it was. Placement rules the grid already enforces (bounds, collisions) run regardless."
+			},
+			{
+				"name": "portalDropFlights",
+				"type": "boolean",
+				"description": "Hosts drop flights in the fixed, viewport-level portal instead of flying them inside the board. Reach for this when drops are released outside the board's box and must fly in across its edge without clipping under the board's overflow lock (e.g. a small hero board mid-page). Leave it off for scrollable boards: a portalled flight escapes the scroll container's clip and paints above surrounding chrome for its duration.",
+				"default": "false"
+			},
+			{
+				"name": "autoScroll",
+				"type": "boolean",
+				"description": "Scrolls the board's scrollable ancestors (the page included) while a drag or resize hovers within 48px of their visible edge. Turn it off for boards that sit on a page where a drag should never move the viewport (e.g. a marketing hero). An unexpected page scroll mid-drag reads as the board jumping.",
+				"default": "true"
 			}
 		],
 		"FlexiTargetDefaults": [
@@ -136,18 +234,6 @@
 				"name": "resizability",
 				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
 				"description": "The resizability of the widget."
-			},
-			{
-				"name": "width",
-				"type": "number",
-				"description": "The width of the widget in units.",
-				"deprecated": "This property does not work and will be removed in the next version."
-			},
-			{
-				"name": "height",
-				"type": "number",
-				"description": "The height of the widget in units.",
-				"deprecated": "This property does not work and will be removed in the next version."
 			},
 			{
 				"name": "snippet",
@@ -203,6 +289,171 @@
 				"name": "maxHeight",
 				"type": "number",
 				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+			}
+		],
+		"FlexiWidgetLayoutEntry": [
+			{
+				"name": "id",
+				"type": "string",
+				"description": "A stable identifier for this widget, preserved through export and import. Optional."
+			},
+			{
+				"name": "type",
+				"type": "string",
+				"description": "The registry key that says how to render this widget. Exported even when absent, so no widget's position is lost; on import, entries without a type are skipped, since nothing says how to render them."
+			},
+			{
+				"name": "x",
+				"type": "number",
+				"description": "The column the widget starts at, zero-indexed."
+			},
+			{
+				"name": "y",
+				"type": "number",
+				"description": "The row the widget starts at, zero-indexed."
+			},
+			{
+				"name": "width",
+				"type": "number",
+				"description": "The width of the widget in grid units."
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": "The height of the widget in grid units."
+			},
+			{
+				"name": "metadata",
+				"type": "Record<string, any>",
+				"description": "Custom serialisable data attached to the widget, preserved through export and import."
+			}
+		],
+		"FlexiRegistryEntry": [
+			{
+				"name": "draggability",
+				"type": "'none' | 'movable' | 'full'",
+				"description": "The draggability of the widget."
+			},
+			{
+				"name": "resizability",
+				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
+				"description": "The resizability of the widget."
+			},
+			{
+				"name": "snippet",
+				"type": "Snippet<[{ widget: FlexiWidgetController }]>",
+				"description": "The snippet that is rendered by this widget."
+			},
+			{
+				"name": "component",
+				"type": "Component",
+				"description": "The component that is rendered by this widget."
+			},
+			{
+				"name": "componentProps",
+				"type": "Record<string, any>",
+				"description": "The props applied to the component rendered, if it has one."
+			},
+			{
+				"name": "className",
+				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<TClass>",
+				"description": "The class names to apply to this widget."
+			},
+			{
+				"name": "transition",
+				"type": "FlexiWidgetTransitionConfiguration",
+				"description": "The transition configuration for this widget."
+			},
+			{
+				"name": "grabTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+			},
+			{
+				"name": "resizeTrigger",
+				"type": "FlexiWidgetTriggerConfiguration",
+				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+			},
+			{
+				"name": "minWidth",
+				"type": "number",
+				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "minHeight",
+				"type": "number",
+				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+			},
+			{
+				"name": "maxWidth",
+				"type": "number",
+				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+			},
+			{
+				"name": "maxHeight",
+				"type": "number",
+				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+			}
+		],
+		"FlexiWidgetEvent": [
+			{
+				"name": "widget",
+				"type": "FlexiWidgetController",
+				"description": ""
+			},
+			{
+				"name": "target",
+				"type": "FlexiTargetController",
+				"description": "The target the widget is in or over. Undefined when it is over none (e.g. a cancelled adder drag)."
+			}
+		],
+		"FlexiWidgetDropEvent": [
+			{
+				"name": "widget",
+				"type": "FlexiWidgetController",
+				"description": ""
+			},
+			{
+				"name": "sourceTarget",
+				"type": "FlexiTargetController",
+				"description": "The target the widget was picked up from. Undefined for a widget added through an adder."
+			},
+			{
+				"name": "target",
+				"type": "FlexiTargetController",
+				"description": "The target the widget landed in."
+			}
+		],
+		"FlexiDropCheck": [
+			{
+				"name": "widget",
+				"type": "FlexiWidgetController",
+				"description": ""
+			},
+			{
+				"name": "target",
+				"type": "FlexiTargetController",
+				"description": ""
+			},
+			{
+				"name": "x",
+				"type": "number",
+				"description": ""
+			},
+			{
+				"name": "y",
+				"type": "number",
+				"description": ""
+			},
+			{
+				"name": "width",
+				"type": "number",
+				"description": ""
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": ""
 			}
 		]
 	}

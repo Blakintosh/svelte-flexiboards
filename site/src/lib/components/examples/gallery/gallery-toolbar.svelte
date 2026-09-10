@@ -10,7 +10,7 @@
 </script>
 
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import ArrowRightLeft from 'lucide-svelte/icons/arrow-right-left';
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
 
@@ -23,15 +23,15 @@
 </script>
 
 <div class="flex items-center gap-2">
-	<!-- One mode control: the chosen segment fills, it never grows a shadow. -->
-	<div class="border-ink flex items-center border" role="group" aria-label="Motion model">
+	<!-- One mode control: a pill switch, the chosen segment lifts with shadow-seg. -->
+	<div class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]" role="group" aria-label="Motion model">
 		{#each modes as mode (mode.id)}
 			<Button
 				variant="ghost"
 				size="sm"
-				class="h-8 rounded-none px-2.5 text-xs sm:px-3 {motion === mode.id
-					? 'bg-tint text-ink'
-					: 'text-body'}"
+				class="h-[26px] rounded-full px-2.5 text-xs sm:px-3 {motion === mode.id
+					? 'bg-panel shadow-seg text-ink'
+					: 'text-faint hover:text-ink'}"
 				aria-pressed={motion === mode.id}
 				title={mode.hint}
 				onclick={() => onMotionChange(mode.id)}
@@ -41,11 +41,11 @@
 		{/each}
 	</div>
 
-	<!-- Shuffle keeps an ink frame; Reset is the quiet one beside it. -->
+	<!-- Shuffle keeps an outline pill; Reset is the quiet one beside it. -->
 	<Button
 		variant="outline"
 		size="sm"
-		class="border-ink h-8 rounded-none text-xs"
+		class="border-rule-soft h-8 rounded-full text-xs"
 		aria-label="Shuffle the plates"
 		onclick={onShuffle}
 	>
@@ -56,7 +56,7 @@
 	<Button
 		variant="ghost"
 		size="sm"
-		class="text-body h-8 rounded-none text-xs"
+		class="text-body hover:bg-rule-faint h-8 rounded-full text-xs"
 		aria-label="Reset the layout"
 		onclick={onReset}
 	>

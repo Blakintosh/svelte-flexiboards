@@ -2,13 +2,36 @@
 	import Toc from '$lib/components/docs/toc.svelte';
 	import DocumentationSidebar from '$lib/components/docs/documentation-sidebar.svelte';
 	import { page } from '$app/state';
-	import { locateDoc } from '$lib/docs-directory';
+	import { excludedFrameworks, locateDoc } from '$lib/docs-directory';
+	import { framework, frameworks } from '$lib/components/brand/framework.svelte';
+	import Callout from '$lib/components/docs/callout.svelte';
+	import { copyText } from '$lib/copy-text';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
+	// The Markdown twin of this page (see /docs/llms), for pasting into an assistant.
+	const markdownHref = $derived(`${page.url.pathname}.md`);
+	let copyState = $state<'idle' | 'copied' | 'failed'>('idle');
+
+	async function copyMarkdown() {
+		const markdown = await fetch(markdownHref).then((r) => r.text());
+		copyState = (await copyText(markdown)) ? 'copied' : 'failed';
+		setTimeout(() => (copyState = 'idle'), 2000);
+	}
+
 	const PageComponent = $derived(data.doc.content);
-	const location = $derived(locateDoc(page.url.pathname));
+	const location = $derived(locateDoc(page.url.pathname, framework.current));
+	// A framework-specific page viewed under another framework gets a notice
+	// rather than a redirect: the content is still readable.
+	const excluded = $derived(excludedFrameworks(page.url.pathname));
+	const notApplicable = $derived(excluded.includes(framework.current));
+	const appliesTo = $derived(
+		frameworks
+			.filter((f) => !excluded.includes(f.id))
+			.map((f) => f.label)
+			.join(', ')
+	);
 	const editUrl = $derived(
 		`https://github.com/blakintosh/svelte-flexiboards/edit/main/site/src/content/docs/${page.url.pathname.replace(/^\/docs\//, '')}.md`
 	);
@@ -17,6 +40,11 @@
 		document.title = `${data.doc.meta.title} ⋅ Docs ⋅ Flexiboards`;
 	});
 </script>
+
+<!-- The Markdown twin of this page, for agents and anything else that would rather read plain text. -->
+<svelte:head>
+	<link rel="alternate" type="text/markdown" href={`${page.url.pathname}.md`} />
+</svelte:head>
 
 <!-- Three columns divided by single 1px rules; the prose measure is capped by `.prose`. -->
 <div class="relative flex h-full">
@@ -54,15 +82,43 @@
 			<p class="max-w-[60ch] text-[17px] leading-relaxed text-body">
 				{data.doc.meta.description}
 			</p>
-			<a
-				href={editUrl}
-				target="_blank"
-				rel="noreferrer"
-				class="mt-5 inline-block font-mono text-[10.5px] text-body no-underline transition-colors duration-[120ms] hover:text-fx-accent"
-			>
-				Edit this page ↗
-			</a>
+			<!-- Page actions: edit the source, or take the page as Markdown to an assistant. -->
+			<div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[10.5px] text-body">
+				<a
+					href={editUrl}
+					target="_blank"
+					rel="noreferrer"
+					class="no-underline transition-colors duration-[120ms] hover:text-fx-accent"
+				>
+					Edit this page ↗
+				</a>
+				<button
+					type="button"
+					class="transition-colors duration-[120ms] hover:text-fx-accent"
+					onclick={copyMarkdown}
+				>
+					{copyState === 'copied'
+						? 'Copied'
+						: copyState === 'failed'
+							? 'Copy blocked, open instead'
+							: 'Copy as Markdown'}
+				</button>
+				<a
+					href={markdownHref}
+					target="_blank"
+					rel="noopener"
+					class="no-underline transition-colors duration-[120ms] hover:text-fx-accent"
+				>
+					Open Markdown ↗
+				</a>
+			</div>
 		</div>
+		{#if notApplicable}
+			<Callout variant="warning" title="{appliesTo} only">
+				This guide applies to the {appliesTo} adapter. The {framework.meta.label} adapter renders
+				client-side only, so nothing here is needed there.
+			</Callout>
+		{/if}
 		<PageComponent />
 		{#if location && (location.prev || location.next)}
 			<nav class="not-prose mt-14 grid grid-cols-2 border border-rule bg-card">

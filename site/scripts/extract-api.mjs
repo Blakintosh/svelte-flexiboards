@@ -28,30 +28,64 @@ const manifest = [
 		id: 'flexi-board',
 		component: 'FlexiBoard',
 		svelte: 'packages/svelte/src/components/flexi-board.svelte',
+		react: 'packages/react/src/components/flexi-board.tsx',
 		propsType: 'FlexiBoardProps',
 		controller: 'FlexiBoardController',
-		types: ['FlexiBoardConfiguration', 'FlexiTargetDefaults', 'FlexiWidgetDefaults']
+		types: [
+			'FlexiBoardConfiguration',
+			'FlexiTargetDefaults',
+			'FlexiWidgetDefaults',
+			'FlexiWidgetLayoutEntry',
+			'FlexiRegistryEntry',
+			'FlexiWidgetEvent',
+			'FlexiWidgetDropEvent',
+			'FlexiDropCheck'
+		]
 	},
 	{
 		id: 'flexi-target',
 		component: 'FlexiTarget',
 		svelte: 'packages/svelte/src/components/flexi-target.svelte',
+		react: 'packages/react/src/components/flexi-target.tsx',
 		propsType: 'FlexiTargetProps',
 		controller: 'FlexiTargetController',
-		types: ['FlexiTargetPartialConfiguration', 'FlexiWidgetDefaults']
+		types: [
+			'FlexiTargetPartialConfiguration',
+			'FlexiWidgetDefaults',
+			'FlowTargetLayout',
+			'FreeFormTargetLayout'
+		]
 	},
 	{
 		id: 'flexi-widget',
 		component: 'FlexiWidget',
 		svelte: 'packages/svelte/src/components/flexi-widget.svelte',
+		react: 'packages/react/src/components/flexi-widget.tsx',
 		propsType: 'FlexiWidgetProps',
 		controller: 'FlexiWidgetController',
-		types: ['FlexiWidgetConfiguration']
+		types: ['FlexiWidgetConfiguration', 'FlexiWidgetTransitionConfiguration']
+	},
+	{
+		id: 'flexi-grab',
+		component: 'FlexiGrab',
+		svelte: 'packages/svelte/src/components/flexi-grab.svelte',
+		react: 'packages/react/src/components/flexi-grab.tsx',
+		propsType: 'FlexiGrabProps',
+		types: []
+	},
+	{
+		id: 'flexi-resize',
+		component: 'FlexiResize',
+		svelte: 'packages/svelte/src/components/flexi-resize.svelte',
+		react: 'packages/react/src/components/flexi-resize.tsx',
+		propsType: 'FlexiResizeProps',
+		types: []
 	},
 	{
 		id: 'responsive-flexi-board',
 		component: 'ResponsiveFlexiBoard',
 		svelte: 'packages/svelte/src/components/responsive-flexi-board.svelte',
+		react: 'packages/react/src/components/responsive-flexi-board.tsx',
 		propsType: 'ResponsiveFlexiBoardProps',
 		controller: 'ResponsiveFlexiBoardController',
 		types: ['ResponsiveFlexiBoardConfiguration']
@@ -60,6 +94,7 @@ const manifest = [
 		id: 'flexi-add',
 		component: 'FlexiAdd',
 		svelte: 'packages/svelte/src/components/flexi-add.svelte',
+		react: 'packages/react/src/components/flexi-add.tsx',
 		propsType: 'FlexiAddProps',
 		controller: 'FlexiAddController',
 		types: ['AdderWidgetConfiguration']
@@ -68,6 +103,7 @@ const manifest = [
 		id: 'flexi-delete',
 		component: 'FlexiDelete',
 		svelte: 'packages/svelte/src/components/flexi-delete.svelte',
+		react: 'packages/react/src/components/flexi-delete.tsx',
 		propsType: 'FlexiDeleteProps',
 		controller: 'FlexiDeleteController',
 		types: []
@@ -90,6 +126,8 @@ const typeLabels = {
 	ResponsiveFlexiLoadLayoutFn: '() => ResponsiveFlexiLayout | undefined',
 	ResponsiveFlexiLayoutChangeFn: '(layouts: ResponsiveFlexiLayout) => void',
 	FlexiDeleteClasses: 'ClassValue | ((deleter: FlexiDeleteController) => ClassValue)',
+	FlexiWidgetTransitionTypeConfiguration:
+		'{ duration?: number; easing?: string } | AnimationAdapter',
 	TargetSizing:
 		'string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)'
 };
@@ -126,12 +164,24 @@ for (const file of project.getSourceFiles()) {
 	}
 }
 
-function presentType(text) {
+/** The React adapter instantiates the same core generics with `string` classes and render functions. */
+const typeLabelsReact = {
+	FlexiWidgetChildrenSnippet: '(params: { widget: FlexiWidgetController }) => ReactNode',
+	FlexiComponent: 'ComponentType',
+	FlexiContent: 'ReactNode',
+	FlexiWidgetClasses: 'string | ((widget: FlexiWidgetController) => string)',
+	FlexiAddClasses: 'string | ((adder: FlexiAddController) => string)',
+	FlexiDeleteClasses: 'string | ((deleter: FlexiDeleteController) => string)'
+};
+
+function presentType(text, labels = typeLabels) {
 	let out = text
 		.replace(/import\("[^"]*"\)\./g, '')
 		.replace(/\s+/g, ' ')
-		.trim();
-	for (const [name, label] of Object.entries(typeLabels)) {
+		.trim()
+		// The React adapter's render-prop union, spelled out at its instantiation.
+		.replace(/\bFlexiChildren<(\{[^}]*\})>/g, 'ReactNode | ((params: $1) => ReactNode)');
+	for (const [name, label] of Object.entries({ ...typeLabels, ...labels })) {
 		out = out.replace(new RegExp(`\\b${name}\\b`, 'g'), label);
 	}
 	for (const [name, expansion] of literalAliases) {
@@ -158,7 +208,7 @@ function jsDocInfo(decl) {
 }
 
 /** Flatten a (possibly intersected) object type into documented entries. */
-function extractMembers(type, { bindables = new Set(), location } = {}) {
+function extractMembers(type, { bindables = new Set(), location, labels } = {}) {
 	const entries = [];
 	for (const symbol of type.getProperties()) {
 		// A member re-declared on a later intersection arm (e.g. width on both
@@ -188,7 +238,7 @@ function extractMembers(type, { bindables = new Set(), location } = {}) {
 
 		const entry = {
 			name: symbol.getName(),
-			type: presentType(typeText),
+			type: presentType(typeText, labels),
 			description: doc.description
 		};
 		if (doc.deprecated) entry.deprecated = doc.deprecated;
@@ -291,6 +341,18 @@ for (const entry of manifest) {
 	const propsAlias = virtualFile.getTypeAlias(entry.propsType);
 	if (!propsAlias) throw new Error(`${entry.propsType} not exported from ${entry.svelte}`);
 
+	// React props come straight from the .tsx component's exported props type.
+	let propsReact;
+	if (entry.react) {
+		const reactFile = project.addSourceFileAtPath(path.join(repoRoot, entry.react));
+		const reactAlias = reactFile.getTypeAlias(entry.propsType);
+		if (!reactAlias) throw new Error(`${entry.propsType} not exported from ${entry.react}`);
+		propsReact = extractMembers(reactAlias.getType(), {
+			location: reactAlias,
+			labels: typeLabelsReact
+		});
+	}
+
 	const types = {};
 	for (const typeName of entry.types) {
 		types[typeName] = extractMembers(findCoreDeclaration(typeName).getType());
@@ -298,9 +360,10 @@ for (const entry of manifest) {
 
 	const result = {
 		component: entry.component,
-		generatedFrom: [entry.svelte, 'packages/core/src'],
+		generatedFrom: [entry.svelte, ...(entry.react ? [entry.react] : []), 'packages/core/src'],
 		props: extractMembers(propsAlias.getType(), { bindables, location: propsAlias }),
-		controller: extractController(findCoreDeclaration(entry.controller)),
+		...(propsReact && { propsReact }),
+		...(entry.controller && { controller: extractController(findCoreDeclaration(entry.controller)) }),
 		types
 	};
 
@@ -309,8 +372,8 @@ for (const entry of manifest) {
 	writeFileSync(outPath, JSON.stringify(result, null, '\t') + '\n');
 	console.log(
 		`✓ ${entry.component}: ${result.props.length} props, ` +
-			`${result.controller.properties.length} controller properties, ` +
-			`${result.controller.methods.length} methods, ` +
+			`${result.controller?.properties.length ?? 0} controller properties, ` +
+			`${result.controller?.methods.length ?? 0} methods, ` +
 			`types [${Object.entries(types)
 				.map(([n, e]) => `${n}:${e.length}`)
 				.join(', ')}] → ${path.relative(repoRoot, outPath)}`

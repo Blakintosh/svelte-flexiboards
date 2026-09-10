@@ -6,42 +6,12 @@ published: true
 ---
 
 <script lang="ts">
-	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
-	import FreeFormExample from '$lib/components/docs/free-form-grids/free-form-example.svelte';
+	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-## Introduction
+A free-form grid is a sparse grid: widgets sit at coordinates you choose, and empty cells are allowed. Set a target's `layout.type` to `'free'` to get one:
 
-Free-form grids are a _sparse_ grid layout, where widgets can be placed anywhere within the grid. They do not enforce a particular structure, making them ideal for things such as dashboards.
-
-The `layout` property of a `FlexiTarget`'s configuration (see [FlexiTarget](/docs/components/target)) allows you to define a FlexiTarget that uses a free-form layout. It is an object with the following properties:
-
-```ts
-export type FreeFormTargetLayout = {
-	type: 'free';
-	minRows?: number;
-	minColumns?: number;
-	maxRows?: number;
-	maxColumns?: number;
-	collapsibility?: FreeGridCollapsibility;
-};
-```
-
-- `type`: The type of layout to use, where `free` defines a free-form grid.
-- `minColumns`: The minimum number of columns that the grid should have.
-- `minRows`: The minimum number of rows that the grid should have.
-- `maxColumns`: The maximum number of columns that the grid should have. When equal to `minColumns`, the grid will not expand in the column direction.
-- `maxRows`: The maximum number of rows that the grid should have. When equal to `minRows`, the grid will not expand in the row direction.
-- `collapsibility`: Whether the grid _collapses_ to remove empty rows and columns, and if so, when. Can be any of: 
-	- `none` (don't collapse)
-	- `leading` (collapse at the start of the grid)
-	- `trailing` (collapse at the end of the grid)
-	- `endings` (collapse at either end of the grid)
-	- or `any` (collapse any empty row/column).
-
-## Example
-
-The following code creates us a basic free-form grid with a non-expandable 2x2 layout:
+<Only svelte>
 
 ```svelte example title="Free Grid"
 <script lang="ts">
@@ -72,13 +42,68 @@ The following code creates us a basic free-form grid with a non-expandable 2x2 l
 </FlexiBoard>
 ```
 
-## Considerations
+</Only>
 
-Free-form grids have some main considerations:
+<Only react>
 
-- When creating a FlexiWidget that is part of a free-form grid, you must explicitly specify an `x` and `y` prop (zero-indexed). Due to the sparse nature of the grid, Flexiboards is not designed to automatically infer a position to drop the widget at.
-- You can only have up to 32 columns in a free-form grid (any `maxColumns` value greater than 32 will be ignored). This is because under the hood, Flexiboards uses 32-bit bitmaps to track free-form layouts.
+```tsx example title="Free Grid"
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
 
-## More Examples
+export function FreeGrid() {
+	return (
+		<FlexiBoard className="size-72 rounded-xl border p-8 lg:size-96">
+			<FlexiTarget
+				className="h-full w-full gap-4 lg:gap-6"
+				containerClassName="w-full h-full"
+				config={{
+					rowSizing: 'minmax(0, 1fr)',
+					layout: {
+						type: 'free',
+						minRows: 2,
+						minColumns: 2,
+						maxRows: 2,
+						maxColumns: 2
+					}
+				}}
+			>
+				<FlexiWidget x={0} y={0} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+					{({ widget }) => (
+						<>
+							I'm at ({widget.x}, {widget.y})
+						</>
+					)}
+				</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
+}
+```
 
-If you would like to see any further examples of free-form grids in action, be sure to check out the open-source [Dashboard](/examples/dashboard) and [Numbers](/examples/numbers) examples, which are both built using free-form grids.
+</Only>
+
+The widget starts at `(0, 0)`. Drag it to any of the four cells and it stays there.
+
+## When to use a free-form grid
+
+Use a free-form grid for dashboards and canvases, where each widget has a position and size of its own and gaps are fine. When you want widgets to stay in an order with no gaps, use a [flow grid](/docs/flow-grids).
+
+## Sizing the grid
+
+`minRows` and `minColumns` set the grid's starting size; `maxRows` and `maxColumns` cap how far it can grow as widgets are dragged or resized past the edge. Set a maximum equal to its minimum, as above, to fix that dimension.
+
+Two further options tidy the grid after each change:
+
+- `collapsibility` removes empty rows and columns, either at the edges of the grid or anywhere in it.
+- `packing` slides widgets left (`'horizontal'`) or up (`'vertical'`) to close gaps, closest-to-the-edge first.
+
+Every property, with its type and default, is in the [FreeFormTargetLayout reference](/docs/components/target#freeformtargetlayout).
+
+## Examples
+
+The [Dashboard](/examples/dashboard) and [Numbers](/examples/numbers) examples are both free-form grids.
+
+## Gotchas
+
+- **Every widget needs `x` and `y`.** The grid does not infer a position for a widget declared without one. Widgets created by an [adder](/docs/components/adder) or an imported [layout](/docs/guides/exporting-importing-boards) carry their own coordinates.
+- **32 columns maximum.** Free-form layouts are tracked as 32-bit bitmaps, so `maxColumns` values above 32 are treated as 32.
+- **Pushing, not swapping.** A widget dropped onto an occupied cell pushes the occupants aside if they fit, and the drop is rejected if they do not. The `dropRejected` flag on the widget lets you show this; see [Widget Rendering](/docs/widget-rendering#styling-by-state).

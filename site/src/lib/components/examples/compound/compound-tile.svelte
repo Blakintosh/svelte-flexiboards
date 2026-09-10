@@ -54,8 +54,6 @@
 </script>
 
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
 	import Grabber from '$lib/components/examples/common/grabber.svelte';
 	import MetricTile from './metric-tile.svelte';
 	import LatencyTile from './latency-tile.svelte';
@@ -67,8 +65,8 @@
 	const tile = $derived(info[kind]);
 </script>
 
-<Card.Root
-	class="border-rule bg-panel flex h-full w-full min-w-0 flex-col gap-0 py-0 shadow-none"
+<div
+	class="border-rule-soft bg-panel shadow-card flex h-full w-full min-w-0 flex-col gap-0 rounded-[14px] border"
 	data-tile-kind={kind}
 >
 	<!--
@@ -77,13 +75,16 @@
 		direct grabs on the tile body — which is exactly what lets the inner boards
 		be drag-anywhere.
 	-->
-	<div class="border-rule flex shrink-0 items-center gap-1 border-b px-1.5 py-1 lg:px-2">
+	<div class="border-rule-faint flex shrink-0 items-center gap-1 border-b px-2 py-1.5 lg:px-2.5">
 		<Grabber size={16} class="-ml-0.5 p-1 lg:p-1.5 [&_svg]:size-4 lg:[&_svg]:size-5" />
-		<span class="label text-faint min-w-0 flex-1 truncate text-[9px] lg:text-[10px]">
+		<span class="text-faint min-w-0 flex-1 truncate text-[11px] font-semibold lg:text-[11.5px]">
 			{tile.title}
 		</span>
 		{#if tile.board}
-			<Badge variant="outline" class="hidden shrink-0 sm:inline-flex">{tile.board}</Badge>
+			<span
+				class="label border-rule-soft text-faint hidden w-fit shrink-0 items-center justify-center overflow-hidden rounded-full border px-2 py-[3px] text-[10px] tracking-[0.1em] whitespace-nowrap sm:inline-flex"
+				>{tile.board}</span
+			>
 		{/if}
 	</div>
 
@@ -98,4 +99,4 @@
 			<MetricTile {...metrics[kind]} />
 		{/if}
 	</div>
-</Card.Root>
+</div>

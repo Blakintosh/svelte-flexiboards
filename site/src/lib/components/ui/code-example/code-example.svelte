@@ -4,7 +4,7 @@
 	async function loadHighlighter() {
 		const highlighter = await getSingletonHighlighter({
 			themes: [blueprintTheme],
-			langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell']
+			langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell', 'tsx', 'jsx', 'diff']
 		});
 
 		return { highlighter };
@@ -39,7 +39,7 @@
 				return '';
 			}
 			const codeContents = rawElement.textContent;
-			const lang = 'svelte';
+			const lang = props.meta?.lang ?? 'svelte';
 
 			try {
 				const { highlighter } = await highlighterPromise;

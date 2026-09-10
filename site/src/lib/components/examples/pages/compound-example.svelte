@@ -8,7 +8,7 @@
 		type FlexiBoardConfiguration,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import Sheet from '$lib/components/examples/common/sheet.svelte';
 	import CompoundTile, {
 		type TileKind
@@ -49,12 +49,14 @@
 
 	onDestroy(() => clearTimeout(flashTimer));
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview reads as a dashed placeholder; the tile in hand lifts
+	// off the stage instead of taking an accent outline.
 	const tileClass = (widget: FlexiWidgetController) =>
 		cn(
-			'min-w-0',
-			widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-			widget.isGrabbed && 'border border-fx-accent opacity-60'
+			'min-w-0 motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+			widget.isShadow &&
+				'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+			widget.isGrabbed && 'shadow-lift rotate-[2.5deg] rounded-[14px]'
 		);
 
 	const outerConfig: FlexiBoardConfiguration = {
@@ -89,11 +91,11 @@
 	];
 </script>
 
-<!-- Draftsman sheet: the nesting claim is annotation, so it belongs in the fig bands. -->
+<!-- Soft sheet: the nesting claim is annotation, so it belongs in the fig band. -->
 <main class="bg-paper flex h-full min-h-0 w-full flex-col p-3 lg:p-5">
 	<Sheet
 		class="min-h-0 flex-1"
-		fig="Fig 9 · Compound · nested boards · every drag scoped to its owner"
+		fig="Compound · nested boards · every drag scoped to its owner"
 		aside="3 boards live"
 	>
 		<div class="flex min-h-0 flex-1 flex-col gap-3 px-4 pt-4 lg:px-8 lg:pt-5">
@@ -104,7 +106,13 @@
 						Two tiles are themselves boards — drag an avatar; the tile never moves.
 					</p>
 				</div>
-				<Button variant="outline" size="icon" onclick={reset} title="Reset layout">
+				<Button
+					variant="outline"
+					size="icon"
+					class="rounded-full"
+					onclick={reset}
+					title="Reset layout"
+				>
 					<RotateCcw class="size-4" />
 					<span class="sr-only">Reset layout</span>
 				</Button>
@@ -114,7 +122,7 @@
 				<FlexiBoard class="min-h-0 grow overflow-x-clip overflow-y-auto" config={outerConfig}>
 					<FlexiTarget
 						key="tiles"
-						class="h-full gap-2 overflow-x-clip pb-4 lg:pb-5"
+						class="bg-stage h-full gap-2 overflow-x-clip rounded-[10px] pb-4 lg:pb-5"
 						config={{
 							rowSizing: 'minmax(0, 7rem)',
 							columnSizing: 'minmax(0, 1fr)',

@@ -2,6 +2,7 @@
 	import { onMount, untrack, type Component, type Snippet } from "svelte";
     import { FlexiResize, FlexiWidget, getFlexiwidgetCtx, type FlexiWidgetProps } from "@flexiboards/svelte";
 	import { getFlexspressiveEditor } from "./index.svelte";
+    import { cn } from "$lib/utils";
 
     export type TileProps = FlexiWidgetProps & {
         title: string;
@@ -65,17 +66,19 @@
 </script>
 
 <!--
-    State is a fill, never a colour swap: on is ink, off is a tinted box, and the
+    State is a fill, never a colour swap: on is ink, off is a tinted card, and the
     fill survives edit mode so both readings stay legible at once. The tile being
-    edited takes the fx-accent dashed frame.
+    edited takes the fx-accent dashed frame; the tile in hand takes the lifted-card
+    look instead, and the placeholder left behind takes the same dashed frame.
 -->
-<button class={[
-    on && !editingTile && 'bg-ink text-paper',
-    !on && !editingTile && 'border border-rule bg-tint text-body',
-    editingTile && 'border border-dashed border-fx-accent bg-tint-accent text-fx-accent',
-    widget.isShadow && 'opacity-40',
-    'h-full grid place-items-center justify-items-center w-full cursor-pointer transition-colors duration-[120ms] relative'
-]} {onclick} bind:this={node}>
+<button class={cn(
+    'relative grid h-full w-full cursor-pointer place-items-center justify-items-center rounded-[14px] transition-[color,background-color,border-color,rotate] duration-[120ms] motion-reduce:transition-none',
+    on && !editingTile && 'bg-ink text-paper shadow-card',
+    !on && !editingTile && 'border border-rule-soft bg-tint text-body shadow-card',
+    editingTile && 'border-[1.5px] border-dashed border-fx-accent/60 bg-tint-accent text-fx-accent-hover shadow-card',
+    widget.isGrabbed && 'border-0 shadow-lift rotate-[2.5deg] bg-panel text-ink',
+    widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent text-fx-accent-hover shadow-none'
+)} {onclick} bind:this={node}>
     <span class="sr-only">Toggle {title}</span>
     <div class={[
         widget.width == 2 && "flex items-center gap-2.5 px-3 w-full",
@@ -92,7 +95,7 @@
             </div>
         {/if}
         {#if widget.width == 2}
-            <h4 class="label text-[9px] truncate">{title}</h4>
+            <h4 class="text-[11px] font-semibold truncate">{title}</h4>
         {/if}
     </div>
 
@@ -101,7 +104,7 @@
         <FlexiResize
             class="absolute top-[50%] right-0 translate-y-[-50%] translate-x-[50%] grid place-items-center p-2 lg:p-0"
         >
-            <span class="pointer-events-none block w-1.5 h-4 bg-fx-accent"></span>
+            <span class="pointer-events-none block w-1.5 h-4 rounded-full bg-fx-accent"></span>
         </FlexiResize>
     {/if}
 </button>

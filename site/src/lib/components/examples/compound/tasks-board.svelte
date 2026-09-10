@@ -23,12 +23,14 @@
 
 	let { onCommit }: { onCommit: (scope: DropScope) => void } = $props();
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview reads as a dashed placeholder; the row in hand lifts off
+	// the queue instead of taking an accent outline.
 	const rowClass = (widget: FlexiWidgetController) =>
 		cn(
 			'min-w-0',
-			widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-			widget.isGrabbed && 'border border-fx-accent opacity-60'
+			widget.isShadow &&
+				'rounded-[10px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+			widget.isGrabbed && 'rounded-[10px] shadow-lift'
 		);
 </script>
 
@@ -52,7 +54,7 @@
 >
 	<FlexiTarget
 		key="queue"
-		class="bg-tint-2 gap-1 p-1"
+		class="bg-tint-2 gap-1 rounded-[9px] p-1"
 		config={{
 			rowSizing: 'minmax(0, 2.25rem)',
 			columnSizing: 'minmax(0, 1fr)',

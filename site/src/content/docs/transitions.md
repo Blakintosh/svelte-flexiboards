@@ -1,29 +1,23 @@
 ---
 title: Transitions
-description: Animate your Flexiboard components with CSS transitions.
+description: Animate widget movement with CSS transitions or springs.
 category: Guides
 published: true
 ---
 
-## Introduction
+<script lang="ts">
+	import Only from '$lib/components/docs/only.svelte';
+</script>
 
-Being a headless library, a default Flexiboard does not animate the movement of widgets.
+Flexiboards is headless, so widgets jump between cells by default. Set `transition` on a widget, or on `widgetDefaults`, to animate the movement instead. `cssTransitionConfig()` gives you a sensible default:
 
-However, manually adding transitions outside of the library would be tricky. CSS transitions do not animate when `grid-row` and `grid-column` values change, which Flexiboards uses under the hood to position placed widgets.
-
-In order to solve this, Flexiboards has a built-in system that allows you to animate the movement of widgets with CSS transitions.
-
-## Enabling Transitions
-
-Flexiboards has built-in helpers for quickly adding default transitions to your widgets: `cssTransitionConfig()` (CSS transitions; `simpleTransitionConfig()` is a deprecated alias of the same thing) and `springTransitionConfig()` (a physics spring with a little bounce on drop). Apply either to the `transition` property of your widget [configuration](/docs/configuration) to get a set of animations for widget movement events.
-
-Here's how that looks, once applied:
+<Only svelte>
 
 ```svelte example
 <script lang="ts">
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from '@flexiboards/svelte';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/svelte';
 	import { untrack } from 'svelte';
 
 	let enableTransitions: boolean = $state(true);
@@ -53,7 +47,7 @@ Here's how that looks, once applied:
 		// Update the config in-place, otherwise the board loses the proxy.
 		untrack(() => {
 			boardConfig.widgetDefaults.transition = enableTransitions
-				? simpleTransitionConfig()
+				? cssTransitionConfig()
 				: undefined;
 		});
 	});
@@ -78,45 +72,102 @@ Here's how that looks, once applied:
 </FlexiBoard>
 ```
 
-For many sitations, this base configuration might suffice for you. However, we next discuss how you can set up your own transition configuration.
+</Only>
 
-## Customising Transitions
+<Only react>
 
-`cssTransitionConfig()` and `springTransitionConfig()` are just wrappers that return a default configuration for you. However, the actual schema for transition configurations is as follows:
+```tsx example
+import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/react';
+import type { FlexiWidgetController } from '@flexiboards/react';
+import { clsx } from 'clsx';
+import { useMemo, useState } from 'react';
 
-```ts
-export type FlexiWidgetTransitionConfiguration = {
-	move?: FlexiWidgetTransitionTypeConfiguration;
-	drop?: FlexiWidgetTransitionTypeConfiguration;
-	resize?: FlexiWidgetTransitionTypeConfiguration;
-};
+export function TransitionsExample() {
+	const [enableTransitions, setEnableTransitions] = useState(true);
+
+	// The config is derived from state, so flipping the switch hands the board a
+	// new object and the widgets pick up the change.
+	const targetConfig = useMemo(
+		() => ({
+			rowSizing: 'minmax(0, 1fr)',
+			layout: {
+				type: 'free' as const,
+				minRows: 2,
+				minColumns: 2,
+				maxRows: 2,
+				maxColumns: 2
+			},
+			widgetDefaults: {
+				transition: enableTransitions ? cssTransitionConfig() : undefined,
+				className: (widget: FlexiWidgetController) =>
+					clsx(
+						'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
+						widget.isShadow && 'opacity-50',
+						widget.isGrabbed && 'animate-pulse opacity-50'
+					)
+			}
+		}),
+		[enableTransitions]
+	);
+
+	return (
+		<>
+			<div className="flex w-72 items-center justify-center gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
+				<input
+					id="enable-transitions"
+					type="checkbox"
+					checked={enableTransitions}
+					onChange={(e) => setEnableTransitions(e.target.checked)}
+				/>
+				<label htmlFor="enable-transitions">Enable transitions</label>
+			</div>
+
+			<FlexiBoard className="size-72 rounded-b-xl border p-8 lg:size-96">
+				<FlexiTarget
+					className="h-full w-full gap-4 lg:gap-6"
+					containerClassName="w-full h-full"
+					config={targetConfig}
+				>
+					<FlexiWidget x={0} y={0}>A</FlexiWidget>
+					<FlexiWidget x={1} y={0}>B</FlexiWidget>
+				</FlexiTarget>
+			</FlexiBoard>
+		</>
+	);
+}
 ```
 
-where `move` determines the transition that plays when a widget moves across cells of a board, `drop` determines the transition that plays when a widget is released from a grab action, and `resize` determines the transition that plays when a widget is released from a resize action.
+</Only>
 
-Within, the parameters are:
+Toggle the switch and drag a widget: with transitions on, the other widget glides out of the way and the dropped widget settles into its cell.
 
-```ts
-export type FlexiWidgetTransitionTypeConfiguration = {
-	duration?: number;
-	easing?: string;
-};
-```
+## Choosing a preset
 
-- `duration` controls how long the transition plays for, in milliseconds.
-- `easing` is any valid CSS easing function to determine the transition curve, including `cubic-bezier()`. For example, `cssTransitionConfig` uses `ease-in-out` for move and `ease-out` for drop.
+Two presets ship with the library. Each returns a complete `transition` configuration:
 
-Each entry may also be an animation adapter instead of a `{ duration, easing }` object. Flexiboards ships two: `cssTransition({ duration, easing })`, which is what the plain object resolves to, and `spring({ duration, bounce })`, a dependency-free spring using SwiftUI's parameterisation (`duration` in seconds is the response time; `bounce` from `0` for critically damped up to `1`). Mix them per event, e.g. a spring for `drop` and a CSS transition for `resize`.
+- `cssTransitionConfig()` uses CSS-style easing, `ease-in-out` for moves and `ease-out` for drops.
+- `springTransitionConfig()` uses a physics spring with a little bounce on drop.
 
-Note that if you omit either of the above properties, or the configuration object entirely, Flexiboards defaults to the behaviour of playing no transition for that scenario.
+`simpleTransitionConfig()` is a deprecated alias of `cssTransitionConfig()`.
 
-The below example puts this customisability into use:
+## Customising transitions
+
+A `transition` configuration has three optional entries, `move`, `drop`, and `resize`, one per kind of widget movement. Each is either a plain `{ duration, easing }` object (a CSS transition, with `duration` in milliseconds and any CSS easing function including `cubic-bezier()`), or an animation adapter:
+
+- `cssTransition({ duration, easing })` is what the plain object resolves to.
+- `spring({ duration, bounce })` is a dependency-free spring using SwiftUI's parameterisation: `duration` in seconds is the response time, and `bounce` runs from `0` (critically damped) to `1`.
+
+Mix them per entry, for example a spring for `drop` and a CSS transition for `resize`. Any entry you omit plays no animation. The exact shape is in the [FlexiWidgetTransitionConfiguration reference](/docs/components/widget#flexiwidgettransitionconfiguration).
+
+The example below drives the `move` and `drop` durations from a slider:
+
+<Only svelte>
 
 ```svelte example
 <script lang="ts">
 	import { Slider } from '$lib/components/ui/slider/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, simpleTransitionConfig } from '@flexiboards/svelte';
+	import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/svelte';
 	import { untrack } from 'svelte';
 
 	let duration: number = $state(150);
@@ -184,3 +235,80 @@ The below example puts this customisability into use:
 	</FlexiTarget>
 </FlexiBoard>
 ```
+
+</Only>
+
+<Only react>
+
+```tsx example
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
+import type { FlexiWidgetController } from '@flexiboards/react';
+import { clsx } from 'clsx';
+import { useMemo, useState } from 'react';
+
+export function CustomTransitionsExample() {
+	const [duration, setDuration] = useState(150);
+
+	const targetConfig = useMemo(
+		() => ({
+			rowSizing: 'minmax(0, 1fr)',
+			layout: {
+				type: 'free' as const,
+				minRows: 2,
+				minColumns: 2,
+				maxRows: 2,
+				maxColumns: 2
+			},
+			widgetDefaults: {
+				transition: {
+					move: { duration, easing: 'ease-in-out' },
+					drop: { duration, easing: 'ease-out' }
+				},
+				className: (widget: FlexiWidgetController) =>
+					clsx(
+						'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
+						widget.isShadow && 'opacity-50',
+						widget.isGrabbed && 'animate-pulse opacity-50'
+					)
+			}
+		}),
+		[duration]
+	);
+
+	return (
+		<>
+			<div className="flex w-72 flex-col items-center justify-center gap-4 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
+				<label htmlFor="transition-duration">Transition duration: {duration}ms</label>
+				<input
+					id="transition-duration"
+					type="range"
+					min={50}
+					max={500}
+					step={50}
+					value={duration}
+					onChange={(e) => setDuration(Number(e.target.value))}
+				/>
+			</div>
+
+			<FlexiBoard className="size-72 rounded-b-xl border p-8 lg:size-96">
+				<FlexiTarget
+					className="h-full w-full gap-4 lg:gap-6"
+					containerClassName="w-full h-full"
+					config={targetConfig}
+				>
+					<FlexiWidget x={0} y={0}>A</FlexiWidget>
+					<FlexiWidget x={1} y={0}>B</FlexiWidget>
+				</FlexiTarget>
+			</FlexiBoard>
+		</>
+	);
+}
+```
+
+</Only>
+
+## Gotchas
+
+- **Why plain CSS transitions don't work.** Widgets are placed with `grid-row` and `grid-column`, which CSS cannot transition. The library measures the before and after boxes and animates a transform between them, so add your transitions through this configuration rather than a stylesheet.
+- **Reduced motion.** Transitions are opt-in, so honour `prefers-reduced-motion` by leaving `transition` unset when it matches. See [Accessibility](/docs/accessibility).
+- **Configuration lives in core.** The presets, adapters, and types come from `@flexiboards/core` and are re-exported by each adapter package, so the configuration is identical across frameworks.

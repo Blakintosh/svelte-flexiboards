@@ -11,7 +11,7 @@
 
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
-	import { Button } from '$lib/components/ui/button';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import X from 'lucide-svelte/icons/x';
 
@@ -49,7 +49,7 @@
 		adding = false;
 
 		target!.createWidget({
-			className: 'border border-rule bg-panel px-4 py-2 text-[13px] text-ink',
+			className: 'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
 			snippet: widgetChildren,
 			componentProps: {
 				content: newItem
@@ -70,10 +70,15 @@
 
 <FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>
 	{#snippet header({ target }: { target: FlexiTargetController })}
-		<!-- Column headings are labels: mono, uppercase, with a square status tick. -->
+		<!-- Column headings are status chips: rounded pill, tinted fill, round dot. -->
 		<div class="mb-4 flex items-center gap-4">
-			<h3 class={twMerge('label inline-flex items-center gap-2 px-3 py-1 text-[10px]', bgClass)}>
-				<div class={twMerge('size-2', dotClass)}></div>
+			<h3
+				class={twMerge(
+					'inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold',
+					bgClass
+				)}
+			>
+				<div class={twMerge('size-1.5 rounded-full', dotClass)}></div>
 				{categoryLabel}
 			</h3>
 			<span class="font-mono text-[11px] text-faint">{target.widgets.size}</span>
@@ -83,10 +88,11 @@
 		<FlexiWidget
 			class={(widget: FlexiWidgetController) => {
 				return cn(
-					'border border-rule bg-panel px-4 py-2 text-[13px] text-ink',
+					'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
 					item.done && 'text-faint line-through',
-					widget.isGrabbed && 'border-fx-accent opacity-60',
-					widget.isShadow && 'border-dashed border-fx-accent bg-tint-accent opacity-70'
+					widget.isGrabbed && ' border-rule-soft opacity-60 shadow-lift',
+					widget.isShadow &&
+						'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
 				);
 			}}
 		>
@@ -95,13 +101,20 @@
 	{/each}
 	{#snippet footer({ target }: { target: FlexiTargetController })}
 		{#if !adding}
-			<Button onclick={onClickAdd} variant={'ghost'}>
+			<Button onclick={onClickAdd} variant={'ghost'} class="rounded-full">
 				<Plus />
 				Add
 			</Button>
 		{:else}
-			<div class="mt-1 flex w-48 items-center gap-2 border border-rule bg-tint px-4 py-1 2xl:w-64">
-				<Button onclick={cancelAddItem} variant={'ghost'} size={'icon'} class="size-4 shrink-0">
+			<div
+				class="mt-1 flex w-48 items-center gap-2 rounded-[10px] border border-rule-soft bg-tint px-4 py-1 2xl:w-64"
+			>
+				<Button
+					onclick={cancelAddItem}
+					variant={'ghost'}
+					size={'icon'}
+					class="size-4 shrink-0 rounded-full"
+				>
 					<X />
 				</Button>
 				<input

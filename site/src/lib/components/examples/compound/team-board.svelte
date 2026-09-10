@@ -24,11 +24,14 @@
 
 	let { onCommit }: { onCommit: (scope: DropScope) => void } = $props();
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview reads as a dashed placeholder; the avatar in hand lifts
+	// off the strip instead of taking an accent outline.
 	const memberClass = (widget: FlexiWidgetController) =>
 		cn(
-			widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-			widget.isGrabbed && 'border border-fx-accent opacity-60'
+			'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+			widget.isShadow &&
+				'rounded-[9px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+			widget.isGrabbed && 'rounded-[9px] shadow-lift rotate-[2.5deg]'
 		);
 </script>
 
@@ -56,7 +59,7 @@
 	>
 		<FlexiTarget
 			key="rotation"
-			class="bg-tint-2 gap-1.5 p-1 lg:gap-2"
+			class="bg-tint-2 gap-1.5 rounded-[9px] p-1 lg:gap-2"
 			config={{
 				columnSizing: 'minmax(0, 2.25rem)',
 				rowSizing: 'minmax(0, 2.25rem)',
@@ -75,5 +78,5 @@
 	</FlexiBoard>
 
 	<!-- The strip's own geometry, annotated the way the sheet annotates the outer board. -->
-	<span class="label text-faint ml-auto hidden text-[9px] lg:inline">flow · 1 × 6</span>
+	<span class="text-faint ml-auto hidden text-[10px] font-semibold lg:inline">flow · 1 × 6</span>
 </div>

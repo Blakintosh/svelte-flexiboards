@@ -2,6 +2,7 @@
 	"component": "FlexiAdd",
 	"generatedFrom": [
 		"packages/svelte/src/components/flexi-add.svelte",
+		"packages/react/src/components/flexi-add.tsx",
 		"packages/core/src"
 	],
 	"props": [
@@ -24,6 +25,28 @@
 		{
 			"name": "children",
 			"type": "Snippet<[{ adder: FlexiAddController }]>",
+			"description": "The child content of the adder, containing the contents of the adder button."
+		},
+		{
+			"name": "addWidget",
+			"type": "() => AdderWidgetConfiguration | null",
+			"description": "When the user interacts with the adder, this function allows you to specify the configuration of the widget that is created and grabbed. Return null to cancel the add."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiAddController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "className",
+			"type": "string | ((adder: FlexiAddController) => string)<string>",
+			"description": "The class names to apply to the adder's button element. Either a class value, or a function deriving one from the adder's state."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode | ((params: { adder: FlexiAddController }) => ReactNode)",
 			"description": "The child content of the adder, containing the contents of the adder button."
 		},
 		{

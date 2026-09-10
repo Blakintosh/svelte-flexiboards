@@ -2,14 +2,25 @@
 	import Header from '$lib/components/nav/header.svelte';
 	import FlexiMark from '$lib/components/brand/flexi-mark.svelte';
 	import { page } from '$app/state';
+	import { framework } from '$lib/components/brand/framework.svelte';
 
 	let { children } = $props();
 
 	// The splash runs edge to edge — its sections supply their own gutters so the
 	// 1px rules between them can reach the viewport edge.
 	const fullBleed = $derived(page.url.pathname === '/');
+	// The header and footer gutters read --page-max. The examples viewer runs
+	// wider (sidebar + stage + features rail) and the docs' three columns span
+	// the whole viewport, so match the chrome to each route's measure.
+	const pageMax = $derived(
+		page.url.pathname.startsWith('/docs')
+			? '100%'
+			: page.url.pathname.startsWith('/examples')
+				? '100rem'
+				: undefined
+	);
 
-	const footerColumns = [
+	const footerColumns = $derived([
 		{
 			heading: 'Docs',
 			links: [
@@ -34,14 +45,15 @@
 			heading: 'Project',
 			links: [
 				{ label: 'GitHub', href: 'https://github.com/Blakintosh/svelte-flexiboards' },
-				{ label: 'npm', href: 'https://www.npmjs.com/package/@flexiboards/svelte' },
+				// Follows the framework picker: the npm page for the adapter in use.
+				{ label: 'npm', href: `https://www.npmjs.com/package/${framework.meta.package}` },
 				{ label: 'Examples', href: '/examples' }
 			]
 		}
-	];
+	]);
 </script>
 
-<div class="flex min-h-svh flex-col">
+<div class="flex min-h-svh flex-col" style:--page-max={pageMax}>
 	<Header />
 
 	<main class="flex min-h-0 flex-1 flex-col {fullBleed ? '' : 'px-4 lg:px-8'}" id="main-content">

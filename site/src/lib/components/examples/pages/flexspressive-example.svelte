@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { FlexiBoard, FlexiTarget, cssTransitionConfig } from '@flexiboards/svelte';
-	import { Button } from '$lib/components/ui/button';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import ArrowLeft from 'lucide-svelte/icons/arrow-left';
 
 	import type { FlexiBoardConfiguration } from '@flexiboards/svelte';
@@ -47,23 +47,22 @@
 </script>
 
 <!--
-	The handset is a drawn figure on the graph-paper sheet, flanked by margin
+	The handset is a lifted card resting on the recessed stage, flanked by margin
 	annotations that explain the two states it can be in. The flanks are dropped
 	below lg, where there is no room for them beside a 308px handset.
 -->
-<div
-	class="graph-paper border-ink bg-paper flex h-full w-full items-center justify-center gap-9 overflow-hidden border p-4"
->
+<div class="bg-stage flex h-full w-full items-center justify-center gap-9 overflow-hidden p-4">
 	<div class="hidden w-[170px] shrink-0 flex-col gap-6 text-right lg:flex">
 		<div>
-			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">Free grid · 4 × 4</div>
+			<div class="text-faint mb-1.5 text-[11.5px] font-semibold">Free grid · 4 × 4</div>
 			<p class="text-body text-xs leading-relaxed">
 				Tiles pack horizontally; a resize pushes neighbours aside.
 			</p>
 		</div>
 		<div>
-			<div class="label border-fx-accent text-fx-accent mb-1.5 border-b pb-1 text-[10px]">
+			<div class="text-faint mb-1.5 flex items-center justify-end gap-1.5 text-[11.5px] font-semibold">
 				Editing tile
+				<span class="bg-fx-accent size-1.5 shrink-0 rounded-full"></span>
 			</div>
 			<p class="text-body text-xs leading-relaxed">
 				Tap in edit mode: dashed frame, fx-accent resize nub, drag free.
@@ -71,17 +70,17 @@
 		</div>
 	</div>
 
-	<!-- 1px ink, square corners, mono readouts. -->
+	<!-- A lifted card standing in for the handset: soft bezel, no ink rule. -->
 	<div
-		class="border-ink bg-panel flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 border px-[18px] pt-5 pb-3 text-sm"
+		class="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pt-5 pb-3 text-sm"
 	>
 		{#if !editMode}
 			<div class="flex items-center justify-between">
 				<h1 class="text-ink font-mono text-3xl leading-none">9:30</h1>
 			</div>
 			<div class="flex items-center justify-between">
-				<span class="label text-faint text-[9px]">Tue, 19 Jul</span>
-				<span class="label text-faint text-[9px]">Until 10:00</span>
+				<span class="text-faint text-[10px] font-semibold">Tue, 19 Jul</span>
+				<span class="text-faint text-[10px] font-semibold">Until 10:00</span>
 			</div>
 			<BrightnessSlider />
 		{:else}
@@ -89,7 +88,7 @@
 				<Button
 					size={'icon'}
 					variant={'outline'}
-					class={'cursor-pointer'}
+					class={'cursor-pointer rounded-full'}
 					onclick={() => (editor.editMode = false)}
 				>
 					<ArrowLeft class="size-5" />
@@ -213,14 +212,14 @@
 			<div class="my-2 flex items-center justify-between">
 				<p class="text-faint w-16 font-mono text-[10px]">16</p>
 				<div class="flex items-center gap-1">
-					<div class="bg-ink h-2 w-4"></div>
-					<div class="bg-rule size-2"></div>
+					<div class="bg-ink h-2 w-4 rounded-full"></div>
+					<div class="bg-rule-faint size-2 rounded-full"></div>
 				</div>
 				<div class="flex w-16 justify-end">
 					<Button
 						size={'icon'}
 						variant={'ghost'}
-						class={'cursor-pointer'}
+						class={'cursor-pointer rounded-full'}
 						onclick={() => (editor.editMode = true)}
 					>
 						<Pencil class="size-5" />
@@ -230,19 +229,19 @@
 			</div>
 		{/if}
 		<div class="flex grow flex-col items-center justify-end">
-			<div class="bg-ink h-1 w-[110px]"></div>
+			<div class="bg-ink h-1 w-[110px] rounded-full"></div>
 		</div>
 	</div>
 
 	<div class="hidden w-[170px] shrink-0 flex-col gap-6 lg:flex">
 		<div>
-			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">On = ink fill</div>
+			<div class="text-faint mb-1.5 text-[11.5px] font-semibold">On = ink fill</div>
 			<p class="text-body text-xs leading-relaxed">
 				State is a fill, never a colour swap; off tiles sit in the tint.
 			</p>
 		</div>
 		<div>
-			<div class="label border-ink text-ink mb-1.5 border-b pb-1 text-[10px]">Brightness</div>
+			<div class="text-faint mb-1.5 text-[11.5px] font-semibold">Brightness</div>
 			<p class="text-body text-xs leading-relaxed">
 				A gauge: ink in a ruled trough, fx-accent thumb.
 			</p>

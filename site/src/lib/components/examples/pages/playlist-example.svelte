@@ -49,14 +49,15 @@
 		onLayoutChange: handleLayoutChange,
 		registry: {
 			track: {
-				// A settled row is just a ruled line; anything provisional is fx-accent.
-				// The shadow's contents are hidden rather than rendered twice, so the
-				// landing slot reads as an empty gap and holds no duplicate controls.
+				// A settled row is just a hairline divider; the row in hand lifts off the
+				// list on its own shadow instead of an accent outline. The shadow's
+				// contents are hidden rather than rendered twice, so the landing slot
+				// reads as a dashed accent placeholder with no duplicate controls.
 				className: (widget: FlexiWidgetController) => [
-					'border-b border-rule',
-					widget.isGrabbed && 'bg-panel outline-2 -outline-offset-2 outline-fx-accent',
+					!widget.isGrabbed && !widget.isShadow && 'border-b border-rule-faint',
+					widget.isGrabbed && 'bg-panel shadow-lift rounded-[10px]',
 					widget.isShadow &&
-						'bg-tint-accent outline-2 outline-dashed -outline-offset-2 outline-fx-accent [&>*]:invisible'
+						'rounded-[10px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent [&>*]:invisible'
 				],
 				transition: cssTransitionConfig(),
 				// The handle is the only grab surface, so a press should start the drag at
@@ -97,8 +98,10 @@
 <main class="bg-paper flex h-full min-h-0 w-full flex-col px-4 py-6 sm:px-8 lg:px-12">
 	<div class="mx-auto flex min-h-0 w-full max-w-[40rem] flex-col gap-5">
 		<!-- The header states the grid the queue actually is, and what it adds up to. -->
-		<header class="border-rule flex shrink-0 items-baseline justify-between gap-3 border-b pb-3">
-			<span class="label text-faint text-[10px]">
+		<header
+			class="border-rule-soft flex shrink-0 items-baseline justify-between gap-3 border-b pb-3"
+		>
+			<span class="text-faint text-[11.5px] font-semibold">
 				Queue · {TRACKS.length} tracks · flow · 1 column
 			</span>
 			<span class="text-faint shrink-0 font-mono text-[10px] tabular-nums">
@@ -113,7 +116,7 @@
 				<FlexiTarget
 					key="queue"
 					class="w-full"
-					containerClass="w-full border-t border-rule"
+					containerClass="border-rule-soft bg-panel shadow-card w-full overflow-hidden rounded-[14px] border"
 					config={{
 						rowSizing: 'minmax(0, 2.5rem)',
 						columnSizing: 'minmax(0, 1fr)',

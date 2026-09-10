@@ -35,7 +35,7 @@
 				{#if meta.kind === 'section'}
 					<h3 class="text-ink min-w-0 truncate font-serif text-[15px]">{meta.label}</h3>
 				{:else}
-					<span class="label text-ink min-w-0 truncate text-[10px]">
+					<span class="text-ink min-w-0 truncate text-[11.5px] font-semibold">
 						{meta.label}{#if meta.required}<span class="text-fx-accent"> *</span>{/if}
 					</span>
 				{/if}

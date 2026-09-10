@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import { cn } from '$lib/utils.js';
 	import { BREAKPOINTS, type Pin } from './layouts.js';
 
@@ -19,18 +19,24 @@
 </script>
 
 <!--
-	One filled segment row: a single ink hairline around four flush segments, the
-	active one filled. No eyebrow — "Auto / LG / MD / SM" reads as a breakpoint
-	control on its own.
+	One pill row on a recessed stage ground: the active segment lifts to a panel
+	chip. No eyebrow — "Auto / LG / MD / SM" reads as a breakpoint control on its
+	own.
 -->
-<div class="border-ink flex items-center border" role="group" aria-label="Breakpoint">
+<div
+	class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]"
+	role="group"
+	aria-label="Breakpoint"
+>
 	{#each options as option (option.id)}
 		<Button
 			variant="ghost"
 			size="sm"
 			class={cn(
-				'h-8 rounded-none px-3 text-xs transition-colors duration-[120ms]',
-				value === option.id ? 'bg-tint text-ink' : 'text-body hover:text-ink'
+				'h-7 rounded-full px-3 text-xs font-semibold transition-colors duration-[120ms]',
+				value === option.id
+					? 'bg-panel shadow-seg text-ink hover:bg-panel'
+					: 'text-faint hover:text-ink bg-transparent hover:bg-transparent'
 			)}
 			title={option.title}
 			aria-pressed={value === option.id}

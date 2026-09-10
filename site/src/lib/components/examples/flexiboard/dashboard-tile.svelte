@@ -15,14 +15,13 @@
 	// Larger handles on mobile for better touch targets
 	let grabberSize = $derived(mediaQuery.current ? 18 : 22);
 
-	// Sub-registry mapping tile types to their content and their plate index.
-	// The index is drawn in the corner, so the order here is the reading order.
+	// Sub-registry mapping tile types to their content and label.
 	const tileRegistry = {
-		mrr: { component: MrrTile, title: 'MRR', index: '01' },
-		subscriptions: { component: SubscriptionsTile, title: 'Subscriptions', index: '02' },
-		churn: { component: ChurnTile, title: 'Churn', index: '03' },
-		revenue: { component: RevenueTile, title: 'Revenue · 6 mo', index: '04' },
-		active: { component: ActiveTile, title: 'Active now', index: '05' }
+		mrr: { component: MrrTile, title: 'MRR' },
+		subscriptions: { component: SubscriptionsTile, title: 'Subscriptions' },
+		churn: { component: ChurnTile, title: 'Churn' },
+		revenue: { component: RevenueTile, title: 'Revenue · 6 mo' },
+		active: { component: ActiveTile, title: 'Active now' }
 	} as const;
 
 	const tileType = widget.metadata?.type as keyof typeof tileRegistry;
@@ -31,16 +30,15 @@
 </script>
 
 <!--
-	Every widget is the same indexed plate: hairline frame on white, mono eyebrow,
-	corner index, and — only while the board is editable — a visible grab handle.
+	Every widget is the same soft plate: white card, rounded corners, a resting
+	shadow, and — only while the board is editable — a visible grab handle next
+	to the label.
 -->
 <div
-	class="border-rule bg-panel relative flex h-full w-full flex-col border p-3 lg:p-4"
+	class="bg-panel border-rule-soft shadow-card relative flex h-full w-full flex-col rounded-[14px] border p-3.5 lg:p-4"
 	data-tile-type={tileType}
 >
-	<span class="text-faint absolute top-2.5 right-3 font-mono text-[10px]">{tileConfig.index}</span>
-
-	<div class="label text-faint flex shrink-0 items-center gap-1.5 pr-8 text-[10px]">
+	<div class="text-faint flex shrink-0 items-center gap-1.5 text-[11.5px] font-semibold">
 		{#if widget.draggability == 'full'}
 			<Grabber size={grabberSize} class="-my-1.5 -ml-1.5" />
 		{/if}

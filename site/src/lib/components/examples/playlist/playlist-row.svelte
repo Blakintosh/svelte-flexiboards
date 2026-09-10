@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { FlexiGrab } from '@flexiboards/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import { cn } from '$lib/utils.js';
 	import GripVertical from 'lucide-svelte/icons/grip-vertical';
 	import Play from 'lucide-svelte/icons/play';
@@ -36,8 +36,8 @@
 	<!-- Vermillion means movement: the handle answers in accent on hover and focus. -->
 	<FlexiGrab
 		class={cn(
-			'text-faint flex h-10 w-8 shrink-0 items-center justify-center transition-colors duration-[120ms]',
-			'hover:text-fx-accent active:text-fx-accent',
+			'text-faint flex h-10 w-8 shrink-0 items-center justify-center rounded-[8px] transition-colors duration-[120ms]',
+			'hover:bg-tint-accent hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
 			'focus-visible:outline-fx-accent focus-visible:outline-2 focus-visible:-outline-offset-2'
 		)}
 	>
@@ -51,7 +51,7 @@
 			<Button
 				variant="ghost"
 				size="icon"
-				class="text-blue hover:text-blue size-8"
+				class="text-blue hover:text-blue size-8 rounded-full"
 				aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
 				onclick={onTogglePlay}
 			>
@@ -74,7 +74,10 @@
 	<Button
 		variant="ghost"
 		size="icon"
-		class={cn('size-8 shrink-0', liked ? 'text-fx-accent hover:text-fx-accent' : 'text-faint')}
+		class={cn(
+			'size-8 shrink-0 rounded-full',
+			liked ? 'text-fx-accent hover:bg-tint-accent hover:text-fx-accent' : 'text-faint'
+		)}
 		aria-pressed={liked}
 		aria-label={liked ? `Unlike ${track.title}` : `Like ${track.title}`}
 		onclick={onToggleLike}

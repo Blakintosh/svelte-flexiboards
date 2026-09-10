@@ -5,17 +5,19 @@ category: Introduction
 published: true
 ---
 
+_Applies to `svelte-flexiboards` v0.4.0, released 7 February 2026. This page is kept for reference; new projects should install `@flexiboards/svelte` and follow [Migrating to v1.0](/docs/breaking-changes-to-10)._
+
 ## 1. Draggability
 
-Instead of just using the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) to add finer control to widget movability. 
+In place of the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) that gives you finer control over widget movability. 
 - `none` is equivalent to `draggable = false`. The widget is completely fixed in place.
 - `full` is equivalent to `draggable = true`. The widget can be grabbed by the user and moved by other widget actions.
-- `movable` is a new value which makes it so that you cannot grab a widget and move it, but it can be moved by other widget actions.
+- `movable` is a new value. You cannot grab a widget and move it yourself, but other widget actions can still move it.
 
-The `draggable` property is now deprecated and will be removed in Flexiboards v1.0.
+The `draggable` property is deprecated. It still works in v1.0 and will be removed in the next major version.
 
-## 2. Widget Defaults
+## 2. Widget defaults
 
-We're removing the `width` and `height` properties from `FlexiWidgetDefaults`. These properties have never functioned, and there does not appear to be a valuable use-case to make them function.
+We're removing the `width` and `height` properties from `FlexiWidgetDefaults`. These properties have never functioned, and we have not found a use-case worth making them work for.
 
-The `width` and `height` properties are now deprecated and will be removed in Flexiboards v1.0.
+The `width` and `height` properties on `widgetDefaults` are deprecated. They still exist in v1.0 and will be removed in the next major version.

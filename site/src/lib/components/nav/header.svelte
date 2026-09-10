@@ -11,12 +11,11 @@
 	import FrameworkMenu from '$lib/components/brand/framework-menu.svelte';
 	import DocumentationSidebar from '../docs/documentation-sidebar.svelte';
 
-	const version = 'v0.4';
+	const version = 'v1.0';
 
 	const nav = [
 		{ label: 'Docs', href: '/docs', match: '/docs' },
-		{ label: 'Examples', href: '/examples', match: '/examples' },
-		{ label: 'API', href: '/docs/configuration', match: '/docs/configuration' }
+		{ label: 'Examples', href: '/examples', match: '/examples' }
 	];
 
 	let drawerOpen = $state(false);

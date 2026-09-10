@@ -1,9 +1,16 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import { page } from '$app/state';
-	import { directory, pageCount } from '$lib/docs-directory';
+	import { directoryFor } from '$lib/docs-directory';
+	import { framework } from '$lib/components/brand/framework.svelte';
+	import FrameworkMenu from '$lib/components/brand/framework-menu.svelte';
 
 	let { class: className = '' } = $props();
+
+	// The contents follow the framework choice: pages that don't apply (e.g.
+	// SSR under React) drop out, and the numbering closes up around them.
+	const directory = $derived(directoryFor(framework.current));
+	const pageCount = $derived(directory.reduce((n, s) => n + s.pages.length, 0));
 </script>
 
 <!--
@@ -11,6 +18,9 @@
   border, and the active page flagged with a fx-accent square in the margin.
 -->
 <nav class={cn('flex min-h-0 flex-col', className)}>
+	<!-- Framework first: it decides which pages exist below. -->
+	<FrameworkMenu align="left" class="mb-5 w-full justify-between" />
+
 	<div class="mb-4 flex items-center gap-2 text-[10px] label text-faint">
 		<span>Contents</span>
 		<div class="h-px flex-1 bg-rule"></div>

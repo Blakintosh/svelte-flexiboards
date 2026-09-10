@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import Copy from 'lucide-svelte/icons/copy';
 	import Check from 'lucide-svelte/icons/check';
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';

@@ -8,10 +8,11 @@
 		type FlexiBoardConfiguration,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import ProductCard, { type Product } from '$lib/components/examples/products/product-card.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-		import { Input } from '$lib/components/ui/input/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
+	import { fieldClass, selectClass } from '$lib/components/examples/common/button-classes.js';
 	import Search from 'lucide-svelte/icons/search';
 	import Plus from 'lucide-svelte/icons/plus';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
@@ -108,7 +109,8 @@
 	];
 
 	let searchQuery = $state('');
-	let selectedCategory = $state<string | null>(null);
+	// '' is "All categories" — a native <select> option can't carry null.
+	let selectedCategory = $state('');
 	let sortBy = $state<'name' | 'price' | 'rating'>('name');
 
 	const categories = ['Audio', 'Accessories', 'Peripherals', 'Home Office'];
@@ -150,10 +152,12 @@
 		}
 	});
 
-	// Anything provisional — the drop preview, the widget in hand — is dashed fx-accent.
+	// The drop preview is dashed fx-accent; the widget in hand lifts instead —
+	// shadow-lift and a slight tilt, no border.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-fx-accent opacity-60'
+		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'rounded-[14px] shadow-lift rotate-[2.5deg] opacity-95'
 	];
 </script>
 
@@ -161,14 +165,16 @@
 	class="relative flex h-full min-h-0 w-full flex-col gap-4 bg-paper px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
 >
 	<!-- Header: title, count and the two board affordances in one mono line. -->
-	<header class="flex shrink-0 items-center justify-between gap-3 border-b border-rule pb-3.5">
+	<header
+		class="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5"
+	>
 		<div class="flex min-w-0 items-baseline gap-3">
 			<h1 class="font-serif text-xl leading-tight text-ink sm:text-2xl lg:text-[28px]">Products</h1>
-			<p class="hidden font-mono text-[11px] text-faint sm:block">
+			<p class="text-faint hidden font-mono text-[11px] sm:block">
 				{filteredProducts().length} items · drag to curate · resize featured
 			</p>
 		</div>
-		<Button size="sm" class="shrink-0">
+		<Button size="sm" class="shrink-0 rounded-full">
 			<Plus class="size-4 sm:mr-2" />
 			<span class="hidden sm:inline">Add product</span>
 		</Button>
@@ -177,66 +183,55 @@
 	<!-- Toolbar: one row — search, category, sort, and the status key it explains. -->
 	<div class="flex shrink-0 flex-wrap items-center gap-2">
 		<div class="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
-			<Search class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint" />
-			<Input
+			<Search class="text-faint absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+			<input
 				type="search"
 				placeholder="Search products…"
-				class="pl-9 sm:w-[288px]"
+				aria-label="Search products"
+				class="{fieldClass} rounded-full pl-9 sm:w-[288px]"
 				bind:value={searchQuery}
 			/>
 		</div>
 
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<!-- Filter and sort read as labels, and say what they are set to. -->
-					<Button variant="outline" size="sm" class="shrink-0 border-ink" {...props}>
-						<Filter class="mr-2 size-3.5" />
-						{selectedCategory ?? 'All categories'}
-					</Button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start">
-				<DropdownMenu.Item onclick={() => (selectedCategory = null)}>
-					All categories
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				{#each categories as category}
-					<DropdownMenu.Item onclick={() => (selectedCategory = category)}>
-						{category}
-					</DropdownMenu.Item>
+		<!-- Filter and sort are choices, so they are native selects: they say what
+			they are set to, and the platform draws the list. -->
+		<div class="relative shrink-0">
+			<Filter class="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+			<select
+				class="{selectClass} h-9 w-auto rounded-full border-rule-soft pl-8"
+				aria-label="Filter by category"
+				bind:value={selectedCategory}
+			>
+				<option value="">All categories</option>
+				{#each categories as category (category)}
+					<option value={category}>{category}</option>
 				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+			</select>
+		</div>
 
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<Button variant="outline" size="sm" class="shrink-0 text-body" {...props}>
-						<ArrowUpDown class="mr-2 size-3.5" />
-						{sortLabels[sortBy]}
-					</Button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start">
-				<DropdownMenu.Label>Sort by</DropdownMenu.Label>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item onclick={() => (sortBy = 'name')}>Name</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={() => (sortBy = 'price')}>Price</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={() => (sortBy = 'rating')}>Rating</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+		<div class="relative shrink-0">
+			<ArrowUpDown class="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+			<select
+				class="{selectClass} text-body h-9 w-auto rounded-full border-rule-soft pl-8"
+				aria-label="Sort by"
+				bind:value={sortBy}
+			>
+				<option value="name">{sortLabels.name}</option>
+				<option value="price">{sortLabels.price}</option>
+				<option value="rating">{sortLabels.rating}</option>
+			</select>
+		</div>
 
-		<!-- Status key: square ticks, one per state a card can show. -->
+		<!-- Status key: soft dots, one per state a card can show. -->
 		<div class="ml-auto flex items-center gap-3 sm:gap-3.5">
-			<span class="flex items-center gap-1.5 font-mono text-[11px] text-body">
-				<span class="size-1.5 bg-blue"></span>In stock
+			<span class="text-body flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-blue size-1.5 rounded-full"></span>In stock
 			</span>
-			<span class="flex items-center gap-1.5 font-mono text-[11px] text-faint">
-				<span class="size-1.5 bg-faint"></span>Low
+			<span class="text-faint flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-faint size-1.5 rounded-full"></span>Low
 			</span>
-			<span class="flex items-center gap-1.5 font-mono text-[11px] text-fx-accent">
-				<span class="size-1.5 bg-fx-accent"></span>Limited
+			<span class="text-fx-accent flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-fx-accent size-1.5 rounded-full"></span>Limited
 			</span>
 		</div>
 	</div>
@@ -246,12 +241,18 @@
 			breakpoints: {
 				lg: 1024,
 				sm: 640
-			}
+			},
+			// SSR can't match a media query; render the desktop board so widget
+			// sizes are right for most first paints (see launcher).
+			ssrBreakpoint: 'lg'
 		}}
 	>
 		<!-- Desktop: 3 columns -->
 		{#snippet lg()}
 			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-auto" config={boardConfig}>
+				{#snippet suspense(_: FlexiBoardSuspenseReason)}
+					<BoardSkeleton bars={4} class="p-1" />
+				{/snippet}
 				<FlexiTarget
 					key="products"
 					class="gap-4 p-1"

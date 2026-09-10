@@ -2,6 +2,7 @@
 	"component": "ResponsiveFlexiBoard",
 	"generatedFrom": [
 		"packages/svelte/src/components/responsive-flexi-board.svelte",
+		"packages/react/src/components/responsive-flexi-board.tsx",
 		"packages/core/src"
 	],
 	"props": [
@@ -44,6 +45,43 @@
 		{
 			"name": "children",
 			"type": "Snippet<[BreakpointSnippetParams]>",
+			"description": "Children snippet used as fallback when no specific breakpoint snippet matches. Receives `{ currentBreakpoint: string }` as a parameter."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "config",
+			"type": "ResponsiveFlexiBoardConfiguration",
+			"description": ""
+		},
+		{
+			"name": "lg",
+			"type": "ReactNode",
+			"description": "Production for large breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "md",
+			"type": "ReactNode",
+			"description": "Production for medium breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "sm",
+			"type": "ReactNode",
+			"description": "Production for small breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "xs",
+			"type": "ReactNode",
+			"description": "Production for extra-small breakpoint (no params - breakpoint is implicit)."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode | ((params: { currentBreakpoint: string }) => ReactNode)",
 			"description": "Children snippet used as fallback when no specific breakpoint snippet matches. Receives `{ currentBreakpoint: string }` as a parameter."
 		}
 	],
@@ -115,9 +153,19 @@
 				"description": "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts, including the updated current one."
 			},
 			{
+				"name": "initialLayouts",
+				"type": "ResponsiveFlexiLayout",
+				"description": "Layouts to render from instead of the widgets declared in markup, as a plain value keyed by breakpoint. The active breakpoint's layout is applied during the initial render pass on both the server and the client, like FlexiBoardConfiguration.initialLayout. A configured `loadLayouts` still runs on the client and overrides this."
+			},
+			{
 				"name": "loadLayouts",
 				"type": "() => ResponsiveFlexiLayout | undefined",
-				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready."
+				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready. Not invoked during server rendering. Use `initialLayouts` for layouts the server has."
+			},
+			{
+				"name": "ssrBreakpoint",
+				"type": "string",
+				"description": "The breakpoint to assume while server-rendering, where no media query can match. Pick the most common viewport for the page (usually the desktop breakpoint); the client corrects to the real breakpoint at hydration. Without it, a server render falls back to the 'default' breakpoint."
 			}
 		]
 	}

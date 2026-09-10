@@ -16,7 +16,7 @@
 <!-- Vermillion means movement: the grab handle turns accent the moment it is touched. -->
 <FlexiGrab
 	class={cn(
-		'shrink-0 p-1.5 text-faint transition-colors duration-[120ms] hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
+		'text-faint hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent shrink-0 rounded-[7px] p-1.5 transition-colors duration-[120ms]',
 		className
 	)}
 >

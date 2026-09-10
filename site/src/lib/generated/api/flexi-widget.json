@@ -2,6 +2,7 @@
 	"component": "FlexiWidget",
 	"generatedFrom": [
 		"packages/svelte/src/components/flexi-widget.svelte",
+		"packages/react/src/components/flexi-widget.tsx",
 		"packages/core/src"
 	],
 	"props": [
@@ -31,16 +32,6 @@
 			"name": "resizability",
 			"type": "'none' | 'horizontal' | 'vertical' | 'both' | undefined",
 			"description": "The resizability of the widget."
-		},
-		{
-			"name": "width",
-			"type": "number | undefined",
-			"description": "The width of the widget in units."
-		},
-		{
-			"name": "height",
-			"type": "number | undefined",
-			"description": "The height of the widget in units."
 		},
 		{
 			"name": "snippet",
@@ -118,6 +109,16 @@
 			"description": "The starting row (y-coordinate) of the widget."
 		},
 		{
+			"name": "width",
+			"type": "number | undefined",
+			"description": "The width of the widget in units."
+		},
+		{
+			"name": "height",
+			"type": "number | undefined",
+			"description": "The height of the widget in units."
+		},
+		{
 			"name": "metadata",
 			"type": "Record<string, any> | undefined",
 			"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
@@ -133,6 +134,119 @@
 			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
 			"description": "The content rendered within the widget.",
 			"bindable": true
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiWidgetController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "component",
+			"type": "ComponentType<any>",
+			"description": "The component rendered by this widget, receiving `componentProps`."
+		},
+		{
+			"name": "draggable",
+			"type": "boolean | undefined",
+			"description": "Whether the widget is draggable.",
+			"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+		},
+		{
+			"name": "draggability",
+			"type": "'none' | 'movable' | 'full' | undefined",
+			"description": "The draggability of the widget."
+		},
+		{
+			"name": "resizability",
+			"type": "'none' | 'horizontal' | 'vertical' | 'both' | undefined",
+			"description": "The resizability of the widget."
+		},
+		{
+			"name": "componentProps",
+			"type": "Record<string, any> | undefined",
+			"description": "The props applied to the component rendered, if it has one."
+		},
+		{
+			"name": "transition",
+			"type": "FlexiWidgetTransitionConfiguration | undefined",
+			"description": "The transition configuration for this widget."
+		},
+		{
+			"name": "grabTrigger",
+			"type": "FlexiWidgetTriggerConfiguration | undefined",
+			"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+		},
+		{
+			"name": "resizeTrigger",
+			"type": "FlexiWidgetTriggerConfiguration | undefined",
+			"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+		},
+		{
+			"name": "minWidth",
+			"type": "number | undefined",
+			"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+		},
+		{
+			"name": "minHeight",
+			"type": "number | undefined",
+			"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+		},
+		{
+			"name": "maxWidth",
+			"type": "number | undefined",
+			"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+		},
+		{
+			"name": "maxHeight",
+			"type": "number | undefined",
+			"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+		},
+		{
+			"name": "id",
+			"type": "string | undefined",
+			"description": "A stable identifier for this widget, used for persistence and layout import/export."
+		},
+		{
+			"name": "type",
+			"type": "string | undefined",
+			"description": "The registry key used to look up shared configuration for this widget."
+		},
+		{
+			"name": "x",
+			"type": "number | undefined",
+			"description": "The starting column (x-coordinate) of the widget."
+		},
+		{
+			"name": "y",
+			"type": "number | undefined",
+			"description": "The starting row (y-coordinate) of the widget."
+		},
+		{
+			"name": "width",
+			"type": "number | undefined",
+			"description": "The width of the widget in units."
+		},
+		{
+			"name": "height",
+			"type": "number | undefined",
+			"description": "The height of the widget in units."
+		},
+		{
+			"name": "metadata",
+			"type": "Record<string, any> | undefined",
+			"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
+		},
+		{
+			"name": "className",
+			"type": "string | ((widget: FlexiWidgetController) => string)<string>",
+			"description": "The class names to apply to this widget. Either a class value, or a function deriving one from the widget's state."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode | FlexiWidgetChildren",
+			"description": "The content rendered within the widget."
 		}
 	],
 	"controller": {
@@ -169,6 +283,12 @@
 				"name": "dropRejected",
 				"type": "boolean",
 				"description": "Whether the widget is being grabbed or resized over a target that cannot accept it where it is: the drop would be rejected on release and the widget would return to where it came from."
+			},
+			{
+				"name": "isInterpolating",
+				"type": "boolean",
+				"description": "Whether the widget is currently animating to a new position or size, e.g. mid drop flight. Useful for styling that should only apply at rest, such as hover effects that would otherwise fire as the widget lands under the pointer.",
+				"readonly": true
 			},
 			{
 				"name": "currentAction",
@@ -330,7 +450,18 @@
 				"readonly": true
 			}
 		],
-		"methods": []
+		"methods": [
+			{
+				"name": "delete",
+				"type": "() => void",
+				"description": "Deletes this widget from its target and board. Fires the board's `onWidgetDelete` and `onLayoutChange`."
+			},
+			{
+				"name": "moveTo",
+				"type": "(options: { target?: FlexiTargetController; x?: number; y?: number }) => boolean",
+				"description": "Moves this widget through the controller API, with no user interaction: to a position in its own target, to another target (at a position, or wherever that target's grid puts it), or both. Runs the grid's placement rules but not `canDrop`, which is for user drops. Fires `onLayoutChange`."
+			}
+		]
 	},
 	"types": {
 		"FlexiWidgetConfiguration": [
@@ -349,16 +480,6 @@
 				"name": "resizability",
 				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
 				"description": "The resizability of the widget."
-			},
-			{
-				"name": "width",
-				"type": "number",
-				"description": "The width of the widget in units."
-			},
-			{
-				"name": "height",
-				"type": "number",
-				"description": "The height of the widget in units."
 			},
 			{
 				"name": "snippet",
@@ -436,9 +557,36 @@
 				"description": "The starting row (y-coordinate) of the widget."
 			},
 			{
+				"name": "width",
+				"type": "number",
+				"description": "The width of the widget in units."
+			},
+			{
+				"name": "height",
+				"type": "number",
+				"description": "The height of the widget in units."
+			},
+			{
 				"name": "metadata",
 				"type": "Record<string, any>",
 				"description": "Arbitrary metadata associated with this widget, carried through layout export/import."
+			}
+		],
+		"FlexiWidgetTransitionConfiguration": [
+			{
+				"name": "move",
+				"type": "{ duration?: number; easing?: string } | AnimationAdapter",
+				"description": "Plays when a widget moves between cells of a grid, including when it is pushed aside by another widget. Omit to play no animation."
+			},
+			{
+				"name": "drop",
+				"type": "{ duration?: number; easing?: string } | AnimationAdapter",
+				"description": "Plays when a grabbed widget is released and settles into its cell. Omit to play no animation."
+			},
+			{
+				"name": "resize",
+				"type": "{ duration?: number; easing?: string } | AnimationAdapter",
+				"description": "Plays when a widget is released from a resize and settles at its new size. Omit to play no animation."
 			}
 		]
 	}

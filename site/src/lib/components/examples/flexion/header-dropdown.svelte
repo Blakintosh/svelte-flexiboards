@@ -1,25 +1,44 @@
 <script lang="ts">
-	import * as Sidebar from '$lib/components/ui/sidebar';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+
+	// Workspace switcher as a native <details>: a summary styled like the old
+	// menu button, and a plain panel of buttons under it. No library needed.
 </script>
 
-<Sidebar.Menu>
-	<Sidebar.MenuItem>
-		<Sidebar.MenuButton
-			size="lg"
-			class="flex items-center justify-between data-[state=open]:bg-tint data-[state=open]:text-ink"
-		>
-			<div class="flex items-center gap-4">
-				<div
-					class="flex aspect-square size-8 items-center justify-center bg-ink font-mono text-paper"
-				>
-					A
-				</div>
-				<div class="flex flex-col gap-0.5 leading-none">
-					<span class="font-serif text-ink">Acme Inc.</span>
-				</div>
+<details class="relative">
+	<summary
+		class="hover:bg-tint flex cursor-pointer list-none [&::-webkit-details-marker]:hidden items-center justify-between gap-2 rounded-[9px] px-2.5 py-[7px] transition-colors duration-[120ms]"
+	>
+		<div class="flex items-center gap-4">
+			<div
+				class="bg-ink text-paper flex aspect-square size-8 items-center justify-center rounded-[9px] font-mono"
+			>
+				A
 			</div>
-			<ChevronsUpDown />
-		</Sidebar.MenuButton>
-	</Sidebar.MenuItem>
-</Sidebar.Menu>
+			<div class="flex flex-col gap-0.5 leading-none">
+				<span class="text-ink font-serif">Acme Inc.</span>
+			</div>
+		</div>
+		<ChevronsUpDown class="text-faint size-4" />
+	</summary>
+
+	<div
+		class="bg-panel border-rule-soft shadow-card-lg absolute top-full left-0 z-10 mt-2 w-full rounded-[12px] border p-1"
+	>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>Acme Inc.</button
+		>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>Personal</button
+		>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>New workspace</button
+		>
+	</div>
+</details>

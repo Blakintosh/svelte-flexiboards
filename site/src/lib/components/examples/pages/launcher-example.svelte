@@ -5,6 +5,8 @@
 		ResponsiveFlexiBoard,
 		cssTransitionConfig
 	} from '@flexiboards/svelte';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import type {
 		BreakpointSnippetParams,
 		FlexiBoardConfiguration,
@@ -39,23 +41,25 @@
 	const FOCUS_RING =
 		'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent';
 	const APP_BASE =
-		'flex cursor-grab select-none overflow-hidden border border-rule bg-tint active:cursor-grabbing';
+		'flex cursor-grab select-none overflow-hidden rounded-[10px] border border-rule-soft bg-tint active:cursor-grabbing';
 	const PANEL_BASE =
-		'flex cursor-grab select-none overflow-hidden border border-rule bg-panel active:cursor-grabbing';
+		'flex cursor-grab select-none overflow-hidden rounded-[10px] border border-rule-soft bg-panel shadow-card active:cursor-grabbing';
 	const FEATURE_BASE =
-		'flex cursor-grab select-none overflow-hidden border border-ink bg-panel active:cursor-grabbing';
+		'flex cursor-grab select-none overflow-hidden rounded-[10px] border border-rule-soft bg-panel shadow-card active:cursor-grabbing';
 
 	// Provisional states — the tile in hand, the drop shadow — are the only
-	// fx-accent on the page. Routed through cn() so the accent border reliably
-	// beats the resting one.
+	// fx-accent on the page. Routed through cn() so the lifted/placeholder look
+	// reliably beats the resting one.
 	const tileClass = (base: string) => (widget: FlexiWidgetController) =>
 		cn(
 			base,
 			FOCUS_RING,
-			widget.isGrabbed && 'border-fx-accent opacity-60',
+			// In hand: no accent border, just a lift off the plate and a small tilt.
+			'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+			widget.isGrabbed && 'shadow-lift rotate-[2.5deg] opacity-95',
 			// Nowhere to go: the tile in hand fades and greys until it is somewhere it fits.
-			widget.dropRejected && 'border-rule opacity-30 saturate-0',
-			widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70'
+			widget.dropRejected && 'border-rule-soft opacity-30 saturate-0',
+			widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
 		);
 
 	// Never $state: this configuration genuinely never changes.
@@ -139,6 +143,9 @@
 	// controller's shallow comparison notices.
 	const responsiveConfig = $derived({
 		breakpoints: breakpointsFor(pin),
+		// Server renders can't match a media query; assume the desktop plate so
+		// the pre-hydration skeleton has the width most visitors will end up with.
+		ssrBreakpoint: 'lg',
 		loadLayouts,
 		onLayoutsChange
 	});
@@ -187,17 +194,17 @@
 -->
 <main class="bg-paper flex h-full min-h-0 w-full flex-col overflow-hidden">
 	<header
-		class="border-rule mx-4 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b pt-4 pb-3 sm:pt-5 lg:mx-12 lg:pt-8"
+		class="border-rule-soft mx-4 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b pt-4 pb-3 sm:pt-5 lg:mx-12 lg:pt-8"
 	>
 		<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 			<h1 class="text-ink font-serif text-2xl lg:text-[28px]">Launcher</h1>
-			<span class="text-faint font-mono text-[11px]">one widget set · three arrangements</span>
+			<span class="text-faint text-[12px]">one widget set · three arrangements</span>
 		</div>
 		<BreakpointSwitcher value={pin} onchange={(next) => (pin = next)} />
 	</header>
 
-	<!-- Only the board region scrolls, so the switcher and the JSON bar never leave. -->
-	<div class="min-h-0 w-full flex-1 overflow-y-auto px-4 py-4 lg:px-12 lg:py-6">
+	<!-- Only the board region scrolls, so the switcher and the JSON bar never leave. Recessed stage ground behind the plate. -->
+	<div class="bg-stage min-h-0 w-full flex-1 overflow-y-auto px-4 py-4 lg:px-12 lg:py-6">
 		<div class="flex min-h-full w-full items-center justify-center">
 			<ResponsiveFlexiBoard bind:controller={board} config={responsiveConfig}>
 				{#snippet children({ currentBreakpoint }: BreakpointSnippetParams)}
@@ -208,9 +215,15 @@
 						class="flex w-full shrink-0 items-center justify-center py-1"
 						config={boardConfig}
 					>
-						<!-- The plate is the figure: 1px ink frame, panel ground, no radius. -->
+						{#snippet suspense(_: FlexiBoardSuspenseReason)}
+							<BoardSkeleton bars={4} class="max-w-[520px]" />
+						{/snippet}
+						<!-- The plate is the figure: soft rounded card, panel ground, resting shadow. -->
 						<div
-							class={cn('border-ink bg-panel flex w-full flex-col border', bp.padClass)}
+							class={cn(
+								'border-rule-soft bg-panel shadow-card flex w-full flex-col rounded-[14px] border',
+								bp.padClass
+							)}
 							style="max-width: {plateWidth(bp)}px"
 						>
 							<FlexiTarget
@@ -234,16 +247,18 @@
 							/>
 
 							<div
-								class="border-rule mt-2.5 flex items-center justify-between gap-2 border-t pt-2"
+								class="border-rule-faint mt-2.5 flex items-center justify-between gap-2 border-t pt-2"
 								role="status"
 							>
-								<span class="label text-faint text-[9px] whitespace-nowrap">{key} · {bp.grid}</span>
+								<span class="text-faint text-[9px] font-semibold whitespace-nowrap"
+									>{key} · {bp.grid}</span
+								>
 								<!--
 									The long half is gated on the *breakpoint*, not the viewport: the strip
 									sits on the plate, and the plate is 212px wide at sm however wide the
 									window is.
 								-->
-								<span class="label text-faint truncate text-[9px] whitespace-nowrap">
+								<span class="text-faint truncate text-[9px] font-semibold whitespace-nowrap">
 									{#if pin === 'auto'}
 										Auto{#if key !== 'sm'}&nbsp;· follows viewport{/if}
 									{:else}

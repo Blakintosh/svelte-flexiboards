@@ -6,6 +6,8 @@
 		cssTransitionConfig,
 		springTransitionConfig
 	} from '@flexiboards/svelte';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import type {
 		FlexiBoardConfiguration,
 		FlexiTargetController,
@@ -28,11 +30,11 @@
 
 	// Anything provisional — the drop preview, the plate in hand — is fx-accent.
 	const className = (widget: FlexiWidgetController) => [
-		'outline-offset-2 focus-visible:outline-2 focus-visible:outline-fx-accent',
-		widget.isShadow && 'border border-dashed border-fx-accent bg-tint-accent opacity-70',
-		widget.isGrabbed && 'border border-fx-accent opacity-60',
+		'rounded-[14px] outline-offset-2 focus-visible:outline-2 focus-visible:outline-fx-accent motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+		widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'shadow-lift rotate-[2.5deg]',
 		// The plate in hand greys out wherever the mosaic has no room for it.
-		widget.dropRejected && 'border-rule opacity-30 saturate-0'
+		widget.dropRejected && 'border-rule-soft border opacity-30 saturate-0'
 	];
 
 	let motion: Motion = $state('spring');
@@ -110,6 +112,9 @@
 {#snippet plateBoard(bp: Breakpoint)}
 	{@const bpGrid = BREAKPOINT_GRIDS[bp]}
 	<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto [scrollbar-gutter:stable]'} config={boardConfig}>
+		{#snippet suspense(_: FlexiBoardSuspenseReason)}
+			<BoardSkeleton bars={4} class="" />
+		{/snippet}
 		<FlexiTarget
 			key={TARGET_KEY}
 			onfirstcreate={(created: FlexiTargetController) => (target = created)}
@@ -134,7 +139,7 @@
 <main class="bg-paper flex h-full min-h-0 w-full flex-col p-3 sm:p-4 lg:p-6">
 	<Sheet
 		class="min-h-0 flex-1"
-		fig="Fig 10 · Gallery · free 2D grid · packing: none"
+		fig="Gallery · free 2D grid · packing: none"
 		aside="transition: {transitionCall}"
 	>
 		<!-- The toolbar lives in the sheet's own header rather than a band of its own. -->
@@ -144,7 +149,7 @@
 			<div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
 				<h1 class="text-ink font-serif text-2xl lg:text-[30px]">Gallery</h1>
 				<!-- The row count is live: it ticks up when a resize grows the grid. -->
-				<span class="label text-faint text-[10px]">
+				<span class="text-faint text-[11px] font-semibold">
 					{columns} × {rows} · rows {grid.minRows}–{grid.maxRows} · neighbours make room
 				</span>
 			</div>
@@ -165,6 +170,7 @@
 				bind:controller={responsive}
 				config={{
 					breakpoints: { lg: 1024, sm: 640 },
+					ssrBreakpoint: 'lg',
 					loadLayouts: () => layouts
 				}}
 			>

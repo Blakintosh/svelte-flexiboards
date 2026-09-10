@@ -6,7 +6,7 @@
 </script>
 
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import Button from '../common/button.svelte';
 	import { cn } from '$lib/utils.js';
 	import Check from 'lucide-svelte/icons/check';
 	import { toSchemaEntry, type FieldEntry } from './field-types.js';
@@ -101,16 +101,18 @@
 </script>
 
 <!-- The payoff panel sits on the dark field ground: it is a terminal, so it
-     should read as one. -->
-<section class="bg-field text-on-ink flex min-h-0 min-w-0 flex-col sm:flex-1 lg:flex-1">
+     should read as one — a rounded card like every other, just inverted. -->
+<section
+	class="bg-field text-on-ink border-rule-soft shadow-card flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border sm:flex-1 lg:flex-1"
+>
 	<div class="border-blue/40 flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
-		<span class="label text-on-ink text-[10px]">Schema · live</span>
+		<span class="text-on-ink text-[11.5px] font-semibold">Schema · live</span>
 		<div class="flex items-center gap-1">
 			<span class="text-on-ink-faint hidden font-mono text-[10px] sm:inline">onLayoutChange</span>
 			<Button
 				variant="ghost"
 				size="sm"
-				class="text-on-ink-faint hover:bg-blue/20 hover:text-on-ink h-6 px-2 text-xs"
+				class="text-on-ink-faint hover:bg-blue/20 hover:text-on-ink h-6 rounded-full px-2 text-xs"
 				onclick={copySchema}
 				disabled={fields.length === 0}
 			>

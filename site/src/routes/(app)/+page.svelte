@@ -40,53 +40,76 @@
 
 	const targetSnippet = `layout: { type: 'free',\n  minColumns: 4 }`;
 
-	// The hero's "grab me" widget breathes until someone actually grabs it.
+	// The hero's "grab me" widget breathes until it's first hovered (or pressed,
+	// for touch); the margin note bows out the first time any bar is grabbed.
 	let heroTouched = $state(false);
+	let heroHovered = $state(false);
+	let heroGrabbed = $state(false);
 
 	// springTransitionConfig(), exaggerated for the shop window: a touch more
 	// bounce than an app would want, so the drop visibly *lands*.
 	const heroTransition: FlexiWidgetTransitionConfiguration = {
-		move: spring({ duration: 0.4, bounce: 0.2 }),
-		drop: spring({ duration: 0.55, bounce: 0.42 }),
+		move: spring({ duration: 0.3, bounce: 0.1 }),
+		drop: spring({ duration: 0.4, bounce: 0.25 }),
 		resize: spring({ duration: 0.25, bounce: 0 })
 	};
 
-	// Every bar of the F drags; the drop preview is a dashed slice that
-	// condenses in (`shadow-enter` — @starting-style blur/opacity, 250ms).
-	const heroBar =
-		(base: string, pulse = false) =>
-		(widget: FlexiWidgetController) => [
+	// Every bar of the F drags. The widget element stays bare — the library
+	// measures its box, so nothing scaled may live on it. All visuals and scale
+	// motion sit on an inner div: the drop preview condenses in (`shadow-enter`
+	// — @starting-style blur/opacity/scale); a hovered bar rises on a soft
+	// shadow; a grabbed bar tilts and scales up. The dropped element remounts
+	// in its resting pose — no settle animation, it flickered against the lerp.
+	const heroShell = (widget: FlexiWidgetController) => [
+		'h-full w-full outline-hidden',
+		!widget.isShadow && 'cursor-grab active:cursor-grabbing'
+	];
+
+	// The library grabs a draggable widget on pointerdown, so a press on a real
+	// bar (not its drop shadow) *is* the first grab — no events API needed.
+	const onBarGrab = (widget: FlexiWidgetController) => () => {
+		if (!widget.isShadow) heroGrabbed = true;
+	};
+
+	const heroBarVisual = (widget: FlexiWidgetController, base: string, pulse = false) =>
+		[
 			'h-full w-full rounded-[12px]',
 			widget.isShadow
 				? 'border-rule shadow-enter border-2 border-dashed text-transparent'
-				: `cursor-grab active:cursor-grabbing ${base}`,
-			pulse && !widget.isShadow && !heroTouched && 'animate-fb-pulse'
-		];
-
-	const inkBarClass = heroBar('bg-ink');
-	const blueBarClass = heroBar('bg-blue');
-	const grabMeClass = heroBar(
-		'ui bg-fx-accent flex items-center justify-center text-[12.5px] text-white',
-		true
-	);
+				: `${base} motion-safe:transition-[translate,rotate,scale,box-shadow,opacity,filter] motion-safe:duration-[180ms] motion-safe:ease-out`,
+			// Hover only at rest: suppressed while grabbed or mid drop flight, so
+			// landing under the cursor eases into the hover rise instead of
+			// bouncing off the lerp.
+			!widget.isShadow &&
+				!widget.isGrabbed &&
+				!widget.isInterpolating &&
+				'hover:-translate-y-[4px] hover:shadow-[0_6px_16px_rgba(16,32,46,0.14)]',
+			!widget.isShadow && widget.isGrabbed && 'shadow-lift -rotate-[2.5deg] scale-[1.045]',
+			// Nowhere to land: the bar in hand greys out and flattens until the
+			// pointer finds a legal spot (core swaps the cursor to not-allowed).
+			!widget.isShadow && widget.dropRejected && 'rotate-0 opacity-40 saturate-0',
+			pulse && !widget.isShadow && !heroTouched && !heroHovered && 'animate-fb-pulse'
+		]
+			.filter(Boolean)
+			.join(' ');
 
 	const packages = [
 		{
 			kind: 'Engine',
 			name: '@flexiboards/core',
-			body: 'Placement, collision, resizing, collapse, responsive state, announcer, portalling.',
+			body: 'The framework-agnostic engine that powers Flexiboards and all its interactions.',
 			status: null
 		},
 		{
 			kind: 'Adapter',
 			name: '@flexiboards/svelte',
-			body: 'Svelte 5 runes throughout. The reference implementation, shipping today.',
+			body: 'Flexiboards for Svelte 5, built for runes. Where it all began.',
 			status: { label: 'stable', variant: 'default' as const }
 		},
 		{
 			kind: 'Adapter',
 			name: '@flexiboards/react',
-			body: 'Core signals bridged into React via useSyncExternalStore. Usable, API not yet frozen.',
+			body: 'Flexiboards for React, currently in public preview.',
 			status: { label: 'preview', variant: 'accent' as const }
 		}
 	];
@@ -278,7 +301,16 @@
 			class="border-rule bg-panel relative mx-auto my-0 w-fit rounded-[20px] border p-8 shadow-[0_24px_56px_rgba(16,32,46,0.09)]"
 		>
 			<div class="relative w-[340px] max-w-full">
-				<FlexiBoard config={{ widgetDefaults: { transition: heroTransition } }}>
+				<!-- Drops on the hero are often released outside its small box, so flights
+					     fly in across the edge — portal them so the overflow lock can't clip them. -->
+				<FlexiBoard
+					config={{
+						widgetDefaults: { transition: heroTransition },
+						portalDropFlights: true,
+						// A drag on the hero must never scroll the page under the visitor.
+						autoScroll: false
+					}}
+				>
 					<FlexiTarget
 						config={{
 							layout: { type: 'free', minRows: 3, maxRows: 3, minColumns: 3, maxColumns: 3 },
@@ -286,17 +318,43 @@
 						}}
 						class="gap-2.5"
 					>
-						<FlexiWidget draggable x={0} y={0} width={3} class={inkBarClass} />
-						<FlexiWidget draggable x={0} y={1} width={2} class={blueBarClass} />
-						<FlexiWidget draggable x={0} y={2} class={grabMeClass}>grab me</FlexiWidget>
+						<FlexiWidget draggable x={0} y={0} width={3} class={heroShell}>
+							{#snippet children({ widget }: { widget: FlexiWidgetController })}
+								<div class={heroBarVisual(widget, 'bg-ink')} onpointerdown={onBarGrab(widget)}></div>
+							{/snippet}
+						</FlexiWidget>
+						<FlexiWidget draggable x={0} y={1} width={2} class={heroShell}>
+							{#snippet children({ widget }: { widget: FlexiWidgetController })}
+								<div class={heroBarVisual(widget, 'bg-blue')} onpointerdown={onBarGrab(widget)}></div>
+							{/snippet}
+						</FlexiWidget>
+						<FlexiWidget draggable x={0} y={2} class={heroShell}>
+							{#snippet children({ widget }: { widget: FlexiWidgetController })}
+								<div
+									class={heroBarVisual(
+										widget,
+										'ui bg-fx-accent flex items-center justify-center text-[12.5px] text-white',
+										true
+									)}
+									onpointerdown={onBarGrab(widget)}
+									onpointerenter={() => (heroHovered = true)}
+								>
+									grab me
+								</div>
+							{/snippet}
+						</FlexiWidget>
 					</FlexiTarget>
 				</FlexiBoard>
 			</div>
 		</figure>
 
-		<!-- Hand-drawn margin note: the one italic on the page. -->
+		<!-- Hand-drawn margin note: the one italic on the page. Once any bar has
+		     been grabbed it has done its job — it sinks out on a fade and shrink
+		     (opacity only under reduced motion). -->
 		<div
-			class="absolute -bottom-[54px] left-1/2 hidden -translate-x-[72%] lg:block"
+			class="absolute -bottom-[54px] left-1/2 hidden -translate-x-[64%] transition-[opacity,translate,scale] duration-[420ms] ease-[var(--ease-snap)] lg:block {heroGrabbed
+				? 'pointer-events-none opacity-0 motion-safe:translate-y-3 motion-safe:scale-90'
+				: ''}"
 			aria-hidden="true"
 		>
 			<div class="flex items-start gap-2">
@@ -565,3 +623,101 @@
 		</div>
 	</div>
 </section>
+
+<style>
+	/*
+	  Splash-only motion. These classes reach elements rendered through library
+	  snippets and runtime-applied classes (the `reveal` action), so they are
+	  declared :global — but they load with this page and nothing else uses the
+	  names, so they never leak in practice.
+	*/
+	:global {
+		/* One-shot entrances: the hero rises on load, sections rise as they scroll
+		   in. Steep ease-out, 12–14px of travel — a snap into place, not a float. */
+		@keyframes fb-rise {
+			from {
+				opacity: 0;
+				transform: translateY(var(--rise, 12px));
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		.animate-fb-rise {
+			animation: fb-rise 900ms var(--ease-snap) both;
+		}
+
+		/* The hero's idle nudge — "grab me" breathes until someone does. */
+		@keyframes fb-pulse {
+			0%,
+			78%,
+			100% {
+				transform: scale(1);
+			}
+			84% {
+				transform: scale(1.09);
+			}
+			90% {
+				transform: scale(0.98);
+			}
+			95% {
+				transform: scale(1.03);
+			}
+		}
+		.animate-fb-pulse {
+			animation: fb-pulse 4s ease-in-out infinite;
+		}
+
+		/* Drop-preview entrance: the dashed slice condenses out of a short blur
+		   the moment it mounts (@starting-style), instead of popping in. */
+		.shadow-enter {
+			opacity: 1;
+			filter: blur(0px);
+			transform: scale(1);
+			transition:
+				opacity 200ms ease-out,
+				filter 200ms ease-out,
+				transform 320ms var(--ease-snap);
+		}
+		@starting-style {
+			.shadow-enter {
+				opacity: 0;
+				filter: blur(8px);
+				transform: scale(2.4);
+			}
+		}
+
+		/* Scroll reveal: applied and sequenced by the `reveal` action. */
+		.reveal {
+			opacity: 0;
+			transform: translateY(var(--rise, 14px));
+			transition:
+				opacity 900ms var(--ease-snap) var(--reveal-delay, 0ms),
+				transform 900ms var(--ease-snap) var(--reveal-delay, 0ms);
+		}
+		.reveal.is-seen {
+			opacity: 1;
+			transform: none;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			/* Entrances keep the fade (it prevents a pop) but drop the travel. */
+			.animate-fb-rise {
+				animation-name: fb-fade;
+				animation-delay: 0ms;
+			}
+			.animate-fb-pulse {
+				animation: none;
+			}
+			.shadow-enter {
+				transition: none;
+			}
+			.reveal {
+				transform: none;
+				transition-property: opacity;
+				transition-delay: 0ms;
+			}
+		}
+	}
+</style>

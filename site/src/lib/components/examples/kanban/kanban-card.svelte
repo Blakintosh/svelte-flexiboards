@@ -30,16 +30,20 @@
 -->
 <div
 	class="flex min-w-0 flex-col gap-2 motion-safe:transition-transform motion-safe:duration-[120ms] {widget.isGrabbed
-		? '-rotate-1'
+		? '-rotate-[2.5deg]'
 		: ''}"
 >
 	<h3 class="text-ink line-clamp-3 text-[13px] leading-snug">{card.title ?? 'Untitled card'}</h3>
 
-	<!-- Meta collapsed to one mono line: tag on the left, who and when on the right. -->
-	<div class="flex min-w-0 items-center gap-2 font-mono text-[10px]">
-		<span class="label text-faint shrink-0 tracking-[0.1em]">{card.tag ?? 'Task'}</span>
+	<!-- Meta: a tag pill on the left, who and when — genuinely tabular data — in mono on the right. -->
+	<div class="flex min-w-0 items-center gap-2 text-[10px]">
+		<span class="bg-tint text-body shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+			>{card.tag ?? 'Task'}</span
+		>
 		<!-- The one data use of fx-accent: a date that has already passed. -->
-		<span class="ml-auto truncate text-[11px] {card.overdue ? 'text-fx-accent' : 'text-faint'}">
+		<span
+			class="ml-auto truncate font-mono text-[11px] {card.overdue ? 'text-fx-accent' : 'text-faint'}"
+		>
 			{card.overdue ? 'Overdue' : (card.initials ?? '?')} · {card.overdue
 				? (card.initials ?? '?')
 				: (card.due ?? '—')}

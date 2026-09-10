@@ -11,7 +11,9 @@
 		type FlexiTargetController,
 		type FlexiWidgetController
 	} from '@flexiboards/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
+	import Button from '$lib/components/examples/common/button.svelte';
 	import { cn } from '$lib/utils.js';
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
 
@@ -59,11 +61,12 @@
 		const meta = widget.metadata as FieldMeta | undefined;
 
 		return cn(
-			'relative flex w-full min-w-0 flex-col border border-rule bg-panel px-3 py-3 transition-colors duration-[120ms]',
-			meta && meta.uid === selectedUid && 'border-l-2 border-l-blue bg-tint',
-			widget.isGrabbed && 'border-fx-accent opacity-60',
-			widget.isShadow && 'border-dashed border-fx-accent bg-tint-accent opacity-70',
-			widget.dropRejected && 'border-rule opacity-30 saturate-0'
+			'relative flex w-full min-w-0 flex-col rounded-[14px] border border-rule-soft bg-panel px-3.5 py-3 shadow-card transition-colors duration-[120ms]',
+			meta && meta.uid === selectedUid && 'bg-tint ring-2 ring-inset ring-blue',
+			widget.isGrabbed && ' opacity-95 shadow-lift',
+			widget.isShadow &&
+				'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent shadow-none',
+			widget.dropRejected && 'border-rule-soft opacity-30 saturate-0'
 		);
 	}
 
@@ -212,9 +215,17 @@
 	<header class="flex shrink-0 items-baseline justify-between gap-4">
 		<div class="flex items-baseline gap-3">
 			<h1 class="text-ink font-serif text-2xl lg:text-[30px]">Form builder</h1>
-			<span class="label text-faint hidden text-[10px] sm:inline"> 1 col · flow · metadata </span>
+			<span class="text-faint hidden text-[11.5px] font-semibold sm:inline">
+				1 col · flow · metadata
+			</span>
 		</div>
-		<Button variant="outline" size="sm" onclick={resetForm} title="Reset the form">
+		<Button
+			variant="outline"
+			size="sm"
+			class="rounded-full"
+			onclick={resetForm}
+			title="Reset the form"
+		>
 			<RotateCcw class="size-3.5" />
 			<span class="max-sm:sr-only">Reset</span>
 		</Button>
@@ -228,15 +239,20 @@
 			bind:controller={board}
 			class="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-5"
 		>
+			{#snippet suspense(_: FlexiBoardSuspenseReason)}
+				<BoardSkeleton bars={4} class="" />
+			{/snippet}
 			<FieldPalette onAdd={addWidget} />
 
-			<!-- The canvas is the only ink-framed box on the page: it is the figure. -->
-			<section class="border-ink bg-panel flex flex-col border lg:min-h-0 lg:flex-1">
+			<!-- The canvas is the page's one lifted card: it is the figure. -->
+			<section
+				class="border-rule-soft bg-panel shadow-card flex flex-col overflow-hidden rounded-[14px] border lg:min-h-0 lg:flex-1"
+			>
 				<header
-					class="border-rule flex shrink-0 items-baseline justify-between gap-3 border-b px-4 py-3"
+					class="border-rule-faint flex shrink-0 items-baseline justify-between gap-3 border-b px-4 py-3"
 				>
 					<h2 class="text-ink font-serif text-[15px]">Contact form</h2>
-					<span class="label text-faint text-[10px]">
+					<span class="text-faint text-[11.5px] font-semibold">
 						{#if ready}
 							{fields.length}
 							{fields.length === 1 ? 'field' : 'fields'}
@@ -271,7 +287,7 @@
 						<div
 							class="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center"
 						>
-							<p class="label text-faint text-[10px]">Drag a field in to begin</p>
+							<p class="text-faint text-[11.5px] font-semibold">Drag a field in to begin</p>
 						</div>
 					{/if}
 				</div>

@@ -2,9 +2,9 @@
 	import type { Snippet } from 'svelte';
 
 	/**
-	 * "Draftsman" sheet chrome shared by the board-concept examples (kanban,
-	 * dashboard, compound, gallery): an ink-framed figure on graph paper with a
-	 * mono fig-caption band on top and an annotation band underneath.
+	 * Soft sheet chrome shared by the board-concept examples (kanban, dashboard,
+	 * compound, gallery): a rounded white card with a caption band on top and an
+	 * annotation band underneath.
 	 */
 	type SheetProps = {
 		/** Left side of the top band, e.g. "Fig 14 · Sprint board · 4 flow targets · append". */
@@ -39,11 +39,16 @@
 	}: SheetProps = $props();
 </script>
 
-<figure class={cn('graph-paper border-ink flex min-h-0 flex-col border', className)}>
+<figure
+	class={cn(
+		'border-rule-soft bg-panel shadow-card m-0 flex min-h-0 flex-col overflow-hidden rounded-[14px] border',
+		className
+	)}
+>
 	<figcaption
-		class="border-ink bg-paper flex shrink-0 items-center justify-between gap-4 border-b px-4 py-2.5 lg:px-8"
+		class="border-rule-faint bg-panel flex shrink-0 items-center justify-between gap-4 border-b px-4 py-2.5 lg:px-6"
 	>
-		<span class="label text-faint truncate text-[10px]">{fig}</span>
+		<span class="text-faint truncate text-[11.5px] font-semibold">{fig}</span>
 		{#if aside}
 			<span class={cn('text-faint shrink-0 font-mono text-[10px]', asideClass)}>{aside}</span>
 		{/if}
@@ -56,7 +61,7 @@
 	{#if footer}
 		<div
 			class={cn(
-				'border-ink bg-paper flex shrink-0 items-center justify-between gap-4 border-t px-4 py-2.5 lg:px-8',
+				'border-rule-faint bg-panel flex shrink-0 items-center justify-between gap-4 border-t px-4 py-2.5 lg:px-6',
 				footerClass
 			)}
 		>

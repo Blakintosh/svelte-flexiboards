@@ -8,11 +8,6 @@
 </script>
 
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
 	import SlidersHorizontal from 'lucide-svelte/icons/sliders-horizontal';
 	import { FIELD_KIND, slugify, type FieldEntry, type FieldMeta } from './field-types.js';
 
@@ -40,8 +35,17 @@
 
 	const isDuplicate = $derived(!!field && duplicateNames.has(field.meta.name));
 
+	// Native controls on the site tokens — the example depends on Tailwind and
+	// the tokens only, no component library.
 	const inputClass =
-		'h-8 w-full rounded-none border-rule bg-paper text-[13px] text-ink shadow-none focus-visible:border-blue focus-visible:ring-0';
+		'h-8 w-full rounded-[9px] border border-rule-soft bg-paper px-3 text-[13px] text-ink placeholder:text-faint shadow-none outline-none transition-[border-color] duration-[120ms] focus-visible:border-blue';
+
+	const labelClass = 'text-faint text-[11.5px] font-semibold';
+
+	// A checkbox painted as a toggle: real input, real semantics, Tailwind-only
+	// track and thumb.
+	const switchClass =
+		'relative h-[18px] w-8 shrink-0 cursor-pointer appearance-none rounded-full bg-rule outline-none transition-colors duration-[130ms] before:absolute before:top-[2px] before:left-[2px] before:size-[14px] before:rounded-full before:bg-paper before:shadow-sm before:transition-transform before:duration-[130ms] before:content-[""] checked:bg-blue checked:before:translate-x-[14px] focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
 	function commitName() {
 		const next = slugify(nameDraft);
@@ -63,23 +67,25 @@
 </script>
 
 <section class="flex min-w-0 flex-col gap-2 sm:flex-1 lg:flex-none">
-	<span class="label text-faint text-[10px]">Field</span>
+	<span class="text-faint text-[11.5px] font-semibold">Field</span>
 
-	<div class="border-rule bg-panel border p-3">
+	<div class="border-rule-soft bg-panel shadow-card rounded-[14px] border p-4">
 		{#if !field || !spec}
 			<div class="flex flex-col items-center justify-center gap-2 py-6 text-center">
-				<SlidersHorizontal class="text-rule size-5" />
-				<p class="label text-faint text-[10px]">Select a field to edit it</p>
+				<SlidersHorizontal class="text-faint size-5" />
+				<p class="text-faint text-[11.5px] font-semibold">Select a field to edit it</p>
 			</div>
 		{:else}
 			{@const uid = field.uid}
 			<div class="flex flex-col gap-3">
-				<Badge variant="secondary" class="w-fit">{spec.title}</Badge>
+				<span class="bg-tint text-ink w-fit rounded-full px-2 py-0.5 text-[11.5px] font-semibold"
+					>{spec.title}</span
+				>
 
 				{#if controls.has('label')}
 					<div class="flex flex-col gap-1">
-						<Label for={`${uid}-label`} class="label text-faint text-[10px]">Label</Label>
-						<Input
+						<label for={`${uid}-label`} class={labelClass}>Label</label>
+						<input
 							id={`${uid}-label`}
 							value={field.meta.label}
 							class={inputClass}
@@ -90,8 +96,8 @@
 
 				{#if controls.has('name')}
 					<div class="flex flex-col gap-1">
-						<Label for={`${uid}-name`} class="label text-faint text-[10px]">Key</Label>
-						<Input
+						<label for={`${uid}-name`} class={labelClass}>Key</label>
+						<input
 							id={`${uid}-name`}
 							bind:value={nameDraft}
 							class={`${inputClass} font-mono`}
@@ -104,19 +110,17 @@
 							}}
 						/>
 						{#if isDuplicate}
-							<p class="label text-fx-accent text-[10px]">Key already used</p>
+							<p class="text-fx-accent text-[11.5px] font-semibold">Key already used</p>
 						{:else}
-							<p class="label text-faint text-[10px]">lowercase · no spaces</p>
+							<p class="text-faint text-[11.5px] font-semibold">lowercase · no spaces</p>
 						{/if}
 					</div>
 				{/if}
 
 				{#if controls.has('placeholder')}
 					<div class="flex flex-col gap-1">
-						<Label for={`${uid}-placeholder`} class="label text-faint text-[10px]">
-							Placeholder
-						</Label>
-						<Input
+						<label for={`${uid}-placeholder`} class={labelClass}>Placeholder</label>
+						<input
 							id={`${uid}-placeholder`}
 							value={field.meta.placeholder ?? ''}
 							class={inputClass}
@@ -127,25 +131,29 @@
 
 				{#if controls.has('options')}
 					<div class="flex flex-col gap-1">
-						<Label for={`${uid}-options`} class="label text-faint text-[10px]">Options</Label>
-						<Textarea
+						<label for={`${uid}-options`} class={labelClass}>Options</label>
+						<textarea
 							id={`${uid}-options`}
 							value={optionsDraft}
 							rows={3}
-							class="border-rule bg-paper text-ink focus-visible:border-blue min-h-16 w-full resize-none rounded-none text-[13px] shadow-none focus-visible:ring-0"
+							class="border-rule-soft bg-paper text-ink focus-visible:border-blue min-h-16 w-full resize-none rounded-[9px] border px-3 py-2 text-[13px] shadow-none outline-none"
 							oninput={(event) => commitOptions(event.currentTarget.value)}
-						/>
-						<p class="label text-faint text-[10px]">one per line</p>
+						></textarea>
+						<p class="text-faint text-[11.5px] font-semibold">one per line</p>
 					</div>
 				{/if}
 
 				{#if controls.has('required')}
-					<div class="border-rule flex items-center justify-between gap-3 border-t pt-3">
-						<Label for={`${uid}-required`} class="label text-faint text-[10px]">Required</Label>
-						<Switch
+					<div class="border-rule-faint flex items-center justify-between gap-3 border-t pt-3">
+						<label for={`${uid}-required`} class={labelClass}>Required</label>
+						<input
 							id={`${uid}-required`}
+							type="checkbox"
+							role="switch"
+							aria-checked={field.meta.required ?? false}
 							checked={field.meta.required ?? false}
-							onCheckedChange={(checked: boolean) => onchange({ required: checked })}
+							class={switchClass}
+							onchange={(event) => onchange({ required: event.currentTarget.checked })}
 						/>
 					</div>
 				{/if}

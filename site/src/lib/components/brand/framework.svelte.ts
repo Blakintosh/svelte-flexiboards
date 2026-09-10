@@ -19,11 +19,23 @@ export const frameworks: FrameworkMeta[] = [
 export const plannedFrameworks = ['Vue'];
 
 const STORAGE_KEY = 'flexiboards:framework';
+/** Cookie mirror of the choice, so the server renders the right framework. */
+export const FRAMEWORK_COOKIE = 'flexiboards-framework';
+
+export function isFramework(value: unknown): value is Framework {
+	return value === 'react' || value === 'svelte';
+}
 
 function readStored(): Framework {
 	if (!browser) return 'svelte';
 	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored === 'react' || stored === 'svelte' ? stored : 'svelte';
+	return isFramework(stored) ? stored : 'svelte';
+}
+
+function persist(fw: Framework) {
+	if (!browser) return;
+	localStorage.setItem(STORAGE_KEY, fw);
+	document.cookie = `${FRAMEWORK_COOKIE}=${fw}; Path=/; Max-Age=31536000; SameSite=Lax`;
 }
 
 /*
@@ -69,7 +81,7 @@ class FrameworkStore {
 	#current = $state<Framework>('svelte');
 	#selected = $state<Framework>('svelte');
 	#swap = $state<SwapPhase>(null);
-	/** False until the stored choice has been read, so SSR and hydration agree. */
+	/** False until the stored choice has been read (server cookie or localStorage). */
 	#hydrated = $state(false);
 
 	#outTimer: ReturnType<typeof setTimeout> | undefined;
@@ -98,7 +110,7 @@ class FrameworkStore {
 	switch(next: Framework) {
 		if (next === this.#selected) return;
 		this.#selected = next;
-		if (browser) localStorage.setItem(STORAGE_KEY, next);
+		persist(next);
 
 		clearTimeout(this.#outTimer);
 		clearTimeout(this.#inTimer);
@@ -132,18 +144,27 @@ class FrameworkStore {
 		return this.#hydrated;
 	}
 
-	/** Call once from the root layout. */
-	hydrate() {
-		this.#current = readStored();
+	/**
+	 * Call once from the root layout, during init (not in an effect), with the
+	 * framework the server read from the cookie. Runs on the server too, so
+	 * SSR renders the same framework the client will hydrate with; the
+	 * cookie-less fallback is localStorage (visitors from before the cookie).
+	 */
+	hydrate(fromCookie: Framework | null) {
+		this.#current = fromCookie ?? readStored();
 		this.#selected = this.#current;
 		this.#hydrated = true;
+		if (!browser) return;
+		if (!fromCookie) persist(this.#current);
 		// Remember where the last press landed so the accent ripple starts there.
 		document.addEventListener(
 			'pointerdown',
 			(e) => (this.#pointer = { x: e.clientX, y: e.clientY }),
 			{ capture: true, passive: true }
 		);
-		if (this.#current !== 'svelte') this.#applyAccent(this.#current);
+		// The accent is already right via `data-framework` on <html>; only the
+		// hover token lives on inline style.
+		document.documentElement.style.setProperty('--fx-accent-hover', ACCENT_HOVER[this.#current]);
 	}
 
 	/** Stagger each section's accent transition by its distance from the click. */
@@ -158,6 +179,8 @@ class FrameworkStore {
 
 	#applyAccent(fw: Framework) {
 		if (!browser) return;
+		// Keep the server-stamped attribute in step (inline style wins meanwhile).
+		document.documentElement.dataset.framework = fw;
 		const style = document.documentElement.style;
 		style.setProperty('--fx-accent-hover', ACCENT_HOVER[fw]);
 		clearTimeout(this.#accentTimer);

@@ -7,6 +7,10 @@
 	import { framework, frameworks, type Framework } from './framework.svelte';
 	import { SiSvelte, SiReact } from '@icons-pack/svelte-simple-icons';
 
+	/** Which edge the popover hangs from; `class` styles the trigger button. */
+	let { align = 'right', class: className = '' }: { align?: 'left' | 'right'; class?: string } =
+		$props();
+
 	let wrap = $state<HTMLElement>();
 	let open = $state(false);
 	let closing = $state(false);
@@ -59,7 +63,7 @@
 		onclick={toggle}
 		aria-haspopup="menu"
 		aria-expanded={open}
-		class="ui border-ink text-ink hover:bg-tint flex h-9 items-center gap-2 border bg-transparent px-3 text-[13px] transition-colors duration-[120ms]"
+		class="ui border-ink text-ink hover:bg-tint flex h-9 items-center gap-2 border bg-transparent px-3 text-[13px] transition-colors duration-[120ms] {className}"
 	>
 		<span
 			class="flex size-5 items-center justify-center rounded-[6px] text-white"
@@ -80,12 +84,10 @@
 	</button>
 
 	{#if open}
-		<div class="absolute top-full right-0 z-30 min-w-[200px] pt-1.5" role="menu">
+		<div class="absolute top-full z-30 min-w-[200px] pt-1.5 {align === 'left' ? 'left-0' : 'right-0'}" role="menu">
 			<div
-				class="bg-panel border-rule flex origin-top-right flex-col rounded-[12px] border p-1.5 shadow-[0_16px_36px_rgba(16,32,46,0.14)] motion-safe:[animation:var(--menu-anim)]"
-				style="--menu-anim: {closing
-					? 'fb-menu-out 160ms var(--ease-snap) both'
-					: 'fb-menu 180ms var(--ease-snap) both'}"
+				class="menu-surface bg-panel border-rule flex flex-col rounded-[12px] border p-1.5 shadow-[0_16px_36px_rgba(16,32,46,0.14)] {align === 'left' ? 'origin-top-left' : 'origin-top-right'}"
+				class:menu-closing={closing}
 			>
 				{#each frameworks as fw (fw.id)}
 					{@const Icon = BADGE[fw.id].icon}
@@ -116,3 +118,36 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/* The popover condenses in from the button and retreats the same way. Under
+	   reduced motion it simply appears — no animation at all. */
+	@media (prefers-reduced-motion: no-preference) {
+		.menu-surface {
+			animation: menu-in 180ms var(--ease-snap) both;
+		}
+		.menu-surface.menu-closing {
+			animation: menu-out 160ms var(--ease-snap) both;
+		}
+	}
+	@keyframes menu-in {
+		from {
+			opacity: 0;
+			transform: translateY(-6px) scale(0.94);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+	@keyframes menu-out {
+		from {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+		to {
+			opacity: 0;
+			transform: translateY(-6px) scale(0.94);
+		}
+	}
+</style>

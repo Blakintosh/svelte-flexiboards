@@ -12,8 +12,8 @@
         bind:value
         class="relative flex w-full touch-none select-none items-center mt-2.5 mb-1.5"
     >
-        <!-- A measurement, so it reads as a drawn gauge: ink fill in a ruled trough. -->
-        <span class="relative h-[26px] w-full grow cursor-pointer overflow-hidden border border-rule bg-tint">
+        <!-- A gauge, softened into a pill: ink fill in a rounded trough. -->
+        <span class="relative h-[26px] w-full grow cursor-pointer overflow-hidden rounded-full border border-rule-soft bg-tint">
             <Slider.Range class="bg-ink absolute h-full" />
             <span class="absolute left-0 top-0 text-paper p-[5px]">
                 <SunMedium class="size-4" />
@@ -22,7 +22,7 @@
         <Slider.Thumb
         index={0}
         class={cn(
-            "focus-visible:ring-fx-accent focus-visible:outline-hidden block h-9 w-1.5 cursor-pointer bg-fx-accent transition-colors duration-[120ms] focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            "focus-visible:ring-fx-accent focus-visible:outline-hidden block h-9 w-2 rounded-full cursor-pointer bg-fx-accent transition-colors duration-[120ms] focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
         )}
         />
     </Slider.Root>
