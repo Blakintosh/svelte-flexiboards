@@ -46,7 +46,7 @@ export const directory: DocSection[] = [
 			{ title: 'Exporting & Importing', href: '/docs/guides/exporting-importing-boards' },
 			{ title: 'Responsive Layouts', href: '/docs/guides/responsive-layouts' },
 			{ title: 'Server-Side Rendering', href: '/docs/guides/server-side-rendering' },
-			{ title: 'Registry (preview)', href: '/docs/guides/registry', frameworks: ['svelte'] }
+			{ title: 'Registry (preview)', href: '/docs/guides/registry' }
 		]
 	},
 	{

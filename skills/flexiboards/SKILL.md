@@ -145,9 +145,9 @@ Both adapters have component tests in `packages/{react,svelte}/tests`. The patte
 
 ## Read more
 
-Every docs page is available as Markdown by appending `.md` to its URL, and the index is at https://svelte-flexiboards.vercel.app/llms.txt (full text: `/llms-full.txt`). Fetch the page for the component you are working with before guessing at a prop:
+Every docs page is available as Markdown by appending `.md` to its URL, and the index is at https://flexiboards.dev/llms.txt (full text: `/llms-full.txt`). Fetch the page for the component you are working with before guessing at a prop:
 
-- https://svelte-flexiboards.vercel.app/docs/controllers.md for the controller actions and callbacks
-- https://svelte-flexiboards.vercel.app/docs/components/board.md, `target.md`, `widget.md` for prop and type tables
-- https://svelte-flexiboards.vercel.app/docs/guides/exporting-importing-boards.md for persistence
-- https://svelte-flexiboards.vercel.app/docs/guides/responsive-layouts.md and `server-side-rendering.md` when those apply
+- https://flexiboards.dev/docs/controllers.md for the controller actions and callbacks
+- https://flexiboards.dev/docs/components/board.md, `target.md`, `widget.md` for prop and type tables
+- https://flexiboards.dev/docs/guides/exporting-importing-boards.md for persistence
+- https://flexiboards.dev/docs/guides/responsive-layouts.md and `server-side-rendering.md` when those apply

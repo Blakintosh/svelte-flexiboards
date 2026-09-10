@@ -57,6 +57,12 @@ const config = {
 		// The generated tsconfig only includes .js/.ts/.svelte, so the React
 		// example sources would sit outside the project: no $lib alias and no
 		// JSX setting for the editor or svelte-check.
+		// The registry's React items import the way they will in a consumer's
+		// project (shadcn's `@/` alias), so those paths point back into this repo.
+		alias: {
+			'@/lib/utils': './src/lib/utils',
+			'@/components/flexi-handles/*': './src/lib/registry/react/flexi-handles/*'
+		},
 		typescript: {
 			config: (tsconfig) => {
 				tsconfig.include.push('../src/**/*.tsx');

@@ -22,7 +22,7 @@ const apiRoot = path.join(siteRoot, 'src/lib/generated/api');
 const outRoot = path.join(siteRoot, 'src/lib/generated/llms');
 const pagesOut = path.join(outRoot, 'pages');
 
-const ORIGIN = 'https://svelte-flexiboards.vercel.app';
+import { ORIGIN } from './site-origin.mjs';
 const SITE_NAME = 'Flexiboards';
 const SUMMARY =
 	'Flexiboards is a headless drag-and-drop toolkit for Svelte 5 and React 18 or 19 where the grid is the model. You get free-form and flow grids, moves between targets, resizing, a keyboard-driven virtual pointer with screen-reader announcements, layouts you can export and import, and server-side rendering with a suspense fallback.';
