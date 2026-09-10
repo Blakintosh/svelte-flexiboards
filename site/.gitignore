@@ -23,3 +23,7 @@ vite.config.ts.timestamp-*
 src/lib/generated/tsx-examples/
 src/lib/generated/tsx-examples/
 src/lib/generated/llms/
+
+# Playwright
+playwright-report/
+test-results/
