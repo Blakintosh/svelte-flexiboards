@@ -39,7 +39,7 @@ The React adapter supports React 18 and 19, and is currently in preview: the API
 A Flexiboard is built from three components: `FlexiBoard`, `FlexiTarget`, and `FlexiWidget`. Together they cover a wide range of drag-and-drop grids.
 
 Below is a diagram showing the anatomy of a Flexiboard that would be used for a todos board.
-<FlexiBoardAnatomy />
+<FlexiBoardAnatomy alt="Figure 1, component anatomy: a FlexiBoard frames two FlexiTarget grids side by side. The first target holds one FlexiWidget; the second holds two, stacked. Each widget renders either a snippet or a component." />
 
 Here's how you would create a board like this using Flexiboards:
 

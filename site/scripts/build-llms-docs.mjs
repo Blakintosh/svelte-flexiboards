@@ -324,6 +324,12 @@ function transform(body, { slug }) {
 		// Any other component tag: nothing sensible to render, so drop it.
 		const other = /^<\/?([A-Z][A-Za-z0-9]*)\b[^>]*\/?>$/.exec(trimmed);
 		if (other) {
+			// A component may carry an `alt` attribute: prose that stands in for it here.
+			const alt = /\balt="([^"]*)"/.exec(trimmed);
+			if (alt) {
+				out.push(alt[1]);
+				continue;
+			}
 			unhandled.add(`${other[1]} (dropped) in ${slug}`);
 			continue;
 		}

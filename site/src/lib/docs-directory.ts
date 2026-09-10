@@ -21,6 +21,7 @@ export const directory: DocSection[] = [
 			{ title: 'Controllers', href: '/docs/controllers' },
 			{ title: 'Accessibility', href: '/docs/accessibility' },
 			{ title: 'Docs for LLMs', href: '/docs/llms' },
+			{ title: 'Changelog', href: '/docs/changelog' },
 			{ title: 'Migrating to v1.0', href: '/docs/breaking-changes-to-10' },
 			// Predates the React adapter.
 			{ title: 'Breaking Changes in v0.4', href: '/docs/breaking-changes-to-04', frameworks: ['svelte'] }
