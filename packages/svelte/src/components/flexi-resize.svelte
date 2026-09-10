@@ -4,8 +4,10 @@
 	import { flexiresize } from '../adapters/widget.js';
 	import type { FlexiWidgetController } from '@flexiboards/core';
 
-	type FlexiResizeProps = {
+	export type FlexiResizeProps = {
+		/** The content of the handle. Receives the surrounding widget's controller. */
 		children?: Snippet<[{ widget: FlexiWidgetController }]>;
+		/** Classes applied to the rendered button. */
 		class?: ClassValue;
 	};
 </script>

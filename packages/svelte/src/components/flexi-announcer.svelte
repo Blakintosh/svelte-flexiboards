@@ -10,6 +10,10 @@
 
 	const controller = flexiannouncer(provider);
 
+	// SSR-stable id — see FlexiBoard's assistiveTextId. Nothing references the
+	// controller's own generated id, so the rendered element uses this one.
+	const id = $props.id();
+
 	const politeness = $derived.by(fromCore(() => controller.politeness));
 	const message = $derived.by(fromCore(() => controller.message));
 </script>
@@ -20,7 +24,7 @@
 	aria-label="Drag-and-drop announcer"
 	aria-atomic="true"
 	style={assistiveTextStyle}
-	id={controller.id}
+	{id}
 >
 	{message}
 </div>

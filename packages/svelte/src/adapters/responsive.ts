@@ -1,6 +1,7 @@
 import { getContext, onDestroy, setContext } from 'svelte';
 import {
 	InternalResponsiveFlexiBoardController,
+	markSsrEnvironment,
 	type ResponsiveFlexiBoardController,
 	type ResponsiveFlexiBoardProps
 } from '@flexiboards/core';
@@ -11,6 +12,11 @@ const contextKey = Symbol('responsive-flexiboard');
 export function responsiveflexiboard(
 	props: ResponsiveFlexiBoardProps
 ): InternalResponsiveFlexiBoardController {
+	// See flexiboard(): core must know before controller construction.
+	if (typeof window === 'undefined') {
+		markSsrEnvironment();
+	}
+
 	const board = new InternalResponsiveFlexiBoardController(props);
 
 	setContext(contextKey, board);

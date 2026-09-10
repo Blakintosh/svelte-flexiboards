@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { assistiveTextStyle, generateUniqueId, type FlexiCommonProps, type FlexiDeleteClasses, type FlexiDeleteController } from '@flexiboards/core';
+	import { assistiveTextStyle, type FlexiCommonProps, type FlexiDeleteClasses, type FlexiDeleteController } from '@flexiboards/core';
 	import type { Snippet } from 'svelte';
 	import { flexidelete } from '../adapters/misc.js';
 	import { fromCore, reactive } from '../adapter.svelte.js';
@@ -43,7 +43,7 @@
 		})
 	);
 
-	let assistiveTextId = generateUniqueId();
+	const assistiveTextId = $props.id();
 </script>
 
 <div

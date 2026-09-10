@@ -1,5 +1,8 @@
 // Components
-import FlexiBoard, { type FlexiBoardProps } from './components/flexi-board.svelte';
+import FlexiBoard, {
+	type FlexiBoardProps,
+	type FlexiBoardSuspenseReason
+} from './components/flexi-board.svelte';
 import FlexiTarget, { type FlexiTargetProps } from './components/flexi-target.svelte';
 import FlexiWidget, { type FlexiWidgetProps } from './components/flexi-widget.svelte';
 import FlexiGrab from './components/flexi-grab.svelte';
@@ -70,6 +73,7 @@ export type FlexiWidgetDefaults = CoreFlexiWidgetDefaults<ClassValue>;
 export {
 	FlexiBoard,
 	type FlexiBoardProps,
+	type FlexiBoardSuspenseReason,
 	FlexiTarget,
 	type FlexiTargetProps,
 	FlexiWidget,

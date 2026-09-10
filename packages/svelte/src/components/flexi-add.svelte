@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { assistiveTextStyle, generateUniqueId, type FlexiAddClasses, type FlexiAddController, type FlexiAddWidgetFn, type FlexiCommonProps } from "@flexiboards/core";
+	import { assistiveTextStyle, type FlexiAddClasses, type FlexiAddController, type FlexiAddWidgetFn, type FlexiCommonProps } from "@flexiboards/core";
 	import type { Snippet } from "svelte";
 	import { flexiadd } from "../adapters/misc.js";
 	import RenderedFlexiWidget from "./rendered-flexi-widget.svelte";
@@ -54,7 +54,7 @@
 		})
 	);
 
-	let assistiveTextId = generateUniqueId();
+	const assistiveTextId = $props.id();
 
 	// The adapter owns the adder's lifecycle (destroy at unmount).
 	// The read must *call* the signal — tracking happens at read time.
