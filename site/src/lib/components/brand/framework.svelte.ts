@@ -12,7 +12,7 @@ export type FrameworkMeta = {
 
 export const frameworks: FrameworkMeta[] = [
 	{ id: 'svelte', label: 'Svelte', status: 'stable', package: '@flexiboards/svelte' },
-	{ id: 'react', label: 'React', status: 'preview', package: '@flexiboards/react' }
+	{ id: 'react', label: 'React', status: 'stable', package: '@flexiboards/react' }
 ];
 
 /** Frameworks with no adapter yet: faint mono text in the picker, never a tab. */

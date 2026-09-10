@@ -59,6 +59,9 @@
 	"dependencies": {
 		"@flexiboards/core": "workspace:^"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git"

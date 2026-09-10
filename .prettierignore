@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+.svelte-kit
+.vercel
+pnpm-lock.yaml
+site/src/lib/generated
+site/playwright-report
+site/test-results
+.changeset/*.md
+/site/src/lib/components/ui/select/select-trigger.svelte

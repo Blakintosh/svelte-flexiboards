@@ -30,7 +30,7 @@ Flexiboards was built from the ground up to be a Svelte 5 library, so it is inco
 
 <InstallCommand package="@flexiboards/react" />
 
-The React adapter supports React 18 and 19, and is currently in preview: the API mirrors the Svelte adapter, and these docs switch their snippets to React wherever the two differ. Boards render on the server too; see [server-side rendering](/docs/guides/server-side-rendering).
+The React adapter supports React 18 and 19. Its API mirrors the Svelte adapter, and these docs switch their snippets to React wherever the two differ. Boards render on the server too; see [server-side rendering](/docs/guides/server-side-rendering).
 
 </Only>
 
@@ -78,7 +78,7 @@ Here's how you would create a board like this using Flexiboards:
 			}
 		}}
 	>
-		<div class="rounded-xl border bg-background px-4 py-2">
+		<div class="bg-background rounded-xl border px-4 py-2">
 			<h5 class="mb-4 text-lg font-semibold">Incomplete</h5>
 			<FlexiTarget key="todo" class="gap-2">
 				<FlexiWidget>Study for exam</FlexiWidget>
@@ -86,7 +86,7 @@ Here's how you would create a board like this using Flexiboards:
 			</FlexiTarget>
 		</div>
 
-		<div class="rounded-xl border bg-background px-4 py-2">
+		<div class="bg-background rounded-xl border px-4 py-2">
 			<h5 class="mb-4 text-lg font-semibold">Done</h5>
 			<FlexiTarget key="done" class="gap-2">
 				<FlexiWidget>Purchase eggs</FlexiWidget>
@@ -131,7 +131,7 @@ export function TodoBoard() {
 					}
 				}}
 			>
-				<div className="rounded-xl border bg-background px-4 py-2">
+				<div className="bg-background rounded-xl border px-4 py-2">
 					<h5 className="mb-4 text-lg font-semibold">Incomplete</h5>
 					<FlexiTarget keyName="todo" className="gap-2">
 						<FlexiWidget>Study for exam</FlexiWidget>
@@ -139,7 +139,7 @@ export function TodoBoard() {
 					</FlexiTarget>
 				</div>
 
-				<div className="rounded-xl border bg-background px-4 py-2">
+				<div className="bg-background rounded-xl border px-4 py-2">
 					<h5 className="mb-4 text-lg font-semibold">Done</h5>
 					<FlexiTarget keyName="done" className="gap-2">
 						<FlexiWidget>Purchase eggs</FlexiWidget>
