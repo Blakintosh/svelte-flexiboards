@@ -239,10 +239,8 @@ We document each component's configuration on their respective API pages. This i
 
 ## Deprecated properties
 
-These properties still work in v1.0 but are scheduled for removal in the next major version:
-
-- `draggable: true` / `draggable: false` on a widget (or in `widgetDefaults`) is deprecated in favour of `draggability`: use `'full'` in place of `true` and `'none'` in place of `false`, or `'movable'` to allow a widget to be moved by other widgets but not grabbed.
-- `width` and `height` on `widgetDefaults` have no effect. Set `width` and `height` on individual widgets instead.
 - `simpleTransitionConfig()` is an alias of `cssTransitionConfig()`. See [Transitions](/docs/transitions).
+
+Removed in v1.0: the `draggable` boolean (use `draggability`) and `width`/`height` in `widgetDefaults`. See [Migrating to v1.0](/docs/breaking-changes-to-10).
 
 Deprecated members are also flagged in the generated tables on each component's API page.

@@ -220,12 +220,6 @@
 		],
 		"FlexiWidgetDefaults": [
 			{
-				"name": "draggable",
-				"type": "boolean",
-				"description": "Whether the widget is draggable.",
-				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
-			},
-			{
 				"name": "draggability",
 				"type": "'none' | 'movable' | 'full'",
 				"description": "The draggability of the widget."

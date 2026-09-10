@@ -492,7 +492,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 				width: of.width,
 				height: of.height,
 				component: of.component,
-				draggable: of.draggable,
 				draggability: of.draggability,
 				resizability: of.resizability,
 				snippet: of.snippet,

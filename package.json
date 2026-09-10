@@ -47,8 +47,5 @@
 		"svelte": "^5.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0"
-	},
-	"dependencies": {
-		"svelte-flexiboards": "workspace:^"
 	}
 }

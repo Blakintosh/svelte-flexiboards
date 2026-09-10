@@ -14,7 +14,7 @@ export default function Tile({ title, on, onIcon, offIcon, ...props }: TileProps
 	return (
 		<FlexiWidget
 			{...props}
-			draggable={false}
+			draggability="none"
 			resizability="none"
 			maxWidth={2}
 			maxHeight={1}

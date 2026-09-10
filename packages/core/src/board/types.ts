@@ -149,7 +149,7 @@ export type FlexiBoardConfiguration<TClass = unknown> = {
 
 export type FlexiRegistryEntry<TClass = unknown> = Omit<
 	FlexiWidgetDefaults<TClass>,
-	'width' | 'height' | 'draggable'
+	'width' | 'height'
 >;
 
 export type FlexiWidgetLayoutEntry = {

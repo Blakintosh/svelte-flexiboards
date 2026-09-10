@@ -19,7 +19,7 @@
 				}
 			},
 			widgetDefaults: {
-				draggable: true,
+				draggability: 'full',
 				className: (widget: FlexiWidgetController) => {
 					return [
 						'w-64 border border-blue bg-tint px-4 py-2 font-mono text-[12.5px] text-blue',

@@ -52,7 +52,7 @@ const createMockWidget = (options: MockWidgetOptions = {}): InternalFlexiWidgetC
 		minHeight,
 		maxHeight,
 		draggability,
-		draggable: draggability == 'full',
+		draggable: draggability !== 'none',
 		isMovable: draggability == 'full' || draggability == 'movable',
 		id,
 		setBounds: vi.fn().mockImplementation(function (

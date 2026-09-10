@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      svelte-flexiboards:
-        specifier: workspace:^
-        version: link:packages/svelte-flexiboards
     devDependencies:
       '@types/eslint':
         specifier: ^9.6.0
@@ -138,46 +134,6 @@ importers:
       svelte:
         specifier: ^5.20.0
         version: 5.38.6
-      svelte-check:
-        specifier: ^4.1.4
-        version: 4.1.4(picomatch@4.0.5)(svelte@5.38.6)(typescript@5.7.3)
-      typescript:
-        specifier: ^5.0.0
-        version: 5.7.3
-      typescript-eslint:
-        specifier: ^8.0.0
-        version: 8.24.0(eslint@9.20.1(jiti@2.4.2)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.7.3)
-      vite:
-        specifier: ^5.0.11
-        version: 5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)
-      vitest:
-        specifier: ^3.0.7
-        version: 3.0.7(@types/node@22.13.5)(happy-dom@20.11.2)(lightningcss@1.33.0)(supports-color@7.2.0)
-
-  packages/svelte-flexiboards:
-    dependencies:
-      svelte:
-        specifier: ^5.0.0
-        version: 5.38.6
-    devDependencies:
-      '@sveltejs/adapter-auto':
-        specifier: ^3.0.0
-        version: 3.3.1(@sveltejs/kit@2.17.2(@sveltejs/vite-plugin-svelte@4.0.4(supports-color@7.2.0)(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)))(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)))
-      '@sveltejs/kit':
-        specifier: ^2.0.0
-        version: 2.17.2(@sveltejs/vite-plugin-svelte@4.0.4(supports-color@7.2.0)(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0)))(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0))
-      '@sveltejs/package':
-        specifier: ^2.0.0
-        version: 2.3.10(svelte@5.38.6)(typescript@5.7.3)
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^4.0.0
-        version: 4.0.4(supports-color@7.2.0)(svelte@5.38.6)(vite@5.4.14(@types/node@22.13.5)(lightningcss@1.33.0))
-      '@types/node':
-        specifier: ^22.13.5
-        version: 22.13.5
-      '@vitest/coverage-v8':
-        specifier: ^3.0.7
-        version: 3.0.7(supports-color@7.2.0)(vitest@3.0.7(@types/node@22.13.5)(happy-dom@20.11.2)(lightningcss@1.33.0)(supports-color@7.2.0))
       svelte-check:
         specifier: ^4.1.4
         version: 4.1.4(picomatch@4.0.5)(svelte@5.38.6)(typescript@5.7.3)

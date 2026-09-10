@@ -36,7 +36,7 @@
 	// so a tile widening under the nub lands as fast as the fill it sits beside.
 	const boardConfig: FlexiBoardConfiguration = {
 		widgetDefaults: {
-			draggable: false,
+			draggability: 'none',
 			resizability: 'none',
 			transition: {
 				...cssTransitionConfig(),

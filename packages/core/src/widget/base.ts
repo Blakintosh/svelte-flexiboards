@@ -107,25 +107,9 @@ export class FlexiWidgetController {
 			this.#rawConfig$().draggability ??
 			this.#targetWidgetDefaults$()?.draggability ??
 			this.#providerWidgetDefaults$()?.draggability ??
-			// This is not pretty but will ensure backwards compatibility with the old `draggable` property.
-			(this.#rawConfig$().draggable !== undefined
-				? this.#rawConfig$().draggable
-					? 'full'
-					: 'none'
-				: undefined) ??
-			(this.#targetWidgetDefaults$()?.draggable !== undefined
-				? this.#targetWidgetDefaults$()?.draggable
-					? 'full'
-					: 'none'
-				: undefined) ??
-			(this.#providerWidgetDefaults$()?.draggable !== undefined
-				? this.#providerWidgetDefaults$()?.draggable
-					? 'full'
-					: 'none'
-				: undefined) ??
 			'full',
-		// Derived from the resolved draggability (which already folds the legacy
-		// boolean in) so `draggability: 'none'` really does read as not draggable.
+		// Derived from the resolved draggability, so `draggability: 'none'`
+		// reads as not draggable.
 		get draggable() {
 			return this.draggability !== 'none';
 		},
@@ -324,16 +308,11 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * Whether the widget is draggable.
-	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
+	 * Whether the widget can move at all: its `draggability` is not `'none'`.
+	 * Read-only; set `draggability` to change it.
 	 */
 	get draggable() {
 		return this.#config$().draggable;
-	}
-
-	set draggable(value: boolean) {
-		this.#rawConfig$().draggable = value;
-		trigger(() => this.#rawConfig$());
 	}
 
 	/**

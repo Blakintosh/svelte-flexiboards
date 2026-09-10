@@ -51,12 +51,6 @@ export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondi
 
 export type FlexiWidgetDefaults<TClass = unknown> = {
 	/**
-	 * Whether the widget is draggable.
-	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
-	 */
-	draggable?: boolean;
-
-	/**
 	 * The draggability of the widget.
 	 */
 	draggability?: WidgetDraggability;
@@ -193,10 +187,9 @@ export type FlexiWidgetDerivedConfiguration<TClass = unknown> = {
 	resizability: WidgetResizability;
 
 	/**
-	 * Whether the widget is draggable.
-	 * @deprecated Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`.
+	 * Whether the widget can move at all: `draggability` is not `'none'`. Read-only; set `draggability`.
 	 */
-	draggable: boolean;
+	readonly draggable: boolean;
 
 	/**
 	 * The draggability of the widget.

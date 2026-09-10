@@ -17,7 +17,7 @@
 </script>
 
 <FlexiWidget {...props} 
-    draggable={false} 
+    draggability={'none'}
     resizability={'none'} 
     maxWidth={2}
     maxHeight={1}

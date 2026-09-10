@@ -18,12 +18,6 @@
 			"description": "A callback that fires when the component's controller is first created."
 		},
 		{
-			"name": "draggable",
-			"type": "boolean | undefined",
-			"description": "Whether the widget is draggable.",
-			"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
-		},
-		{
 			"name": "draggability",
 			"type": "'none' | 'movable' | 'full' | undefined",
 			"description": "The draggability of the widget."
@@ -146,12 +140,6 @@
 			"name": "component",
 			"type": "ComponentType<any>",
 			"description": "The component rendered by this widget, receiving `componentProps`."
-		},
-		{
-			"name": "draggable",
-			"type": "boolean | undefined",
-			"description": "Whether the widget is draggable.",
-			"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
 		},
 		{
 			"name": "draggability",
@@ -298,8 +286,8 @@
 			{
 				"name": "draggable",
 				"type": "boolean",
-				"description": "Whether the widget is draggable.",
-				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
+				"description": "Whether the widget can move at all: its `draggability` is not `'none'`. Read-only; set `draggability` to change it.",
+				"readonly": true
 			},
 			{
 				"name": "draggability",
@@ -465,12 +453,6 @@
 	},
 	"types": {
 		"FlexiWidgetConfiguration": [
-			{
-				"name": "draggable",
-				"type": "boolean",
-				"description": "Whether the widget is draggable.",
-				"deprecated": "Prefer the use of `draggability` instead for finer control. When `true`, `draggability = 'full'`, when `false`, `draggability = 'none'`."
-			},
 			{
 				"name": "draggability",
 				"type": "'none' | 'movable' | 'full'",

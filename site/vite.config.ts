@@ -11,13 +11,6 @@ export default defineConfig({
 		jsx: 'automatic',
 		jsxImportSource: 'react'
 	},
-	resolve: {
-		alias: {
-			// Trial plumbing: serve the docs/demos from the new core-based adapter
-			// package instead of the legacy self-contained one. Remove to revert.
-			'svelte-flexiboards': '@flexiboards/svelte'
-		}
-	},
 	server: {
 		fs: {
 			strict: false

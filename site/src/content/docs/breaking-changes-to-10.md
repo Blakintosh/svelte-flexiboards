@@ -42,13 +42,16 @@ Every export from v0.4 is still exported from `@flexiboards/svelte` under the sa
 
 ## Deprecations still honoured
 
-These were deprecated in v0.4 and continue to work in v1.0. They will be removed in the next major version.
-
-- `draggable` on widgets and in `widgetDefaults`. Use `draggability`.
+- `simpleTransitionConfig()` remains as an alias of `cssTransitionConfig()`.
 
 ## Removed
 
+- `draggable` on widgets and in `widgetDefaults`, deprecated since v0.4. Use `draggability`: `'full'` for `true`, `'none'` for `false`, or `'movable'` for a widget other widgets may push but the user cannot grab. The controller's `draggable` getter stays, read-only, as shorthand for `draggability !== 'none'`.
 - `width` and `height` in `widgetDefaults`. They never had an effect, so nothing changes at runtime; if you set them, TypeScript now flags the keys. Set `width` and `height` on each widget instead.
+
+## The `svelte-flexiboards` package
+
+`svelte-flexiboards` stops at 0.4.2. It stays on npm and keeps working, but it receives no further releases; every fix and feature from here lands in `@flexiboards/svelte`.
 
 ## New in v1.0
 

@@ -21,7 +21,6 @@ published: true
 
 <ApiProps {api} />
 
-The `draggable` prop is deprecated. Use `draggability` instead: `'none'`, `'movable'` or `'full'`.
 
 <Only svelte>
 
