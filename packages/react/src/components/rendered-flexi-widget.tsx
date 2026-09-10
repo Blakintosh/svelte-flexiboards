@@ -6,8 +6,9 @@ import {
 	type FlexiWidgetChildren,
 	type RenderedFlexiWidgetProps
 } from '../adapters/widget.js';
-import { controllerRef } from '../adapters/utils.js';
+import { forwardEvent, controllerRef } from '../adapters/utils.js';
 import { parseStyleString, useFromCore } from '../adapter.js';
+import { useReactive } from '../adapters/reactive.js';
 import { WidgetTransitionPlaceholder } from './widget-transition-placeholder.js';
 
 /** @internal Renders a widget controller's content and provides its context. */
@@ -17,16 +18,21 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
 	const innerRef = useRef<HTMLDivElement | null>(null);
 
+	const draggedIn = useRef(false);
+	// widget is a core-owned mutable controller, not React-managed state.
+	/* eslint-disable react-hooks/immutability */
 	useEffect(() => {
-		if (adder) {
-			// Core dispatches the drag-in immediately; the mount timing is ours.
+		// Core dispatches the drag-in immediately; the mount timing is ours. Once
+		// per widget: StrictMode re-runs this effect, and a second grab would be
+		// ignored by the board but still re-arm the keyboard pointer.
+		if (adder && !draggedIn.current) {
+			draggedIn.current = true;
 			dragInOnceMounted(adder, widget);
 		}
 
-		// widget is a core-owned mutable controller, not React-managed state.
-		// eslint-disable-next-line react-hooks/immutability
 		widget.mounted = true;
 	}, [adder, widget]);
+	/* eslint-enable react-hooks/immutability */
 
 	const orphanSweepTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	useEffect(() => {
@@ -61,6 +67,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	const [events] = useState(() => widgetEvents(widget));
 
 	// Bridge reads of core's signal-backed state into React's reactivity.
+	const publicWidget = useReactive(widget as FlexiWidgetController);
 	const styleString = useFromCore(useCallback(() => widget.style, [widget]));
 	const draggable = useFromCore(useCallback(() => widget.draggable, [widget]));
 	const resizable = useFromCore(useCallback(() => widget.resizable, [widget]));
@@ -118,8 +125,8 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 				<div
 					className={derivedClassName}
 					style={parseStyleString(styleString)}
-					onPointerDown={(e) => events.onpointerdown(e.nativeEvent)}
-					onKeyDown={(e) => events.onkeydown(e.nativeEvent)}
+					onPointerDown={(e) => forwardEvent(e, events.onpointerdown)}
+					onKeyDown={(e) => forwardEvent(e, events.onkeydown)}
 					aria-grabbed={draggable && !isShadow ? isGrabbed : undefined}
 					aria-label={ariaLabel}
 					aria-dropeffect={draggable ? 'move' : undefined}
@@ -135,7 +142,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 					}}
 				>
 					{snippet ? (
-						snippet({ widget: widget as FlexiWidgetController, ...events })
+						snippet({ widget: publicWidget, ...events })
 					) : WidgetComponent ? (
 						// Not created during render: a stable component reference the
 						// consumer stored in the widget's config, retrieved from core.

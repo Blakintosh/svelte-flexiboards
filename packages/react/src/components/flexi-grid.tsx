@@ -13,7 +13,10 @@ export type FlexiGridProps = {
 export function FlexiGrid({ className, children }: FlexiGridProps) {
 	const target = useInternalFlexiTarget();
 
-	const grid = useSingleRef(() => target.createGrid());
+	// The grid may already exist (a layout import can create it before this
+	// component renders); reuse it rather than replacing it and losing the
+	// widgets already placed in it.
+	const grid = useSingleRef(() => target.ensureGrid());
 
 	const columns = useFromCore(useCallback(() => grid.columns, [grid]));
 	const rows = useFromCore(useCallback(() => grid.rows, [grid]));

@@ -2,16 +2,16 @@ import {
 	assistiveTextStyleObject,
 	InternalFlexiAddController,
 	type FlexiAddClasses,
-	type FlexiAddController,
-	type FlexiAddWidgetFn,
-	type FlexiCommonProps
+	type FlexiAddController
 } from '@flexiboards/core';
-import { useCallback, useId, type ReactNode } from 'react';
+import type { FlexiAddWidgetFn } from '../types.js';
+import { useCallback, useId } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 import { FlexiAddContext } from '../adapters/misc.js';
-import { controllerRef, useOnce, useSingleRef } from '../adapters/utils.js';
+import { controllerRef, forwardEvent, renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
 import { RenderedFlexiWidget } from './rendered-flexi-widget.js';
 import { useFromCore } from '../adapter.js';
+import { useReactive } from '../adapters/reactive.js';
 
 export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
 	/**
@@ -24,23 +24,24 @@ export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
 	 * The child content of the adder, containing the contents of the adder
 	 * button.
 	 */
-	children?: (params: { adder: FlexiAddController }) => ReactNode;
+	children?: FlexiChildren<{ adder: FlexiAddController }>;
 
 	/**
 	 * When the user interacts with the adder, this function allows you to
 	 * specify the configuration of the widget that is created and grabbed.
 	 * Return null to cancel the add.
 	 */
-	addWidget: FlexiAddWidgetFn<string>;
+	addWidget: FlexiAddWidgetFn;
 };
 
 export function FlexiAdd({ children, className, addWidget, onfirstcreate }: FlexiAddProps) {
 	const provider = useInternalFlexiBoard();
 
 	const adder = useSingleRef(() => new InternalFlexiAddController(provider, addWidget));
-	useOnce(() => onfirstcreate?.(adder as FlexiAddController));
+	useOnceCommitted(() => onfirstcreate?.(adder as FlexiAddController));
 
 	const assistiveTextId = useId();
+	const publicAdder = useReactive(adder as FlexiAddController);
 
 	// useFromCore: the user's class function may read signal-backed adder state.
 	const derivedClassName = useFromCore(
@@ -63,13 +64,13 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 				ref={controllerRef(adder)}
 				aria-describedby={assistiveTextId}
 				style={{ touchAction: 'none' }}
-				onPointerDown={(e) => adder.onpointerdown(e.nativeEvent)}
-				onKeyDown={(e) => adder.onkeydown(e.nativeEvent)}
+				onPointerDown={(e) => forwardEvent(e, adder.onpointerdown)}
+				onKeyDown={(e) => forwardEvent(e, adder.onkeydown)}
 			>
 				<span style={assistiveTextStyleObject} id={assistiveTextId}>
 					Press Enter to drag a new widget into this board.
 				</span>
-				{children?.({ adder })}
+				{renderChildren(children, { adder: publicAdder })}
 			</button>
 
 			<div style={{display: 'none'}}>

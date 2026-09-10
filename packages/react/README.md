@@ -1,75 +1,50 @@
-# React + TypeScript + Vite
+# Flexiboards for React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Headless, reactive drag-and-drop components for React. [https://svelte-flexiboards.vercel.app](https://svelte-flexiboards.vercel.app/)
 
-Currently, two official plugins are available:
+`@flexiboards/react` is the React adapter over the framework-agnostic `@flexiboards/core`: the same boards, targets, widgets, adders and deleters as the Svelte package, with hooks (`useFlexiBoard()`, `useFlexiTarget()`, `useFlexiWidget()`, ...) in place of context getters and `onfirstcreate` callbacks in place of `bind:controller`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+If you encounter any issues, please report them on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation
 
 ```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+npm i @flexiboards/react
 ```
+
+Requires React 18 or 19.
+
+## Usage
+
+```tsx
+import { FlexiBoard, FlexiTarget, FlexiWidget } from "@flexiboards/react";
+
+export function Board() {
+  return (
+    <FlexiBoard config={{ widgetDefaults: { draggability: "full" } }}>
+      <FlexiTarget
+        keyName="main"
+        config={{
+          layout: {
+            type: "free",
+            minColumns: 3,
+            maxColumns: 3,
+            minRows: 3,
+            maxRows: 3,
+          },
+        }}
+      >
+        <FlexiWidget x={0} y={0} width={1} height={1}>
+          Drag me
+        </FlexiWidget>
+      </FlexiTarget>
+    </FlexiBoard>
+  );
+}
+```
+
+See the documentation site for guides and the full API reference. The React pages differ from the Svelte ones only in naming: `class` is `className`, a target's `key` is `keyName`, and snippets are children (plain JSX or a render function).
+
+## Licence
+
+Flexiboards is open-source software licenced under the MIT licence. Please see [LICENSE.md](https://github.com/Blakintosh/svelte-flexiboards/blob/main/LICENSE.md) for more information.

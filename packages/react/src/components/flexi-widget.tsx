@@ -1,15 +1,16 @@
 import type {
-	FlexiCommonProps,
 	FlexiWidgetClasses,
-	FlexiWidgetConfiguration,
+	FlexiWidgetConfiguration as CoreFlexiWidgetConfiguration,
 	FlexiWidgetController,
 	InternalFlexiWidgetController
 } from '@flexiboards/core';
-import { useEffect, useState } from 'react';
+import type { FlexiWidgetConfiguration } from '../types.js';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useFlexiWidgetInit, type FlexiWidgetChildren } from '../adapters/widget.js';
+import type { FlexiCommonProps } from '../adapters/utils.js';
 
 export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
-	Omit<FlexiWidgetConfiguration<string>, 'className' | 'snippet'> & {
+	Omit<FlexiWidgetConfiguration, 'className' | 'snippet'> & {
 		/**
 		 * The class names to apply to this widget. Either a class value, or a
 		 * function deriving one from the widget's state.
@@ -19,7 +20,7 @@ export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
 		/**
 		 * The content rendered within the widget.
 		 */
-		children?: FlexiWidgetChildren;
+		children?: ReactNode | FlexiWidgetChildren;
 	};
 
 /**
@@ -30,32 +31,36 @@ export function FlexiWidget({
 	className,
 	children,
 	onfirstcreate,
-	// controller is a Svelte-bindable with no React equivalent; keep it out of
-	// the config forwarded to core.
-	controller: _controller,
 	...propsConfig
 }: FlexiWidgetProps) {
-	// The widget is created lazily by the target, so hold the controller in state
-	// and let the prop seam below run once it exists. The target always creates
+	// The widget is created lazily by the target — during the target loader's
+	// render, in the same pass as this component — so the controller lives in a
+	// ref (a state write from inside another component's render is illegal) and
+	// the effects below pick it up after commit. The target always creates
 	// internal controllers; updateConfig lives on the internal type.
-	const [createdWidget, setCreatedWidget] = useState<InternalFlexiWidgetController | undefined>(
-		undefined
-	);
+	const createdWidget = useRef<InternalFlexiWidgetController | undefined>(undefined);
+	const firstCreateFired = useRef(false);
 
-	const assembleConfig = (): FlexiWidgetConfiguration<string> => ({
+	const assembleConfig = (): CoreFlexiWidgetConfiguration<string> => ({
 		...propsConfig,
 		...(className !== undefined && { className }),
-		...(children !== undefined && { snippet: children })
+		// Plain nodes become a constant snippet; functions get the widget + events.
+		...(children !== undefined && {
+			snippet: typeof children === 'function' ? children : () => children
+		})
 	});
 
-	// Callback so that we still fulfil these props.
-	function onWidgetCreated(widget: FlexiWidgetController) {
-		setCreatedWidget(widget as InternalFlexiWidgetController);
+	useFlexiWidgetInit(assembleConfig(), (widget) => {
+		createdWidget.current = widget as InternalFlexiWidgetController;
+	});
 
-		onfirstcreate?.(widget);
-	}
-
-	useFlexiWidgetInit(assembleConfig(), onWidgetCreated);
+	// onfirstcreate fires once the widget exists, from a layout effect (like the
+	// other components' useOnceCommitted), so the consumer may set state in it.
+	useLayoutEffect(() => {
+		if (firstCreateFired.current || !createdWidget.current) return;
+		firstCreateFired.current = true;
+		onfirstcreate?.(createdWidget.current);
+	});
 
 	// Prop seam — see FlexiBoard. updateConfig() merges only the keys that
 	// actually changed, so it never clobbers state set imperatively on the
@@ -68,7 +73,7 @@ export function FlexiWidget({
 	// observe every render. Identity-changed keys (like a fresh children tree)
 	// being re-written each time is the semantically correct React behaviour.
 	useEffect(() => {
-		createdWidget?.updateConfig(assembleConfig());
+		createdWidget.current?.updateConfig(assembleConfig());
 	});
 
 	return null;

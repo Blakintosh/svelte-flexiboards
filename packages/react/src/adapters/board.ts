@@ -1,5 +1,6 @@
 import { InternalFlexiBoardController, type FlexiBoardController } from '@flexiboards/core';
 import { createContext, useContext } from 'react';
+import { useReactive } from './reactive.js';
 
 /** @internal Provided by the FlexiBoard component; consumed via the hooks below. */
 export const FlexiBoardContext = createContext<InternalFlexiBoardController | null>(null);
@@ -36,5 +37,5 @@ export function useInternalFlexiBoard() {
  * @returns A {@link FlexiBoardController} instance.
  */
 export function useFlexiBoard(): FlexiBoardController {
-	return useInternalFlexiBoard() as FlexiBoardController;
+	return useReactive(useInternalFlexiBoard() as FlexiBoardController);
 }

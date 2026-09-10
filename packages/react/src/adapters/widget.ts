@@ -5,7 +5,8 @@ import {
 } from '@flexiboards/core';
 import { createContext, useContext, type ReactNode } from 'react';
 import { useInternalFlexiTarget } from './target.js';
-import { useOnce } from './utils.js';
+import { useOnce, type FlexiChildren } from './utils.js';
+import { useReactive } from './reactive.js';
 
 /** @internal Provided by the RenderedFlexiWidget component; consumed via the hooks below. */
 export const FlexiWidgetContext = createContext<InternalFlexiWidgetController | null>(null);
@@ -34,8 +35,16 @@ export type RenderedFlexiWidgetProps = {
 	widget: InternalFlexiWidgetController;
 };
 
+/**
+ * Props shared by the grab and resize handles. Like the Svelte components,
+ * they render a <button> that owns the pointer/keyboard wiring, so children
+ * are plain content (or a render function receiving the widget).
+ */
 export type FlexiWidgetSubProps = {
-	children?: FlexiWidgetChildren;
+	/** Classes applied to the rendered button: a string, or a function deriving one from the widget's state. */
+	className?: string | ((widget: FlexiWidgetController) => string);
+	/** The content of the handle. Plain JSX, or a function receiving the surrounding widget's controller. */
+	children?: FlexiChildren<{ widget: FlexiWidgetController }>;
 };
 
 export function useInternalFlexiWidgetOrNull() {
@@ -54,8 +63,9 @@ export function useInternalFlexiWidget() {
 	return widget;
 }
 
-export function useFlexiWidget() {
-	return useInternalFlexiWidget() as FlexiWidgetController;
+/** The surrounding widget. Signal-backed getters read during render re-render the component. */
+export function useFlexiWidget(): FlexiWidgetController {
+	return useReactive(useInternalFlexiWidget() as FlexiWidgetController);
 }
 
 export function useFlexiWidgetInterpolator() {

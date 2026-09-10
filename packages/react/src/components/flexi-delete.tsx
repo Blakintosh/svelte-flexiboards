@@ -1,9 +1,10 @@
-import { assistiveTextStyleObject, FlexiDeleteController, type FlexiCommonProps, type FlexiDeleteClasses } from '@flexiboards/core';
-import { useCallback, useId, type ReactNode } from 'react';
+import { assistiveTextStyleObject, FlexiDeleteController, type FlexiDeleteClasses } from '@flexiboards/core';
+import { useCallback, useId } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 import { FlexiDeleteContext } from '../adapters/misc.js';
-import { controllerRef, useSingleRef } from '../adapters/utils.js';
+import { controllerRef, renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
 import { useFromCore } from '../adapter.js';
+import { useReactive } from '../adapters/reactive.js';
 
 export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 	/**
@@ -16,13 +17,15 @@ export type FlexiDeleteProps = FlexiCommonProps<FlexiDeleteController> & {
 	 * The child content of the deleter, containing the contents of the deleter
 	 * button.
 	 */
-	children?: (values: { deleter: FlexiDeleteController }) => ReactNode;
+	children?: FlexiChildren<{ deleter: FlexiDeleteController }>;
 };
 
-export function FlexiDelete({ children, className }: FlexiDeleteProps) {
+export function FlexiDelete({ children, className, onfirstcreate }: FlexiDeleteProps) {
 	const provider = useInternalFlexiBoard();
 	const deleter = useSingleRef(() => new FlexiDeleteController(provider));
+	useOnceCommitted(() => onfirstcreate?.(deleter));
 	const assistiveTextId = useId();
+	const publicDeleter = useReactive(deleter);
 	
 	// useFromCore: the user's class function may read signal-backed adder state.
 	const derivedClassName = useFromCore(
@@ -44,7 +47,7 @@ export function FlexiDelete({ children, className }: FlexiDeleteProps) {
 			<span style={assistiveTextStyleObject} id={assistiveTextId}>
 				Drag a widget here and press Enter to delete it.
 			</span>
-			{children?.({ deleter })}
+			{renderChildren(children, { deleter: publicDeleter })}
 		</div>
 	</FlexiDeleteContext.Provider>;
 }

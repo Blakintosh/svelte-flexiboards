@@ -1,5 +1,6 @@
 import { InternalFlexiTargetController, type FlexiTargetController } from '@flexiboards/core';
 import { createContext, useContext } from 'react';
+import { useReactive } from './reactive.js';
 
 /** @internal Provided by the FlexiTarget component; consumed via the hooks below. */
 export const FlexiTargetContext = createContext<InternalFlexiTargetController | null>(null);
@@ -35,5 +36,5 @@ export function useInternalFlexiTarget() {
  * @returns A {@link FlexiTargetController} instance.
  */
 export function useFlexiTarget(): FlexiTargetController {
-	return useInternalFlexiTarget() as FlexiTargetController;
+	return useReactive(useInternalFlexiTarget() as FlexiTargetController);
 }

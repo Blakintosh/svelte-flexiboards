@@ -3,6 +3,7 @@ import {
 	type ResponsiveFlexiBoardController
 } from '@flexiboards/core';
 import { createContext, useContext } from 'react';
+import { useReactive } from './reactive.js';
 
 /** @internal Provided by the ResponsiveFlexiBoard component; consumed via the hooks below. */
 export const ResponsiveFlexiBoardContext =
@@ -39,5 +40,5 @@ export function useInternalResponsiveFlexiBoard(): InternalResponsiveFlexiBoardC
  * Throws an error if no responsive board is found.
  */
 export function useResponsiveFlexiBoard(): ResponsiveFlexiBoardController {
-	return useInternalResponsiveFlexiBoard() as ResponsiveFlexiBoardController;
+	return useReactive(useInternalResponsiveFlexiBoard() as ResponsiveFlexiBoardController);
 }

@@ -1,7 +1,6 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
@@ -13,7 +12,6 @@ export default defineConfig([
       js.configs.recommended,
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
     ],
     languageOptions: {
       globals: globals.browser,
@@ -30,5 +28,11 @@ export default defineConfig([
         },
       ],
     },
+  },
+  {
+    // Test fixtures hand their state setters out through module variables so
+    // a test can drive a mounted component; that is the point, not a leak.
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: { 'react-hooks/globals': 'off' },
   },
 ])

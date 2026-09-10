@@ -5,12 +5,13 @@ import {
 } from '@flexiboards/core';
 import { Fragment, useCallback, useEffect, type ReactNode } from 'react';
 import { ResponsiveFlexiBoardContext } from '../adapters/responsive.js';
-import { useOnce, useSingleRef } from '../adapters/utils.js';
+import { renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
 import { useFromCore } from '../adapter.js';
 
 export type BreakpointSnippetParams = { currentBreakpoint: string };
 
-export type ResponsiveFlexiBoardProps = ResponsiveFlexiBoardPropsPrimitive & {
+export type ResponsiveFlexiBoardProps = Omit<ResponsiveFlexiBoardPropsPrimitive, 'controller'> &
+	FlexiCommonProps<ResponsiveFlexiBoardController> & {
 	/**
 	 * Production for large breakpoint (no params - breakpoint is implicit).
 	 */
@@ -35,7 +36,7 @@ export type ResponsiveFlexiBoardProps = ResponsiveFlexiBoardPropsPrimitive & {
 	 * Children snippet used as fallback when no specific breakpoint snippet matches.
 	 * Receives `{ currentBreakpoint: string }` as a parameter.
 	 */
-	children?: ( params: { currentBreakpoint: string }) => ReactNode;
+	children?: FlexiChildren<{ currentBreakpoint: string }>;
 };
 
 export function ResponsiveFlexiBoard({
@@ -55,22 +56,23 @@ export function ResponsiveFlexiBoard({
 		return b;
 	});
 
-	useOnce(() => onfirstcreate?.(board as ResponsiveFlexiBoardController));
+	useOnceCommitted(() => onfirstcreate?.(board as ResponsiveFlexiBoardController));
 
 	const productions: Record<string, ReactNode | undefined> = { lg, md, sm, xs };
 
 	const currentBreakpoint = useFromCore(useCallback(() => board.currentBreakpoint, [board]));
 	const active = productions[currentBreakpoint];
 
-	// Update props when board or config changes.
+	// Prop seam — see FlexiBoard. Runs every render; inert unless `config`
+	// differs by value.
 	useEffect(() => {
 		board.updateProps({ config });
-	}, [board, config]);
+	});
 
 	return (
 		<ResponsiveFlexiBoardContext.Provider value={board}>
 			<Fragment key={currentBreakpoint}>
-				{active !== undefined ? active : children?.({ currentBreakpoint })}
+				{active !== undefined ? active : renderChildren(children, { currentBreakpoint })}
 			</Fragment>
 		</ResponsiveFlexiBoardContext.Provider>
 	);

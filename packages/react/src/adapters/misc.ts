@@ -4,6 +4,7 @@ import {
 	type FlexiAddController
 } from '@flexiboards/core';
 import { createContext, useContext } from 'react';
+import { useReactive } from './reactive.js';
 
 /** @internal Provided by the FlexiAdd component; consumed via the hooks below. */
 export const FlexiAddContext = createContext<InternalFlexiAddController | null>(null);
@@ -28,5 +29,5 @@ export function useInternalFlexiAdd() {
 }
 
 export function useFlexiAdd() {
-	return useInternalFlexiAdd() as FlexiAddController;
+	return useReactive(useInternalFlexiAdd() as FlexiAddController);
 }

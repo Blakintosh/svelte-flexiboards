@@ -1,4 +1,12 @@
-import { useEffect, useRef } from 'react';
+import type { FlexiCommonProps as CoreFlexiCommonProps } from '@flexiboards/core';
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+
+/**
+ * Props every Flexiboards component accepts. Core's version also carries a
+ * `controller` bindable, which has no React equivalent: read the controller
+ * from `onfirstcreate` or from the matching context hook instead.
+ */
+export type FlexiCommonProps<T> = Omit<CoreFlexiCommonProps<T>, 'controller'>;
 
 /**
  * Holds a single controller instance for the component's lifetime: created
@@ -77,4 +85,57 @@ export function useOnce(fn: () => void) {
 		ran.current = true;
 		fn();
 	}
+}
+
+/**
+ * Runs fn once per component instance, from a layout effect — i.e. after the
+ * component (and its children) have committed, before paint, and never again
+ * across StrictMode's simulated remount. This is where `onfirstcreate`
+ * callbacks fire: unlike a render-time call, the consumer may set React state
+ * from inside it (Svelte's init-time equivalent has no such restriction).
+ * @param fn The function to run.
+ */
+export function useOnceCommitted(fn: () => void) {
+	const ran = useRef(false);
+	useLayoutEffect(() => {
+		if (ran.current) return;
+		ran.current = true;
+		fn();
+		// Deliberately once: fn is the consumer's first-create callback.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+}
+
+/**
+ * Hands a React synthetic event's native event to a core handler, then mirrors
+ * what core did to it — `stopPropagation()` / `preventDefault()` on the native
+ * event — onto the synthetic one. React dispatches every handler for a native
+ * event itself, from the root, so stopping the *native* event alone does not
+ * stop React from also running an outer widget's handler: with one board nested
+ * in another's widget, Enter on the inner widget would grab the outer one too.
+ * @param event The React synthetic event.
+ * @param handler The core handler taking the native event.
+ */
+export function forwardEvent<E extends Event>(
+	event: { nativeEvent: E; stopPropagation(): void; preventDefault(): void },
+	handler: (native: E) => void
+) {
+	handler(event.nativeEvent);
+	if (event.nativeEvent.cancelBubble) {
+		event.stopPropagation();
+	}
+	if (event.nativeEvent.defaultPrevented) {
+		event.preventDefault();
+	}
+}
+
+/**
+ * Children that may be plain content or a render function receiving params —
+ * the React stand-in for a Svelte snippet with parameters, where the simple
+ * case stays as terse as ordinary JSX.
+ */
+export type FlexiChildren<P> = ReactNode | ((params: P) => ReactNode);
+
+export function renderChildren<P>(children: FlexiChildren<P> | undefined, params: P): ReactNode {
+	return typeof children === 'function' ? children(params) : children;
 }

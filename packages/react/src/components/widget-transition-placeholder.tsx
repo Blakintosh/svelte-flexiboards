@@ -13,9 +13,10 @@ export function WidgetTransitionPlaceholder() {
 	const ref = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
-		if (ref.current) {
-			interpolator.onPlaceholderMount(ref.current);
-		}
+		if (!ref.current) return;
+		// Returns the unmount handler: the interpolator must forget this element
+		// once it leaves the grid, or the next flight targets a detached node.
+		return interpolator.onPlaceholderMount(ref.current);
 	}, [interpolator]);
 
 	// The read must *call* the signal — tracking happens at read time.
