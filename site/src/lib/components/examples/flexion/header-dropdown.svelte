@@ -7,7 +7,7 @@
 
 <details class="relative">
 	<summary
-		class="hover:bg-tint flex cursor-pointer list-none [&::-webkit-details-marker]:hidden items-center justify-between gap-2 rounded-[9px] px-2.5 py-[7px] transition-colors duration-[120ms]"
+		class="hover:bg-tint flex cursor-pointer list-none items-center justify-between gap-2 rounded-[9px] px-2.5 py-[7px] transition-colors duration-[120ms] [&::-webkit-details-marker]:hidden"
 	>
 		<div class="flex items-center gap-4">
 			<div
@@ -23,7 +23,7 @@
 	</summary>
 
 	<div
-		class="bg-panel border-rule-soft shadow-card-lg absolute top-full left-0 z-10 mt-2 w-full rounded-[12px] border p-1"
+		class="bg-panel border-rule-soft shadow-card-lg absolute left-0 top-full z-10 mt-2 w-full rounded-[12px] border p-1"
 	>
 		<button
 			type="button"

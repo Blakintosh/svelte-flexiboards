@@ -38,7 +38,7 @@
 	<span
 		aria-hidden="true"
 		class={cn(
-			'pointer-events-none absolute top-px right-0.5 font-mono text-[9px] leading-none',
+			'pointer-events-none absolute right-0.5 top-px font-mono text-[9px] leading-none',
 			onCall ? 'text-fx-accent' : 'text-faint'
 		)}
 	>

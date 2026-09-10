@@ -22,8 +22,6 @@
 
 <div class={cn('flex w-full flex-col gap-3 py-1', className)} role="presentation">
 	{#each { length: bars } as _, i (i)}
-		<div
-			class={cn('w-full rounded-[10px] bg-ink/10', barClass, i === bars - 1 && 'w-3/5')}
-		></div>
+		<div class={cn('bg-ink/10 w-full rounded-[10px]', barClass, i === bars - 1 && 'w-3/5')}></div>
 	{/each}
 </div>

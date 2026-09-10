@@ -11,9 +11,7 @@
 	should read as a second thing to click.
 -->
 <div class="flex h-full w-full flex-col gap-2 overflow-hidden p-3">
-	<div
-		class="border-rule-soft bg-tint grid min-h-0 flex-1 place-items-center rounded-[9px] border"
-	>
+	<div class="border-rule-soft bg-tint grid min-h-0 flex-1 place-items-center rounded-[9px] border">
 		<Music class="text-blue size-6" />
 	</div>
 	<div class="flex min-w-0 flex-col">

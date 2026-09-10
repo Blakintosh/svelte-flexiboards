@@ -21,7 +21,6 @@ published: true
 
 <ApiProps {api} />
 
-
 <Only svelte>
 
 Widget content is rendered either from `children`, which receives the widget's controller, or from the `component` prop (with `componentProps`), or both.
@@ -140,10 +139,10 @@ The `transition` property of a widget's configuration (or of `widgetDefaults`). 
 
 Each widget renders as `role="cell"` with `aria-colindex`, `aria-rowindex`, `aria-colspan`, `aria-rowspan`, and `aria-grabbed` while held. A grabbable widget is in the tab order unless it contains a [FlexiGrab](/docs/components/grab), in which case the handle is.
 
-| Key | Effect |
-| --- | --- |
-| <kbd>Enter</kbd> | Grabs the focused widget; while grabbed, drops it. |
-| Arrow keys | Moves the grabbed widget. <kbd>Shift</kbd> for larger steps, <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> for finer ones. |
-| <kbd>Escape</kbd> | Cancels a grab or resize. |
+| Key               | Effect                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| <kbd>Enter</kbd>  | Grabs the focused widget; while grabbed, drops it.                                                            |
+| Arrow keys        | Moves the grabbed widget. <kbd>Shift</kbd> for larger steps, <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> for finer ones. |
+| <kbd>Escape</kbd> | Cancels a grab or resize.                                                                                     |
 
 Grabs, resizes, releases, and rejected drops are announced through the board's live region. Styling the `isGrabbed`, `isShadow`, and `dropRejected` states is up to you; see [Widget Rendering](/docs/widget-rendering#styling-by-state). Full details in [Accessibility](/docs/accessibility).

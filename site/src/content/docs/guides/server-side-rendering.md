@@ -33,7 +33,7 @@ The rest of this guide covers how to handle these two scenarios.
 
 ## Server-stored layouts
 
-A layout the *server* already has, such as a user's saved board fetched from your database in a SvelteKit `load`, doesn't need any of the suspense machinery below. Pass it as `initialLayout`: a plain layout value (not a callback), applied during the initial render pass on both the server and the client.
+A layout the _server_ already has, such as a user's saved board fetched from your database in a SvelteKit `load`, doesn't need any of the suspense machinery below. Pass it as `initialLayout`: a plain layout value (not a callback), applied during the initial render pass on both the server and the client.
 
 ```ts
 // +page.server.ts
@@ -263,11 +263,11 @@ The guess is also exposed on the controller as `board.breakpointPending` (`strin
 
 ## Summary
 
-| Situation | Server renders | Marked with | Resolves |
-| --- | --- | --- | --- |
-| Declared layout, no stored state | The final board | Nothing | Already final |
-| `initialLayout` / `initialLayouts` (server data) | The final board | Nothing | Already final |
-| `loadLayout` / `loadLayouts` configured | Declared or initial stand-in | `data-flexi-pending="layout"` | Client import at hydration |
-| Responsive board | The `ssrBreakpoint` (else `default`) layout | `data-flexi-pending="<breakpoint>"` | Real `matchMedia` at hydration |
+| Situation                                        | Server renders                              | Marked with                         | Resolves                       |
+| ------------------------------------------------ | ------------------------------------------- | ----------------------------------- | ------------------------------ |
+| Declared layout, no stored state                 | The final board                             | Nothing                             | Already final                  |
+| `initialLayout` / `initialLayouts` (server data) | The final board                             | Nothing                             | Already final                  |
+| `loadLayout` / `loadLayouts` configured          | Declared or initial stand-in                | `data-flexi-pending="layout"`       | Client import at hydration     |
+| Responsive board                                 | The `ssrBreakpoint` (else `default`) layout | `data-flexi-pending="<breakpoint>"` | Real `matchMedia` at hydration |
 
 Everything else about SSR is automatic: no configuration, no wrappers, and no hydration warnings for boards whose layout is fully declared.

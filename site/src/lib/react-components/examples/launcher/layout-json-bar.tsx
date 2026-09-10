@@ -108,7 +108,7 @@ export default function LayoutJsonBar({
 				ref={listing}
 				tabIndex={0}
 				aria-label="Live responsive layout JSON"
-				className="text-on-ink-faint focus-visible:outline-fx-accent max-h-[16vh] overflow-auto font-mono text-[10.5px] leading-[1.6] whitespace-pre focus-visible:outline-2 focus-visible:-outline-offset-2"
+				className="text-on-ink-faint focus-visible:outline-fx-accent max-h-[16vh] overflow-auto whitespace-pre font-mono text-[10.5px] leading-[1.6] focus-visible:outline-2 focus-visible:-outline-offset-2"
 			>
 				{lines.map((line, i) => (
 					<Fragment key={i}>

@@ -1,5 +1,5 @@
-import { effect } from "@flexiboards/core";
-import { useCallback, useSyncExternalStore, type CSSProperties } from "react";
+import { effect } from '@flexiboards/core';
+import { useCallback, useSyncExternalStore, type CSSProperties } from 'react';
 
 /**
  * Wraps a read of core signal-backed state so that React component
@@ -9,16 +9,16 @@ import { useCallback, useSyncExternalStore, type CSSProperties } from "react";
  * touch getters) — tracking happens at read time, not at reference time.
  */
 export function useFromCore<T>(read: () => T): T {
-    const subscribe = useCallback(
-        (notify: () => void) =>
-            effect(() => {
-                read();      // establish tracking
-                notify();    // tell React to re-read the snapshot
-            }),
-        [read]
-    );
+	const subscribe = useCallback(
+		(notify: () => void) =>
+			effect(() => {
+				read(); // establish tracking
+				notify(); // tell React to re-read the snapshot
+			}),
+		[read]
+	);
 
-    return useSyncExternalStore(subscribe, read, read);
+	return useSyncExternalStore(subscribe, read, read);
 }
 
 /**
@@ -27,20 +27,20 @@ export function useFromCore<T>(read: () => T): T {
  * @param css The CSS string.
  */
 export function parseStyleString(css: string): CSSProperties {
-    const out: Record<string, string> = {};
+	const out: Record<string, string> = {};
 
-    for(const decl of css.split(';')) {
-        const i = decl.indexOf(':');
-        if(i === -1) {
-            continue;
-        }
+	for (const decl of css.split(';')) {
+		const i = decl.indexOf(':');
+		if (i === -1) {
+			continue;
+		}
 
-        const prop = decl.slice(0, i).trim();
-        // Normalise prop names to camelCase.
-        const key = prop.startsWith('--') ? prop : prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+		const prop = decl.slice(0, i).trim();
+		// Normalise prop names to camelCase.
+		const key = prop.startsWith('--') ? prop : prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
-        out[key] = decl.slice(i + 1).trim();
-    }
+		out[key] = decl.slice(i + 1).trim();
+	}
 
-    return out as CSSProperties;
+	return out as CSSProperties;
 }

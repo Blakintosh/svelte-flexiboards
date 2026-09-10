@@ -133,8 +133,7 @@ export default function GalleryExample() {
 	const columns = useFromCore(useCallback(() => target?.columns, [target])) ?? grid.columns;
 
 	// The fig band reads out whichever config the board is actually running on.
-	const transitionCall =
-		motion === 'spring' ? 'springTransitionConfig()' : 'cssTransitionConfig()';
+	const transitionCall = motion === 'spring' ? 'springTransitionConfig()' : 'cssTransitionConfig()';
 
 	function shuffle() {
 		layouts.current = buildShuffledLayouts(layouts.current);
@@ -150,7 +149,7 @@ export default function GalleryExample() {
 
 	const plateBoard = (bp: Breakpoint) => (
 		<FlexiBoard
-			className="min-h-0 grow overflow-x-clip overflow-y-auto [scrollbar-gutter:stable]"
+			className="min-h-0 grow overflow-y-auto overflow-x-clip [scrollbar-gutter:stable]"
 			config={boardConfig}
 		>
 			<FlexiTarget
@@ -170,7 +169,7 @@ export default function GalleryExample() {
 				aside={`transition: ${transitionCall}`}
 			>
 				{/* The toolbar lives in the sheet's own header rather than a band of its own. */}
-				<header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pt-4 pb-3 lg:px-9 lg:pt-5">
+				<header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-3 pt-4 lg:px-9 lg:pt-5">
 					<div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
 						<h1 className="text-ink font-serif text-2xl lg:text-[30px]">Gallery</h1>
 						{/* The row count is live: it ticks up when a resize grows the grid. */}

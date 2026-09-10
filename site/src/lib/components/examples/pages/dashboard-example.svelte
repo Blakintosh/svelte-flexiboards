@@ -64,7 +64,8 @@
 				className: (widget: FlexiWidgetController) => [
 					'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
 					widget.isGrabbed && 'shadow-lift rotate-[2.5deg]',
-					widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
+					widget.isShadow &&
+						'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
 				]
 			},
 			immovable: {
@@ -158,7 +159,7 @@
 			>
 				{#snippet lg()}
 					<FlexiBoard
-						class={'dashboard-board min-h-0 grow overflow-x-clip overflow-y-auto'}
+						class={'dashboard-board min-h-0 grow overflow-y-auto overflow-x-clip'}
 						config={boardConfig}
 					>
 						{#snippet suspense(_: FlexiBoardSuspenseReason)}
@@ -187,7 +188,7 @@
 				{/snippet}
 
 				{#snippet children({ currentBreakpoint }: BreakpointSnippetParams)}
-					<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto'} config={boardConfig}>
+					<FlexiBoard class={'min-h-0 grow overflow-y-auto overflow-x-clip'} config={boardConfig}>
 						{#snippet suspense(_: FlexiBoardSuspenseReason)}
 							<BoardSkeleton bars={4} class="" />
 						{/snippet}

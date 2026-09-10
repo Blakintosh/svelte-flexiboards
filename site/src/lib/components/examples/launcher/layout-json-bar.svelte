@@ -112,7 +112,7 @@
 		bind:this={listing}
 		tabindex="0"
 		aria-label="Live responsive layout JSON"
-		class="text-on-ink-faint focus-visible:outline-fx-accent max-h-[16vh] overflow-auto font-mono text-[10.5px] leading-[1.6] whitespace-pre focus-visible:outline-2 focus-visible:-outline-offset-2">{#each lines as line, i}{#if line.xy}{line.before}<span
+		class="text-on-ink-faint focus-visible:outline-fx-accent max-h-[16vh] overflow-auto whitespace-pre font-mono text-[10.5px] leading-[1.6] focus-visible:outline-2 focus-visible:-outline-offset-2">{#each lines as line, i}{#if line.xy}{line.before}<span
 					class="text-on-ink-sage">{line.xy}</span
 				>{line.after}{:else}{line.text}{/if}{#if i < lines.length - 1}{'\n'}{/if}{/each}</pre>
 </div>

@@ -17,14 +17,14 @@
 					href="#{heading.id}"
 					use:melt={$item(heading.id)}
 					class={cn(
-						'group flex items-center gap-2.5 py-1.5 font-mono text-[12px] leading-snug text-body no-underline transition-colors duration-[120ms]',
+						'text-body group flex items-center gap-2.5 py-1.5 font-mono text-[12px] leading-snug no-underline transition-colors duration-[120ms]',
 						'hover:text-ink',
 						'data-[active]:text-fx-accent'
 					)}
 				>
 					{#if level === 1}
 						<span
-							class="h-px w-[7px] shrink-0 bg-rule transition-all duration-[120ms] group-data-[active]:w-[14px] group-data-[active]:bg-fx-accent"
+							class="bg-rule group-data-[active]:bg-fx-accent h-px w-[7px] shrink-0 transition-all duration-[120ms] group-data-[active]:w-[14px]"
 						></span>
 					{/if}
 					<span class="min-w-0 break-all">{@html heading.node.innerHTML}</span>

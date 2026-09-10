@@ -1,4 +1,10 @@
-import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig, immediateTriggerConfig } from '@flexiboards/react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	FlexiWidget,
+	cssTransitionConfig,
+	immediateTriggerConfig
+} from '@flexiboards/react';
 import type { FlexiBoardConfiguration, FlexiWidgetController } from '@flexiboards/react';
 import { RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,7 +19,8 @@ import DropLog, { type DropCounts, type DropScope } from '../compound/drop-log';
 const tileClass = (widget: FlexiWidgetController) =>
 	cn(
 		'min-w-0 motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
-		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isShadow &&
+			'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
 		widget.isGrabbed && 'shadow-lift rotate-[2.5deg] rounded-[14px]'
 	);
 
@@ -122,7 +129,13 @@ export default function CompoundExample() {
 								Two tiles are themselves boards — drag an avatar; the tile never moves.
 							</p>
 						</div>
-						<Button variant="outline" size="icon" className="rounded-full" onClick={reset} title="Reset layout">
+						<Button
+							variant="outline"
+							size="icon"
+							className="rounded-full"
+							onClick={reset}
+							title="Reset layout"
+						>
 							<RotateCcw className="size-4" />
 							<span className="sr-only">Reset layout</span>
 						</Button>
@@ -130,7 +143,7 @@ export default function CompoundExample() {
 
 					<FlexiBoard
 						key={resetToken}
-						className="min-h-0 grow overflow-x-clip overflow-y-auto"
+						className="min-h-0 grow overflow-y-auto overflow-x-clip"
 						config={outerConfig}
 					>
 						<FlexiTarget

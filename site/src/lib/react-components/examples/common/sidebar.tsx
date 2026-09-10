@@ -15,7 +15,12 @@ export type SidebarProps = {
 
 export default function Sidebar({ header, children, footer, className }: SidebarProps) {
 	return (
-		<aside className={cn('border-rule-soft bg-paper hidden w-64 shrink-0 flex-col border-r lg:flex', className)}>
+		<aside
+			className={cn(
+				'border-rule-soft bg-paper hidden w-64 shrink-0 flex-col border-r lg:flex',
+				className
+			)}
+		>
 			{header && <div className="border-rule-soft border-b px-2 py-4">{header}</div>}
 			<nav className="flex flex-1 flex-col gap-1 px-2 py-4">{children}</nav>
 			{footer && <div className="border-rule-soft border-t p-2">{footer}</div>}

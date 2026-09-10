@@ -20,7 +20,9 @@
 	let { header, children, footer, class: className }: SidebarProps = $props();
 </script>
 
-<aside class={cn('border-rule-soft bg-paper hidden w-64 shrink-0 flex-col border-r lg:flex', className)}>
+<aside
+	class={cn('border-rule-soft bg-paper hidden w-64 shrink-0 flex-col border-r lg:flex', className)}
+>
 	{#if header}
 		<div class="border-rule-soft border-b px-2 py-4">{@render header()}</div>
 	{/if}

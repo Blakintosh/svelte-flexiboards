@@ -41,7 +41,7 @@ export default function FieldPreview({ meta }: FieldPreviewProps) {
 				<select disabled className={`${control} text-faint cursor-default appearance-none pr-8`}>
 					<option>{meta.placeholder || 'Select an option'}</option>
 				</select>
-				<ChevronDown className="text-faint pointer-events-none absolute top-1/2 right-2.5 size-3 -translate-y-1/2" />
+				<ChevronDown className="text-faint pointer-events-none absolute right-2.5 top-1/2 size-3 -translate-y-1/2" />
 			</div>
 		);
 	}

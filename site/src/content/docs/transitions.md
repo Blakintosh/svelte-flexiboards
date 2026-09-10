@@ -46,9 +46,7 @@ Flexiboards is headless, so widgets jump between cells by default. Set `transiti
 
 		// Update the config in-place, otherwise the board loses the proxy.
 		untrack(() => {
-			boardConfig.widgetDefaults.transition = enableTransitions
-				? cssTransitionConfig()
-				: undefined;
+			boardConfig.widgetDefaults.transition = enableTransitions ? cssTransitionConfig() : undefined;
 		});
 	});
 </script>
@@ -128,8 +126,12 @@ export function TransitionsExample() {
 					containerClassName="w-full h-full"
 					config={targetConfig}
 				>
-					<FlexiWidget x={0} y={0}>A</FlexiWidget>
-					<FlexiWidget x={1} y={0}>B</FlexiWidget>
+					<FlexiWidget x={0} y={0}>
+						A
+					</FlexiWidget>
+					<FlexiWidget x={1} y={0}>
+						B
+					</FlexiWidget>
 				</FlexiTarget>
 			</FlexiBoard>
 		</>
@@ -296,8 +298,12 @@ export function CustomTransitionsExample() {
 					containerClassName="w-full h-full"
 					config={targetConfig}
 				>
-					<FlexiWidget x={0} y={0}>A</FlexiWidget>
-					<FlexiWidget x={1} y={0}>B</FlexiWidget>
+					<FlexiWidget x={0} y={0}>
+						A
+					</FlexiWidget>
+					<FlexiWidget x={1} y={0}>
+						B
+					</FlexiWidget>
 				</FlexiTarget>
 			</FlexiBoard>
 		</>

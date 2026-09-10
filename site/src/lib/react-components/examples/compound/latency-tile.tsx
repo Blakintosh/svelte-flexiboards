@@ -19,7 +19,10 @@ export default function LatencyTile({ value, series }: LatencyTileProps) {
 							{point.at}
 						</span>
 						<span className="bg-tint h-1.5 min-w-0 flex-1 overflow-hidden rounded-full">
-							<span className="bg-blue block h-full rounded-full" style={{ width: `${point.pct}%` }} />
+							<span
+								className="bg-blue block h-full rounded-full"
+								style={{ width: `${point.pct}%` }}
+							/>
 						</span>
 					</li>
 				))}

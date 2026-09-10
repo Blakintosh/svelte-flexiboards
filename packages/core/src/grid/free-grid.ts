@@ -175,7 +175,14 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				// Try move the colliding widget along the x-axis if this is allowed and possible.
 				if (
 					displaceX &&
-					this.#attemptDisplacement(collidingWidget, newX + width, currentY, operations, displaceX, false)
+					this.#attemptDisplacement(
+						collidingWidget,
+						newX + width,
+						currentY,
+						operations,
+						displaceX,
+						false
+					)
 				) {
 					continue;
 				}
@@ -183,7 +190,14 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 				// If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
 				if (
 					displaceY &&
-					this.#attemptDisplacement(collidingWidget, currentX, newY + height, operations, false, displaceY)
+					this.#attemptDisplacement(
+						collidingWidget,
+						currentX,
+						newY + height,
+						operations,
+						false,
+						displaceY
+					)
 				) {
 					continue;
 				}

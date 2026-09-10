@@ -16,20 +16,33 @@ translation, scale and rotation.
 
 ## Where
 
-| File | Lines | What's there |
-| --- | --- | --- |
-| `site/src/app.css` | 292–300 | existing `@media (prefers-reduced-motion: reduce)` block |
-| `site/src/lib/components/nav/theme-selector.svelte` | 13, 16 | `rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0` |
+| File                                                | Lines   | What's there                                                     |
+| --------------------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `site/src/app.css`                                  | 292–300 | existing `@media (prefers-reduced-motion: reduce)` block         |
+| `site/src/lib/components/nav/theme-selector.svelte` | 13, 16  | `rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0` |
 
 ### Current code
 
 ```css
 /* site/src/app.css:292 */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fb-snap { animation: none; transform: translateX(calc(100% + 10px)) }
-  .animate-fb-blink { animation: none }
-  .animate-fb-rise, .animate-fb-in { animation-name: fb-fade; animation-delay: 0ms }
-  .reveal { transform: none; transition-property: opacity; transition-delay: 0ms }
+	.animate-fb-snap {
+		animation: none;
+		transform: translateX(calc(100% + 10px));
+	}
+	.animate-fb-blink {
+		animation: none;
+	}
+	.animate-fb-rise,
+	.animate-fb-in {
+		animation-name: fb-fade;
+		animation-delay: 0ms;
+	}
+	.reveal {
+		transform: none;
+		transition-property: opacity;
+		transition-delay: 0ms;
+	}
 }
 ```
 
@@ -38,13 +51,23 @@ translation, scale and rotation.
 Add inside that same block:
 
 ```css
-  /* tw-animate surfaces: zero the transform channels, keep the opacity fade. */
-  .animate-in, .animate-out {
-    --tw-enter-translate-x: 0; --tw-enter-translate-y: 0; --tw-enter-scale: 1; --tw-enter-rotate: 0;
-    --tw-exit-translate-x: 0;  --tw-exit-translate-y: 0;  --tw-exit-scale: 1;  --tw-exit-rotate: 0;
-  }
-  /* Theme icon: crossfade instead of spin. */
-  [data-theme-icon] { transition-property: opacity; transform: none !important }
+/* tw-animate surfaces: zero the transform channels, keep the opacity fade. */
+.animate-in,
+.animate-out {
+	--tw-enter-translate-x: 0;
+	--tw-enter-translate-y: 0;
+	--tw-enter-scale: 1;
+	--tw-enter-rotate: 0;
+	--tw-exit-translate-x: 0;
+	--tw-exit-translate-y: 0;
+	--tw-exit-scale: 1;
+	--tw-exit-rotate: 0;
+}
+/* Theme icon: crossfade instead of spin. */
+[data-theme-icon] {
+	transition-property: opacity;
+	transform: none !important;
+}
 ```
 
 In `theme-selector.svelte`, add `data-theme-icon` to both `<Sun>` and `<Moon>`,
@@ -76,12 +99,15 @@ inside the hover/press band; the curve is the site's one token.
 ## Verification
 
 **Build**
+
 - [ ] svelte-check passes.
 
 **Behavior**
+
 - [ ] DevTools → Rendering → emulate `prefers-reduced-motion: reduce`: open the theme menu and a context menu — they fade in place, no slide/zoom; the sheet fades.
 - [ ] Toggle theme: Sun/Moon crossfade, no spin.
 - [ ] Without emulation: everything behaves as before (icons now rotate+fade rather than scale from 0 — an improvement, nothing appears from nothing).
 
 **Feel**
+
 - [ ] With reduced motion on, nothing on the page moves; every state change is still visible as a fade.

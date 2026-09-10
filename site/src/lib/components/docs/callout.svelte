@@ -43,9 +43,9 @@
 <div class={cn('not-prose my-6 border-l-2 px-5 py-4', current.classes)}>
 	<span class={cn('label block text-[10px]', current.kickerClass)}>{current.title}</span>
 	{#if displayTitle !== current.title}
-		<p class="mt-2 mb-0 font-serif text-[15px] font-semibold text-ink">{displayTitle}</p>
+		<p class="text-ink mb-0 mt-2 font-serif text-[15px] font-semibold">{displayTitle}</p>
 	{/if}
-	<div class="mt-2 space-y-2 text-[14.5px] leading-relaxed text-body">
+	<div class="text-body mt-2 space-y-2 text-[14.5px] leading-relaxed">
 		{@render children()}
 	</div>
 </div>

@@ -16,7 +16,7 @@
 </script>
 
 <nav class="flex flex-col gap-3">
-	<h2 class="label text-[10px] text-faint">On this page</h2>
+	<h2 class="label text-faint text-[10px]">On this page</h2>
 	{#key $headingsTree}
 		<TocTree tree={$headingsTree} activeHeadingIdxs={$activeHeadingIdxs} {item} />
 	{/key}

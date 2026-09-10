@@ -30,7 +30,9 @@ export default function MetricTile({ value, delta, positive = false, bars }: Met
 					))}
 				</div>
 			</div>
-			<span className={cn('truncate text-[11px] lg:text-[12px]', positive ? 'text-blue' : 'text-faint')}>
+			<span
+				className={cn('truncate text-[11px] lg:text-[12px]', positive ? 'text-blue' : 'text-faint')}
+			>
 				{delta}
 			</span>
 		</div>

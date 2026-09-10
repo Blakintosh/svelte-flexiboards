@@ -111,7 +111,10 @@
 
 {#snippet plateBoard(bp: Breakpoint)}
 	{@const bpGrid = BREAKPOINT_GRIDS[bp]}
-	<FlexiBoard class={'min-h-0 grow overflow-x-clip overflow-y-auto [scrollbar-gutter:stable]'} config={boardConfig}>
+	<FlexiBoard
+		class={'min-h-0 grow overflow-y-auto overflow-x-clip [scrollbar-gutter:stable]'}
+		config={boardConfig}
+	>
 		{#snippet suspense(_: FlexiBoardSuspenseReason)}
 			<BoardSkeleton bars={4} class="" />
 		{/snippet}
@@ -144,7 +147,7 @@
 	>
 		<!-- The toolbar lives in the sheet's own header rather than a band of its own. -->
 		<header
-			class="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pt-4 pb-3 lg:px-9 lg:pt-5"
+			class="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-3 pt-4 lg:px-9 lg:pt-5"
 		>
 			<div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
 				<h1 class="text-ink font-serif text-2xl lg:text-[30px]">Gallery</h1>

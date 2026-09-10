@@ -195,7 +195,8 @@ export class WidgetMoveInterpolator {
 			y: newDimensions.y,
 			width: newDimensions.width,
 			height: newDimensions.height,
-			heightPx: lockSize?.height ?? (resizeRestart ? previousPlaceholder.heightPx : oldPosition.height),
+			heightPx:
+				lockSize?.height ?? (resizeRestart ? previousPlaceholder.heightPx : oldPosition.height),
 			widthPx: lockSize?.width ?? (resizeRestart ? previousPlaceholder.widthPx : oldPosition.width),
 			lockMinWidth,
 			lockMinHeight

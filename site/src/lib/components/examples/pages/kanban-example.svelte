@@ -443,7 +443,9 @@
 	{@const key = String(widget.metadata?.key ?? '') as ColumnKey}
 	{@const chip = CHIPS[key] ?? CHIPS.backlog}
 	<Grabber size={14} />
-	<span class="flex min-w-0 items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold {chip.chip}">
+	<span
+		class="flex min-w-0 items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold {chip.chip}"
+	>
 		<!-- The status tick, a small dot. -->
 		<span class="size-2 shrink-0 rounded-full {chip.tick}"></span>
 		<span class="min-w-0 truncate">{widget.metadata?.title ?? ''}</span>
@@ -495,7 +497,7 @@
 				{#snippet suspense(_: FlexiBoardSuspenseReason)}
 					<BoardSkeleton bars={4} class="px-4 pt-5 lg:px-8" />
 				{/snippet}
-				<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pt-5 pb-3 lg:px-8">
+				<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-3 pt-5 lg:px-8">
 					<!--
 						Board B — the column headings. A second, independent FlexiBoard
 						nested in the first one's DOM: the two never exchange widgets,

@@ -45,9 +45,9 @@
      preference for the whole site, so every listing follows it. Sized like the
      page's other listings (16px mono, generous inset) rather than the prose
      body it would otherwise inherit from. -->
-<div class="not-prose my-6 border border-ink bg-field">
+<div class="not-prose border-ink bg-field my-6 border">
 	<div
-		class="flex items-center justify-between border-b border-on-ink-faint/30 pl-2 pr-1"
+		class="border-on-ink-faint/30 flex items-center justify-between border-b pl-2 pr-1"
 		role="tablist"
 		aria-label="Package manager"
 	>
@@ -57,7 +57,7 @@
 					type="button"
 					role="tab"
 					aria-selected={packageManager.current === pm}
-					class="ui relative -mb-px border-0 border-b-2 border-b-transparent bg-transparent px-3 py-2 font-mono text-[11px] leading-none text-on-ink-faint transition-colors duration-[120ms] hover:text-on-ink aria-selected:border-b-fx-accent aria-selected:text-on-ink"
+					class="ui text-on-ink-faint hover:text-on-ink aria-selected:border-b-fx-accent aria-selected:text-on-ink relative -mb-px border-0 border-b-2 border-b-transparent bg-transparent px-3 py-2 font-mono text-[11px] leading-none transition-colors duration-[120ms]"
 					onclick={() => (packageManager.current = pm)}
 				>
 					{pm}
@@ -66,7 +66,7 @@
 		</div>
 		<button
 			type="button"
-			class="p-2 text-on-ink-faint transition-colors duration-[120ms] hover:text-on-ink"
+			class="text-on-ink-faint hover:text-on-ink p-2 transition-colors duration-[120ms]"
 			onclick={copy}
 			aria-label="Copy command to clipboard"
 		>
@@ -77,8 +77,8 @@
 		class="shiki blueprint m-0 overflow-x-auto px-6 py-4 font-mono text-[16px] leading-7"
 		style="background-color:#10202E;color:#DFE7EE"><code
 			>{#each lines as line, i (i)}{@const parts = split(line)}<span class="line"
-					><span style="color:#E2452B">{parts.tool}</span><span style="color:#C8E6A0"
-						> {parts.rest}</span
+					><span style="color:#E2452B">{parts.tool}</span><span
+						style="color:#C8E6A0"> {parts.rest}</span
 					></span
 				>{#if i < lines.length - 1}{'\n'}{/if}{/each}</code
 		></pre>

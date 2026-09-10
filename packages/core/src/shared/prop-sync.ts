@@ -57,7 +57,11 @@ export function shallowEqual(a: unknown, b: unknown, depth: number = 0): boolean
  * Used by seams that must merge rather than replace, so that state set
  * imperatively on a controller isn't clobbered by an unrelated prop update.
  */
-export function changedKeys<T extends object>(previous: T, next: T, depth: number = 0): (keyof T)[] {
+export function changedKeys<T extends object>(
+	previous: T,
+	next: T,
+	depth: number = 0
+): (keyof T)[] {
 	const keys = new Set<keyof T>([
 		...(Object.keys(previous) as (keyof T)[]),
 		...(Object.keys(next) as (keyof T)[])

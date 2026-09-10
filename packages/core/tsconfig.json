@@ -12,16 +12,10 @@
 		"moduleResolution": "NodeNext",
 		"stripInternal": true,
 		"target": "ES2023",
-		"lib": [
-			"ES2023",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
 		"declaration": true,
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"include": [
-		"src"
-	]
+	"include": ["src"]
 }

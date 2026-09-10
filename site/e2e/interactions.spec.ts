@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { cells, center, drag, expectCompact, frameworks, rowIndexes, settle, trackErrors } from './helpers';
+import {
+	cells,
+	center,
+	drag,
+	expectCompact,
+	frameworks,
+	rowIndexes,
+	settle,
+	trackErrors
+} from './helpers';
 
 for (const fw of frameworks) {
 	test.describe(`${fw}: numbers`, () => {
@@ -38,7 +47,10 @@ for (const fw of frameworks) {
 			await expect(cells(page).first()).toBeVisible();
 			const before = await cells(page).count();
 			const one = cells(page).filter({ hasText: '1' }).first();
-			const deleter = page.locator('[role="region"][aria-describedby]').filter({ hasText: /delete/i }).first();
+			const deleter = page
+				.locator('[role="region"][aria-describedby]')
+				.filter({ hasText: /delete/i })
+				.first();
 			await drag(page, one, await center(deleter));
 			await settle(page);
 			await expect(cells(page)).toHaveCount(before - 1);
@@ -58,7 +70,10 @@ for (const fw of frameworks) {
 
 			// Drop just below the last card of the next column.
 			const nextBox = (await next.boundingBox())!;
-			await drag(page, card, { x: nextBox.x + nextBox.width / 2, y: nextBox.y + nextBox.height - 10 });
+			await drag(page, card, {
+				x: nextBox.x + nextBox.width / 2,
+				y: nextBox.y + nextBox.height - 10
+			});
 			await settle(page);
 
 			await expect(cells(page, next).filter({ hasText: label })).toHaveCount(1);

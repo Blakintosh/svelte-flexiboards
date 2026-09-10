@@ -110,7 +110,9 @@ export default function DashboardExample() {
 				<Pencil className="text-fx-accent size-4 shrink-0" />
 				<div className="flex flex-col">
 					<span className="text-fx-accent text-[11.5px] font-semibold">Editing layout</span>
-					<span className="text-body hidden text-[12px] sm:block">Drag and resize widgets to customise</span>
+					<span className="text-body hidden text-[12px] sm:block">
+						Drag and resize widgets to customise
+					</span>
 				</div>
 			</div>
 			<div className="flex items-center gap-2">
@@ -127,7 +129,7 @@ export default function DashboardExample() {
 	);
 
 	const board = (target: { rowSizing: string; columns: number; maxRows: number; gap: string }) => (
-		<FlexiBoard className="min-h-0 grow overflow-x-clip overflow-y-auto" config={boardConfig}>
+		<FlexiBoard className="min-h-0 grow overflow-y-auto overflow-x-clip" config={boardConfig}>
 			<FlexiTarget
 				keyName="left"
 				className={`h-full overflow-x-clip ${target.gap}`}
@@ -186,7 +188,12 @@ export default function DashboardExample() {
 					<ResponsiveFlexiBoard
 						config={responsiveConfig}
 						onfirstcreate={(controller) => (responsiveBoard.current = controller)}
-						lg={board({ rowSizing: 'minmax(0, 180px)', columns: 3, maxRows: 4, gap: 'gap-2 lg:gap-3.5' })}
+						lg={board({
+							rowSizing: 'minmax(0, 180px)',
+							columns: 3,
+							maxRows: 4,
+							gap: 'gap-2 lg:gap-3.5'
+						})}
 					>
 						{board({ rowSizing: 'minmax(0, 160px)', columns: 2, maxRows: 5, gap: 'gap-2' })}
 					</ResponsiveFlexiBoard>

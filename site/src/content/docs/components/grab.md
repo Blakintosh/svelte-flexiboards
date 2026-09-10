@@ -38,11 +38,11 @@ published: true
 		{#each ['Only the handle drags me', 'Select my text freely'] as label}
 			<FlexiWidget
 				class={(widget) => [
-					'flex items-center gap-3 rounded-lg bg-muted px-3 py-2',
+					'bg-muted flex items-center gap-3 rounded-lg px-3 py-2',
 					widget.isShadow && 'opacity-50'
 				]}
 			>
-				<FlexiGrab class="rounded p-1 hover:bg-background">
+				<FlexiGrab class="hover:bg-background rounded p-1">
 					<GripVertical class="size-4" />
 					<span class="sr-only">Move widget</span>
 				</FlexiGrab>
@@ -73,10 +73,13 @@ export function GrabHandles() {
 					<FlexiWidget
 						key={label}
 						className={(widget) =>
-							clsx('flex items-center gap-3 rounded-lg bg-muted px-3 py-2', widget.isShadow && 'opacity-50')
+							clsx(
+								'bg-muted flex items-center gap-3 rounded-lg px-3 py-2',
+								widget.isShadow && 'opacity-50'
+							)
 						}
 					>
-						<FlexiGrab className="rounded p-1 hover:bg-background">
+						<FlexiGrab className="hover:bg-background rounded p-1">
 							<GripVertical className="size-4" />
 							<span className="sr-only">Move widget</span>
 						</FlexiGrab>
@@ -108,9 +111,10 @@ export function GrabHandles() {
 <Only react>
 
 ```tsx
-<FlexiGrab>{({ widget }) => <GripVertical className={widget.isGrabbed ? 'text-primary' : undefined} />}</FlexiGrab>
+<FlexiGrab>
+	{({ widget }) => <GripVertical className={widget.isGrabbed ? 'text-primary' : undefined} />}
+</FlexiGrab>
 ```
-
 
 `className` may also be a function of the widget (`className={(widget) => widget.isGrabbed ? 'ring-2' : ''}`), re-evaluated as the widget's state changes.
 

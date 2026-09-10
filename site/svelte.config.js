@@ -1,6 +1,6 @@
 import adapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import { mdsvex, escapeSvelte } from "mdsvex";
+import { mdsvex, escapeSvelte } from 'mdsvex';
 import { getSingletonHighlighter } from 'shiki';
 import remarkToc from 'remark-toc';
 import rehypeSlug from 'rehype-slug';
@@ -20,33 +20,32 @@ const mdsvexOptions = {
 	highlight: {
 		highlighter: async (code, lang = 'text') => {
 			const highlighter = await shikiPromise;
-			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'blueprint' }))
-			return `{@html \`${html}\` }`
+			const html = escapeSvelte(highlighter.codeToHtml(code, { lang, theme: 'blueprint' }));
+			return `{@html \`${html}\` }`;
 		}
 	},
 	remarkPlugins: [
-		[remarkToc, { tight: true }], 
-		[examples, {
-			defaults: {
-				Wrapper: '/src/lib/components/ui/code-example/code-example.svelte'
+		[remarkToc, { tight: true }],
+		[
+			examples,
+			{
+				defaults: {
+					Wrapper: '/src/lib/components/ui/code-example/code-example.svelte'
+				}
 			}
-		}],
+		],
 		// Live React examples: ```tsx example fences (see the script).
 		[tsxExamples, { Wrapper: '/src/lib/components/ui/code-example/code-example.svelte' }]
 	],
 	rehypePlugins: [rehypeSlug]
-}
+};
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
 	// for more information about preprocessors
 	extensions: ['.svelte', '.md'],
-	preprocess: sequence([
-		vitePreprocess(),
-		mdsvex(mdsvexOptions),
-		preprocessMeltUI()
-	]),
+	preprocess: sequence([vitePreprocess(), mdsvex(mdsvexOptions), preprocessMeltUI()]),
 
 	kit: {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

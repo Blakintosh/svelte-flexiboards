@@ -30,35 +30,46 @@ const SUMMARY =
 /** One-line descriptions for llms.txt, keyed by docs slug. */
 const DESCRIPTIONS = {
 	overview: 'Meet the three components a board is built from and put a first board on the page.',
-	configuration: 'Set board, target, and widget options, and see which level wins when they overlap.',
-	controllers: 'Reach a board, target, or widget controller to read and change its state from code.',
-	accessibility: 'Move and resize widgets from the keyboard, and hear what the announcer reads out.',
+	configuration:
+		'Set board, target, and widget options, and see which level wins when they overlap.',
+	controllers:
+		'Reach a board, target, or widget controller to read and change its state from code.',
+	accessibility:
+		'Move and resize widgets from the keyboard, and hear what the announcer reads out.',
 	'breaking-changes-to-10': 'Update code written against v0.x to the v1.0 API.',
 	'breaking-changes-to-04': 'Update Svelte code written against v0.3 to the v0.4 API.',
 	'breaking-changes-to-03': 'Update Svelte code written against v0.2 to the v0.3 API.',
-	'flow-grids': 'Keep widgets in order and packed, for Kanban columns, sortable lists, and galleries.',
-	'free-form-grids': 'Place widgets at fixed coordinates and choose what happens when they collide.',
+	'flow-grids':
+		'Keep widgets in order and packed, for Kanban columns, sortable lists, and galleries.',
+	'free-form-grids':
+		'Place widgets at fixed coordinates and choose what happens when they collide.',
 	'multiple-targets': 'Run several targets on one board and move widgets between them.',
-	'widget-rendering': 'Choose what a widget renders, from inline content to a registry of components.',
+	'widget-rendering':
+		'Choose what a widget renders, from inline content to a registry of components.',
 	transitions: 'Animate widgets as they move, resize, appear, and leave.',
 	'guides/exporting-importing-boards': 'Save a board layout to your server and load it back later.',
 	'guides/responsive-layouts': 'Give each breakpoint its own layout with ResponsiveFlexiBoard.',
-	'guides/server-side-rendering': 'Render a board on the server and show a fallback until the layout is confirmed.',
+	'guides/server-side-rendering':
+		'Render a board on the server and show a fallback until the layout is confirmed.',
 	'components/board': 'Props, controller members, and configuration types for FlexiBoard.',
 	'components/target': 'Props, controller members, and layout types for FlexiTarget.',
 	'components/widget': 'Props, controller members, and configuration types for FlexiWidget.',
 	'components/grab': 'Props and controller members for FlexiGrab, the drag handle.',
 	'components/resize': 'Props and controller members for FlexiResize, the resize handle.',
-	'components/responsive-board': 'Props, controller members, and configuration for ResponsiveFlexiBoard.',
+	'components/responsive-board':
+		'Props, controller members, and configuration for ResponsiveFlexiBoard.',
 	'components/adder': 'Props and controller members for FlexiAdd, which creates widgets on drag.',
-	'components/deleter': 'Props and controller members for FlexiDelete, which removes dropped widgets.'
+	'components/deleter':
+		'Props and controller members for FlexiDelete, which removes dropped widgets.'
 };
 
 /* ---------------------------------------------------------------- helpers */
 
 function walk(dir, base = '') {
 	const out = [];
-	for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+	for (const entry of fs
+		.readdirSync(dir, { withFileTypes: true })
+		.sort((a, b) => a.name.localeCompare(b.name))) {
 		const rel = base ? `${base}/${entry.name}` : entry.name;
 		if (entry.isDirectory()) out.push(...walk(path.join(dir, entry.name), rel));
 		else if (entry.name.endsWith('.md')) out.push(rel.replace(/\.md$/, ''));
@@ -116,7 +127,11 @@ function resolvePath(root, dotted) {
 		.reduce((acc, key) => (acc == null ? acc : acc[key]), root);
 }
 
-const escapeCell = (text) => String(text ?? '').replace(/\r?\n+/g, ' ').replace(/\|/g, '\\|').trim();
+const escapeCell = (text) =>
+	String(text ?? '')
+		.replace(/\r?\n+/g, ' ')
+		.replace(/\|/g, '\\|')
+		.trim();
 
 /** Renders one list of API entries as a Markdown table. */
 function apiTable(entries, title) {
@@ -339,7 +354,10 @@ function transform(body, { slug }) {
 	}
 
 	// Collapse runs of blank lines left behind by dropped blocks.
-	const text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+	const text = out
+		.join('\n')
+		.replace(/\n{3,}/g, '\n\n')
+		.trim();
 	return { text, unhandled: [...unhandled] };
 }
 
@@ -375,7 +393,14 @@ for (const slug of slugs) {
 	const markdown = `${header}\n${text}\n`;
 	const file = path.join(pagesOut, `${slug.replace(/\//g, '__')}.md`);
 	fs.writeFileSync(file, markdown);
-	bySlug.set(slug, { slug, url, title: meta.title ?? slug, description: meta.description ?? '', category: meta.category ?? '', markdown });
+	bySlug.set(slug, {
+		slug,
+		url,
+		title: meta.title ?? slug,
+		description: meta.description ?? '',
+		category: meta.category ?? '',
+		markdown
+	});
 }
 
 // llms.txt — curated, in the order the site's sidebar uses.
@@ -391,7 +416,9 @@ for (const section of directory) {
 		if (!entry) continue;
 		listed.add(slug);
 		const note = DESCRIPTIONS[slug] ?? entry.description;
-		const only = page.frameworks ? ` (${page.frameworks.map((f) => (f === 'svelte' ? 'Svelte' : 'React')).join(' and ')} only)` : '';
+		const only = page.frameworks
+			? ` (${page.frameworks.map((f) => (f === 'svelte' ? 'Svelte' : 'React')).join(' and ')} only)`
+			: '';
 		items.push(`- [${page.title}](${entry.url}.md): ${note}${only}`);
 	}
 	if (items.length) sections.push({ title: section.section, items });
@@ -470,4 +497,5 @@ fs.writeFileSync(
 );
 
 console.log(`llms docs: ${bySlug.size} pages -> src/lib/generated/llms/`);
-if (allUnhandled.length) console.log(`  dropped/unhandled: ${[...new Set(allUnhandled)].join('; ')}`);
+if (allUnhandled.length)
+	console.log(`  dropped/unhandled: ${[...new Set(allUnhandled)].join('; ')}`);

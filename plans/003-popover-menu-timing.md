@@ -16,21 +16,21 @@ after the user already decided. Origins are already correct
 
 ## Where
 
-| File | Line | What's there |
-| --- | --- | --- |
-| `site/src/lib/components/ui/dropdown-menu/dropdown-menu-content.svelte` | 22 | `data-[state=open]:animate-in … zoom-in-95 …` |
-| `site/src/lib/components/ui/dropdown-menu/dropdown-menu-sub-content.svelte` | 16 | same |
-| `site/src/lib/components/ui/context-menu/context-menu-content.svelte` | 20 | same |
-| `site/src/lib/components/ui/context-menu/context-menu-sub-content.svelte` | 16 | same |
-| `site/src/lib/components/ui/popover/popover-content.svelte` | 24 | same |
-| `site/src/lib/components/ui/tooltip/tooltip-content.svelte` | 25 | `animate-in fade-in-0 zoom-in-95 …` |
-| `site/src/lib/components/ui/select/select-content.svelte` | 30 | `duration-100 … data-open:animate-in …` |
+| File                                                                        | Line | What's there                                  |
+| --------------------------------------------------------------------------- | ---- | --------------------------------------------- |
+| `site/src/lib/components/ui/dropdown-menu/dropdown-menu-content.svelte`     | 22   | `data-[state=open]:animate-in … zoom-in-95 …` |
+| `site/src/lib/components/ui/dropdown-menu/dropdown-menu-sub-content.svelte` | 16   | same                                          |
+| `site/src/lib/components/ui/context-menu/context-menu-content.svelte`       | 20   | same                                          |
+| `site/src/lib/components/ui/context-menu/context-menu-sub-content.svelte`   | 16   | same                                          |
+| `site/src/lib/components/ui/popover/popover-content.svelte`                 | 24   | same                                          |
+| `site/src/lib/components/ui/tooltip/tooltip-content.svelte`                 | 25   | `animate-in fade-in-0 zoom-in-95 …`           |
+| `site/src/lib/components/ui/select/select-content.svelte`                   | 30   | `duration-100 … data-open:animate-in …`       |
 
 ### Current code (dropdown, representative)
 
 ```ts
 // dropdown-menu-content.svelte:22
-"… data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 … origin-(--radix-dropdown-menu-content-transform-origin) …"
+'… data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 … origin-(--radix-dropdown-menu-content-transform-origin) …';
 ```
 
 ## Target
@@ -71,11 +71,14 @@ never from `scale(0)`.
 ## Verification
 
 **Build**
+
 - [ ] svelte-check passes.
 
 **Behavior**
+
 - [ ] Menus still scale from the trigger side, not the center.
 - [ ] Open/close rapidly: no lingering ghost — exit is clearly the quicker of the two.
 
 **Feel**
+
 - [ ] Scrub the theme dropdown at 25%: fast pop, soft settle. If enter and exit look the same length, the `data-[state=closed]` duration didn't apply — inspect `--tw-duration`.

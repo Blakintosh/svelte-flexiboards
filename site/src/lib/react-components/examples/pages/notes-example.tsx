@@ -27,8 +27,8 @@ export default function NotesExample() {
 	return (
 		<div className="flex h-full min-h-0 w-full grow">
 			<AppSidebar />
-			<main className="flex h-full min-h-0 grow flex-col bg-paper px-4 py-4 lg:px-8">
-				<header className="mb-8 flex items-center justify-between border-b border-rule-soft pb-3">
+			<main className="bg-paper flex h-full min-h-0 grow flex-col px-4 py-4 lg:px-8">
+				<header className="border-rule-soft mb-8 flex items-center justify-between border-b pb-3">
 					<div className="flex items-center gap-4">
 						<ul className="hidden items-center lg:flex">
 							<li>
@@ -37,14 +37,19 @@ export default function NotesExample() {
 								</Button>
 							</li>
 							<li>
-								<Button variant="ghost" size="icon" disabled className="rounded-full [&_svg]:size-5">
+								<Button
+									variant="ghost"
+									size="icon"
+									disabled
+									className="rounded-full [&_svg]:size-5"
+								>
 									<ArrowRight />
 								</Button>
 							</li>
 						</ul>
 
-						<span className="text-[12px] font-semibold text-ink">Launch plan — 0.5</span>
-						<span className="font-mono text-[11px] text-faint">Edited 2h ago</span>
+						<span className="text-ink text-[12px] font-semibold">Launch plan — 0.5</span>
+						<span className="text-faint font-mono text-[11px]">Edited 2h ago</span>
 					</div>
 
 					<ul className="flex items-center gap-2">
@@ -59,7 +64,7 @@ export default function NotesExample() {
 				</header>
 				<article className="flex min-h-0 w-full grow flex-col">
 					<FlexiBoard config={boardConfig} className="overflow-y-auto py-8 2xl:pl-8 2xl:pr-16">
-						<h1 className="mb-8 pl-8 font-serif text-[30px] text-ink 2xl:text-[38px]">
+						<h1 className="text-ink mb-8 pl-8 font-serif text-[30px] 2xl:text-[38px]">
 							Launch plan — 0.5
 						</h1>
 						{/* Real page content: the copy explains the demo the reader is dragging. */}

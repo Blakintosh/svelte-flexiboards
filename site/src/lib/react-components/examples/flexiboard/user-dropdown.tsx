@@ -9,7 +9,7 @@ export default function UserDropdown() {
 		'text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]';
 	return (
 		<details className="relative">
-			<summary className="hover:bg-tint flex w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden items-center gap-3 rounded-[9px] p-2 text-left transition-colors duration-[120ms]">
+			<summary className="hover:bg-tint flex w-full cursor-pointer list-none items-center gap-3 rounded-[9px] p-2 text-left transition-colors duration-[120ms] [&::-webkit-details-marker]:hidden">
 				<img
 					src="https://github.com/blakintosh.png"
 					alt="Blakintosh"

@@ -14,12 +14,12 @@
 	}: { caption: string; note?: string; children: Snippet; class?: string } = $props();
 </script>
 
-<figure class="border-ink bg-panel relative m-0 border px-6 pt-9 pb-6 {className}">
-	<figcaption class="label bg-ink text-paper absolute -top-px -left-px px-2 py-1 text-[10px]">
+<figure class="border-ink bg-panel relative m-0 border px-6 pb-6 pt-9 {className}">
+	<figcaption class="label bg-ink text-paper absolute -left-px -top-px px-2 py-1 text-[10px]">
 		{caption}
 	</figcaption>
 	{#if note}
-		<div class="text-faint absolute top-3.5 right-3 font-mono text-[10px]">{note}</div>
+		<div class="text-faint absolute right-3 top-3.5 font-mono text-[10px]">{note}</div>
 	{/if}
 	{@render children()}
 </figure>

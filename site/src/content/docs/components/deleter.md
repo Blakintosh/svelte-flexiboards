@@ -52,7 +52,10 @@ export function Deleter() {
 	return (
 		<FlexiDelete
 			className={(deleter) =>
-				clsx('rounded-lg border border-dashed p-4', deleter.isHovered && 'border-red-500 text-red-500')
+				clsx(
+					'rounded-lg border border-dashed p-4',
+					deleter.isHovered && 'border-red-500 text-red-500'
+				)
 			}
 		>
 			Drag a widget here to delete it
@@ -64,7 +67,9 @@ export function Deleter() {
 The `children` prop also accepts a function receiving the deleter controller, if you want its state inside the content:
 
 ```tsx
-<FlexiDelete>{({ deleter }) => <span>{deleter.isHovered ? 'Release to delete' : 'Delete'}</span>}</FlexiDelete>
+<FlexiDelete>
+	{({ deleter }) => <span>{deleter.isHovered ? 'Release to delete' : 'Delete'}</span>}
+</FlexiDelete>
 ```
 
 </Only>

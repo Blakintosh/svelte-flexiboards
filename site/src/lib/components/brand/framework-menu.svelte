@@ -84,9 +84,15 @@
 	</button>
 
 	{#if open}
-		<div class="absolute top-full z-30 min-w-[200px] pt-1.5 {align === 'left' ? 'left-0' : 'right-0'}" role="menu">
+		<div
+			class="absolute top-full z-30 min-w-[200px] pt-1.5 {align === 'left' ? 'left-0' : 'right-0'}"
+			role="menu"
+		>
 			<div
-				class="menu-surface bg-panel border-rule flex flex-col rounded-[12px] border p-1.5 shadow-[0_16px_36px_rgba(16,32,46,0.14)] {align === 'left' ? 'origin-top-left' : 'origin-top-right'}"
+				class="menu-surface bg-panel border-rule flex flex-col rounded-[12px] border p-1.5 shadow-[0_16px_36px_rgba(16,32,46,0.14)] {align ===
+				'left'
+					? 'origin-top-left'
+					: 'origin-top-right'}"
 				class:menu-closing={closing}
 			>
 				{#each frameworks as fw (fw.id)}

@@ -17,7 +17,8 @@
 		dashboard: {
 			title: 'Dashboard',
 			slug: 'dashboard',
-			description: 'A drag-and-drop SaaS dashboard with an editable, responsive layout that persists between visits.',
+			description:
+				'A drag-and-drop SaaS dashboard with an editable, responsive layout that persists between visits.',
 			href: '/examples/dashboard'
 		},
 		notes: {
@@ -130,13 +131,29 @@
 		deleter: { label: 'Deleting widgets', href: '/docs/components/deleter', group: 'Interaction' },
 		editMode: { label: 'Edit mode', href: '/docs/configuration', group: 'Interaction' },
 		metadata: { label: 'Widget metadata', href: '/docs/widget-rendering', group: 'State' },
-		stored: { label: 'Stored layouts', href: '/docs/guides/exporting-importing-boards', group: 'State' },
-		export: { label: 'Export as JSON', href: '/docs/guides/exporting-importing-boards', group: 'State' },
-		responsive: { label: 'Responsive layouts', href: '/docs/guides/responsive-layouts', group: 'State' },
+		stored: {
+			label: 'Stored layouts',
+			href: '/docs/guides/exporting-importing-boards',
+			group: 'State'
+		},
+		export: {
+			label: 'Export as JSON',
+			href: '/docs/guides/exporting-importing-boards',
+			group: 'State'
+		},
+		responsive: {
+			label: 'Responsive layouts',
+			href: '/docs/guides/responsive-layouts',
+			group: 'State'
+		},
 		spring: { label: 'Spring motion', href: '/docs/transitions', group: 'Motion' },
 		css: { label: 'CSS transitions', href: '/docs/transitions', group: 'Motion' },
 		simple: { label: 'Simple transitions', href: '/docs/transitions', group: 'Motion' },
-		ssr: { label: 'Server-side rendering', href: '/docs/guides/server-side-rendering', group: 'State' },
+		ssr: {
+			label: 'Server-side rendering',
+			href: '/docs/guides/server-side-rendering',
+			group: 'State'
+		},
 		// The SSR guide is Svelte-only; React has no page to send this chip to.
 		csr: {
 			label: 'Client-side rendering',
@@ -145,7 +162,11 @@
 		},
 		// Only meaningful alongside `ssr`: the server renders a stand-in (stored
 		// layout or breakpoint guess) and the real board lands after mount.
-		loadOnMount: { label: 'Loads on mount', href: '/docs/guides/server-side-rendering', group: 'State' }
+		loadOnMount: {
+			label: 'Loads on mount',
+			href: '/docs/guides/server-side-rendering',
+			group: 'State'
+		}
 	} satisfies Record<string, Feature>;
 
 	type FeatureId = keyof typeof features;
@@ -153,16 +174,54 @@
 
 	// Filled from each example's source; keep in step when an example changes.
 	const exampleFeatures: Record<string, FeatureId[]> = {
-		dashboard: ['freeGrid', 'registry', 'grab', 'resize', 'editMode', 'metadata', 'stored', 'responsive', 'simple'],
+		dashboard: [
+			'freeGrid',
+			'registry',
+			'grab',
+			'resize',
+			'editMode',
+			'metadata',
+			'stored',
+			'responsive',
+			'simple'
+		],
 		notes: ['flowGrid', 'multiTarget', 'grab', 'keyboard', 'simple'],
 		flexspressive: ['freeGrid', 'resize', 'keyboard', 'css'],
 		products: ['flowGrid', 'multiTarget', 'grab', 'resize', 'responsive', 'css', 'loadOnMount'],
 		numbers: ['freeGrid', 'adder', 'deleter', 'resize', 'keyboard', 'spring'],
 		flow: ['flowGrid', 'keyboard', 'css'],
-		kanban: ['flowGrid', 'multiTarget', 'deleter', 'metadata', 'stored', 'export', 'css', 'loadOnMount'],
-		'form-builder': ['flowGrid', 'adder', 'deleter', 'grab', 'metadata', 'stored', 'css', 'loadOnMount'],
+		kanban: [
+			'flowGrid',
+			'multiTarget',
+			'deleter',
+			'metadata',
+			'stored',
+			'export',
+			'css',
+			'loadOnMount'
+		],
+		'form-builder': [
+			'flowGrid',
+			'adder',
+			'deleter',
+			'grab',
+			'metadata',
+			'stored',
+			'css',
+			'loadOnMount'
+		],
 		compound: ['freeGrid', 'flowGrid', 'nested', 'registry', 'grab', 'stored', 'css'],
-		gallery: ['freeGrid', 'packing', 'resize', 'metadata', 'stored', 'responsive', 'spring', 'css', 'loadOnMount'],
+		gallery: [
+			'freeGrid',
+			'packing',
+			'resize',
+			'metadata',
+			'stored',
+			'responsive',
+			'spring',
+			'css',
+			'loadOnMount'
+		],
 		launcher: ['freeGrid', 'metadata', 'stored', 'export', 'responsive', 'css', 'loadOnMount'],
 		playlist: ['flowGrid', 'grab', 'keyboard', 'stored', 'css']
 	};
@@ -227,7 +286,8 @@
 			? ssrOn(slug)
 			: highlight === 'csr'
 				? !ssrOn(slug)
-				: exampleFeatures[slug]?.includes(highlight) && (highlight !== 'loadOnMount' || ssrOn(slug)));
+				: exampleFeatures[slug]?.includes(highlight) &&
+					(highlight !== 'loadOnMount' || ssrOn(slug)));
 	// SSR is an embed-level opt-in (ssrSlugs), not something the example's
 	// source declares, and React embeds never server-render.
 	const ssrOn = (slug: string) => fw === 'svelte' && ssrSlugs.includes(slug);
@@ -269,7 +329,7 @@
 	<aside class="hidden w-[212px] shrink-0 flex-col gap-6 lg:flex">
 		<div class="flex flex-col gap-1.5">
 			<span class="label text-fx-accent text-[11px]">Examples</span>
-			<h1 class="text-ink m-0 font-serif text-2xl leading-[1.15] font-semibold">
+			<h1 class="text-ink m-0 font-serif text-2xl font-semibold leading-[1.15]">
 				Flexiboards in action
 			</h1>
 			<p class="text-faint m-0 text-[12.5px] leading-[1.55]">
@@ -299,7 +359,10 @@
 						{#if slug === data.slug}
 							<span class="bg-fx-accent size-1.5 rounded-full"></span>
 						{:else if usesHighlight(slug)}
-							<span class="bg-blue size-1.5 rounded-full" title="Uses {highlight ? features[highlight].label : ''}"></span>
+							<span
+								class="bg-blue size-1.5 rounded-full"
+								title="Uses {highlight ? features[highlight].label : ''}"
+							></span>
 						{/if}
 					</a>
 				{/each}
@@ -311,7 +374,8 @@
 				class="border-rule-soft bg-tint text-body mt-auto rounded-[10px] border px-3 py-2.5 text-[14px] leading-[1.5]"
 				role="note"
 			>
-				<code>@flexiboards/react</code> is in public preview. We'll add more React examples as we approach stability.
+				<code>@flexiboards/react</code> is in public preview. We'll add more React examples as we approach
+				stability.
 			</p>
 		{/if}
 	</aside>
@@ -396,7 +460,9 @@
 			</div>
 
 			<!-- Below xl the rail folds into a chip strip; the same chips, same highlight. -->
-			<div class="border-rule-faint flex flex-wrap items-center gap-1.5 border-b px-4 py-2 xl:hidden lg:px-[18px]">
+			<div
+				class="border-rule-faint flex flex-wrap items-center gap-1.5 border-b px-4 py-2 lg:px-[18px] xl:hidden"
+			>
 				<span class="text-faint mr-1 text-[11px] font-bold">Features</span>
 				{#each currentFeatures as id (id)}
 					{@render chip(id)}
@@ -417,7 +483,7 @@
 	<!-- Features rail: what this board is exercising, each linked to its doc. -->
 	<aside class="hidden w-[200px] shrink-0 flex-col gap-5 xl:flex" aria-label="Features used">
 		<div class="flex flex-col gap-2">
-			<span class="text-[16px] font-serif font-bold">Features used</span>
+			<span class="font-serif text-[16px] font-bold">Features used</span>
 			<p class="text-faint m-0 text-[13px] leading-[1.5]">
 				Press one to flag other examples that use it, or navigate to the related guide if available.
 			</p>
@@ -426,7 +492,9 @@
 			{@const ids = currentFeatures.filter((id) => features[id].group === group)}
 			{#if ids.length}
 				<div class="flex flex-col gap-1.5">
-					<span class="text-faint text-[10.5px] font-semibold tracking-[0.04em] uppercase">{group}</span>
+					<span class="text-faint text-[10.5px] font-semibold uppercase tracking-[0.04em]"
+						>{group}</span
+					>
 					<div class="flex flex-wrap gap-1.5">
 						{#each ids as id (id)}
 							{@render chip(id)}

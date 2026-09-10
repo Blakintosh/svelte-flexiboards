@@ -3,7 +3,13 @@ import type { FlexiTargetPartialConfiguration } from '../types.js';
 import { useCallback, useEffect, type ReactNode } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 import { FlexiTargetContext } from '../adapters/target.js';
-import { renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
+import {
+	renderChildren,
+	useOnceCommitted,
+	useSingleRef,
+	type FlexiChildren,
+	type FlexiCommonProps
+} from '../adapters/utils.js';
 import { useFromCore } from '../adapter.js';
 import { useReactive } from '../adapters/reactive.js';
 import { RenderedFlexiWidget } from './rendered-flexi-widget.js';
@@ -52,7 +58,16 @@ export type FlexiTargetProps = FlexiCommonProps<FlexiTargetController> & {
 /**
  * Creates a new FlexiTarget in the context of the current FlexiBoard.
  */
-export function FlexiTarget({ children, className, header, footer, config, containerClassName, keyName, onfirstcreate }: FlexiTargetProps) {
+export function FlexiTarget({
+	children,
+	className,
+	header,
+	footer,
+	config,
+	containerClassName,
+	keyName,
+	onfirstcreate
+}: FlexiTargetProps) {
 	const provider = useInternalFlexiBoard();
 	const target = useSingleRef(() => provider.createTarget(config, keyName));
 
@@ -71,35 +86,40 @@ export function FlexiTarget({ children, className, header, footer, config, conta
 	const prepared = useFromCore(useCallback(() => target.prepared, [target]));
 	const orderedWidgets = useFromCore(useCallback(() => target.orderedWidgets, [target]));
 	const dropzoneWidget = useFromCore(useCallback(() => target.dropzoneWidget, [target]));
-	const shouldRenderDropzoneWidget = useFromCore(useCallback(() => target.shouldRenderDropzoneWidget, [target]));
+	const shouldRenderDropzoneWidget = useFromCore(
+		useCallback(() => target.shouldRenderDropzoneWidget, [target])
+	);
 
-	return <FlexiTargetContext.Provider value={target}>
-		<div className={containerClassName}>
-			{renderChildren(header, { target: publicTarget })}
+	return (
+		<FlexiTargetContext.Provider value={target}>
+			<div className={containerClassName}>
+				{renderChildren(header, { target: publicTarget })}
 
-			<FlexiGrid className={className}>
-				{children && (
-					// The FlexiWidget declarations in here register their configs and
-					// render no markup, so the wrapper is inert. display:none (not
-					// visibility) so it never occupies a grid cell of its own.
-					<div style={{ display: 'none' }}>{children}</div>
-				)}
-
-				{prepared && <>
-					{orderedWidgets.map((widget) => (
-						<RenderedFlexiWidget key={widget.id} widget={widget} />
-					))}
-
-					{dropzoneWidget && shouldRenderDropzoneWidget && (
-						<RenderedFlexiWidget widget={dropzoneWidget} />
+				<FlexiGrid className={className}>
+					{children && (
+						// The FlexiWidget declarations in here register their configs and
+						// render no markup, so the wrapper is inert. display:none (not
+						// visibility) so it never occupies a grid cell of its own.
+						<div style={{ display: 'none' }}>{children}</div>
 					)}
-				</>}
-			</FlexiGrid>
 
-			{renderChildren(footer, { target: publicTarget })}
-		</div>
+					{prepared && (
+						<>
+							{orderedWidgets.map((widget) => (
+								<RenderedFlexiWidget key={widget.id} widget={widget} />
+							))}
 
-		{/* Creates the registered widgets at render time, in this same render
+							{dropzoneWidget && shouldRenderDropzoneWidget && (
+								<RenderedFlexiWidget widget={dropzoneWidget} />
+							)}
+						</>
+					)}
+				</FlexiGrid>
+
+				{renderChildren(footer, { target: publicTarget })}
+			</div>
+
+			{/* Creates the registered widgets at render time, in this same render
 		    pass: after the children (registrations happen inside the grid's
 		    subtree, which React renders first) and before the board's own
 		    loader (a later sibling of every target), so stored layouts replace
@@ -107,6 +127,7 @@ export function FlexiTarget({ children, className, header, footer, config, conta
 		    Svelte init ordering. The grid read orderedWidgets before this ran;
 		    useSyncExternalStore re-checks its snapshot on subscribe, so it
 		    re-renders with the created widgets. */}
-		<FlexiTargetLoader />
-	</FlexiTargetContext.Provider>;
+			<FlexiTargetLoader />
+		</FlexiTargetContext.Provider>
+	);
 }

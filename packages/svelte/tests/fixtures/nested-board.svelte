@@ -23,6 +23,13 @@
 		key="blocks"
 		config={{ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 } }}
 	>
-		<FlexiWidget x={0} y={0} width={3} height={3} component={NestedInnerBoard} componentProps={{ oncard, oninner }} />
+		<FlexiWidget
+			x={0}
+			y={0}
+			width={3}
+			height={3}
+			component={NestedInnerBoard}
+			componentProps={{ oncard, oninner }}
+		/>
 	</FlexiTarget>
 </FlexiBoard>

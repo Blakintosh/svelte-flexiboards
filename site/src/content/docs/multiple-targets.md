@@ -58,7 +58,7 @@ The example below builds the Kanban board we described earlier.
 	class={'flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-center'}
 >
 	<div class={targetClass}>
-		<h4 class="mb-2 text-base font-semibold text-foreground">Backlog</h4>
+		<h4 class="text-foreground mb-2 text-base font-semibold">Backlog</h4>
 		<FlexiTarget key={'backlog'} class={gridClass}>
 			<FlexiWidget>Export and Import Layouts</FlexiWidget>
 			<FlexiWidget>Animations</FlexiWidget>
@@ -66,7 +66,7 @@ The example below builds the Kanban board we described earlier.
 	</div>
 
 	<div class={targetClass}>
-		<h4 class="mb-2 text-base font-semibold text-foreground">Work-in-Progress</h4>
+		<h4 class="text-foreground mb-2 text-base font-semibold">Work-in-Progress</h4>
 		<FlexiTarget
 			key={'wip'}
 			class={gridClass}
@@ -84,7 +84,7 @@ The example below builds the Kanban board we described earlier.
 	</div>
 
 	<div class={targetClass}>
-		<h4 class="mb-2 text-base font-semibold text-foreground">Done</h4>
+		<h4 class="text-foreground mb-2 text-base font-semibold">Done</h4>
 		<FlexiTarget key={'done'} class={gridClass}>
 			<FlexiWidget>Write Multiple Targets Guide</FlexiWidget>
 		</FlexiTarget>
@@ -128,7 +128,7 @@ export function KanbanBoard() {
 			className="flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-center"
 		>
 			<div className={targetClass}>
-				<h4 className="mb-2 text-base font-semibold text-foreground">Backlog</h4>
+				<h4 className="text-foreground mb-2 text-base font-semibold">Backlog</h4>
 				<FlexiTarget keyName="backlog" className={gridClass}>
 					<FlexiWidget>Export and Import Layouts</FlexiWidget>
 					<FlexiWidget>Animations</FlexiWidget>
@@ -136,7 +136,7 @@ export function KanbanBoard() {
 			</div>
 
 			<div className={targetClass}>
-				<h4 className="mb-2 text-base font-semibold text-foreground">Work-in-Progress</h4>
+				<h4 className="text-foreground mb-2 text-base font-semibold">Work-in-Progress</h4>
 				<FlexiTarget
 					keyName="wip"
 					className={gridClass}
@@ -154,7 +154,7 @@ export function KanbanBoard() {
 			</div>
 
 			<div className={targetClass}>
-				<h4 className="mb-2 text-base font-semibold text-foreground">Done</h4>
+				<h4 className="text-foreground mb-2 text-base font-semibold">Done</h4>
 				<FlexiTarget keyName="done" className={gridClass}>
 					<FlexiWidget>Write Multiple Targets Guide</FlexiWidget>
 				</FlexiTarget>
@@ -190,7 +190,7 @@ Flexiboards applies the same drag-and-drop logic whatever grid type the target d
 	class={'flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-center'}
 >
 	<div class={targetClass}>
-		<h4 class="mb-2 text-base font-semibold text-foreground">List Representation</h4>
+		<h4 class="text-foreground mb-2 text-base font-semibold">List Representation</h4>
 		<FlexiTarget
 			key={'flow'}
 			class={gridClass}
@@ -216,7 +216,7 @@ Flexiboards applies the same drag-and-drop logic whatever grid type the target d
 	</div>
 
 	<div class={targetClass}>
-		<h4 class="mb-2 text-base font-semibold text-foreground">Grid Representation</h4>
+		<h4 class="text-foreground mb-2 text-base font-semibold">Grid Representation</h4>
 		<FlexiTarget
 			key={'free'}
 			class={gridClass}
@@ -257,7 +257,7 @@ export function MixedGridsBoard() {
 	return (
 		<FlexiBoard className="flex flex-col items-center gap-8 lg:flex-row lg:items-stretch lg:justify-center">
 			<div className={targetClass}>
-				<h4 className="mb-2 text-base font-semibold text-foreground">List Representation</h4>
+				<h4 className="text-foreground mb-2 text-base font-semibold">List Representation</h4>
 				<FlexiTarget
 					keyName="flow"
 					className={gridClass}
@@ -284,7 +284,7 @@ export function MixedGridsBoard() {
 			</div>
 
 			<div className={targetClass}>
-				<h4 className="mb-2 text-base font-semibold text-foreground">Grid Representation</h4>
+				<h4 className="text-foreground mb-2 text-base font-semibold">Grid Representation</h4>
 				<FlexiTarget
 					keyName="free"
 					className={gridClass}

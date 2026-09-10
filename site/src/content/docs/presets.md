@@ -24,9 +24,9 @@ Two presets cover the boards people most often ask for. Each is one `FlexiBoard`
 </script>
 
 <FlexiSortable class="w-72 gap-2">
-	<FlexiWidget class="rounded-lg border bg-card px-4 py-2">Write the docs</FlexiWidget>
-	<FlexiWidget class="rounded-lg border bg-card px-4 py-2">Record the demo</FlexiWidget>
-	<FlexiWidget class="rounded-lg border bg-card px-4 py-2">Ship it</FlexiWidget>
+	<FlexiWidget class="bg-card rounded-lg border px-4 py-2">Write the docs</FlexiWidget>
+	<FlexiWidget class="bg-card rounded-lg border px-4 py-2">Record the demo</FlexiWidget>
+	<FlexiWidget class="bg-card rounded-lg border px-4 py-2">Ship it</FlexiWidget>
 </FlexiSortable>
 ```
 
@@ -40,9 +40,9 @@ import { FlexiSortable, FlexiWidget } from '@flexiboards/react';
 export function SortableList() {
 	return (
 		<FlexiSortable className="w-72 gap-2">
-			<FlexiWidget className="rounded-lg border bg-card px-4 py-2">Write the docs</FlexiWidget>
-			<FlexiWidget className="rounded-lg border bg-card px-4 py-2">Record the demo</FlexiWidget>
-			<FlexiWidget className="rounded-lg border bg-card px-4 py-2">Ship it</FlexiWidget>
+			<FlexiWidget className="bg-card rounded-lg border px-4 py-2">Write the docs</FlexiWidget>
+			<FlexiWidget className="bg-card rounded-lg border px-4 py-2">Record the demo</FlexiWidget>
+			<FlexiWidget className="bg-card rounded-lg border px-4 py-2">Ship it</FlexiWidget>
 		</FlexiSortable>
 	);
 }
@@ -64,9 +64,15 @@ export function SortableList() {
 </script>
 
 <FlexiDashboard columns={3} rows={2} class="w-96 gap-2">
-	<FlexiWidget x={0} y={0} width={2} height={1} class="rounded-lg border bg-card p-3">Revenue</FlexiWidget>
-	<FlexiWidget x={2} y={0} width={1} height={1} class="rounded-lg border bg-card p-3">Users</FlexiWidget>
-	<FlexiWidget x={0} y={1} width={1} height={1} class="rounded-lg border bg-card p-3">Churn</FlexiWidget>
+	<FlexiWidget x={0} y={0} width={2} height={1} class="bg-card rounded-lg border p-3"
+		>Revenue</FlexiWidget
+	>
+	<FlexiWidget x={2} y={0} width={1} height={1} class="bg-card rounded-lg border p-3"
+		>Users</FlexiWidget
+	>
+	<FlexiWidget x={0} y={1} width={1} height={1} class="bg-card rounded-lg border p-3"
+		>Churn</FlexiWidget
+	>
 </FlexiDashboard>
 ```
 
@@ -80,13 +86,13 @@ import { FlexiDashboard, FlexiWidget } from '@flexiboards/react';
 export function Dashboard() {
 	return (
 		<FlexiDashboard columns={3} rows={2} className="w-96 gap-2">
-			<FlexiWidget x={0} y={0} width={2} height={1} className="rounded-lg border bg-card p-3">
+			<FlexiWidget x={0} y={0} width={2} height={1} className="bg-card rounded-lg border p-3">
 				Revenue
 			</FlexiWidget>
-			<FlexiWidget x={2} y={0} width={1} height={1} className="rounded-lg border bg-card p-3">
+			<FlexiWidget x={2} y={0} width={1} height={1} className="bg-card rounded-lg border p-3">
 				Users
 			</FlexiWidget>
-			<FlexiWidget x={0} y={1} width={1} height={1} className="rounded-lg border bg-card p-3">
+			<FlexiWidget x={0} y={1} width={1} height={1} className="bg-card rounded-lg border p-3">
 				Churn
 			</FlexiWidget>
 		</FlexiDashboard>

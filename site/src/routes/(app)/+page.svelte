@@ -248,7 +248,7 @@
 
 <!-- ===== HERO ===== -->
 <section
-	class="graph-paper page-gutter grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] gap-14 pt-20 pb-18"
+	class="graph-paper page-gutter pb-18 grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] gap-14 pt-20"
 >
 	<div class="flex flex-col gap-6 self-center">
 		<h1
@@ -320,12 +320,18 @@
 					>
 						<FlexiWidget draggable x={0} y={0} width={3} class={heroShell}>
 							{#snippet children({ widget }: { widget: FlexiWidgetController })}
-								<div class={heroBarVisual(widget, 'bg-ink')} onpointerdown={onBarGrab(widget)}></div>
+								<div
+									class={heroBarVisual(widget, 'bg-ink')}
+									onpointerdown={onBarGrab(widget)}
+								></div>
 							{/snippet}
 						</FlexiWidget>
 						<FlexiWidget draggable x={0} y={1} width={2} class={heroShell}>
 							{#snippet children({ widget }: { widget: FlexiWidgetController })}
-								<div class={heroBarVisual(widget, 'bg-blue')} onpointerdown={onBarGrab(widget)}></div>
+								<div
+									class={heroBarVisual(widget, 'bg-blue')}
+									onpointerdown={onBarGrab(widget)}
+								></div>
 							{/snippet}
 						</FlexiWidget>
 						<FlexiWidget draggable x={0} y={2} class={heroShell}>
@@ -405,14 +411,14 @@
 			>
 				{#if framework.current === 'react'}
 					<p
-						class="border-fx-accent text-on-ink m-0 mt-4.5 border-l-2 bg-white/5 px-3 py-2 text-xs"
+						class="border-fx-accent text-on-ink mt-4.5 m-0 border-l-2 bg-white/5 px-3 py-2 text-xs"
 					>
 						Preview API — component names and props match the Svelte adapter; details may still move
 						before 1.0 of <span class="text-white">@flexiboards/react</span>.
 					</p>
 				{:else}
 					<p
-						class="border-fx-accent text-on-ink m-0 mt-4.5 border-l-2 bg-white/5 px-3 py-2 text-xs"
+						class="border-fx-accent text-on-ink mt-4.5 m-0 border-l-2 bg-white/5 px-3 py-2 text-xs"
 					>
 						Stable API — built on Svelte 5 signals; <span class="text-white"
 							>@flexiboards/svelte</span
@@ -423,7 +429,7 @@
 		</div>
 
 		<div
-			class="border-rule bg-paper border-t px-6 py-11 lg:border-t-0 lg:border-l lg:px-10"
+			class="border-rule bg-paper border-t px-6 py-11 lg:border-l lg:border-t-0 lg:px-10"
 			use:reveal={120}
 		>
 			<div class="label text-faint mb-4.5 text-[11px]">Result · styled entirely by you</div>
@@ -506,7 +512,7 @@
 			{#each packages as pkg, i (pkg.name)}
 				<div
 					class="p-6 {i % 3 === 0 ? 'bg-paper' : ''} {i < packages.length - 1
-						? 'border-rule border-b lg:border-r lg:border-b-0'
+						? 'border-rule border-b lg:border-b-0 lg:border-r'
 						: ''}"
 				>
 					<div class="mb-2.5 flex items-center justify-between gap-3">

@@ -1,6 +1,6 @@
 packages:
-  - "packages/*"
-  - "site"
+  - 'packages/*'
+  - 'site'
 allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true

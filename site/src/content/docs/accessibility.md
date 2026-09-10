@@ -18,15 +18,15 @@ Flexiboards renders semantic roles and live announcements without any configurat
 
 A widget that can be grabbed is in the tab order. If it contains a [FlexiGrab](/docs/components/grab), the handle takes its place in the tab order instead, and [FlexiResize](/docs/components/resize) handles are always focusable buttons.
 
-| Key | On | Effect |
-| --- | --- | --- |
-| <kbd>Tab</kbd> | Page | Moves focus between widgets, grab handles, resize handles, and adders. |
-| <kbd>Enter</kbd> | Focused widget or grab handle | Grabs the widget from its centre. |
-| <kbd>Enter</kbd> | Focused resize handle | Starts resizing the widget. |
-| <kbd>Enter</kbd> | Focused adder | Creates the adder's widget and grabs it. |
-| <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> | While grabbed or resizing | Moves the widget, or its resize edge, by a small step. Hold <kbd>Shift</kbd> for a large step, or <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> for a fine one. |
-| <kbd>Enter</kbd> | Anywhere, while grabbed or resizing | Drops the widget where it currently is. |
-| <kbd>Escape</kbd> | Anywhere, while grabbed or resizing | Cancels and returns the widget to where it started. |
+| Key                                                 | On                                  | Effect                                                                                                                                             |
+| --------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <kbd>Tab</kbd>                                      | Page                                | Moves focus between widgets, grab handles, resize handles, and adders.                                                                             |
+| <kbd>Enter</kbd>                                    | Focused widget or grab handle       | Grabs the widget from its centre.                                                                                                                  |
+| <kbd>Enter</kbd>                                    | Focused resize handle               | Starts resizing the widget.                                                                                                                        |
+| <kbd>Enter</kbd>                                    | Focused adder                       | Creates the adder's widget and grabs it.                                                                                                           |
+| <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> | While grabbed or resizing           | Moves the widget, or its resize edge, by a small step. Hold <kbd>Shift</kbd> for a large step, or <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> for a fine one. |
+| <kbd>Enter</kbd>                                    | Anywhere, while grabbed or resizing | Drops the widget where it currently is.                                                                                                            |
+| <kbd>Escape</kbd>                                   | Anywhere, while grabbed or resizing | Cancels and returns the widget to where it started.                                                                                                |
 
 A keyboard grab drives the same virtual pointer as a mouse drag, so the widget follows the arrow keys across cells and between targets exactly as it would follow a cursor. <kbd>Tab</kbd> is trapped while a widget is held, so focus cannot leave until you drop or cancel.
 

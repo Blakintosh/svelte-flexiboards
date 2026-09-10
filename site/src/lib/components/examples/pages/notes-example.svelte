@@ -24,8 +24,8 @@
 
 <div class="flex h-full min-h-0 w-full grow">
 	<AppSidebar />
-	<main class="flex h-full min-h-0 grow flex-col bg-paper px-4 py-4 lg:px-8">
-		<header class="mb-8 flex items-center justify-between border-b border-rule-soft pb-3">
+	<main class="bg-paper flex h-full min-h-0 grow flex-col px-4 py-4 lg:px-8">
+		<header class="border-rule-soft mb-8 flex items-center justify-between border-b pb-3">
 			<div class="flex items-center gap-4">
 				<ul class="hidden items-center lg:flex">
 					<li>
@@ -34,19 +34,14 @@
 						</Button>
 					</li>
 					<li>
-						<Button
-							variant={'ghost'}
-							size={'icon'}
-							disabled
-							class={'rounded-full [&_svg]:size-5'}
-						>
+						<Button variant={'ghost'} size={'icon'} disabled class={'rounded-full [&_svg]:size-5'}>
 							<ArrowRight />
 						</Button>
 					</li>
 				</ul>
 
-				<span class="text-[12px] font-semibold text-ink">Launch plan — 0.5</span>
-				<span class="font-mono text-[11px] text-faint">Edited 2h ago</span>
+				<span class="text-ink text-[12px] font-semibold">Launch plan — 0.5</span>
+				<span class="text-faint font-mono text-[11px]">Edited 2h ago</span>
 			</div>
 
 			<ul class="flex items-center gap-2">
@@ -75,7 +70,7 @@
 				bind:controller={board}
 				class="overflow-y-auto py-8 2xl:pl-8 2xl:pr-16"
 			>
-				<h1 class="mb-8 pl-8 font-serif text-[30px] text-ink 2xl:text-[38px]">Launch plan — 0.5</h1>
+				<h1 class="text-ink mb-8 pl-8 font-serif text-[30px] 2xl:text-[38px]">Launch plan — 0.5</h1>
 				<!-- Real page content: the copy explains the demo the reader is dragging. -->
 				<FlexiTarget key="page" class="gap-6">
 					<FlexionBlockContainer

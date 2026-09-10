@@ -46,7 +46,11 @@
 	import FlexiPortal from './flexi-portal.svelte';
 	import FlexiAnnouncer from './flexi-announcer.svelte';
 	import FlexiSuspenseBoundary from './flexi-suspense-boundary.svelte';
-	import { assistiveTextStyle, type FlexiBoardConfiguration, type FlexiBoardController } from '@flexiboards/core';
+	import {
+		assistiveTextStyle,
+		type FlexiBoardConfiguration,
+		type FlexiBoardController
+	} from '@flexiboards/core';
 	import type { FlexiCommonProps } from '@flexiboards/core';
 	import { flexiboard } from '../adapters/board.js';
 	import { fromCore, reactive, snapshotConfig } from '../adapter.svelte.js';
@@ -127,7 +131,6 @@
 		}
 		return null;
 	});
-
 </script>
 
 <div
@@ -142,8 +145,8 @@
 >
 	{#snippet boardContent()}
 		<span style={assistiveTextStyle} id={assistiveTextId}>
-			Press Enter to grab or resize widgets. Once grabbed, use Arrow keys to move/resize the
-			widget, Enter to confirm the action, or Esc to cancel it.
+			Press Enter to grab or resize widgets. Once grabbed, use Arrow keys to move/resize the widget,
+			Enter to confirm the action, or Esc to cancel it.
 		</span>
 		{@render boardProps.children()}
 

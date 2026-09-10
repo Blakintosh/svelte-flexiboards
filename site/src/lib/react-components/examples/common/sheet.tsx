@@ -43,7 +43,9 @@ export default function Sheet({
 			<figcaption className="border-rule-faint bg-panel flex shrink-0 items-center justify-between gap-4 border-b px-4 py-2.5 lg:px-6">
 				<span className="text-faint truncate text-[11.5px] font-semibold">{fig}</span>
 				{aside && (
-					<span className={cn('text-faint shrink-0 font-mono text-[10px]', asideClass)}>{aside}</span>
+					<span className={cn('text-faint shrink-0 font-mono text-[10px]', asideClass)}>
+						{aside}
+					</span>
 				)}
 			</figcaption>
 

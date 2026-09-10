@@ -17,7 +17,8 @@ const TASKS: Task[] = [
 const rowClass = (widget: FlexiWidgetController) =>
 	cn(
 		'min-w-0',
-		widget.isShadow && 'rounded-[10px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isShadow &&
+			'rounded-[10px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
 		widget.isGrabbed && 'rounded-[10px] shadow-lift'
 	);
 
@@ -54,7 +55,11 @@ export default function TasksBoard({ onCommit }: { onCommit: (scope: DropScope) 
 
 	return (
 		<FlexiBoard className="h-full min-h-0 min-w-0" config={config}>
-			<FlexiTarget keyName="queue" className="bg-tint-2 gap-1 rounded-[9px] p-1" config={targetConfig}>
+			<FlexiTarget
+				keyName="queue"
+				className="bg-tint-2 gap-1 rounded-[9px] p-1"
+				config={targetConfig}
+			>
 				{TASKS.map((task) => (
 					<FlexiWidget key={task.id} type="task" componentProps={{ task }} />
 				))}

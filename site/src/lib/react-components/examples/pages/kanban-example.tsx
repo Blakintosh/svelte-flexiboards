@@ -1,4 +1,10 @@
-import { FlexiBoard, FlexiDelete, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/react';
+import {
+	FlexiBoard,
+	FlexiDelete,
+	FlexiTarget,
+	FlexiWidget,
+	cssTransitionConfig
+} from '@flexiboards/react';
 import type {
 	FlexiBoardConfiguration,
 	FlexiBoardController,
@@ -239,7 +245,8 @@ const headClass = (widget: FlexiWidgetController) =>
 	clsx([
 		'flex min-w-0 items-center gap-2.5 rounded-[10px] border border-transparent px-1.5 py-1 transition-shadow duration-[120ms] select-none',
 		widget.isGrabbed && 'bg-panel shadow-lift opacity-90',
-		widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent [&>*]:invisible'
+		widget.isShadow &&
+			'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent [&>*]:invisible'
 	]);
 
 // The archive tray *is* the sheet's bottom annotation band: a soft-ruled
@@ -318,11 +325,12 @@ export default function KanbanExample() {
 
 	const persist = useCallback((layout: FlexiLayout) => {
 		const currentSlots = slotsRef.current;
-		const columns = [...SEED_ORDER].sort(
-			(a, b) => (currentSlots[a] ?? 0) - (currentSlots[b] ?? 0)
-		);
+		const columns = [...SEED_ORDER].sort((a, b) => (currentSlots[a] ?? 0) - (currentSlots[b] ?? 0));
 		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify({ columns, cards: layout } satisfies SavedBoard));
+			localStorage.setItem(
+				STORAGE_KEY,
+				JSON.stringify({ columns, cards: layout } satisfies SavedBoard)
+			);
 		} catch {
 			// Private browsing or a full quota: the board still works, it just
 			// won't be remembered.
@@ -489,7 +497,7 @@ export default function KanbanExample() {
 					config={cardsConfig}
 					onfirstcreate={(controller) => (cardsBoard.current = controller)}
 				>
-					<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pt-5 pb-3 lg:px-8">
+					<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-3 pt-5 lg:px-8">
 						{/*
 							Board B — the column headings. A second, independent FlexiBoard
 							nested in the first one's DOM: the two never exchange widgets,
@@ -538,7 +546,9 @@ export default function KanbanExample() {
 						<Archive className="size-4 shrink-0" />
 						{undoLayout ? (
 							<>
-								<span className="min-w-0 truncate text-[11.5px] font-semibold">1 card archived</span>
+								<span className="min-w-0 truncate text-[11.5px] font-semibold">
+									1 card archived
+								</span>
 								<Button
 									variant="ghost"
 									size="sm"

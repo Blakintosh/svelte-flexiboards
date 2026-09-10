@@ -14,7 +14,7 @@ describe('appleSpring', () => {
 		expect(appleSpring({ duration: 0.5, bounce: 2 }).damping).toBe(0);
 	});
 
-	it('shorter durations are stiffer, and stay within Svelte\'s [0, 1] ranges for sane inputs', () => {
+	it("shorter durations are stiffer, and stay within Svelte's [0, 1] ranges for sane inputs", () => {
 		const fast = appleSpring({ duration: 0.25 });
 		const slow = appleSpring({ duration: 1 });
 		expect(fast.stiffness).toBeGreaterThan(slow.stiffness!);

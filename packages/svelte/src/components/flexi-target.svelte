@@ -45,7 +45,11 @@
 	import FlexiGrid from './flexi-grid.svelte';
 	import FlexiTargetLoader from './flexi-target-loader.svelte';
 	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
-	import type { FlexiCommonProps, FlexiTargetController, FlexiTargetPartialConfiguration } from '@flexiboards/core';
+	import type {
+		FlexiCommonProps,
+		FlexiTargetController,
+		FlexiTargetPartialConfiguration
+	} from '@flexiboards/core';
 	import { flexitarget } from '../adapters/target.js';
 	import { fromCore, reactive, snapshotConfig } from '../adapter.svelte.js';
 	import type { ClassValue } from 'svelte/elements';

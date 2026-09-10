@@ -107,7 +107,9 @@ export default function SchemaPanel({ fields, selectedUid }: SchemaPanelProps) {
 			<div className="border-blue/40 flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2">
 				<span className="text-on-ink text-[11.5px] font-semibold">Schema · live</span>
 				<div className="flex items-center gap-1">
-					<span className="text-on-ink-faint hidden font-mono text-[10px] sm:inline">onLayoutChange</span>
+					<span className="text-on-ink-faint hidden font-mono text-[10px] sm:inline">
+						onLayoutChange
+					</span>
 					<Button
 						variant="ghost"
 						size="sm"

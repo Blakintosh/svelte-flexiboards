@@ -68,7 +68,9 @@ describe('grabbing with the pointer outside the target', () => {
 		const third = target.createWidget({ width: 1, height: 1 } as any)!;
 
 		const entries = () =>
-			(grid.takeSnapshot() as { widgets: { widget: unknown; y: number }[] }).widgets.map((w) => w.widget);
+			(grid.takeSnapshot() as { widgets: { widget: unknown; y: number }[] }).widgets.map(
+				(w) => w.widget
+			);
 
 		// The mouse rested outside; the grab lands inside the list at its first row.
 		getPointerService().updatePosition(-50, -50);
@@ -94,7 +96,11 @@ describe('grabbing with the pointer outside the target', () => {
 		expect([second.y, third.y]).toEqual([0, 1]);
 
 		// And cancelling brings the widget back with no phantom slot left behind.
-		getFlexiEventBus().dispatch('widget:cancel', { board, target: undefined, widget: first } as any);
+		getFlexiEventBus().dispatch('widget:cancel', {
+			board,
+			target: undefined,
+			widget: first
+		} as any);
 		// The board restores the source target's pre-grab snapshot in a microtask.
 		await Promise.resolve();
 		expect(entries()).toEqual([first, second, third]);

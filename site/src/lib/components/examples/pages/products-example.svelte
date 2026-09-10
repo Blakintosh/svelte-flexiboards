@@ -156,20 +156,19 @@
 	// shadow-lift and a slight tilt, no border.
 	const className = (widget: FlexiWidgetController) => [
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
-		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isShadow &&
+			'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
 		widget.isGrabbed && 'rounded-[14px] shadow-lift rotate-[2.5deg] opacity-95'
 	];
 </script>
 
 <main
-	class="relative flex h-full min-h-0 w-full flex-col gap-4 bg-paper px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
+	class="bg-paper relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
 >
 	<!-- Header: title, count and the two board affordances in one mono line. -->
-	<header
-		class="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5"
-	>
+	<header class="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5">
 		<div class="flex min-w-0 items-baseline gap-3">
-			<h1 class="font-serif text-xl leading-tight text-ink sm:text-2xl lg:text-[28px]">Products</h1>
+			<h1 class="text-ink font-serif text-xl leading-tight sm:text-2xl lg:text-[28px]">Products</h1>
 			<p class="text-faint hidden font-mono text-[11px] sm:block">
 				{filteredProducts().length} items · drag to curate · resize featured
 			</p>
@@ -183,7 +182,7 @@
 	<!-- Toolbar: one row — search, category, sort, and the status key it explains. -->
 	<div class="flex shrink-0 flex-wrap items-center gap-2">
 		<div class="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
-			<Search class="text-faint absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+			<Search class="text-faint absolute left-3 top-1/2 size-4 -translate-y-1/2" />
 			<input
 				type="search"
 				placeholder="Search products…"
@@ -196,9 +195,11 @@
 		<!-- Filter and sort are choices, so they are native selects: they say what
 			they are set to, and the platform draws the list. -->
 		<div class="relative shrink-0">
-			<Filter class="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+			<Filter
+				class="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2"
+			/>
 			<select
-				class="{selectClass} h-9 w-auto rounded-full border-rule-soft pl-8"
+				class="{selectClass} border-rule-soft h-9 w-auto rounded-full pl-8"
 				aria-label="Filter by category"
 				bind:value={selectedCategory}
 			>
@@ -210,9 +211,11 @@
 		</div>
 
 		<div class="relative shrink-0">
-			<ArrowUpDown class="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+			<ArrowUpDown
+				class="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2"
+			/>
 			<select
-				class="{selectClass} text-body h-9 w-auto rounded-full border-rule-soft pl-8"
+				class="{selectClass} text-body border-rule-soft h-9 w-auto rounded-full pl-8"
 				aria-label="Sort by"
 				bind:value={sortBy}
 			>
@@ -249,7 +252,7 @@
 	>
 		<!-- Desktop: 3 columns -->
 		{#snippet lg()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-auto" config={boardConfig}>
+			<FlexiBoard class="min-h-0 flex-1 overflow-y-auto overflow-x-clip" config={boardConfig}>
 				{#snippet suspense(_: FlexiBoardSuspenseReason)}
 					<BoardSkeleton bars={4} class="p-1" />
 				{/snippet}
@@ -287,7 +290,7 @@
 		<!-- Tablet: 2 columns -->
 		{#snippet sm()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
+				class="products-board min-h-0 flex-1 overflow-y-auto overflow-x-clip"
 				config={boardConfig}
 			>
 				<FlexiTarget
@@ -324,7 +327,7 @@
 		<!-- Phone: 1 column, full vertical cards -->
 		{#snippet children()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
+				class="products-board min-h-0 flex-1 overflow-y-auto overflow-x-clip"
 				config={boardConfig}
 			>
 				<FlexiTarget

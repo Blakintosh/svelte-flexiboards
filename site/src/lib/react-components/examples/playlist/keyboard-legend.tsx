@@ -17,7 +17,7 @@ export default function KeyboardLegend({ movingTitle }: KeyboardLegendProps) {
 	const keycap = (label: string): ReactNode => (
 		<kbd
 			className={cn(
-				'inline-flex items-center rounded-[7px] border px-1.5 py-0.5 font-mono text-[10px] leading-none font-semibold',
+				'inline-flex items-center rounded-[7px] border px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none',
 				moving
 					? 'border-fx-accent/50 bg-tint-accent text-fx-accent-hover'
 					: 'border-rule-soft text-faint'

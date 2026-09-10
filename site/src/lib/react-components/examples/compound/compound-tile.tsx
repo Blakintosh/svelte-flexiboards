@@ -74,7 +74,7 @@ export default function CompoundTile({ kind, onCommit }: CompoundTileProps) {
 					{tile.title}
 				</span>
 				{tile.board && (
-					<span className="label border-rule-soft text-faint hidden w-fit shrink-0 items-center justify-center overflow-hidden rounded-full border px-2 py-[3px] text-[10px] tracking-[0.1em] whitespace-nowrap sm:inline-flex">
+					<span className="label border-rule-soft text-faint hidden w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-full border px-2 py-[3px] text-[10px] tracking-[0.1em] sm:inline-flex">
 						{tile.board}
 					</span>
 				)}

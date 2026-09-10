@@ -38,7 +38,16 @@ class MockResizeObserver {
 }
 
 const box = (left: number, top: number, width = 100, height = 100) =>
-	({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top }) as DOMRect;
+	({
+		left,
+		top,
+		width,
+		height,
+		right: left + width,
+		bottom: top + height,
+		x: left,
+		y: top
+	}) as DOMRect;
 
 const setRect = (el: Element, r: DOMRect) => {
 	(el as HTMLElement).getBoundingClientRect = () => r;
@@ -67,7 +76,8 @@ function layoutGrid() {
 		};
 		return new Proxy(style, {
 			get(t, k) {
-				if (k === 'getPropertyValue') return (name: string) => tracks[name] ?? t.getPropertyValue(name);
+				if (k === 'getPropertyValue')
+					return (name: string) => tracks[name] ?? t.getPropertyValue(name);
 				const v = Reflect.get(t, k);
 				return typeof v === 'function' ? v.bind(t) : v;
 			}
@@ -122,7 +132,9 @@ describe('drop flight', () => {
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 		flushSync();
 
-		const flying = document.querySelector<HTMLElement>('[role="cell"][style*="position: absolute"]');
+		const flying = document.querySelector<HTMLElement>(
+			'[role="cell"][style*="position: absolute"]'
+		);
 		expect(flying).not.toBeNull();
 
 		settled = true;

@@ -21,19 +21,19 @@
 	<!-- Framework first: it decides which pages exist below. -->
 	<FrameworkMenu align="left" class="mb-5 w-full justify-between" />
 
-	<div class="mb-4 flex items-center gap-2 text-[10px] label text-faint">
+	<div class="label text-faint mb-4 flex items-center gap-2 text-[10px]">
 		<span>Contents</span>
-		<div class="h-px flex-1 bg-rule"></div>
+		<div class="bg-rule h-px flex-1"></div>
 		<span>{pageCount} pages</span>
 	</div>
 
 	{#each directory as section, i}
 		<div class={cn('flex flex-col', i > 0 && 'mt-6')}>
-			<h2 class="mb-2 flex gap-2.5 text-[10px] label">
+			<h2 class="label mb-2 flex gap-2.5 text-[10px]">
 				<span class="text-faint">{String(i + 1).padStart(2, '0')}</span>
 				<span class="text-ink-hover">{section.section}</span>
 			</h2>
-			<div class="ml-0.5 flex flex-col border-l border-rule pl-3">
+			<div class="border-rule ml-0.5 flex flex-col border-l pl-3">
 				{#each section.pages as docPage}
 					{@const isActive = docPage.href === page.url.pathname}
 					<a
@@ -45,7 +45,7 @@
 						)}
 					>
 						{#if isActive}
-							<span class="absolute -left-[15.5px] top-1/2 size-[5px] -translate-y-1/2 bg-fx-accent"
+							<span class="bg-fx-accent absolute -left-[15.5px] top-1/2 size-[5px] -translate-y-1/2"
 							></span>
 						{/if}
 						<span class="block truncate">{docPage.title}</span>

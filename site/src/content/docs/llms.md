@@ -13,11 +13,11 @@ These docs follow the [llms.txt convention](https://llmstxt.org), so an assistan
 
 ## Files
 
-| File | What it holds |
-| --- | --- |
-| [/llms.txt](/llms.txt) | An index of every docs page with a one-line description, plus the examples and the npm packages. Point an assistant here first. |
-| [/llms-full.txt](/llms-full.txt) | The full text of every docs page in one file, for tools that want everything in context at once. |
-| `/docs/<page>.md` | Any docs page as Markdown, at the page's own URL with `.md` appended. [/docs/flow-grids.md](/docs/flow-grids.md), for example. |
+| File                             | What it holds                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [/llms.txt](/llms.txt)           | An index of every docs page with a one-line description, plus the examples and the npm packages. Point an assistant here first. |
+| [/llms-full.txt](/llms-full.txt) | The full text of every docs page in one file, for tools that want everything in context at once.                                |
+| `/docs/<page>.md`                | Any docs page as Markdown, at the page's own URL with `.md` appended. [/docs/flow-grids.md](/docs/flow-grids.md), for example.  |
 
 The Markdown pages contain both the Svelte and the React code samples, each under its own lead line, and the API tables rendered as Markdown tables. Each HTML page links to its twin with `<link rel="alternate" type="text/markdown">`, so a tool that fetches a page can find the plain version on its own.
 

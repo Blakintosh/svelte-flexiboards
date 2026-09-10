@@ -49,7 +49,8 @@
 		adding = false;
 
 		target!.createWidget({
-			className: 'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
+			className:
+				'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
 			snippet: widgetChildren,
 			componentProps: {
 				content: newItem
@@ -68,7 +69,7 @@
 	{widget.componentProps?.content}
 {/snippet}
 
-<FlexiTarget key={category} class="w-72 lg:w-48 2xl:w-64 gap-1" bind:controller={target}>
+<FlexiTarget key={category} class="w-72 gap-1 lg:w-48 2xl:w-64" bind:controller={target}>
 	{#snippet header({ target }: { target: FlexiTargetController })}
 		<!-- Column headings are status chips: rounded pill, tinted fill, round dot. -->
 		<div class="mb-4 flex items-center gap-4">
@@ -81,18 +82,18 @@
 				<div class={twMerge('size-1.5 rounded-full', dotClass)}></div>
 				{categoryLabel}
 			</h3>
-			<span class="font-mono text-[11px] text-faint">{target.widgets.size}</span>
+			<span class="text-faint font-mono text-[11px]">{target.widgets.size}</span>
 		</div>
 	{/snippet}
 	{#each items as item}
 		<FlexiWidget
 			class={(widget: FlexiWidgetController) => {
 				return cn(
-					'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
+					'border-rule-soft bg-panel text-ink shadow-card rounded-[10px] border px-4 py-2 text-[13px]',
 					item.done && 'text-faint line-through',
-					widget.isGrabbed && ' border-rule-soft opacity-60 shadow-lift',
+					widget.isGrabbed && ' border-rule-soft shadow-lift opacity-60',
 					widget.isShadow &&
-						'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
+						'border-fx-accent/50 bg-tint-accent rounded-[14px] border-[1.5px] border-dashed'
 				);
 			}}
 		>
@@ -107,7 +108,7 @@
 			</Button>
 		{:else}
 			<div
-				class="mt-1 flex w-48 items-center gap-2 rounded-[10px] border border-rule-soft bg-tint px-4 py-1 2xl:w-64"
+				class="border-rule-soft bg-tint mt-1 flex w-48 items-center gap-2 rounded-[10px] border px-4 py-1 2xl:w-64"
 			>
 				<Button
 					onclick={cancelAddItem}
@@ -121,7 +122,7 @@
 					type="text"
 					bind:this={addInput}
 					bind:value={newItem}
-					class="min-w-0 grow bg-transparent text-[13px] text-ink outline-none"
+					class="text-ink min-w-0 grow bg-transparent text-[13px] outline-none"
 				/>
 				<Button onclick={onClickAddItem} variant="link" size={'sm'} class="shrink-0">Add</Button>
 			</div>

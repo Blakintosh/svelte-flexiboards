@@ -24,20 +24,23 @@
 </script>
 
 {#if ready}
-<FlexiBoard
-	class="inner"
-	onfirstcreate={oninner}
-	config={{
-		widgetDefaults: { draggability: 'full', transition: { drop: { duration: 150, easing: 'ease-out' } } }
-	}}
->
-	<FlexiTarget
-		key="cards"
-		config={{ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 } }}
+	<FlexiBoard
+		class="inner"
+		onfirstcreate={oninner}
+		config={{
+			widgetDefaults: {
+				draggability: 'full',
+				transition: { drop: { duration: 150, easing: 'ease-out' } }
+			}
+		}}
 	>
-		<FlexiWidget x={0} y={0} width={1} height={1} onfirstcreate={oncard}>
-			{#snippet children()}card{/snippet}
-		</FlexiWidget>
-	</FlexiTarget>
-</FlexiBoard>
+		<FlexiTarget
+			key="cards"
+			config={{ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 } }}
+		>
+			<FlexiWidget x={0} y={0} width={1} height={1} onfirstcreate={oncard}>
+				{#snippet children()}card{/snippet}
+			</FlexiWidget>
+		</FlexiTarget>
+	</FlexiBoard>
 {/if}

@@ -70,7 +70,9 @@ describe('board config propagation', () => {
 		// otherwise the invalidation they cause can re-enter the effect.
 		for (let i = 0; i < 100; i++) {
 			board.updateProps({ config: { widgetDefaults: { draggability: 'none' } } } as any);
-			target.updateConfig({ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 4 } } as any);
+			target.updateConfig({
+				layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 4 }
+			} as any);
 			widget.updateConfig({ x: 0, y: 0, width: 1, height: 1 } as any);
 		}
 

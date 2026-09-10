@@ -113,7 +113,14 @@
 				});
 				continue;
 			}
-			for (const field of ['colindex', 'rowindex', 'colspan', 'rowspan', 'gridArea', 'text'] as const) {
+			for (const field of [
+				'colindex',
+				'rowindex',
+				'colspan',
+				'rowspan',
+				'gridArea',
+				'text'
+			] as const) {
 				if (String(s[field]) !== String(c[field])) {
 					found.push({ field, server: String(s[field]), client: String(c[field]), cell: cellName });
 				}
@@ -135,10 +142,7 @@
 <main style="max-width: 960px; margin: 0 auto; padding: 2rem; font-family: monospace;">
 	<h1 style="font-size: 1.2rem; margin-bottom: 1rem;">SSR testbed</h1>
 
-	<section
-		data-testbed-board
-		style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;"
-	>
+	<section data-testbed-board style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;">
 		<h2>Flow board (append placement)</h2>
 		<FlexiBoard config={{ widgetDefaults: { draggable: true } }}>
 			<FlexiTarget
@@ -146,23 +150,34 @@
 				class="testbed-grid"
 				config={{
 					rowSizing: 'minmax(0, 4rem)',
-					layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append', rows: 3, columns: 3 }
+					layout: {
+						type: 'flow',
+						flowAxis: 'row',
+						placementStrategy: 'append',
+						rows: 3,
+						columns: 3
+					}
 				}}
 			>
 				{#snippet children()}
-					<FlexiWidget class={tileClass('a')} width={1}>{#snippet children()}A{/snippet}</FlexiWidget>
-					<FlexiWidget class={tileClass('b')} width={2}>{#snippet children()}B (2 wide){/snippet}</FlexiWidget>
-					<FlexiWidget class={tileClass('c')} width={1}>{#snippet children()}C{/snippet}</FlexiWidget>
-					<FlexiWidget class={tileClass('d')} width={1}>{#snippet children()}D{/snippet}</FlexiWidget>
+					<FlexiWidget class={tileClass('a')} width={1}
+						>{#snippet children()}A{/snippet}</FlexiWidget
+					>
+					<FlexiWidget class={tileClass('b')} width={2}
+						>{#snippet children()}B (2 wide){/snippet}</FlexiWidget
+					>
+					<FlexiWidget class={tileClass('c')} width={1}
+						>{#snippet children()}C{/snippet}</FlexiWidget
+					>
+					<FlexiWidget class={tileClass('d')} width={1}
+						>{#snippet children()}D{/snippet}</FlexiWidget
+					>
 				{/snippet}
 			</FlexiTarget>
 		</FlexiBoard>
 	</section>
 
-	<section
-		data-testbed-board
-		style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;"
-	>
+	<section data-testbed-board style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;">
 		<h2>Free board (declared collision at 0,0)</h2>
 		<FlexiBoard config={{ widgetDefaults: { draggable: true } }}>
 			<FlexiTarget
@@ -189,10 +204,7 @@
 		</FlexiBoard>
 	</section>
 
-	<section
-		data-testbed-board
-		style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;"
-	>
+	<section data-testbed-board style="margin-bottom: 2rem; border: 1px solid #ccc; padding: 1rem;">
 		<h2>initialLayout board (server picked variant {data.variant})</h2>
 		<FlexiBoard
 			config={{
@@ -233,7 +245,13 @@
 				class="testbed-grid"
 				config={{
 					rowSizing: 'minmax(0, 4rem)',
-					layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append', rows: 2, columns: 2 }
+					layout: {
+						type: 'flow',
+						flowAxis: 'row',
+						placementStrategy: 'append',
+						rows: 2,
+						columns: 2
+					}
 				}}
 			>
 				{#snippet children()}
@@ -289,7 +307,9 @@
 			{#if fetchError}<p>Fetch error: {fetchError}</p>{/if}
 			{#if hydrationLogs.length}
 				<h3>Hydration console output ({hydrationLogs.length})</h3>
-				<ul>{#each hydrationLogs as log}<li>{log}</li>{/each}</ul>
+				<ul>
+					{#each hydrationLogs as log}<li>{log}</li>{/each}
+				</ul>
 			{:else}
 				<p>No hydration warnings.</p>
 			{/if}

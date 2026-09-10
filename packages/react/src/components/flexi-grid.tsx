@@ -27,17 +27,19 @@ export function FlexiGrid({ className, children }: FlexiGridProps) {
 	// watchGridElementDimensions returns its cleanup — return it to the effect.
 	useEffect(() => grid.watchGridElementDimensions(), [grid]);
 
-	return <FlexiGridContext.Provider value={grid}>
-		<div
-			className={className}
-			role="grid"
-			aria-label="Drag-and-drop grid"
-			aria-colcount={columns}
-			aria-rowcount={rows}
-			ref={controllerRef(grid)}
-			style={style}
-		>
-			{children}
-		</div>
-	</FlexiGridContext.Provider>;
+	return (
+		<FlexiGridContext.Provider value={grid}>
+			<div
+				className={className}
+				role="grid"
+				aria-label="Drag-and-drop grid"
+				aria-colcount={columns}
+				aria-rowcount={rows}
+				ref={controllerRef(grid)}
+				style={style}
+			>
+				{children}
+			</div>
+		</FlexiGridContext.Provider>
+	);
 }

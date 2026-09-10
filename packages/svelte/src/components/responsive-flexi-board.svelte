@@ -33,7 +33,11 @@
 </script>
 
 <script lang="ts">
-	import type { FlexiCommonProps, ResponsiveFlexiBoardConfiguration, ResponsiveFlexiBoardController } from '@flexiboards/core';
+	import type {
+		FlexiCommonProps,
+		ResponsiveFlexiBoardConfiguration,
+		ResponsiveFlexiBoardController
+	} from '@flexiboards/core';
 	import { responsiveflexiboard } from '../adapters/responsive.js';
 	import { fromCore, reactive } from '../adapter.svelte.js';
 

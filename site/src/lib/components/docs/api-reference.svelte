@@ -29,16 +29,16 @@
   greyed out with their notice flagged fx-accent.
 -->
 <div class="not-prose my-8">
-	<h3 class="label mb-3 text-[10px] text-faint" data-toc-ignore>
+	<h3 class="label text-faint mb-3 text-[10px]" data-toc-ignore>
 		{title}
 	</h3>
-	<div class="border border-ink bg-panel">
-		<div class="flex gap-6 border-b border-ink bg-paper px-5 py-2">
-			<span class="label w-1/3 text-[10px] text-faint">Prop</span>
-			<span class="label flex-1 text-[10px] text-faint">Type</span>
+	<div class="border-ink bg-panel border">
+		<div class="border-ink bg-paper flex gap-6 border-b px-5 py-2">
+			<span class="label text-faint w-1/3 text-[10px]">Prop</span>
+			<span class="label text-faint flex-1 text-[10px]">Type</span>
 		</div>
 		{#each api as item}
-			<div class="flex flex-col gap-2 border-b border-rule px-5 py-4 last:border-b-0">
+			<div class="border-rule flex flex-col gap-2 border-b px-5 py-4 last:border-b-0">
 				<div class="flex flex-wrap items-baseline gap-x-6 gap-y-1">
 					<span class="flex w-1/3 min-w-fit items-baseline gap-2">
 						<code
@@ -47,25 +47,27 @@
 								: 'text-fx-accent'}">{item.name}</code
 						>
 						{#if item.bindable}
-							<span class="label border border-rule px-1 py-px text-[9px] text-faint">bindable</span>
+							<span class="label border-rule text-faint border px-1 py-px text-[9px]">bindable</span
+							>
 						{/if}
 						{#if item.readonly}
-							<span class="label border border-rule px-1 py-px text-[9px] text-faint">readonly</span>
+							<span class="label border-rule text-faint border px-1 py-px text-[9px]">readonly</span
+							>
 						{/if}
 					</span>
-					<code class="flex-1 font-mono text-[12.5px] text-blue">{item.type}</code>
+					<code class="text-blue flex-1 font-mono text-[12.5px]">{item.type}</code>
 				</div>
 				{#if item.description}
-					<p class="m-0 text-[14px] leading-relaxed text-body">{item.description}</p>
+					<p class="text-body m-0 text-[14px] leading-relaxed">{item.description}</p>
 				{/if}
 				{#if item.default}
-					<p class="m-0 font-mono text-[12px] text-faint">
+					<p class="text-faint m-0 font-mono text-[12px]">
 						Default: <code class="text-body">{item.default}</code>
 					</p>
 				{/if}
 				{#if item.deprecated}
-					<p class="m-0 text-[13px] leading-relaxed text-body">
-						<span class="label mr-1.5 text-[9px] text-fx-accent">Deprecated</span>{item.deprecated}
+					<p class="text-body m-0 text-[13px] leading-relaxed">
+						<span class="label text-fx-accent mr-1.5 text-[9px]">Deprecated</span>{item.deprecated}
 					</p>
 				{/if}
 			</div>

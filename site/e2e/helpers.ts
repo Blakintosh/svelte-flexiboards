@@ -36,7 +36,10 @@ export async function drag(page: Page, from: Locator, to: { x: number; y: number
 	await page.mouse.move(start.x, start.y);
 	await page.mouse.down();
 	for (let i = 1; i <= steps; i++) {
-		await page.mouse.move(start.x + ((to.x - start.x) * i) / steps, start.y + ((to.y - start.y) * i) / steps);
+		await page.mouse.move(
+			start.x + ((to.x - start.x) * i) / steps,
+			start.y + ((to.y - start.y) * i) / steps
+		);
 		await page.waitForTimeout(16);
 	}
 	await page.mouse.up();

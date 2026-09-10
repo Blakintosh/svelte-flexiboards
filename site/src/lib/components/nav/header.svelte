@@ -56,7 +56,7 @@
 </script>
 
 <header
-	class="page-gutter border-rule bg-paper/95 sticky top-0 z-40 flex h-15 shrink-0 items-center justify-between border-b backdrop-blur-sm"
+	class="page-gutter border-rule bg-paper/95 h-15 sticky top-0 z-40 flex shrink-0 items-center justify-between border-b backdrop-blur-sm"
 >
 	<div class="flex items-center gap-8 lg:gap-11">
 		<a class="flex items-center gap-3" href="/">
@@ -118,7 +118,7 @@
 			</Drawer.Trigger>
 			<Drawer.Content>
 				<ScrollArea class="h-[80svh]">
-					<nav class="flex flex-col gap-6 px-6 pt-2 pb-8">
+					<nav class="flex flex-col gap-6 px-6 pb-8 pt-2">
 						<div class="flex flex-col">
 							<h2 class="label text-faint mb-3 text-[10px]">Navigation</h2>
 							<div class="border-rule flex flex-col border-t">

@@ -33,7 +33,7 @@ A free-form grid is a sparse grid: widgets sit at coordinates you choose, and em
 			}
 		}}
 	>
-		<FlexiWidget x={0} y={0} class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+		<FlexiWidget x={0} y={0} class="bg-primary text-primary-foreground rounded-lg px-4 py-2">
 			{#snippet children({ widget, component, componentProps })}
 				I'm at ({widget.x}, {widget.y})
 			{/snippet}
@@ -66,7 +66,11 @@ export function FreeGrid() {
 					}
 				}}
 			>
-				<FlexiWidget x={0} y={0} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+				<FlexiWidget
+					x={0}
+					y={0}
+					className="bg-primary text-primary-foreground rounded-lg px-4 py-2"
+				>
 					{({ widget }) => (
 						<>
 							I'm at ({widget.x}, {widget.y})

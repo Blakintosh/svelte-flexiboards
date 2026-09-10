@@ -25,7 +25,9 @@
 	let inTimer: ReturnType<typeof setTimeout>;
 
 	function reducedMotion() {
-		return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+		return (
+			typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+		);
 	}
 
 	$effect(() => {

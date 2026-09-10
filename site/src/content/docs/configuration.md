@@ -15,7 +15,12 @@ Boards and targets take a `config` prop; widgets take their configuration as pro
 
 ```svelte example title="Lockable board"
 <script lang="ts">
-	import { FlexiBoard, FlexiTarget, FlexiWidget, type FlexiBoardConfiguration } from '@flexiboards/svelte';
+	import {
+		FlexiBoard,
+		FlexiTarget,
+		FlexiWidget,
+		type FlexiBoardConfiguration
+	} from '@flexiboards/svelte';
 
 	let editing = $state(true);
 
@@ -39,7 +44,9 @@ Boards and targets take a `config` prop; widgets take their configuration as pro
 	<button class="rounded-md border px-3 py-1 text-sm" onclick={() => (editing = !editing)}>
 		{editing ? 'Lock' : 'Unlock'}
 	</button>
-	<span class="text-sm text-muted-foreground">{editing ? 'Widgets are draggable' : 'Widgets are locked'}</span>
+	<span class="text-muted-foreground text-sm"
+		>{editing ? 'Widgets are draggable' : 'Widgets are locked'}</span
+	>
 </div>
 
 <FlexiBoard class="w-72 rounded-b-xl border p-6 lg:w-96" config={boardConfig}>
@@ -70,7 +77,10 @@ export function LockableBoard() {
 			widgetDefaults: {
 				draggability: editing ? 'full' : 'none',
 				className: (widget: FlexiWidgetController) =>
-					clsx('rounded-lg bg-primary px-4 py-2 text-primary-foreground', widget.isShadow && 'opacity-50')
+					clsx(
+						'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
+						widget.isShadow && 'opacity-50'
+					)
 			}
 		}),
 		[editing]
@@ -79,10 +89,13 @@ export function LockableBoard() {
 	return (
 		<>
 			<div className="flex w-72 items-center gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
-				<button className="rounded-md border px-3 py-1 text-sm" onClick={() => setEditing((v) => !v)}>
+				<button
+					className="rounded-md border px-3 py-1 text-sm"
+					onClick={() => setEditing((v) => !v)}
+				>
 					{editing ? 'Lock' : 'Unlock'}
 				</button>
-				<span className="text-sm text-muted-foreground">
+				<span className="text-muted-foreground text-sm">
 					{editing ? 'Widgets are draggable' : 'Widgets are locked'}
 				</span>
 			</div>
@@ -199,7 +212,7 @@ Here, we've set `widgetDefaults.draggability = 'full'` on our board's configurat
 
 <Only react>
 
-In React, hold the state that drives your configuration in `useState`, and derive the configuration object from it with `useMemo`. The component's prop seam compares the `config` object by identity, so it must be a *new* object whenever something in it changes. It should equally stay stable while nothing has changed, so that unrelated re-renders don't push work into the board:
+In React, hold the state that drives your configuration in `useState`, and derive the configuration object from it with `useMemo`. The component's prop seam compares the `config` object by identity, so it must be a _new_ object whenever something in it changes. It should equally stay stable while nothing has changed, so that unrelated re-renders don't push work into the board:
 
 ```tsx
 import { FlexiBoard } from '@flexiboards/react';

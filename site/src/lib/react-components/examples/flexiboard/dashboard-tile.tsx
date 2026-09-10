@@ -33,7 +33,9 @@ export default function DashboardTile() {
 			data-tile-type={tileType}
 		>
 			<div className="text-faint flex shrink-0 items-center gap-1.5 text-[11.5px] font-semibold">
-				{widget.draggability == 'full' && <Grabber size={grabberSize} className="-my-1.5 -ml-1.5" />}
+				{widget.draggability == 'full' && (
+					<Grabber size={grabberSize} className="-my-1.5 -ml-1.5" />
+				)}
 				<span className="truncate">{tileConfig.title}</span>
 			</div>
 
@@ -42,7 +44,7 @@ export default function DashboardTile() {
 			</div>
 
 			{widget.resizable && (
-				<Resizer size={grabberSize} className="absolute right-1 bottom-1 cursor-col-resize" />
+				<Resizer size={grabberSize} className="absolute bottom-1 right-1 cursor-col-resize" />
 			)}
 		</div>
 	);

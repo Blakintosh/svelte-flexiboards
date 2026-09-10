@@ -33,7 +33,10 @@ A board's layout, the position, size, type, and metadata of every widget, can be
 {/snippet}
 
 <div class="flex w-72 gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
-	<button class="rounded-md border px-3 py-1 text-sm" onclick={() => (saved = board?.exportLayout())}>
+	<button
+		class="rounded-md border px-3 py-1 text-sm"
+		onclick={() => (saved = board?.exportLayout())}
+	>
 		Save
 	</button>
 	<button
@@ -104,7 +107,10 @@ export function SaveAndRestore() {
 	return (
 		<>
 			<div className="flex w-72 gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
-				<button className="rounded-md border px-3 py-1 text-sm" onClick={() => setSaved(board.current?.exportLayout())}>
+				<button
+					className="rounded-md border px-3 py-1 text-sm"
+					onClick={() => setSaved(board.current?.exportLayout())}
+				>
 					Save
 				</button>
 				<button
@@ -296,7 +302,7 @@ export function Dashboard() {
 }
 ```
 
-A component rendered *inside* the board can skip the ref entirely and call `useFlexiBoard()` to get the same controller.
+A component rendered _inside_ the board can skip the ref entirely and call `useFlexiBoard()` to get the same controller.
 
 </Only>
 
@@ -382,7 +388,9 @@ export function Dashboard() {
 	return (
 		<>
 			<FlexiBoard onfirstcreate={(controller) => (board.current = controller)} config={boardConfig}>
-				<FlexiTarget keyName="main">{/* Widgets will be created from the imported layout */}</FlexiTarget>
+				<FlexiTarget keyName="main">
+					{/* Widgets will be created from the imported layout */}
+				</FlexiTarget>
 			</FlexiBoard>
 
 			<button onClick={loadLayout}>Load Layout</button>
@@ -461,6 +469,7 @@ export function Dashboard() {
 </Only>
 
 The `loadLayout` function is called once after the board is ready, and supports returning either:
+
 - A full `FlexiLayout` object (for multi-target boards)
 - An array of `FlexiWidgetLayoutEntry[]` (shorthand for single-target boards)
 
@@ -470,7 +479,7 @@ The `loadLayout` function is called once after the board is ready, and supports 
 
 ## Initial layouts for server-rendered pages
 
-When you already *have* the layout at render time, say a saved board fetched on the server and handed to the page, use `initialLayout` instead of `loadLayout`. It takes a plain `FlexiLayout` value rather than a callback, and is applied during the very first render pass.
+When you already _have_ the layout at render time, say a saved board fetched on the server and handed to the page, use `initialLayout` instead of `loadLayout`. It takes a plain `FlexiLayout` value rather than a callback, and is applied during the very first render pass.
 
 <Only svelte>
 
@@ -543,7 +552,7 @@ The board's first paint is already at the layout's final positions, so there is 
 
 On a `ResponsiveFlexiBoard`, use `initialLayouts` (keyed by breakpoint, like `loadLayouts`). If both `initialLayout` and `loadLayout` are configured, the initial layout is applied first and `loadLayout` overrides it. That suits a local draft that should beat the server copy.
 
-React Flexiboards mount client-side, so `initialLayout` buys you a correct *first* client render rather than server-rendered markup. The [Server-Side Rendering guide](/docs/guides/server-side-rendering) explains why.
+React Flexiboards mount client-side, so `initialLayout` buys you a correct _first_ client render rather than server-rendered markup. The [Server-Side Rendering guide](/docs/guides/server-side-rendering) explains why.
 
 </Only>
 
@@ -615,6 +624,7 @@ Because React boards only ever mount in the browser, neither callback needs an e
 </Only>
 
 The `onLayoutChange` callback fires (debounced) whenever:
+
 - A widget is moved to a new position
 - A widget is resized
 - A widget is deleted
@@ -630,6 +640,7 @@ For more advanced scenarios, you can assign stable IDs to widgets:
 ```
 
 The `id` is preserved through export/import. Use it to:
+
 - Track specific widget instances across sessions
 - Implement features like "reset widget to default position"
 - Reference widgets in your application logic

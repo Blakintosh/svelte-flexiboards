@@ -17,12 +17,12 @@
 	     the two read as nested tiers rather than one collided label. -->
 	<WidgetBox
 		label="FlexiBoard"
-		class="mt-3 flex flex-col items-stretch gap-10 border-ink bg-paper lg:flex-row"
+		class="border-ink bg-paper mt-3 flex flex-col items-stretch gap-10 lg:flex-row"
 		labelClass="bg-ink text-paper"
 	>
 		<WidgetBox label="FlexiTarget" class={targetClass} labelClass={targetLabelClass}>
 			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border border-rule bg-panel px-4 py-2 font-mono text-[12px] text-body">
+				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
 					Snippet | Component
 				</div>
 			</WidgetBox>
@@ -34,12 +34,12 @@
 			labelClass={targetLabelClass}
 		>
 			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border border-rule bg-panel px-4 py-2 font-mono text-[12px] text-body">
+				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
 					Snippet | Component
 				</div>
 			</WidgetBox>
 			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border border-rule bg-panel px-4 py-2 font-mono text-[12px] text-body">
+				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
 					Snippet | Component
 				</div>
 			</WidgetBox>

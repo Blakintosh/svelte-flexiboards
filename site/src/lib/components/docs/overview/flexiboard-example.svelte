@@ -31,16 +31,16 @@
 			}
 		}}
 	>
-		<div class="border border-rule bg-panel px-4 py-3">
-			<h5 class="label mb-4 text-[10px] text-faint">Incomplete</h5>
+		<div class="border-rule bg-panel border px-4 py-3">
+			<h5 class="label text-faint mb-4 text-[10px]">Incomplete</h5>
 			<FlexiTarget key="todo" class="gap-2">
 				<FlexiWidget>Study for exam</FlexiWidget>
 				<FlexiWidget>Research for project</FlexiWidget>
 			</FlexiTarget>
 		</div>
 
-		<div class="border border-rule bg-panel px-4 py-3">
-			<h5 class="label mb-4 text-[10px] text-faint">Done</h5>
+		<div class="border-rule bg-panel border px-4 py-3">
+			<h5 class="label text-faint mb-4 text-[10px]">Done</h5>
 			<FlexiTarget key="done" class="gap-2">
 				<FlexiWidget>Purchase eggs</FlexiWidget>
 				<FlexiWidget>Recharge car</FlexiWidget>

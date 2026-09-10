@@ -1,5 +1,12 @@
 <script module lang="ts">
-	import type { FlexiCommonProps, FlexiWidgetChildrenSnippet, FlexiWidgetClasses, FlexiWidgetConfiguration, FlexiWidgetController, InternalFlexiWidgetController } from '@flexiboards/core';
+	import type {
+		FlexiCommonProps,
+		FlexiWidgetChildrenSnippet,
+		FlexiWidgetClasses,
+		FlexiWidgetConfiguration,
+		FlexiWidgetController,
+		InternalFlexiWidgetController
+	} from '@flexiboards/core';
 	import { flexiwidget } from '../adapters/widget.js';
 	import { reactive } from '../adapter.svelte.js';
 	import type { ClassValue } from 'svelte/elements';

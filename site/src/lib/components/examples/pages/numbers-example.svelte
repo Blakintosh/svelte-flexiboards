@@ -52,10 +52,10 @@
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
 </script>
 
-<main class="flex h-full min-h-0 w-full flex-col gap-8 bg-paper px-12 py-8 lg:px-16">
+<main class="bg-paper flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
 	<header class="flex shrink-0 items-baseline justify-between gap-4">
-		<h1 class="font-serif text-2xl text-ink lg:text-[30px]">Numbers</h1>
-		<span class="text-[11.5px] font-semibold text-faint">3 × 3 · free grid · add and delete</span>
+		<h1 class="text-ink font-serif text-2xl lg:text-[30px]">Numbers</h1>
+		<span class="text-faint text-[11.5px] font-semibold">3 × 3 · free grid · add and delete</span>
 	</header>
 
 	<FlexiBoard
@@ -65,14 +65,14 @@
 	>
 		<FlexiAdd
 			{addWidget}
-			class={'ui flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed border-rule-soft bg-stage p-4 text-center text-xs text-faint transition-colors duration-[120ms] hover:border-ink hover:bg-tint hover:text-ink lg:size-40'}
+			class={'ui border-rule-soft bg-stage text-faint hover:border-ink hover:bg-tint hover:text-ink flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed p-4 text-center text-xs transition-colors duration-[120ms] lg:size-40'}
 		>
 			<Plus class="mb-2 size-8 lg:size-12" />
 			Add a random number
 		</FlexiAdd>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-64 gap-2 rounded-[14px] border border-rule-soft bg-panel p-4 shadow-card lg:h-128 lg:gap-6'}
+			class={'border-rule-soft bg-panel shadow-card lg:h-128 aspect-square h-64 gap-2 rounded-[14px] border p-4 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 1fr)',
 				layout: {
@@ -99,10 +99,12 @@
 				y={2}
 			/>
 		</FlexiTarget>
-		<FlexiDelete class={(deleter: FlexiDeleteController) => [
-			'ui flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed border-rule-soft bg-stage p-4 text-center text-xs text-faint transition-colors duration-[120ms] lg:size-40',
-			deleter.isHovered && 'border-fx-accent/50 bg-tint-accent text-fx-accent-hover'
-		]}>
+		<FlexiDelete
+			class={(deleter: FlexiDeleteController) => [
+				'ui border-rule-soft bg-stage text-faint flex size-32 flex-col items-center justify-center rounded-[14px] border border-dashed p-4 text-center text-xs transition-colors duration-[120ms] lg:size-40',
+				deleter.isHovered && 'border-fx-accent/50 bg-tint-accent text-fx-accent-hover'
+			]}
+		>
 			<Trash2 class="mb-2 size-8 lg:size-12" />
 			Delete
 

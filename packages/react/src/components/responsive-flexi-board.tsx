@@ -5,39 +5,45 @@ import {
 } from '@flexiboards/core';
 import { Fragment, useCallback, useEffect, type ReactNode } from 'react';
 import { ResponsiveFlexiBoardContext } from '../adapters/responsive.js';
-import { renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
+import {
+	renderChildren,
+	useOnceCommitted,
+	useSingleRef,
+	type FlexiChildren,
+	type FlexiCommonProps
+} from '../adapters/utils.js';
 import { useFromCore } from '../adapter.js';
 
 export type BreakpointSnippetParams = { currentBreakpoint: string };
 
 export type ResponsiveFlexiBoardProps = Omit<ResponsiveFlexiBoardPropsPrimitive, 'controller'> &
 	FlexiCommonProps<ResponsiveFlexiBoardController> & {
-	/**
-	 * Production for large breakpoint (no params - breakpoint is implicit).
-	 */
-	lg?: ReactNode;
+		/**
+		 * Production for large breakpoint (no params - breakpoint is implicit).
+		 */
+		lg?: ReactNode;
 
-	/**
-	 * Production for medium breakpoint (no params - breakpoint is implicit).
-	 */
-	md?: ReactNode;
+		/**
+		 * Production for medium breakpoint (no params - breakpoint is implicit).
+		 */
+		md?: ReactNode;
 
-	/**
-	 * Production for small breakpoint (no params - breakpoint is implicit).
-	 */
-	sm?: ReactNode;
-	/**
-	 * 
-	 * Production for extra-small breakpoint (no params - breakpoint is implicit).
-	 */
-	xs?: ReactNode;
+		/**
+		 * Production for small breakpoint (no params - breakpoint is implicit).
+		 */
+		sm?: ReactNode;
+		/**
+		 *
+		 * Production for extra-small breakpoint (no params - breakpoint is implicit).
+		 */
+		xs?: ReactNode;
 
-	/**
-	 * Children snippet used as fallback when no specific breakpoint snippet matches.
-	 * Receives `{ currentBreakpoint: string }` as a parameter.
-	 */
-	children?: FlexiChildren<{ currentBreakpoint: string }>;
-};
+		/**
+		 * Children snippet used as fallback when no specific breakpoint snippet matches.
+		 * Receives `{ currentBreakpoint: string }` as a parameter.
+		 */
+		children?: FlexiChildren<{ currentBreakpoint: string }>;
+	};
 
 export function ResponsiveFlexiBoard({
 	lg,

@@ -62,14 +62,17 @@ function motionAdapter(
 			return {
 				setTarget(to) {
 					const mine = ++generation;
-					motion.set(to).then(() => {
-						// Only the latest target's settle counts; an interrupted set() also resolves.
-						if (!stopped && mine === generation) {
-							onSettle();
+					motion.set(to).then(
+						() => {
+							// Only the latest target's settle counts; an interrupted set() also resolves.
+							if (!stopped && mine === generation) {
+								onSettle();
+							}
+						},
+						() => {
+							// Svelte rejects the previous set()'s promise with 'Aborted' on retarget; that's expected.
 						}
-					}, () => {
-						// Svelte rejects the previous set()'s promise with 'Aborted' on retarget; that's expected.
-					});
+					);
 				},
 				stop() {
 					stopped = true;

@@ -17,29 +17,29 @@ Requires React 18 or 19.
 ## Usage
 
 ```tsx
-import { FlexiBoard, FlexiTarget, FlexiWidget } from "@flexiboards/react";
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
 
 export function Board() {
-  return (
-    <FlexiBoard config={{ widgetDefaults: { draggability: "full" } }}>
-      <FlexiTarget
-        keyName="main"
-        config={{
-          layout: {
-            type: "free",
-            minColumns: 3,
-            maxColumns: 3,
-            minRows: 3,
-            maxRows: 3,
-          },
-        }}
-      >
-        <FlexiWidget x={0} y={0} width={1} height={1}>
-          Drag me
-        </FlexiWidget>
-      </FlexiTarget>
-    </FlexiBoard>
-  );
+	return (
+		<FlexiBoard config={{ widgetDefaults: { draggability: 'full' } }}>
+			<FlexiTarget
+				keyName="main"
+				config={{
+					layout: {
+						type: 'free',
+						minColumns: 3,
+						maxColumns: 3,
+						minRows: 3,
+						maxRows: 3
+					}
+				}}
+			>
+				<FlexiWidget x={0} y={0} width={1} height={1}>
+					Drag me
+				</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
 }
 ```
 

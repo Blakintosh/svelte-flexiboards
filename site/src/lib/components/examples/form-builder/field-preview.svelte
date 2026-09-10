@@ -38,7 +38,7 @@
 			<option>{meta.placeholder || 'Select an option'}</option>
 		</select>
 		<ChevronDown
-			class="text-faint pointer-events-none absolute top-1/2 right-2.5 size-3 -translate-y-1/2"
+			class="text-faint pointer-events-none absolute right-2.5 top-1/2 size-3 -translate-y-1/2"
 		/>
 	</div>
 {:else if meta.kind === 'checkbox'}

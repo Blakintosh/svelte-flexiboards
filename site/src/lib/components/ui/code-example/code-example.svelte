@@ -73,24 +73,24 @@
 
 <Tabs.Root value={'preview'} class="relative mt-4">
 	<Tabs.List
-		class="mb-8 flex h-9 items-center justify-start rounded-none border-b border-rule bg-transparent p-0"
+		class="border-rule mb-8 flex h-9 items-center justify-start rounded-none border-b bg-transparent p-0"
 	>
 		<Tabs.Trigger value="preview" class={triggerClass}>Preview</Tabs.Trigger>
 		<Tabs.Trigger value="code" class={triggerClass}>Code</Tabs.Trigger>
 	</Tabs.List>
 	<Tabs.Content value="preview">
 		<div
-			class="not-prose preview mt-2 ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+			class="not-prose preview ring-offset-background focus-visible:outline-hidden focus-visible:ring-ring mt-2 focus-visible:ring-2 focus-visible:ring-offset-2"
 		>
 			{@render example()}
 		</div>
 	</Tabs.Content>
 	<Tabs.Content value="code">
 		<div
-			class="not-prose code-block group relative max-h-160 overflow-clip border border-ink bg-field"
+			class="not-prose code-block max-h-160 border-ink bg-field group relative overflow-clip border"
 		>
 			<button
-				class="absolute right-3 top-3 z-10 border border-on-ink-faint/40 bg-field p-2 text-on-ink-faint opacity-0 transition-colors duration-[120ms] hover:text-on-ink focus:outline-hidden focus:ring-1 focus:ring-fx-accent group-hover:opacity-100"
+				class="border-on-ink-faint/40 bg-field text-on-ink-faint hover:text-on-ink focus:outline-hidden focus:ring-fx-accent absolute right-3 top-3 z-10 border p-2 opacity-0 transition-colors duration-[120ms] focus:ring-1 group-hover:opacity-100"
 				onclick={copyCode}
 				aria-label="Copy code to clipboard"
 			>
@@ -101,11 +101,11 @@
 				{/if}
 			</button>
 			{#await highlightedCodePromise}
-				<p class="label m-0 px-6 py-4 text-[10px] text-on-ink-faint">Loading listing</p>
+				<p class="label text-on-ink-faint m-0 px-6 py-4 text-[10px]">Loading listing</p>
 			{:then highlightedHtml}
 				{@html highlightedHtml}
 			{:catch error}
-				<p class="m-0 px-6 py-4 font-mono text-[12.5px] text-on-ink">
+				<p class="text-on-ink m-0 px-6 py-4 font-mono text-[12.5px]">
 					Error loading code: {error.message}
 				</p>
 			{/await}

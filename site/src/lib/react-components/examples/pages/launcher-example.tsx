@@ -1,4 +1,10 @@
-import { FlexiBoard, FlexiTarget, ResponsiveFlexiBoard, cssTransitionConfig, useFromCore } from '@flexiboards/react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	ResponsiveFlexiBoard,
+	cssTransitionConfig,
+	useFromCore
+} from '@flexiboards/react';
 import type {
 	FlexiBoardConfiguration,
 	FlexiTargetController,
@@ -217,7 +223,7 @@ export default function LauncherExample() {
 			sections rather than on <main>.
 		*/
 		<main className="bg-paper flex h-full min-h-0 w-full flex-col overflow-hidden">
-			<header className="border-rule-soft mx-4 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b pt-4 pb-3 sm:pt-5 lg:mx-12 lg:pt-8">
+			<header className="border-rule-soft mx-4 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b pb-3 pt-4 sm:pt-5 lg:mx-12 lg:pt-8">
 				<div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
 					<h1 className="text-ink font-serif text-2xl lg:text-[28px]">Launcher</h1>
 					<span className="text-faint text-[12px]">one widget set · three arrangements</span>
@@ -260,7 +266,7 @@ export default function LauncherExample() {
 											className="border-rule-faint mt-2.5 flex items-center justify-between gap-2 border-t pt-2"
 											role="status"
 										>
-											<span className="text-faint text-[9px] font-semibold whitespace-nowrap">
+											<span className="text-faint whitespace-nowrap text-[9px] font-semibold">
 												{key} · {bp.grid}
 											</span>
 											{/*
@@ -268,7 +274,7 @@ export default function LauncherExample() {
 												sits on the plate, and the plate is 212px wide at sm however wide the
 												window is.
 											*/}
-											<span className="text-faint truncate text-[9px] font-semibold whitespace-nowrap">
+											<span className="text-faint truncate whitespace-nowrap text-[9px] font-semibold">
 												{pin === 'auto' ? 'Auto' : 'Pinned'}
 												{key !== 'sm' &&
 													(pin === 'auto' ? ' · follows viewport' : ' · click auto to release')}

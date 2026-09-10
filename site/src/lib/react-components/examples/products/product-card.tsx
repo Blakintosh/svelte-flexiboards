@@ -102,13 +102,15 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 	const rating = (large: boolean) => (
 		<div className="mt-1.5 flex items-center gap-1.5">
 			<Star className={`${large ? 'size-3.5' : 'size-3'} fill-ink text-ink`} />
-			<span className="font-mono text-[11px] text-ink">{product.rating}</span>
+			<span className="text-ink font-mono text-[11px]">{product.rating}</span>
 			<span className="text-faint font-mono text-[11px]">
 				{large
 					? `· ${product.reviewCount.toLocaleString()} reviews · ${product.stock} units`
 					: `(${formatReviewCount(product.reviewCount)})`}
 			</span>
-			{!large && <span className={`ml-auto size-1.5 shrink-0 rounded-full ${stockStatus.bar}`}></span>}
+			{!large && (
+				<span className={`ml-auto size-1.5 shrink-0 rounded-full ${stockStatus.bar}`}></span>
+			)}
 		</div>
 	);
 
@@ -123,7 +125,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 	const saleBadge = (position: string) =>
 		product.badge === 'sale' ? (
 			<span
-				className={`absolute ${position} rounded-full bg-fx-accent px-2.5 py-1 text-[11px] font-bold text-white shadow-card`}
+				className={`absolute ${position} bg-fx-accent shadow-card rounded-full px-2.5 py-1 text-[11px] font-bold text-white`}
 			>
 				{saleLabel}
 			</span>
@@ -138,7 +140,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 				<MoreVertical className="size-4" />
 				<span className="sr-only">Product actions</span>
 			</summary>
-			<div className="border-rule-soft bg-panel shadow-card-lg absolute top-full right-0 z-20 mt-1 w-40 rounded-[12px] border p-1">
+			<div className="border-rule-soft bg-panel shadow-card-lg absolute right-0 top-full z-20 mt-1 w-40 rounded-[12px] border p-1">
 				{menuItems.map((item) => {
 					const Icon = item.icon;
 					return (
@@ -167,11 +169,13 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 		// Phone: Full-width vertical card
 		return (
 			<div className={`${cardClass} flex-col`}>
-				<div className={`absolute top-2 left-2 ${chromeClass}`}>
+				<div className={`absolute left-2 top-2 ${chromeClass}`}>
 					<Grabber size={16} className="bg-paper" />
 				</div>
 
-				<div className={`bg-paper absolute top-2 right-2 rounded-full ${chromeClass}`}>{controls}</div>
+				<div className={`bg-paper absolute right-2 top-2 rounded-full ${chromeClass}`}>
+					{controls}
+				</div>
 
 				{/* Placeholder (top) */}
 				<div className="border-rule-faint relative h-28 shrink-0 border-b">
@@ -187,13 +191,13 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 							{stockStatus.label}
 						</span>
 					</div>
-					<h3 className="mt-1 font-serif text-base leading-tight text-ink">{product.name}</h3>
+					<h3 className="text-ink mt-1 font-serif text-base leading-tight">{product.name}</h3>
 
 					{rating(false)}
 
 					{/* Price sits on a hairline shelf at the foot of the card. */}
 					<div className="border-rule-faint mt-auto flex items-baseline gap-2 border-t pt-2.5">
-						<span className="font-mono text-xl text-ink">£{product.price.toFixed(2)}</span>
+						<span className="text-ink font-mono text-xl">£{product.price.toFixed(2)}</span>
 						{product.originalPrice && (
 							<span className="text-faint font-mono text-[11px] line-through">
 								£{product.originalPrice.toFixed(2)}
@@ -209,13 +213,15 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 		// Wide (featured) card layout: horizontal
 		return (
 			<div className={`${cardClass} flex-row`}>
-				<div className={`absolute top-2 left-2 ${chromeClass}`}>
+				<div className={`absolute left-2 top-2 ${chromeClass}`}>
 					<Grabber size={16} className="bg-paper" />
 				</div>
 
-				<div className={`bg-paper absolute top-2 right-2 rounded-full ${chromeClass}`}>{controls}</div>
+				<div className={`bg-paper absolute right-2 top-2 rounded-full ${chromeClass}`}>
+					{controls}
+				</div>
 
-				<div className={`absolute right-2 bottom-2 ${chromeClass}`}>
+				<div className={`absolute bottom-2 right-2 ${chromeClass}`}>
 					<Resizer size={16} />
 				</div>
 
@@ -228,7 +234,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 				{/* Content (right) */}
 				<div className="flex min-h-0 flex-1 flex-col p-4 pr-12">
 					{categoryLine}
-					<h3 className="mt-1.5 truncate font-serif text-[19px] leading-tight text-ink">
+					<h3 className="text-ink mt-1.5 truncate font-serif text-[19px] leading-tight">
 						{product.name}
 					</h3>
 
@@ -248,7 +254,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 					</div>
 
 					<div className="border-rule-faint mt-auto flex items-baseline gap-2.5 border-t pt-3">
-						<span className="font-mono text-2xl text-ink">£{product.price.toFixed(2)}</span>
+						<span className="text-ink font-mono text-2xl">£{product.price.toFixed(2)}</span>
 						{product.originalPrice && (
 							<span className="text-faint font-mono text-xs line-through">
 								£{product.originalPrice.toFixed(2)}
@@ -263,13 +269,15 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 	// Narrow card layout: vertical (tablet/desktop 1x1)
 	return (
 		<div className={`${cardClass} flex-col`}>
-			<div className={`absolute top-2 left-2 ${chromeClass}`}>
+			<div className={`absolute left-2 top-2 ${chromeClass}`}>
 				<Grabber size={16} className="bg-paper" />
 			</div>
 
-			<div className={`bg-paper absolute top-2 right-2 rounded-full ${chromeClass}`}>{controls}</div>
+			<div className={`bg-paper absolute right-2 top-2 rounded-full ${chromeClass}`}>
+				{controls}
+			</div>
 
-			<div className={`absolute right-2 bottom-2 ${chromeClass}`}>
+			<div className={`absolute bottom-2 right-2 ${chromeClass}`}>
 				<Resizer size={16} />
 			</div>
 
@@ -280,10 +288,10 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 			</div>
 
 			{/* Content (bottom) */}
-			<div className="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-2">
+			<div className="flex min-h-0 flex-1 flex-col px-3 pb-2 pt-2">
 				<div className="min-w-0">
 					{categoryLine}
-					<h3 className="mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight text-ink">
+					<h3 className="text-ink mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight">
 						{product.name}
 					</h3>
 				</div>
@@ -291,7 +299,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 				{rating(false)}
 
 				<div className="border-rule-faint mt-auto border-t pt-2">
-					<span className="font-mono text-base text-ink">£{product.price.toFixed(2)}</span>
+					<span className="text-ink font-mono text-base">£{product.price.toFixed(2)}</span>
 				</div>
 			</div>
 		</div>

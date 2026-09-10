@@ -1,4 +1,10 @@
-import { FlexiBoard, FlexiTarget, FlexiWidget, ResponsiveFlexiBoard, cssTransitionConfig } from '@flexiboards/react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	FlexiWidget,
+	ResponsiveFlexiBoard,
+	cssTransitionConfig
+} from '@flexiboards/react';
 import type { FlexiBoardConfiguration, FlexiWidgetController } from '@flexiboards/react';
 import { clsx } from 'clsx';
 import { ArrowUpDown, Filter, Plus, Search } from 'lucide-react';
@@ -139,7 +145,8 @@ const responsiveConfig = {
 const className = (widget: FlexiWidgetController) =>
 	clsx([
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
-		widget.isShadow && 'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isShadow &&
+			'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
 		widget.isGrabbed && 'rounded-[14px] shadow-lift rotate-[2.5deg] opacity-95'
 	]);
 
@@ -188,11 +195,7 @@ export default function ProductsExample() {
 		phone?: boolean;
 	}) => (
 		<FlexiBoard className={options.boardClass} config={boardConfig}>
-			<FlexiTarget
-				keyName="products"
-				className={options.targetClass}
-				config={options.config}
-			>
+			<FlexiTarget keyName="products" className={options.targetClass} config={options.config}>
 				{filteredProducts.map((product) => (
 					<FlexiWidget
 						key={product.id}
@@ -209,11 +212,11 @@ export default function ProductsExample() {
 	);
 
 	return (
-		<main className="relative flex h-full min-h-0 w-full flex-col gap-4 bg-paper px-4 py-6 lg:gap-6 lg:px-12 lg:py-8">
+		<main className="bg-paper relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8">
 			{/* Header: title, count and the two board affordances in one mono line. */}
 			<header className="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5">
 				<div className="flex min-w-0 items-baseline gap-3">
-					<h1 className="font-serif text-xl leading-tight text-ink sm:text-2xl lg:text-[28px]">
+					<h1 className="text-ink font-serif text-xl leading-tight sm:text-2xl lg:text-[28px]">
 						Products
 					</h1>
 					<p className="text-faint hidden font-mono text-[11px] sm:block">
@@ -229,7 +232,7 @@ export default function ProductsExample() {
 			{/* Toolbar: one row — search, category, sort, and the status key it explains. */}
 			<div className="flex shrink-0 flex-wrap items-center gap-2">
 				<div className="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
-					<Search className="text-faint absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+					<Search className="text-faint absolute left-3 top-1/2 size-4 -translate-y-1/2" />
 					<input
 						type="search"
 						placeholder="Search products…"
@@ -243,9 +246,9 @@ export default function ProductsExample() {
 				{/* Filter and sort are choices, so they are native selects: they say what
 					they are set to, and the platform draws the list. */}
 				<div className="relative shrink-0">
-					<Filter className="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+					<Filter className="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2" />
 					<select
-						className={`${selectClass} h-9 w-auto rounded-full border-rule-soft pl-8`}
+						className={`${selectClass} border-rule-soft h-9 w-auto rounded-full pl-8`}
 						aria-label="Filter by category"
 						value={selectedCategory}
 						onChange={(event) => setSelectedCategory(event.target.value)}
@@ -260,9 +263,9 @@ export default function ProductsExample() {
 				</div>
 
 				<div className="relative shrink-0">
-					<ArrowUpDown className="text-faint pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+					<ArrowUpDown className="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2" />
 					<select
-						className={`${selectClass} text-body h-9 w-auto rounded-full border-rule-soft pl-8`}
+						className={`${selectClass} text-body border-rule-soft h-9 w-auto rounded-full pl-8`}
 						aria-label="Sort by"
 						value={sortBy}
 						onChange={(event) => setSortBy(event.target.value as SortKey)}

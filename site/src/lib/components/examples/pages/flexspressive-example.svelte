@@ -60,7 +60,9 @@
 			</p>
 		</div>
 		<div>
-			<div class="text-faint mb-1.5 flex items-center justify-end gap-1.5 text-[11.5px] font-semibold">
+			<div
+				class="text-faint mb-1.5 flex items-center justify-end gap-1.5 text-[11.5px] font-semibold"
+			>
 				Editing tile
 				<span class="bg-fx-accent size-1.5 shrink-0 rounded-full"></span>
 			</div>
@@ -72,7 +74,7 @@
 
 	<!-- A lifted card standing in for the handset: soft bezel, no ink rule. -->
 	<div
-		class="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pt-5 pb-3 text-sm"
+		class="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pb-3 pt-5 text-sm"
 	>
 		{#if !editMode}
 			<div class="flex items-center justify-between">
@@ -115,7 +117,16 @@
 				}}
 				class="gap-[7px]"
 			>
-				<Tile title="Internet" on x={0} y={0} width={2} height={1} onIcon={Wifi} offIcon={WifiOff} />
+				<Tile
+					title="Internet"
+					on
+					x={0}
+					y={0}
+					width={2}
+					height={1}
+					onIcon={Wifi}
+					offIcon={WifiOff}
+				/>
 				<Tile
 					title="Bluetooth"
 					on={false}

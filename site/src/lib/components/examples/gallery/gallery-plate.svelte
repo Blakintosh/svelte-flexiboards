@@ -73,7 +73,7 @@
 			<!-- Resizing is movement too, so the corner mark answers in fx-accent. -->
 			<FlexiResize
 				class={[
-					'absolute right-1 bottom-1 rounded-[7px] p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
+					'absolute bottom-1 right-1 rounded-[7px] p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
 					'focus-visible:text-fx-accent focus-visible:outline-fx-accent hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
 					// Mid-resize the mark is the live control, so it takes a soft accent fill.
 					widget.isResizing ? 'bg-tint-accent text-fx-accent' : 'bg-panel/85 text-faint'

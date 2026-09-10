@@ -33,12 +33,12 @@ A flow grid keeps widgets in order and packs them densely, like a list. Set a ta
 			}
 		}}
 	>
-		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+		<FlexiWidget class="bg-primary text-primary-foreground rounded-lg px-4 py-2">
 			{#snippet children({ widget, component, componentProps })}
 				I'm at ({widget.x}, {widget.y})
 			{/snippet}
 		</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground">
+		<FlexiWidget class="bg-secondary text-secondary-foreground rounded-lg px-4 py-2">
 			{#snippet children({ widget, component, componentProps })}
 				And I'm at ({widget.x}, {widget.y})
 			{/snippet}
@@ -71,14 +71,14 @@ export function FlowGrid() {
 					}
 				}}
 			>
-				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">
+				<FlexiWidget className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
 					{({ widget }) => (
 						<>
 							I'm at ({widget.x}, {widget.y})
 						</>
 					)}
 				</FlexiWidget>
-				<FlexiWidget className="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground">
+				<FlexiWidget className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2">
 					{({ widget }) => (
 						<>
 							And I'm at ({widget.x}, {widget.y})
@@ -137,11 +137,11 @@ Below, widget `B` has a width of 2, so it always takes a row of its own. Placed 
 			}
 		}}
 	>
-		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">A</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground" width={2}>
+		<FlexiWidget class="bg-primary text-primary-foreground rounded-lg px-4 py-2">A</FlexiWidget>
+		<FlexiWidget class="bg-secondary text-secondary-foreground rounded-lg px-4 py-2" width={2}>
 			B
 		</FlexiWidget>
-		<FlexiWidget class="rounded-lg bg-primary px-4 py-2 text-primary-foreground">C</FlexiWidget>
+		<FlexiWidget class="bg-primary text-primary-foreground rounded-lg px-4 py-2">C</FlexiWidget>
 	</FlexiTarget>
 </FlexiBoard>
 ```
@@ -170,11 +170,18 @@ export function FlowGrid2D() {
 					}
 				}}
 			>
-				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">A</FlexiWidget>
-				<FlexiWidget className="rounded-lg bg-secondary px-4 py-2 text-secondary-foreground" width={2}>
+				<FlexiWidget className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
+					A
+				</FlexiWidget>
+				<FlexiWidget
+					className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2"
+					width={2}
+				>
 					B
 				</FlexiWidget>
-				<FlexiWidget className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">C</FlexiWidget>
+				<FlexiWidget className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
+					C
+				</FlexiWidget>
 			</FlexiTarget>
 		</FlexiBoard>
 	);

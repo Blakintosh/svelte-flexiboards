@@ -12,10 +12,10 @@ export default function BrightnessSlider() {
 
 	return (
 		<div className="w-full">
-			<div className="relative mt-2.5 mb-1.5 flex w-full touch-none select-none items-center">
-				<span className="relative h-[26px] w-full grow cursor-pointer overflow-hidden rounded-full border border-rule-soft bg-tint">
+			<div className="relative mb-1.5 mt-2.5 flex w-full touch-none select-none items-center">
+				<span className="border-rule-soft bg-tint relative h-[26px] w-full grow cursor-pointer overflow-hidden rounded-full border">
 					<span className="bg-ink absolute h-full" style={{ width: `${value}%` }}></span>
-					<span className="absolute left-0 top-0 text-paper p-[5px]">
+					<span className="text-paper absolute left-0 top-0 p-[5px]">
 						<SunMedium className="size-4" />
 					</span>
 				</span>

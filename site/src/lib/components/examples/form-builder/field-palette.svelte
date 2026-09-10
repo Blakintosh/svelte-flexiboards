@@ -49,7 +49,7 @@
 			{@const Icon = ICONS[spec.kind]}
 			<FlexiAdd
 				addWidget={() => onAdd(spec)}
-				class={'ui text-xs border-rule-soft bg-tint-2 text-body hover:bg-panel hover:text-ink hover:shadow-card focus-visible:outline-blue flex flex-1 basis-[calc(50%-0.25rem)] items-center gap-2 rounded-[10px] border px-2.5 py-2.5 text-left transition-all duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 sm:basis-[calc(33.333%-0.4rem)] lg:basis-auto'}
+				class={'ui border-rule-soft bg-tint-2 text-body hover:bg-panel hover:text-ink hover:shadow-card focus-visible:outline-blue flex flex-1 basis-[calc(50%-0.25rem)] items-center gap-2 rounded-[10px] border px-2.5 py-2.5 text-left text-xs transition-all duration-[120ms] focus-visible:outline-2 focus-visible:outline-offset-2 sm:basis-[calc(33.333%-0.4rem)] lg:basis-auto'}
 			>
 				<GripVertical class="text-faint size-3 shrink-0" />
 				<Icon class="text-blue size-3.5 shrink-0" />
@@ -66,7 +66,7 @@
 	<FlexiDelete
 		class={(deleter: FlexiDeleteController) =>
 			cn(
-				'ui text-xs border-rule-soft bg-tint-2 text-faint flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed px-3 py-3 text-center transition-colors duration-[120ms] lg:mt-auto lg:flex-col lg:py-6',
+				'ui border-rule-soft bg-tint-2 text-faint flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed px-3 py-3 text-center text-xs transition-colors duration-[120ms] lg:mt-auto lg:flex-col lg:py-6',
 				deleter.isHovered && 'border-fx-accent/70 bg-tint-accent text-fx-accent'
 			)}
 	>

@@ -60,14 +60,14 @@
 		{@render children()}
 	</main>
 
-	<footer class="border-t border-rule bg-paper">
+	<footer class="border-rule bg-paper border-t">
 		<div
-			class="page-gutter grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-8 py-12 text-[13.5px] text-body"
+			class="page-gutter text-body grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-8 py-12 text-[13.5px]"
 		>
 			<div>
 				<div class="mb-2.5 flex items-center gap-2.5">
 					<FlexiMark />
-					<span class="font-serif text-base text-ink">Flexiboards</span>
+					<span class="text-ink font-serif text-base">Flexiboards</span>
 				</div>
 				<p class="m-0 max-w-[34ch] leading-relaxed">
 					A headless drag-and-drop grids library. We'll bring the grid, you bring the style.
@@ -76,14 +76,14 @@
 
 			{#each footerColumns as column (column.heading)}
 				<div>
-					<b class="label mb-2.5 block text-[11px] tracking-[0.12em] text-faint">
+					<b class="label text-faint mb-2.5 block text-[11px] tracking-[0.12em]">
 						{column.heading}
 					</b>
 					<div class="flex flex-col gap-1.5">
 						{#each column.links as link (link.href)}
 							<a
 								href={link.href}
-								class="w-fit transition-colors duration-[120ms] hover:text-fx-accent"
+								class="hover:text-fx-accent w-fit transition-colors duration-[120ms]"
 								target={link.href.startsWith('http') ? '_blank' : undefined}
 							>
 								{link.label}
@@ -95,13 +95,13 @@
 		</div>
 
 		<div
-			class="page-gutter label flex flex-wrap items-center justify-between gap-3 border-t border-rule py-4 text-[10px] text-faint"
+			class="page-gutter label border-rule text-faint flex flex-wrap items-center justify-between gap-3 border-t py-4 text-[10px]"
 		>
 			<span>MIT licensed</span>
 			<span class="normal-case tracking-normal">
 				Made by <a
 					href="https://github.com/Blakintosh"
-					class="text-body transition-colors duration-[120ms] hover:text-fx-accent"
+					class="text-body hover:text-fx-accent transition-colors duration-[120ms]"
 					target="_blank">Blakintosh</a
 				>
 			</span>

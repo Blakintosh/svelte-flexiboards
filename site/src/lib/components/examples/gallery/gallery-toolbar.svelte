@@ -24,7 +24,11 @@
 
 <div class="flex items-center gap-2">
 	<!-- One mode control: a pill switch, the chosen segment lifts with shadow-seg. -->
-	<div class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]" role="group" aria-label="Motion model">
+	<div
+		class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]"
+		role="group"
+		aria-label="Motion model"
+	>
 		{#each modes as mode (mode.id)}
 			<Button
 				variant="ghost"

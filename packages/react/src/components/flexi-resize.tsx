@@ -35,7 +35,11 @@ export function FlexiResize({ className, children }: FlexiResizeProps) {
 		<button
 			className={derivedClassName}
 			disabled={!enabled}
-			style={{ userSelect: 'none', touchAction: 'none', cursor: enabled ? 'nwse-resize' : 'not-allowed' }}
+			style={{
+				userSelect: 'none',
+				touchAction: 'none',
+				cursor: enabled ? 'nwse-resize' : 'not-allowed'
+			}}
 			onPointerDown={(e) => forwardEvent(e, events.onpointerdown)}
 			onKeyDown={(e) => forwardEvent(e, events.onkeydown)}
 		>

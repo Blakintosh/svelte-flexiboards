@@ -50,6 +50,6 @@
 	</div>
 
 	{#if widget.resizable}
-		<Resizer size={grabberSize} class="absolute right-1 bottom-1 cursor-col-resize" />
+		<Resizer size={grabberSize} class="absolute bottom-1 right-1 cursor-col-resize" />
 	{/if}
 </div>

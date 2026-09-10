@@ -17,11 +17,11 @@ Flexiboards 1.0 splits the library into a framework-agnostic core and thin adapt
 
 ## Renamed packages
 
-| v0.4 | v1.0 |
-| --- | --- |
-| `svelte-flexiboards` | `@flexiboards/svelte` |
-| Not in v0.4 | `@flexiboards/react` (new) |
-| Not in v0.4 | `@flexiboards/core` (types and helpers, re-exported by each adapter) |
+| v0.4                 | v1.0                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| `svelte-flexiboards` | `@flexiboards/svelte`                                                |
+| Not in v0.4          | `@flexiboards/react` (new)                                           |
+| Not in v0.4          | `@flexiboards/core` (types and helpers, re-exported by each adapter) |
 
 <InstallCommand steps={[{ action: 'remove', package: 'svelte-flexiboards' }, { package: '@flexiboards/svelte' }]} />
 
@@ -36,8 +36,8 @@ Every export from v0.4 is still exported from `@flexiboards/svelte` under the sa
 
 ## Renamed helpers
 
-| v0.4 | v1.0 | Notes |
-| --- | --- | --- |
+| v0.4                       | v1.0                    | Notes                                           |
+| -------------------------- | ----------------------- | ----------------------------------------------- |
 | `simpleTransitionConfig()` | `cssTransitionConfig()` | The old name still works as a deprecated alias. |
 
 ## Deprecations still honoured

@@ -11,17 +11,17 @@ Two adapters share one core and one API: `@flexiboards/svelte` (Svelte 5) and `@
 
 ## Decide the shape first
 
-| You want | Use |
-| --- | --- |
-| A single sortable list, nothing else | `FlexiSortable` preset (`direction="vertical"` or `"horizontal"`); a flow target on a board with the layout chosen |
-| A single dashboard grid, nothing else | `FlexiDashboard` preset (`columns`, `rows`, `maxRows`, `resizable`); a free target on a board |
-| Items keep an order and pack together (kanban column, sortable list, gallery) | `layout: { type: 'flow', flowAxis: 'row' or 'column', placementStrategy: 'append' }` |
-| Items sit at coordinates and can leave gaps (dashboard, launcher) | `layout: { type: 'free', minColumns, maxColumns, minRows, maxRows }` |
-| Several lists that trade items | One `FlexiBoard`, one `FlexiTarget` per list, each with a `keyName` (React) or `key` (Svelte) |
-| Different layouts per screen size | `ResponsiveFlexiBoard` around the board, with `breakpoints` |
-| Users add items by dragging from a palette | `FlexiAdd` with an `addWidget` function |
-| Users remove items by dropping them somewhere | `FlexiDelete` |
-| Save and restore | `board.exportLayout()`, `board.importLayout()`, or `loadLayout` and `onLayoutChange` in the board config, plus a `registry` |
+| You want                                                                      | Use                                                                                                                         |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| A single sortable list, nothing else                                          | `FlexiSortable` preset (`direction="vertical"` or `"horizontal"`); a flow target on a board with the layout chosen          |
+| A single dashboard grid, nothing else                                         | `FlexiDashboard` preset (`columns`, `rows`, `maxRows`, `resizable`); a free target on a board                               |
+| Items keep an order and pack together (kanban column, sortable list, gallery) | `layout: { type: 'flow', flowAxis: 'row' or 'column', placementStrategy: 'append' }`                                        |
+| Items sit at coordinates and can leave gaps (dashboard, launcher)             | `layout: { type: 'free', minColumns, maxColumns, minRows, maxRows }`                                                        |
+| Several lists that trade items                                                | One `FlexiBoard`, one `FlexiTarget` per list, each with a `keyName` (React) or `key` (Svelte)                               |
+| Different layouts per screen size                                             | `ResponsiveFlexiBoard` around the board, with `breakpoints`                                                                 |
+| Users add items by dragging from a palette                                    | `FlexiAdd` with an `addWidget` function                                                                                     |
+| Users remove items by dropping them somewhere                                 | `FlexiDelete`                                                                                                               |
+| Save and restore                                                              | `board.exportLayout()`, `board.importLayout()`, or `loadLayout` and `onLayoutChange` in the board config, plus a `registry` |
 
 Start with a preset when the board is one list or one grid; they take the same `config`, `targetConfig`, callbacks and children as the full components, and swapping to `FlexiBoard` + `FlexiTarget` later is mechanical. Reach for the full components when there are several targets, a header or footer around the grid, or the target is not the whole board.
 
@@ -35,7 +35,11 @@ Svelte:
 </script>
 
 <FlexiBoard config={{ widgetDefaults: { draggability: 'full' } }}>
-	<FlexiTarget key="list" class="gap-2" config={{ layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' } }}>
+	<FlexiTarget
+		key="list"
+		class="gap-2"
+		config={{ layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' } }}
+	>
 		<FlexiWidget class="rounded border p-3">First</FlexiWidget>
 		<FlexiWidget class="rounded border p-3">Second</FlexiWidget>
 	</FlexiTarget>
@@ -48,7 +52,9 @@ React:
 import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
 
 const boardConfig = { widgetDefaults: { draggability: 'full' } } as const;
-const listConfig = { layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' } } as const;
+const listConfig = {
+	layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' }
+} as const;
 
 export function List() {
 	return (
@@ -66,16 +72,16 @@ The grid element is a CSS grid; `class` / `className` on `FlexiTarget` styles it
 
 ## Naming differences between the adapters
 
-| Svelte | React |
-| --- | --- |
-| `class` | `className` |
-| `<FlexiTarget key="x">` | `<FlexiTarget keyName="x">` |
-| `containerClass` | `containerClassName` |
-| `{#snippet children({ widget })}` | `{({ widget }) => ...}` as children |
-| `header` / `footer` snippets | `header` / `footer` props, node or `({ target }) => ...` |
-| `bind:controller={c}` | no twin; use `onfirstcreate={(c) => ...}` |
-| `getFlexiwidgetCtx()` | `useFlexiWidget()` (also `useFlexiBoard`, `useFlexiTarget`, `useFlexiAdd`, `useResponsiveFlexiBoard`) |
-| `{#snippet suspense({ reason })}` | `suspense={(reason) => ...}` |
+| Svelte                            | React                                                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `class`                           | `className`                                                                                           |
+| `<FlexiTarget key="x">`           | `<FlexiTarget keyName="x">`                                                                           |
+| `containerClass`                  | `containerClassName`                                                                                  |
+| `{#snippet children({ widget })}` | `{({ widget }) => ...}` as children                                                                   |
+| `header` / `footer` snippets      | `header` / `footer` props, node or `({ target }) => ...`                                              |
+| `bind:controller={c}`             | no twin; use `onfirstcreate={(c) => ...}`                                                             |
+| `getFlexiwidgetCtx()`             | `useFlexiWidget()` (also `useFlexiBoard`, `useFlexiTarget`, `useFlexiAdd`, `useResponsiveFlexiBoard`) |
+| `{#snippet suspense({ reason })}` | `suspense={(reason) => ...}`                                                                          |
 
 Whatever a hook or `onfirstcreate` hands you is a reactive proxy: read `widget.isGrabbed`, `widget.x`, `target.dropRejected`, `board.currentWidgetAction` during render and the component re-renders when they change. Reads in event handlers are plain reads.
 
@@ -88,14 +94,14 @@ Config is one object with three levels: `FlexiBoard config` (`widgetDefaults`, `
 Every controller you can reach exposes actions. All of them fire `onLayoutChange`.
 
 ```ts
-widget.delete();                        // also fires onWidgetDelete
-widget.moveTo({ x: 0, y: 1 });          // within its target; false if the grid refuses
+widget.delete(); // also fires onWidgetDelete
+widget.moveTo({ x: 0, y: 1 }); // within its target; false if the grid refuses
 widget.moveTo({ target: doing, x: 0, y: 0 });
-target.createWidget({ type: 'card', metadata: { id } });  // undefined if it cannot be placed
+target.createWidget({ type: 'card', metadata: { id } }); // undefined if it cannot be placed
 target.clear();
 board.clear();
-board.importLayout(saved);              // the load; does not fire onLayoutChange
-const layout = board.exportLayout();    // { [targetKey]: [{ type?, id, x, y, width, height, metadata }] }
+board.importLayout(saved); // the load; does not fire onLayoutChange
+const layout = board.exportLayout(); // { [targetKey]: [{ type?, id, x, y, width, height, metadata }] }
 const stored = board.exportLayoutEnvelope(); // { version, layout }: persist this; importLayout accepts either
 ```
 
@@ -108,14 +114,14 @@ Board config callbacks, all fired after the change is committed:
 ```ts
 const config = {
 	onWidgetGrab: ({ widget, target }) => {},
-	onWidgetDrop: ({ widget, sourceTarget, target }) => {},   // sourceTarget undefined for a FlexiAdd drop
+	onWidgetDrop: ({ widget, sourceTarget, target }) => {}, // sourceTarget undefined for a FlexiAdd drop
 	onWidgetResize: ({ widget, target }) => {},
 	onWidgetCancel: ({ widget, target }) => {},
 	onWidgetDelete: ({ widget, target }) => {},
-	onWidgetEnterTarget: ({ widget, target }) => {},                // hover styling for the candidate column
+	onWidgetEnterTarget: ({ widget, target }) => {}, // hover styling for the candidate column
 	onWidgetLeaveTarget: ({ widget, target }) => {},
 	canDrop: ({ widget, target, x, y, width, height }) => true, // false shows a rejected preview and refuses the release
-	onLayoutChange: (layout) => save(layout)                   // debounced
+	onLayoutChange: (layout) => save(layout) // debounced
 };
 ```
 

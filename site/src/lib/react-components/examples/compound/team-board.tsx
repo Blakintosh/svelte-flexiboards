@@ -18,7 +18,8 @@ const MEMBERS: TeamMember[] = [
 const memberClass = (widget: FlexiWidgetController) =>
 	cn(
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
-		widget.isShadow && 'rounded-[9px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isShadow &&
+			'rounded-[9px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
 		widget.isGrabbed && 'rounded-[9px] shadow-lift rotate-[2.5deg]'
 	);
 
@@ -59,7 +60,11 @@ export default function TeamBoard({ onCommit }: { onCommit: (scope: DropScope) =
 				which suppresses direct grabs because it *does* have a grabber.
 			*/}
 			<FlexiBoard className="min-w-0 shrink-0" config={config}>
-				<FlexiTarget keyName="rotation" className="bg-tint-2 gap-1.5 rounded-[9px] p-1 lg:gap-2" config={targetConfig}>
+				<FlexiTarget
+					keyName="rotation"
+					className="bg-tint-2 gap-1.5 rounded-[9px] p-1 lg:gap-2"
+					config={targetConfig}
+				>
 					{MEMBERS.map((member) => (
 						<FlexiWidget key={member.initials} type="member" componentProps={{ member }} />
 					))}
@@ -67,7 +72,9 @@ export default function TeamBoard({ onCommit }: { onCommit: (scope: DropScope) =
 			</FlexiBoard>
 
 			{/* The strip's own geometry, annotated the way the sheet annotates the outer board. */}
-			<span className="text-faint ml-auto hidden text-[10px] font-semibold lg:inline">flow · 1 × 6</span>
+			<span className="text-faint ml-auto hidden text-[10px] font-semibold lg:inline">
+				flow · 1 × 6
+			</span>
 		</div>
 	);
 }

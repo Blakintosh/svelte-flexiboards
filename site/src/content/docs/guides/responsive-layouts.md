@@ -25,7 +25,9 @@ published: true
 	{#snippet children({ currentBreakpoint })}
 		{@const columns = currentBreakpoint === 'lg' ? 3 : 2}
 		<FlexiBoard class="w-72 rounded-xl border p-6 lg:w-96">
-			<p class="mb-3 text-sm text-muted-foreground">Breakpoint: {currentBreakpoint}, {columns} columns</p>
+			<p class="text-muted-foreground mb-3 text-sm">
+				Breakpoint: {currentBreakpoint}, {columns} columns
+			</p>
 			<FlexiTarget
 				key="main"
 				class="gap-3"
@@ -58,7 +60,7 @@ export function ResponsiveColumns() {
 				const columns = currentBreakpoint === 'lg' ? 3 : 2;
 				return (
 					<FlexiBoard className="w-72 rounded-xl border p-6 lg:w-96">
-						<p className="mb-3 text-sm text-muted-foreground">
+						<p className="text-muted-foreground mb-3 text-sm">
 							Breakpoint: {currentBreakpoint}, {columns} columns
 						</p>
 						<FlexiTarget
@@ -66,7 +68,13 @@ export function ResponsiveColumns() {
 							className="gap-3"
 							config={{
 								rowSizing: '4rem',
-								layout: { type: 'free', minRows: 2, minColumns: columns, maxRows: 2, maxColumns: columns }
+								layout: {
+									type: 'free',
+									minRows: 2,
+									minColumns: columns,
+									maxRows: 2,
+									maxColumns: columns
+								}
 							}}
 						>
 							<FlexiWidget x={0} y={0} className={tile}>
@@ -100,11 +108,7 @@ The example above uses a single fallback snippet that receives the current break
 
 ```svelte
 <script lang="ts">
-	import {
-		ResponsiveFlexiBoard,
-		FlexiBoard,
-		FlexiTarget
-	} from '@flexiboards/svelte';
+	import { ResponsiveFlexiBoard, FlexiBoard, FlexiTarget } from '@flexiboards/svelte';
 </script>
 
 <ResponsiveFlexiBoard config={{ breakpoints: { lg: 1024, md: 768 } }}>
@@ -191,19 +195,13 @@ For more control, give each breakpoint its own snippet. This lets you use entire
 >
 	{#snippet lg()}
 		<FlexiBoard config={boardConfig}>
-			<FlexiTarget
-				key="main"
-				config={{ layout: { type: 'free', minColumns: 3, maxColumns: 3 } }}
-			/>
+			<FlexiTarget key="main" config={{ layout: { type: 'free', minColumns: 3, maxColumns: 3 } }} />
 		</FlexiBoard>
 	{/snippet}
 
 	{#snippet children({ currentBreakpoint })}
 		<FlexiBoard config={boardConfig}>
-			<FlexiTarget
-				key="main"
-				config={{ layout: { type: 'free', minColumns: 2, maxColumns: 2 } }}
-			/>
+			<FlexiTarget key="main" config={{ layout: { type: 'free', minColumns: 2, maxColumns: 2 } }} />
 		</FlexiBoard>
 	{/snippet}
 </ResponsiveFlexiBoard>
@@ -240,7 +238,10 @@ const responsiveConfig = {
 function board(columns: number) {
 	return (
 		<FlexiBoard config={boardConfig}>
-			<FlexiTarget keyName="main" config={{ layout: { type: 'free', minColumns: columns, maxColumns: columns } }} />
+			<FlexiTarget
+				keyName="main"
+				config={{ layout: { type: 'free', minColumns: columns, maxColumns: columns } }}
+			/>
 		</FlexiBoard>
 	);
 }
@@ -260,12 +261,12 @@ export function Dashboard() {
 
 You can define breakpoints for these keys:
 
-| Breakpoint | Description |
-|------------|-------------|
-| `lg` | Large screens |
-| `md` | Medium screens |
-| `sm` | Small screens |
-| `xs` | Extra-small screens |
+| Breakpoint | Description         |
+| ---------- | ------------------- |
+| `lg`       | Large screens       |
+| `md`       | Medium screens      |
+| `sm`       | Small screens       |
+| `xs`       | Extra-small screens |
 
 A default breakpoint (which uses `children`) always implicitly exists, and is used if no breakpoint is matched.
 
@@ -388,9 +389,7 @@ const responsiveConfig = {
 };
 
 export function Dashboard() {
-	return (
-		<ResponsiveFlexiBoard config={responsiveConfig}>{/* ... */}</ResponsiveFlexiBoard>
-	);
+	return <ResponsiveFlexiBoard config={responsiveConfig}>{/* ... */}</ResponsiveFlexiBoard>;
 }
 ```
 

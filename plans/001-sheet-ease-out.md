@@ -16,9 +16,9 @@ curve that front-loads the movement (Vaul's), which this is not.
 
 ## Where
 
-| File | Lines | What's there |
-| --- | --- | --- |
-| `site/src/lib/components/ui/sheet/sheet-content.svelte` | 4 | `base` class string of the sheet variants |
+| File                                                    | Lines | What's there                              |
+| ------------------------------------------------------- | ----- | ----------------------------------------- |
+| `site/src/lib/components/ui/sheet/sheet-content.svelte` | 4     | `base` class string of the sheet variants |
 
 ### Current code
 
@@ -63,13 +63,16 @@ animation.
 ## Verification
 
 **Build**
+
 - [ ] svelte-check passes.
 
 **Behavior**
+
 - [ ] Sheet still slides from its configured side; overlay still fades.
 - [ ] Close feels quicker than open.
 - [ ] With `prefers-reduced-motion: reduce` emulated, motion is opacity-only (plan 004 supplies this; before it lands, expect the slide).
 
 **Feel**
+
 - [ ] Record open at 25% speed: fast start, gentle settle. If it looks flat, the class did not apply (check `--tw-ease` in DevTools), not the duration.
 - [ ] Test on a phone by local IP — bottom sheets read differently on touch.

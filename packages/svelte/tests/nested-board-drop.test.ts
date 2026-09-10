@@ -50,7 +50,8 @@ function layoutGrid(grid: HTMLElement, left: number, top: number) {
 		};
 		return new Proxy(style, {
 			get(t, k) {
-				if (k === 'getPropertyValue') return (name: string) => tracks[name] ?? t.getPropertyValue(name);
+				if (k === 'getPropertyValue')
+					return (name: string) => tracks[name] ?? t.getPropertyValue(name);
 				const v = Reflect.get(t, k);
 				return typeof v === 'function' ? v.bind(t) : v;
 			}
@@ -83,7 +84,11 @@ describe('drop inside a nested board', () => {
 		let innerBoard: FlexiBoardController | undefined;
 		component = mount(NestedBoard, {
 			target: document.body,
-			props: { oncard: (w) => (card = w), onouter: (b) => (outer = b), oninner: (b) => (innerBoard = b) }
+			props: {
+				oncard: (w) => (card = w),
+				onouter: (b) => (outer = b),
+				oninner: (b) => (innerBoard = b)
+			}
 		});
 		flushSync();
 		expect(card).toBeDefined();
@@ -91,7 +96,8 @@ describe('drop inside a nested board', () => {
 		const inner = document.querySelector<HTMLElement>('.inner')!;
 		const grid = inner.querySelector<HTMLElement>('[role="grid"]')!;
 		const el = inner.querySelector<HTMLElement>('[role="cell"]')!;
-		document.querySelector<HTMLElement>('.outer')!.getBoundingClientRect = () => box(0, 0, 600, 600);
+		document.querySelector<HTMLElement>('.outer')!.getBoundingClientRect = () =>
+			box(0, 0, 600, 600);
 		inner.getBoundingClientRect = () => box(300, 300, 300, 300);
 		layoutGrid(grid, 300, 300);
 
@@ -111,8 +117,9 @@ describe('drop inside a nested board', () => {
 		flushSync();
 
 		const flights: { left: number; top: number }[] = [];
-		const interpolator = (card as unknown as { interpolator: { interpolateMove: (...a: unknown[]) => void } })
-			.interpolator;
+		const interpolator = (
+			card as unknown as { interpolator: { interpolateMove: (...a: unknown[]) => void } }
+		).interpolator;
 		const original = interpolator.interpolateMove.bind(interpolator);
 		interpolator.interpolateMove = (dims, from, ...rest) => {
 			const b = from as { left: number; top: number };

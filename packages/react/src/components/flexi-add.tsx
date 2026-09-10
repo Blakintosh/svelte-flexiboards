@@ -8,7 +8,15 @@ import type { FlexiAddWidgetFn } from '../types.js';
 import { useCallback, useId } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 import { FlexiAddContext } from '../adapters/misc.js';
-import { controllerRef, forwardEvent, renderChildren, useOnceCommitted, useSingleRef, type FlexiChildren, type FlexiCommonProps } from '../adapters/utils.js';
+import {
+	controllerRef,
+	forwardEvent,
+	renderChildren,
+	useOnceCommitted,
+	useSingleRef,
+	type FlexiChildren,
+	type FlexiCommonProps
+} from '../adapters/utils.js';
 import { RenderedFlexiWidget } from './rendered-flexi-widget.js';
 import { useFromCore } from '../adapter.js';
 import { useReactive } from '../adapters/reactive.js';
@@ -46,13 +54,13 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 	// useFromCore: the user's class function may read signal-backed adder state.
 	const derivedClassName = useFromCore(
 		useCallback(() => {
-			if(typeof className === 'function') {
+			if (typeof className === 'function') {
 				return className(adder);
 			}
 			return className;
 		}, [adder, className])
 	);
-	
+
 	// The adapter owns the adder's lifecycle (destroy at unmount).
 	// The read must *call* the signal — tracking happens at read time.
 	const newWidget = useFromCore(useCallback(() => adder.newWidget$(), [adder]));
@@ -73,10 +81,8 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 				{renderChildren(children, { adder: publicAdder })}
 			</button>
 
-			<div style={{display: 'none'}}>
-				{newWidget && (
-					<RenderedFlexiWidget widget={newWidget} />
-				)}
+			<div style={{ display: 'none' }}>
+				{newWidget && <RenderedFlexiWidget widget={newWidget} />}
 			</div>
 		</FlexiAddContext.Provider>
 	);

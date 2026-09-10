@@ -7,7 +7,7 @@
 
 <details class="relative">
 	<summary
-		class="hover:bg-tint flex w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden items-center gap-3 rounded-[9px] p-2 text-left transition-colors duration-[120ms]"
+		class="hover:bg-tint flex w-full cursor-pointer list-none items-center gap-3 rounded-[9px] p-2 text-left transition-colors duration-[120ms] [&::-webkit-details-marker]:hidden"
 	>
 		<img
 			src="https://github.com/blakintosh.png"

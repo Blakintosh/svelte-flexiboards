@@ -86,14 +86,12 @@
 	let stockStatus = $derived(getStockStatus(product.stock));
 
 	// Duplicate only makes sense on a card wide enough to have been featured.
-	let menuItems = $derived(
-		[
-			{ label: 'View', icon: Eye },
-			{ label: 'Edit', icon: PencilLine },
-			...(isWide ? [{ label: 'Duplicate', icon: Copy }] : []),
-			{ label: 'Delete', icon: Trash2, separator: true, danger: true }
-		] as { label: string; icon: typeof Eye; separator?: boolean; danger?: boolean }[]
-	);
+	let menuItems = $derived([
+		{ label: 'View', icon: Eye },
+		{ label: 'Edit', icon: PencilLine },
+		...(isWide ? [{ label: 'Duplicate', icon: Copy }] : []),
+		{ label: 'Delete', icon: Trash2, separator: true, danger: true }
+	] as { label: string; icon: typeof Eye; separator?: boolean; danger?: boolean }[]);
 </script>
 
 <!-- Thumbnails are placeholders — a plain recessed stage, never stock imagery. -->
@@ -108,7 +106,7 @@
 {#snippet rating(large: boolean)}
 	<div class="mt-1.5 flex items-center gap-1.5">
 		<Star class="{large ? 'size-3.5' : 'size-3'} fill-ink text-ink" />
-		<span class="font-mono text-[11px] text-ink">{product.rating}</span>
+		<span class="text-ink font-mono text-[11px]">{product.rating}</span>
 		<span class="text-faint font-mono text-[11px]">
 			{#if large}
 				· {product.reviewCount.toLocaleString()} reviews · {product.stock} units
@@ -132,7 +130,7 @@
 {#snippet saleBadge(position: string)}
 	{#if product.badge === 'sale'}
 		<span
-			class="absolute {position} rounded-full bg-fx-accent px-2.5 py-1 text-[11px] font-bold text-white shadow-card"
+			class="absolute {position} bg-fx-accent shadow-card rounded-full px-2.5 py-1 text-[11px] font-bold text-white"
 		>
 			{saleLabel}
 		</span>
@@ -149,7 +147,7 @@
 			<span class="sr-only">Product actions</span>
 		</summary>
 		<div
-			class="border-rule-soft bg-panel shadow-card-lg absolute top-full right-0 z-20 mt-1 w-40 rounded-[12px] border p-1"
+			class="border-rule-soft bg-panel shadow-card-lg absolute right-0 top-full z-20 mt-1 w-40 rounded-[12px] border p-1"
 		>
 			{#each menuItems as item (item.label)}
 				{@const Icon = item.icon}
@@ -174,11 +172,11 @@
 {#if phone}
 	<!-- Phone: Full-width vertical card -->
 	<div class="{cardClass} flex-col">
-		<div class="absolute top-2 left-2 {chromeClass}">
+		<div class="absolute left-2 top-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<div class="bg-paper absolute top-2 right-2 rounded-full {chromeClass}">
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
 			{@render controls()}
 		</div>
 
@@ -194,13 +192,13 @@
 				{@render categoryLine()}
 				<span class="text-[11px] font-semibold {stockStatus.class}">{stockStatus.label}</span>
 			</div>
-			<h3 class="mt-1 font-serif text-base leading-tight text-ink">{product.name}</h3>
+			<h3 class="text-ink mt-1 font-serif text-base leading-tight">{product.name}</h3>
 
 			{@render rating(false)}
 
 			<!-- Price sits on a hairline shelf at the foot of the card. -->
 			<div class="border-rule-faint mt-auto flex items-baseline gap-2 border-t pt-2.5">
-				<span class="font-mono text-xl text-ink">£{product.price.toFixed(2)}</span>
+				<span class="text-ink font-mono text-xl">£{product.price.toFixed(2)}</span>
 				{#if product.originalPrice}
 					<span class="text-faint font-mono text-[11px] line-through">
 						£{product.originalPrice.toFixed(2)}
@@ -212,15 +210,15 @@
 {:else if isWide}
 	<!-- Wide (featured) card layout: horizontal -->
 	<div class="{cardClass} flex-row">
-		<div class="absolute top-2 left-2 {chromeClass}">
+		<div class="absolute left-2 top-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<div class="bg-paper absolute top-2 right-2 rounded-full {chromeClass}">
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
 			{@render controls()}
 		</div>
 
-		<div class="absolute right-2 bottom-2 {chromeClass}">
+		<div class="absolute bottom-2 right-2 {chromeClass}">
 			<Resizer size={16} />
 		</div>
 
@@ -233,7 +231,7 @@
 		<!-- Content (right) -->
 		<div class="flex min-h-0 flex-1 flex-col p-4 pr-12">
 			{@render categoryLine()}
-			<h3 class="mt-1.5 truncate font-serif text-[19px] leading-tight text-ink">{product.name}</h3>
+			<h3 class="text-ink mt-1.5 truncate font-serif text-[19px] leading-tight">{product.name}</h3>
 
 			{@render rating(true)}
 
@@ -249,7 +247,7 @@
 			</div>
 
 			<div class="border-rule-faint mt-auto flex items-baseline gap-2.5 border-t pt-3">
-				<span class="font-mono text-2xl text-ink">£{product.price.toFixed(2)}</span>
+				<span class="text-ink font-mono text-2xl">£{product.price.toFixed(2)}</span>
 				{#if product.originalPrice}
 					<span class="text-faint font-mono text-xs line-through">
 						£{product.originalPrice.toFixed(2)}
@@ -261,15 +259,15 @@
 {:else}
 	<!-- Narrow card layout: vertical (tablet/desktop 1x1) -->
 	<div class="{cardClass} flex-col">
-		<div class="absolute top-2 left-2 {chromeClass}">
+		<div class="absolute left-2 top-2 {chromeClass}">
 			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<div class="bg-paper absolute top-2 right-2 rounded-full {chromeClass}">
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
 			{@render controls()}
 		</div>
 
-		<div class="absolute right-2 bottom-2 {chromeClass}">
+		<div class="absolute bottom-2 right-2 {chromeClass}">
 			<Resizer size={16} />
 		</div>
 
@@ -280,10 +278,10 @@
 		</div>
 
 		<!-- Content (bottom) -->
-		<div class="flex min-h-0 flex-1 flex-col px-3 pt-2 pb-2">
+		<div class="flex min-h-0 flex-1 flex-col px-3 pb-2 pt-2">
 			<div class="min-w-0">
 				{@render categoryLine()}
-				<h3 class="mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight text-ink">
+				<h3 class="text-ink mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight">
 					{product.name}
 				</h3>
 			</div>
@@ -291,7 +289,7 @@
 			{@render rating(false)}
 
 			<div class="border-rule-faint mt-auto border-t pt-2">
-				<span class="font-mono text-base text-ink">£{product.price.toFixed(2)}</span>
+				<span class="text-ink font-mono text-base">£{product.price.toFixed(2)}</span>
 			</div>
 		</div>
 	</div>

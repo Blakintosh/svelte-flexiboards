@@ -9,7 +9,8 @@ _Applies to `svelte-flexiboards` v0.4.0, released 7 February 2026. This page is 
 
 ## 1. Draggability
 
-In place of the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) that gives you finer control over widget movability. 
+In place of the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) that gives you finer control over widget movability.
+
 - `none` is equivalent to `draggable = false`. The widget is completely fixed in place.
 - `full` is equivalent to `draggable = true`. The widget can be grabbed by the user and moved by other widget actions.
 - `movable` is a new value. You cannot grab a widget and move it yourself, but other widget actions can still move it.

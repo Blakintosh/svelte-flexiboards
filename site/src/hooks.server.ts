@@ -10,6 +10,7 @@ export const handle: Handle = ({ event, resolve }) => {
 	const fw = event.cookies.get(FRAMEWORK_COOKIE);
 	if (!isFramework(fw) || fw === 'svelte') return resolve(event);
 	return resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('<html lang="en"', `<html lang="en" data-framework="${fw}"`)
+		transformPageChunk: ({ html }) =>
+			html.replace('<html lang="en"', `<html lang="en" data-framework="${fw}"`)
 	});
 };

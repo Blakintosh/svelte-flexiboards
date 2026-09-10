@@ -17,7 +17,5 @@ export function FlexiEventBusProvider({ children }: FlexiEventBusProviderProps) 
 	// calling it during render is safe.
 	const eventBus = getFlexiEventBus();
 
-	return (
-		<FlexiEventBusContext.Provider value={eventBus}>{children}</FlexiEventBusContext.Provider>
-	);
+	return <FlexiEventBusContext.Provider value={eventBus}>{children}</FlexiEventBusContext.Provider>;
 }

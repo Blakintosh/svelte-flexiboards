@@ -43,14 +43,14 @@ published: true
 			y={0}
 			resizability="both"
 			class={(widget) => [
-				'relative rounded-lg bg-primary p-3 text-primary-foreground',
+				'bg-primary text-primary-foreground relative rounded-lg p-3',
 				widget.isShadow && 'opacity-50'
 			]}
 		>
 			{#snippet children({ widget })}
 				{widget.width} × {widget.height}
 				<FlexiResize
-					class="absolute right-1 bottom-1 size-4 rounded-sm border-r-2 border-b-2 border-current"
+					class="absolute bottom-1 right-1 size-4 rounded-sm border-b-2 border-r-2 border-current"
 				>
 					<span class="sr-only">Resize widget</span>
 				</FlexiResize>
@@ -84,13 +84,16 @@ export function ResizeHandle() {
 					y={0}
 					resizability="both"
 					className={(widget) =>
-						clsx('relative rounded-lg bg-primary p-3 text-primary-foreground', widget.isShadow && 'opacity-50')
+						clsx(
+							'bg-primary text-primary-foreground relative rounded-lg p-3',
+							widget.isShadow && 'opacity-50'
+						)
 					}
 				>
 					{({ widget }) => (
 						<>
 							{widget.width} × {widget.height}
-							<FlexiResize className="absolute right-1 bottom-1 size-4 rounded-sm border-r-2 border-b-2 border-current">
+							<FlexiResize className="absolute bottom-1 right-1 size-4 rounded-sm border-b-2 border-r-2 border-current">
 								<span className="sr-only">Resize widget</span>
 							</FlexiResize>
 						</>
@@ -101,7 +104,6 @@ export function ResizeHandle() {
 	);
 }
 ```
-
 
 `className` may also be a function of the widget (`className={(widget) => widget.isGrabbed ? 'ring-2' : ''}`), re-evaluated as the widget's state changes.
 

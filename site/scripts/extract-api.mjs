@@ -379,7 +379,9 @@ for (const entry of manifest) {
 		generatedFrom: [entry.svelte, ...(entry.react ? [entry.react] : []), 'packages/core/src'],
 		props: extractMembers(propsAlias.getType(), { bindables, location: propsAlias }),
 		...(propsReact && { propsReact }),
-		...(entry.controller && { controller: extractController(findCoreDeclaration(entry.controller)) }),
+		...(entry.controller && {
+			controller: extractController(findCoreDeclaration(entry.controller))
+		}),
 		types
 	};
 

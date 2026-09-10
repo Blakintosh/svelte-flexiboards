@@ -1,4 +1,9 @@
-import { FlexiBoard, FlexiTarget, cssTransitionConfig, immediateTriggerConfig } from '@flexiboards/react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	cssTransitionConfig,
+	immediateTriggerConfig
+} from '@flexiboards/react';
 import type {
 	AdderWidgetConfiguration,
 	FlexiBoardConfiguration,
@@ -39,7 +44,13 @@ const canvasConfig = {
  * target's `header` slot (it renders nothing) because that is the one place
  * that re-renders with the target's own reactive state.
  */
-function CanvasSync({ target, onSync }: { target: FlexiTargetController; onSync: (target: FlexiTargetController) => void }) {
+function CanvasSync({
+	target,
+	onSync
+}: {
+	target: FlexiTargetController;
+	onSync: (target: FlexiTargetController) => void;
+}) {
 	useEffect(() => {
 		onSync(target);
 	});
@@ -158,7 +169,10 @@ export default function FormBuilderExample() {
 
 			if (added) {
 				selectField(added.widget as FlexiWidgetController);
-			} else if (selectedUidRef.current && !next.some((field) => field.uid === selectedUidRef.current)) {
+			} else if (
+				selectedUidRef.current &&
+				!next.some((field) => field.uid === selectedUidRef.current)
+			) {
 				selectedUidRef.current = undefined;
 				setSelectedUid(undefined);
 			}
@@ -178,7 +192,8 @@ export default function FormBuilderExample() {
 				'relative flex w-full min-w-0 flex-col rounded-[14px] border border-rule-soft bg-panel px-3.5 py-3 shadow-card transition-colors duration-[120ms]',
 				meta && meta.uid === selectedUidRef.current && 'bg-tint ring-2 ring-inset ring-blue',
 				widget.isGrabbed && ' opacity-95 shadow-lift',
-				widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent shadow-none',
+				widget.isShadow &&
+					'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent shadow-none',
 				widget.dropRejected && 'border-rule-soft opacity-30 saturate-0'
 			);
 		}
@@ -277,7 +292,13 @@ export default function FormBuilderExample() {
 						1 col · flow · metadata
 					</span>
 				</div>
-				<Button variant="outline" size="sm" className="rounded-full" onClick={resetForm} title="Reset the form">
+				<Button
+					variant="outline"
+					size="sm"
+					className="rounded-full"
+					onClick={resetForm}
+					title="Reset the form"
+				>
 					<RotateCcw className="size-3.5" />
 					<span className="max-sm:sr-only">Reset</span>
 				</Button>

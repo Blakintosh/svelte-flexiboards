@@ -16,13 +16,13 @@ constantly, any duration reads as lag between keypress and result.
 
 ## Where
 
-| File | Lines | What's there |
-| --- | --- | --- |
-| `site/src/lib/components/ui/sidebar/sidebar.svelte` | 72 | gap element: `transition-[width] duration-200 ease-linear` |
-| `site/src/lib/components/ui/sidebar/sidebar.svelte` | 83 | fixed panel: `transition-[left,right,width] duration-200 ease-linear` |
-| `site/src/lib/components/ui/sidebar/sidebar-rail.svelte` | 25 | `transition-all ease-linear` |
-| `site/src/lib/components/ui/sidebar/sidebar-group-label.svelte` | 18 | `transition-[margin,opacity] duration-200 ease-linear` |
-| `site/src/lib/components/ui/sidebar/context.svelte.ts` | 45 | keyboard handler that calls the toggle |
+| File                                                            | Lines | What's there                                                          |
+| --------------------------------------------------------------- | ----- | --------------------------------------------------------------------- |
+| `site/src/lib/components/ui/sidebar/sidebar.svelte`             | 72    | gap element: `transition-[width] duration-200 ease-linear`            |
+| `site/src/lib/components/ui/sidebar/sidebar.svelte`             | 83    | fixed panel: `transition-[left,right,width] duration-200 ease-linear` |
+| `site/src/lib/components/ui/sidebar/sidebar-rail.svelte`        | 25    | `transition-all ease-linear`                                          |
+| `site/src/lib/components/ui/sidebar/sidebar-group-label.svelte` | 18    | `transition-[margin,opacity] duration-200 ease-linear`                |
+| `site/src/lib/components/ui/sidebar/context.svelte.ts`          | 45    | keyboard handler that calls the toggle                                |
 
 ### Current code
 
@@ -30,7 +30,8 @@ constantly, any duration reads as lag between keypress and result.
 <!-- site/src/lib/components/ui/sidebar/sidebar.svelte:72 -->
 "w-(--sidebar-width) relative bg-transparent transition-[width] duration-200 ease-linear",
 <!-- :83 -->
-"w-(--sidebar-width) fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] duration-200 ease-linear md:flex",
+"w-(--sidebar-width) fixed inset-y-0 z-10 hidden h-svh transition-[left,right,width] duration-200 ease-linear
+md:flex",
 ```
 
 ```ts
@@ -50,11 +51,11 @@ if (e.key === SIDEBAR_KEYBOARD_SHORTCUT && (e.metaKey || e.ctrlKey)) {
 
 ```css
 /* Keyboard toggles never animate — the result must land with the keypress. */
-:root[data-sidebar-instant] [data-slot="sidebar-container"],
-:root[data-sidebar-instant] [data-slot="sidebar-gap"],
-:root[data-sidebar-instant] [data-slot="sidebar-rail"],
-:root[data-sidebar-instant] [data-slot="sidebar-group-label"] {
-  transition-duration: 0ms;
+:root[data-sidebar-instant] [data-slot='sidebar-container'],
+:root[data-sidebar-instant] [data-slot='sidebar-gap'],
+:root[data-sidebar-instant] [data-slot='sidebar-rail'],
+:root[data-sidebar-instant] [data-slot='sidebar-group-label'] {
+	transition-duration: 0ms;
 }
 ```
 
@@ -85,12 +86,15 @@ once the curve is steep. 0ms on the keyboard path because the rule is
 ## Verification
 
 **Build**
+
 - [ ] svelte-check passes.
 
 **Behavior**
+
 - [ ] Click the rail / trigger on `/examples/dashboard`: sidebar animates 200ms with a fast start.
 - [ ] Press ⌘B / Ctrl+B: sidebar snaps with no animation; press it ten times fast — no jitter, no mid-state.
 - [ ] Reduced motion: still fine (width change is a layout tween; acceptable at 200ms, instant on keyboard).
 
 **Feel**
+
 - [ ] Record a click toggle at 25% speed; the width should decelerate into place, not stop dead.

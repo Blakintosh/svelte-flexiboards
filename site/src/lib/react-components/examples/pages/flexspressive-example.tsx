@@ -83,7 +83,7 @@ function FlexspressiveHandset() {
 			</div>
 
 			{/* A lifted card standing in for the handset: soft bezel, no ink rule. */}
-			<div className="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pt-5 pb-3 text-sm">
+			<div className="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pb-3 pt-5 text-sm">
 				{!editMode ? (
 					<>
 						<div className="flex items-center justify-between">
@@ -118,7 +118,16 @@ function FlexspressiveHandset() {
 				{/* Uniform 46px rhythm: rows are fixed, so a tile is the same height wherever it lands. */}
 				<FlexiBoard config={boardConfig}>
 					<FlexiTarget config={targetConfig} className="gap-[7px]">
-						<Tile title="Internet" on x={0} y={0} width={2} height={1} onIcon={Wifi} offIcon={WifiOff} />
+						<Tile
+							title="Internet"
+							on
+							x={0}
+							y={0}
+							width={2}
+							height={1}
+							onIcon={Wifi}
+							offIcon={WifiOff}
+						/>
 						<Tile
 							title="Bluetooth"
 							on={false}

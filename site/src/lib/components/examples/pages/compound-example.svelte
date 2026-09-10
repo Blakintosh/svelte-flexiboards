@@ -119,7 +119,7 @@
 			</header>
 
 			{#key resetToken}
-				<FlexiBoard class="min-h-0 grow overflow-x-clip overflow-y-auto" config={outerConfig}>
+				<FlexiBoard class="min-h-0 grow overflow-y-auto overflow-x-clip" config={outerConfig}>
 					<FlexiTarget
 						key="tiles"
 						class="bg-stage h-full gap-2 overflow-x-clip rounded-[10px] pb-4 lg:pb-5"

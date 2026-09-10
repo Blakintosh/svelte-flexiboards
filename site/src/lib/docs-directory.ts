@@ -24,7 +24,11 @@ export const directory: DocSection[] = [
 			{ title: 'Changelog', href: '/docs/changelog' },
 			{ title: 'Migrating to v1.0', href: '/docs/breaking-changes-to-10' },
 			// Predates the React adapter.
-			{ title: 'Breaking Changes in v0.4', href: '/docs/breaking-changes-to-04', frameworks: ['svelte'] }
+			{
+				title: 'Breaking Changes in v0.4',
+				href: '/docs/breaking-changes-to-04',
+				frameworks: ['svelte']
+			}
 		]
 	},
 	{
@@ -95,10 +99,14 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
  */
 export function locateDoc(pathname: string, fw?: Framework): DocLocation | null {
 	const dir = fw ? directoryFor(fw) : directory;
-	let flat = dir.flatMap((section, si) => section.pages.map((page, pi) => ({ section, si, pi, page })));
+	let flat = dir.flatMap((section, si) =>
+		section.pages.map((page, pi) => ({ section, si, pi, page }))
+	);
 	let i = flat.findIndex((e) => e.page.href === pathname);
 	if (i === -1 && fw) {
-		flat = directory.flatMap((section, si) => section.pages.map((page, pi) => ({ section, si, pi, page })));
+		flat = directory.flatMap((section, si) =>
+			section.pages.map((page, pi) => ({ section, si, pi, page }))
+		);
 		i = flat.findIndex((e) => e.page.href === pathname);
 	}
 	if (i === -1) return null;

@@ -82,7 +82,7 @@
 				>
 					<div class="min-h-0 overflow-hidden">
 						<p
-							class="text-body m-0 box-content max-w-[420px] pb-4.5 pl-[34px] text-sm leading-[1.6]"
+							class="text-body pb-4.5 m-0 box-content max-w-[420px] pl-[34px] text-sm leading-[1.6]"
 							style="min-height: 44.8px"
 						>
 							{item.body}

@@ -44,7 +44,7 @@ A `FlexiWidget` is an invisible wrapper: it positions itself in the grid and han
 			x={1}
 			y={1}
 			draggability="none"
-			class="flex items-center justify-center rounded-lg bg-muted text-foreground"
+			class="bg-muted text-foreground flex items-center justify-center rounded-lg"
 		>
 			Fixed
 		</FlexiWidget>
@@ -81,12 +81,14 @@ export function StylingByState() {
 					}
 				}}
 			>
-				<FlexiWidget x={0} y={0}>{({ widget }) => (widget.isGrabbed ? 'Grabbed' : 'Drag me')}</FlexiWidget>
+				<FlexiWidget x={0} y={0}>
+					{({ widget }) => (widget.isGrabbed ? 'Grabbed' : 'Drag me')}
+				</FlexiWidget>
 				<FlexiWidget
 					x={1}
 					y={1}
 					draggability="none"
-					className="flex items-center justify-center rounded-lg bg-muted text-foreground"
+					className="bg-muted text-foreground flex items-center justify-center rounded-lg"
 				>
 					Fixed
 				</FlexiWidget>
@@ -126,20 +128,24 @@ Flexiboards pass parameters into the `children` snippet which you can access if 
 
 Passing `children` is the most intuitive approach to rendering a widget. Any elements or components you write become the content of your widget, like any other container component.
 
-`children` may also be a *render function*, which Flexiboards calls with the widget's controller. This is the React counterpart of Svelte's `children` snippet parameters, and lets you read the widget's reactive state without a separate component:
+`children` may also be a _render function_, which Flexiboards calls with the widget's controller. This is the React counterpart of Svelte's `children` snippet parameters, and lets you read the widget's reactive state without a separate component:
 
 ```tsx
-{/* Without the parameters — plain JSX children */}
-<FlexiWidget>I'm a FlexiWidget!</FlexiWidget>
+{
+	/* Without the parameters — plain JSX children */
+}
+<FlexiWidget>I'm a FlexiWidget!</FlexiWidget>;
 
-{/* With the parameters (e.g. get widget reactive data) — we discuss component and componentProps later */}
+{
+	/* With the parameters (e.g. get widget reactive data) — we discuss component and componentProps later */
+}
 <FlexiWidget>
 	{({ widget }) => (
 		<>
 			I'm a FlexiWidget at ({widget.x}, {widget.y})!
 		</>
 	)}
-</FlexiWidget>
+</FlexiWidget>;
 ```
 
 </Only>
@@ -236,7 +242,7 @@ Whichever approach you use, the widget's own element is styled with its class pr
 ```svelte
 <FlexiWidget
 	class={(widget) => [
-		'rounded-lg bg-muted px-4 py-2',
+		'bg-muted rounded-lg px-4 py-2',
 		widget.isShadow && 'opacity-50',
 		widget.isGrabbed && 'animate-pulse opacity-50',
 		widget.dropRejected && 'opacity-30'
@@ -260,7 +266,7 @@ import { clsx } from 'clsx';
 <FlexiWidget
 	className={(widget: FlexiWidgetController) =>
 		clsx(
-			'rounded-lg bg-muted px-4 py-2',
+			'bg-muted rounded-lg px-4 py-2',
 			widget.isShadow && 'opacity-50',
 			widget.isGrabbed && 'animate-pulse opacity-50',
 			widget.dropRejected && 'opacity-30'

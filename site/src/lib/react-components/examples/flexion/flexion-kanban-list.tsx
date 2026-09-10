@@ -85,7 +85,7 @@ export default function FlexionKanbanList({
 				<div className={twMerge('size-1.5 rounded-full', dotClass)}></div>
 				{categoryLabel}
 			</h3>
-			<span className="font-mono text-[11px] text-faint">{targetController.widgets.size}</span>
+			<span className="text-faint font-mono text-[11px]">{targetController.widgets.size}</span>
 		</div>
 	);
 
@@ -96,7 +96,7 @@ export default function FlexionKanbanList({
 				Add
 			</Button>
 		) : (
-			<div className="mt-1 flex w-48 items-center gap-2 rounded-[10px] border border-rule-soft bg-tint px-4 py-1 2xl:w-64">
+			<div className="border-rule-soft bg-tint mt-1 flex w-48 items-center gap-2 rounded-[10px] border px-4 py-1 2xl:w-64">
 				<Button
 					onClick={cancelAddItem}
 					variant="ghost"
@@ -110,7 +110,7 @@ export default function FlexionKanbanList({
 					ref={addInput}
 					value={newItem}
 					onChange={(event) => setNewItem(event.target.value)}
-					className="min-w-0 grow bg-transparent text-[13px] text-ink outline-none"
+					className="text-ink min-w-0 grow bg-transparent text-[13px] outline-none"
 				/>
 				<Button onClick={addItem} variant="link" size="sm" className="shrink-0">
 					Add
@@ -121,7 +121,7 @@ export default function FlexionKanbanList({
 	return (
 		<FlexiTarget
 			keyName={category}
-			className="w-72 lg:w-48 2xl:w-64 gap-1"
+			className="w-72 gap-1 lg:w-48 2xl:w-64"
 			onfirstcreate={(controller) => (target.current = controller)}
 			header={header}
 			footer={footer}
@@ -131,11 +131,11 @@ export default function FlexionKanbanList({
 					key={item.label}
 					className={(widget: FlexiWidgetController) =>
 						cn(
-							'rounded-[10px] border border-rule-soft bg-panel px-4 py-2 text-[13px] text-ink shadow-card',
+							'border-rule-soft bg-panel text-ink shadow-card rounded-[10px] border px-4 py-2 text-[13px]',
 							item.done && 'text-faint line-through',
-							widget.isGrabbed && ' border-rule-soft opacity-60 shadow-lift',
+							widget.isGrabbed && 'border-rule-soft shadow-lift opacity-60',
 							widget.isShadow &&
-								'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
+								'border-fx-accent/50 bg-tint-accent rounded-[14px] border-[1.5px] border-dashed'
 						)
 					}
 				>

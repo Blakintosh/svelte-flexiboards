@@ -1,11 +1,16 @@
 <script module lang="ts">
-	import { assistiveTextStyle, type FlexiAddClasses, type FlexiAddController, type FlexiAddWidgetFn, type FlexiCommonProps } from "@flexiboards/core";
-	import type { Snippet } from "svelte";
-	import { flexiadd } from "../adapters/misc.js";
-	import RenderedFlexiWidget from "./rendered-flexi-widget.svelte";
-	import { fromCore, reactive } from "../adapter.svelte.js";
-	import type { ClassValue } from "svelte/elements";
-
+	import {
+		assistiveTextStyle,
+		type FlexiAddClasses,
+		type FlexiAddController,
+		type FlexiAddWidgetFn,
+		type FlexiCommonProps
+	} from '@flexiboards/core';
+	import type { Snippet } from 'svelte';
+	import { flexiadd } from '../adapters/misc.js';
+	import RenderedFlexiWidget from './rendered-flexi-widget.svelte';
+	import { fromCore, reactive } from '../adapter.svelte.js';
+	import type { ClassValue } from 'svelte/elements';
 
 	export type FlexiAddProps = FlexiCommonProps<FlexiAddController> & {
 		/**

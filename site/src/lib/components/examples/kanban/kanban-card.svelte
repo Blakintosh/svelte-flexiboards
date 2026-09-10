@@ -42,7 +42,9 @@
 		>
 		<!-- The one data use of fx-accent: a date that has already passed. -->
 		<span
-			class="ml-auto truncate font-mono text-[11px] {card.overdue ? 'text-fx-accent' : 'text-faint'}"
+			class="ml-auto truncate font-mono text-[11px] {card.overdue
+				? 'text-fx-accent'
+				: 'text-faint'}"
 		>
 			{card.overdue ? 'Overdue' : (card.initials ?? '?')} · {card.overdue
 				? (card.initials ?? '?')

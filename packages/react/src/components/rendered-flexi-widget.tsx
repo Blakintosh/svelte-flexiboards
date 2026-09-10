@@ -98,9 +98,10 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 		useCallback(() => widget.snippet as FlexiWidgetChildren | undefined, [widget])
 	);
 	const WidgetComponent = useFromCore(
-		useCallback(() => widget.component as ComponentType<Record<string, unknown>> | undefined, [
-			widget
-		])
+		useCallback(
+			() => widget.component as ComponentType<Record<string, unknown>> | undefined,
+			[widget]
+		)
 	);
 	// Read raw (may be undefined) — defaulting to {} inside the read would build
 	// a fresh object per snapshot and break Object.is comparison.

@@ -2,11 +2,21 @@ import { TrendingUp } from 'lucide-react';
 
 /** Twins of `examples/flexiboard/tiles/*.svelte`. */
 
-function Metric({ value, note, accent = false }: { value: string; note: string; accent?: boolean }) {
+function Metric({
+	value,
+	note,
+	accent = false
+}: {
+	value: string;
+	note: string;
+	accent?: boolean;
+}) {
 	const tone = accent ? 'text-fx-accent' : 'text-blue';
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="text-ink font-serif text-[26px] font-semibold tracking-[-0.01em]">{value}</div>
+			<div className="text-ink font-serif text-[26px] font-semibold tracking-[-0.01em]">
+				{value}
+			</div>
 			<div className="flex items-center gap-1.5">
 				<TrendingUp className={`${tone} size-3.5`} />
 				<p className={`${tone} text-[12px]`}>{note}</p>
@@ -85,7 +95,9 @@ export function ActiveTile() {
 		<div className="flex flex-col gap-2">
 			<style>{liveDotCss}</style>
 			<div className="flex items-center gap-2.5">
-				<span className="text-ink font-serif text-[26px] font-semibold tracking-[-0.01em]">573</span>
+				<span className="text-ink font-serif text-[26px] font-semibold tracking-[-0.01em]">
+					573
+				</span>
 				{/* The permitted loop on this sheet: a dot marking a live count. */}
 				<span className="live-dot bg-fx-accent block size-2 rounded-full"></span>
 			</div>

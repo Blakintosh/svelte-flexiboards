@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { assistiveTextStyle, flexiannouncer, type InternalFlexiBoardController } from "@flexiboards/core";
+	import {
+		assistiveTextStyle,
+		flexiannouncer,
+		type InternalFlexiBoardController
+	} from '@flexiboards/core';
 	import { fromCore } from '../adapter.svelte.js';
 
 	type FlexiAnnouncerProps = {

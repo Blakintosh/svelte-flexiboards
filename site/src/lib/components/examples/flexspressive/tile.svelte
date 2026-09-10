@@ -1,31 +1,32 @@
 <script module lang="ts">
-	import { untrack, type Component, type Snippet } from "svelte";
-    import { FlexiResize, FlexiWidget, type FlexiWidgetProps } from "@flexiboards/svelte";
-	import { getFlexspressiveEditor } from "./index.svelte";
-	import TileContents from "./tile-contents.svelte";
+	import { untrack, type Component, type Snippet } from 'svelte';
+	import { FlexiResize, FlexiWidget, type FlexiWidgetProps } from '@flexiboards/svelte';
+	import { getFlexspressiveEditor } from './index.svelte';
+	import TileContents from './tile-contents.svelte';
 
-    export type TileProps = FlexiWidgetProps & {
-        title: string;
-        on: boolean;
-        onIcon?: any;
-        offIcon?: any;
-    };
+	export type TileProps = FlexiWidgetProps & {
+		title: string;
+		on: boolean;
+		onIcon?: any;
+		offIcon?: any;
+	};
 </script>
 
 <script lang="ts">
-    let { title, on = $bindable(), onIcon: Icon, offIcon: OffIcon, ...props }: TileProps = $props();
+	let { title, on = $bindable(), onIcon: Icon, offIcon: OffIcon, ...props }: TileProps = $props();
 </script>
 
-<FlexiWidget {...props} 
-    draggability={'none'}
-    resizability={'none'} 
-    maxWidth={2}
-    maxHeight={1}
-    component={TileContents}
-    componentProps={{
-        title,
-        on,
-        onIcon: Icon,
-        offIcon: OffIcon
-    }}
+<FlexiWidget
+	{...props}
+	draggability={'none'}
+	resizability={'none'}
+	maxWidth={2}
+	maxHeight={1}
+	component={TileContents}
+	componentProps={{
+		title,
+		on,
+		onIcon: Icon,
+		offIcon: OffIcon
+	}}
 />
