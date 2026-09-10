@@ -13,6 +13,8 @@ Two adapters share one core and one API: `@flexiboards/svelte` (Svelte 5) and `@
 
 | You want | Use |
 | --- | --- |
+| A single sortable list, nothing else | `FlexiSortable` preset (`direction="vertical"` or `"horizontal"`); a flow target on a board with the layout chosen |
+| A single dashboard grid, nothing else | `FlexiDashboard` preset (`columns`, `rows`, `maxRows`, `resizable`); a free target on a board |
 | Items keep an order and pack together (kanban column, sortable list, gallery) | `layout: { type: 'flow', flowAxis: 'row' or 'column', placementStrategy: 'append' }` |
 | Items sit at coordinates and can leave gaps (dashboard, launcher) | `layout: { type: 'free', minColumns, maxColumns, minRows, maxRows }` |
 | Several lists that trade items | One `FlexiBoard`, one `FlexiTarget` per list, each with a `keyName` (React) or `key` (Svelte) |
@@ -21,7 +23,7 @@ Two adapters share one core and one API: `@flexiboards/svelte` (Svelte 5) and `@
 | Users remove items by dropping them somewhere | `FlexiDelete` |
 | Save and restore | `board.exportLayout()`, `board.importLayout()`, or `loadLayout` and `onLayoutChange` in the board config, plus a `registry` |
 
-A flow grid with one column and no `rows` cap is the sortable list most people ask for. Start there unless coordinates matter.
+Start with a preset when the board is one list or one grid; they take the same `config`, `targetConfig`, callbacks and children as the full components, and swapping to `FlexiBoard` + `FlexiTarget` later is mechanical. Reach for the full components when there are several targets, a header or footer around the grid, or the target is not the whole board.
 
 ## The smallest working board
 

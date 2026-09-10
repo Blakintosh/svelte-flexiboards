@@ -43,6 +43,22 @@ const manifest = [
 		]
 	},
 	{
+		id: 'flexi-sortable',
+		component: 'FlexiSortable',
+		svelte: 'packages/svelte/src/components/flexi-sortable.svelte',
+		react: 'packages/react/src/components/flexi-sortable.tsx',
+		propsType: 'FlexiSortableProps',
+		types: []
+	},
+	{
+		id: 'flexi-dashboard',
+		component: 'FlexiDashboard',
+		svelte: 'packages/svelte/src/components/flexi-dashboard.svelte',
+		react: 'packages/react/src/components/flexi-dashboard.tsx',
+		propsType: 'FlexiDashboardProps',
+		types: []
+	},
+	{
 		id: 'flexi-target',
 		component: 'FlexiTarget',
 		svelte: 'packages/svelte/src/components/flexi-target.svelte',

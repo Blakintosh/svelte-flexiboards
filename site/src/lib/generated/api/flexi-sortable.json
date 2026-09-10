@@ -1,0 +1,113 @@
+{
+	"component": "FlexiSortable",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-sortable.svelte",
+		"packages/react/src/components/flexi-sortable.tsx",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "FlexiBoardController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "direction",
+			"type": "'vertical' | 'horizontal'",
+			"description": "Which way the list runs. Vertical is a column of rows, horizontal a row of columns.",
+			"default": "'vertical'"
+		},
+		{
+			"name": "key",
+			"type": "string",
+			"description": "The target key, used when a layout is exported or imported.",
+			"default": "'list'"
+		},
+		{
+			"name": "class",
+			"type": "ClassValue",
+			"description": "Classes for the list's grid element (the place for `gap-*`)."
+		},
+		{
+			"name": "containerClass",
+			"type": "string",
+			"description": "Classes for the element wrapping the grid."
+		},
+		{
+			"name": "boardClass",
+			"type": "ClassValue",
+			"description": "Classes for the board's root element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiBoardConfiguration<ClassValue>",
+			"description": "Board configuration merged over the preset's defaults (widgets fully draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts."
+		},
+		{
+			"name": "targetConfig",
+			"type": "Omit<FlexiTargetPartialConfiguration<ClassValue>, 'layout'>",
+			"description": "Target configuration merged over the preset's. The layout is fixed by `direction`; sizing and widget defaults are yours to set."
+		},
+		{
+			"name": "children",
+			"type": "Snippet",
+			"description": "The list items: FlexiWidget declarations."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "direction",
+			"type": "'vertical' | 'horizontal'",
+			"description": "Which way the list runs. Vertical is a column of rows, horizontal a row of columns.",
+			"default": "'vertical'"
+		},
+		{
+			"name": "keyName",
+			"type": "string",
+			"description": "The target key, used when a layout is exported or imported.",
+			"default": "'list'"
+		},
+		{
+			"name": "className",
+			"type": "string",
+			"description": "Classes for the list's grid element (the place for `gap-*`)."
+		},
+		{
+			"name": "containerClassName",
+			"type": "string",
+			"description": "Classes for the element wrapping the grid."
+		},
+		{
+			"name": "boardClassName",
+			"type": "string",
+			"description": "Classes for the board's root element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiBoardConfiguration",
+			"description": "Board configuration merged over the preset's defaults (widgets fully draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts. Keep it referentially stable."
+		},
+		{
+			"name": "targetConfig",
+			"type": "Omit<FlexiTargetPartialConfiguration, 'layout'>",
+			"description": "Target configuration merged over the preset's. The layout is fixed by `direction`; sizing and widget defaults are yours to set."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode",
+			"description": "The list items: FlexiWidget declarations."
+		}
+	],
+	"types": {}
+}

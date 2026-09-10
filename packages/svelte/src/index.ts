@@ -4,6 +4,8 @@ import FlexiBoard, {
 	type FlexiBoardSuspenseReason
 } from './components/flexi-board.svelte';
 import FlexiTarget, { type FlexiTargetProps } from './components/flexi-target.svelte';
+import FlexiSortable, { type FlexiSortableProps } from './components/flexi-sortable.svelte';
+import FlexiDashboard, { type FlexiDashboardProps } from './components/flexi-dashboard.svelte';
 import FlexiWidget, { type FlexiWidgetProps } from './components/flexi-widget.svelte';
 import FlexiGrab from './components/flexi-grab.svelte';
 import FlexiResize from './components/flexi-resize.svelte';
@@ -76,6 +78,10 @@ export {
 	type FlexiBoardSuspenseReason,
 	FlexiTarget,
 	type FlexiTargetProps,
+	FlexiSortable,
+	type FlexiSortableProps,
+	FlexiDashboard,
+	type FlexiDashboardProps,
 	FlexiWidget,
 	type FlexiWidgetProps,
 	FlexiGrab,

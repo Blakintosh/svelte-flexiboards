@@ -1,0 +1,149 @@
+{
+	"component": "FlexiDashboard",
+	"generatedFrom": [
+		"packages/svelte/src/components/flexi-dashboard.svelte",
+		"packages/react/src/components/flexi-dashboard.tsx",
+		"packages/core/src"
+	],
+	"props": [
+		{
+			"name": "controller",
+			"type": "FlexiBoardController | undefined",
+			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"bindable": true
+		},
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "columns",
+			"type": "number",
+			"description": "Columns in the grid.",
+			"default": "4"
+		},
+		{
+			"name": "rows",
+			"type": "number",
+			"description": "Rows the grid starts with.",
+			"default": "3"
+		},
+		{
+			"name": "maxRows",
+			"type": "number",
+			"description": "Rows the grid may grow to as widgets are pushed down.",
+			"default": "rows"
+		},
+		{
+			"name": "resizable",
+			"type": "boolean",
+			"description": "Let widgets be resized from their FlexiResize handles.",
+			"default": "false"
+		},
+		{
+			"name": "key",
+			"type": "string",
+			"description": "The target key, used when a layout is exported or imported.",
+			"default": "'dashboard'"
+		},
+		{
+			"name": "class",
+			"type": "ClassValue",
+			"description": "Classes for the grid element (the place for `gap-*`)."
+		},
+		{
+			"name": "containerClass",
+			"type": "string",
+			"description": "Classes for the element wrapping the grid."
+		},
+		{
+			"name": "boardClass",
+			"type": "ClassValue",
+			"description": "Classes for the board's root element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiBoardConfiguration<ClassValue>",
+			"description": "Board configuration merged over the preset's defaults."
+		},
+		{
+			"name": "targetConfig",
+			"type": "Omit<FlexiTargetPartialConfiguration<ClassValue>, 'layout'>",
+			"description": "Target configuration merged over the preset's. The layout comes from `columns`, `rows` and `maxRows`."
+		},
+		{
+			"name": "children",
+			"type": "Snippet",
+			"description": "The tiles: FlexiWidget declarations with `x`, `y`, `width`, `height`."
+		}
+	],
+	"propsReact": [
+		{
+			"name": "onfirstcreate",
+			"type": "((instance: FlexiBoardController) => void) | undefined",
+			"description": "A callback that fires when the component's controller is first created."
+		},
+		{
+			"name": "columns",
+			"type": "number",
+			"description": "Columns in the grid.",
+			"default": "4"
+		},
+		{
+			"name": "rows",
+			"type": "number",
+			"description": "Rows the grid starts with.",
+			"default": "3"
+		},
+		{
+			"name": "maxRows",
+			"type": "number",
+			"description": "Rows the grid may grow to as widgets are pushed down.",
+			"default": "rows"
+		},
+		{
+			"name": "resizable",
+			"type": "boolean",
+			"description": "Let widgets be resized from their FlexiResize handles.",
+			"default": "false"
+		},
+		{
+			"name": "keyName",
+			"type": "string",
+			"description": "The target key, used when a layout is exported or imported.",
+			"default": "'dashboard'"
+		},
+		{
+			"name": "className",
+			"type": "string",
+			"description": "Classes for the grid element (the place for `gap-*`)."
+		},
+		{
+			"name": "containerClassName",
+			"type": "string",
+			"description": "Classes for the element wrapping the grid."
+		},
+		{
+			"name": "boardClassName",
+			"type": "string",
+			"description": "Classes for the board's root element."
+		},
+		{
+			"name": "config",
+			"type": "FlexiBoardConfiguration",
+			"description": "Board configuration merged over the preset's defaults. Keep it referentially stable."
+		},
+		{
+			"name": "targetConfig",
+			"type": "Omit<FlexiTargetPartialConfiguration, 'layout'>",
+			"description": "Target configuration merged over the preset's. The layout comes from `columns`, `rows` and `maxRows`."
+		},
+		{
+			"name": "children",
+			"type": "ReactNode",
+			"description": "The tiles: FlexiWidget declarations with `x`, `y`, `width`, `height`."
+		}
+	],
+	"types": {}
+}

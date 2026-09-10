@@ -12,6 +12,10 @@ export {
 } from './components/responsive-flexi-board.js';
 export { FlexiWidget, type FlexiWidgetProps } from './components/flexi-widget.js';
 
+// Presets: one board and one target with the layout chosen for you.
+export { FlexiSortable, type FlexiSortableProps } from './components/flexi-sortable.js';
+export { FlexiDashboard, type FlexiDashboardProps } from './components/flexi-dashboard.js';
+
 // Adapter context hooks
 export { useFlexiBoard } from './adapters/board.js';
 export { useFlexiTarget } from './adapters/target.js';

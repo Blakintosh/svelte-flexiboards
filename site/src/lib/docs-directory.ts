@@ -32,6 +32,7 @@ export const directory: DocSection[] = [
 			// Ordered as a developer meets them: the flow grid every intro example
 			// uses, then the sparse grid, then composition, content, motion,
 			// persistence, and finally the environment concerns.
+			{ title: 'Presets', href: '/docs/presets' },
 			{ title: 'Flow Grids', href: '/docs/flow-grids' },
 			{ title: 'Free-Form Grids', href: '/docs/free-form-grids' },
 			{ title: 'Multiple Targets', href: '/docs/multiple-targets' },
