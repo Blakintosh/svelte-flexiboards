@@ -18,7 +18,7 @@ export default defineConfig({
 	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 	webServer: {
 		command:
-			'node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && vite build && vite preview --port 4173 --strictPort',
+			'node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node --test scripts/build-llms-docs.test.mjs && node scripts/build-registry.mjs && vite build && vite preview --port 4173 --strictPort',
 		url: 'http://localhost:4173',
 		reuseExistingServer: !process.env.CI,
 		timeout: 300_000

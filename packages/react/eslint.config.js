@@ -16,6 +16,9 @@ export default defineConfig([
 		languageOptions: {
 			globals: globals.browser
 		},
+		settings: {
+			'react-hooks': { additionalEffectHooks: 'useClientLayoutEffect' }
+		},
 		rules: {
 			// Underscore-prefixed names mark deliberate exclusions (e.g. destructuring
 			// a prop out so it stays off a rest spread), matching tsc's convention.

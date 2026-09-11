@@ -5,9 +5,10 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm -r build",
-		"build:packages": "pnpm -F \"./packages/**\" -F \"!@flexiboards/react\" build",
+		"build:packages": "pnpm -r --filter './packages/*' build",
 		"check": "pnpm build:packages && pnpm -r check",
-		"ci:publish": "pnpm -C packages/core build && pnpm -C packages/svelte build && pnpm -C packages/react build && changeset publish",
+		"check:artifacts": "node scripts/check-package-artifacts.mjs",
+		"ci:publish": "pnpm build:packages && pnpm check:artifacts && changeset publish",
 		"dev": "pnpm -r --parallel dev",
 		"dev:host": "pnpm -r --parallel dev:host",
 		"format": "prettier --write .",

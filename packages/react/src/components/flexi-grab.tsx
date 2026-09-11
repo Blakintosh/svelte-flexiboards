@@ -33,6 +33,7 @@ export function FlexiGrab({ className, children }: FlexiGrabProps) {
 
 	return (
 		<button
+			type="button"
 			className={derivedClassName}
 			disabled={!enabled}
 			style={{ userSelect: 'none', touchAction: 'none', cursor: enabled ? 'grab' : 'not-allowed' }}

@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { act } from 'react';
 import {
 	FlexiBoard,
+	FlexiAdd,
 	FlexiDelete,
 	FlexiGrab,
 	FlexiResize,
@@ -57,6 +58,30 @@ function Status() {
 const status = () =>
 	document.querySelector('[role="cell"]:not([aria-label="Widget action preview"]) .status')!
 		.textContent;
+
+it('never submits a surrounding form from an add, grab, or resize button', () => {
+	const submit = vi.fn((event: React.FormEvent) => event.preventDefault());
+	mounted = mount(
+		<form onSubmit={submit}>
+			<FlexiBoard>
+				<FlexiAdd addWidget={() => null}>add</FlexiAdd>
+				<FlexiTarget keyName="main" config={freeLayout}>
+					<FlexiWidget x={0} y={0} width={1} height={1} resizability="both">
+						<FlexiGrab>grab</FlexiGrab>
+						<FlexiResize>resize</FlexiResize>
+					</FlexiWidget>
+				</FlexiTarget>
+			</FlexiBoard>
+		</form>
+	);
+	const buttons = [...document.querySelectorAll('button')];
+	expect(buttons).toHaveLength(3);
+	for (const button of buttons) {
+		expect(button.disabled).toBe(false);
+		act(() => button.click());
+	}
+	expect(submit).not.toHaveBeenCalled();
+});
 
 describe('keyboard grab via FlexiGrab', () => {
 	it('grabs on Enter, exposes isGrabbed through useFlexiWidget, and cancels on Escape', () => {

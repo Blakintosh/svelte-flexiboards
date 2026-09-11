@@ -288,6 +288,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 
 		// If the widget can't be added, it's probably a collision.
 		if (!this.#tryAddWidget(widget, x, y, width, height)) {
+			widget.destroy();
 			console.warn(
 				"Failed to add widget to target. Check that the widget's x and y coordinates do not lead to an unresolvable collision."
 			);
@@ -436,8 +437,13 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			return;
 		}
 
+		// Replacing a layout is not a user deletion: dispose the old controllers
+		// without firing delete callbacks or retaining their event subscriptions.
+		for (const widget of this.internalWidgets) widget.destroy();
 		this.widgets.clear();
 		this.grid.clear();
+		this.forgetPreGrabSnapshot();
+		this.#updateOrderedWidgets();
 
 		for (const entry of layout) {
 			if (!entry.type) {

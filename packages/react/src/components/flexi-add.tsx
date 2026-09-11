@@ -68,6 +68,7 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 	return (
 		<FlexiAddContext.Provider value={adder}>
 			<button
+				type="button"
 				className={derivedClassName}
 				ref={controllerRef(adder)}
 				aria-describedby={assistiveTextId}

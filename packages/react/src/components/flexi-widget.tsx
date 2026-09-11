@@ -5,9 +5,9 @@ import type {
 	InternalFlexiWidgetController
 } from '@flexiboards/core';
 import type { FlexiWidgetConfiguration } from '../types.js';
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useFlexiWidgetInit, type FlexiWidgetChildren } from '../adapters/widget.js';
-import type { FlexiCommonProps } from '../adapters/utils.js';
+import { useClientLayoutEffect, type FlexiCommonProps } from '../adapters/utils.js';
 
 export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
 	Omit<FlexiWidgetConfiguration, 'className' | 'snippet'> & {
@@ -56,7 +56,7 @@ export function FlexiWidget({
 
 	// onfirstcreate fires once the widget exists, from a layout effect (like the
 	// other components' useOnceCommitted), so the consumer may set state in it.
-	useLayoutEffect(() => {
+	useClientLayoutEffect(() => {
 		if (firstCreateFired.current || !createdWidget.current) return;
 		firstCreateFired.current = true;
 		onfirstcreate?.(createdWidget.current);

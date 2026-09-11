@@ -61,7 +61,12 @@ const config = {
 		// project (shadcn's `@/` alias), so those paths point back into this repo.
 		alias: {
 			'@/lib/utils': './src/lib/utils',
-			'@/components/flexi-handles/*': './src/lib/registry/react/flexi-handles/*'
+			'@/components/flexi-handles/*': './src/lib/registry/react/flexi-handles/*',
+			...Object.fromEntries(
+				['flexi-dashboard', 'flexi-sortable-list', 'flexi-board'].flatMap((name) => [
+					[`@/components/${name}`, `./src/lib/registry/react/${name}/index.ts`]
+				])
+			)
 		},
 		typescript: {
 			config: (tsconfig) => {

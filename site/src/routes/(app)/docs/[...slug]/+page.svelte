@@ -11,12 +11,17 @@
 	let { data }: { data: PageData } = $props();
 
 	// The Markdown twin of this page (see /docs/llms), for pasting into an assistant.
-	const markdownHref = $derived(`${page.url.pathname}.md`);
+	const markdownHref = $derived(`${page.url.pathname}.md?framework=${framework.current}`);
 	let copyState = $state<'idle' | 'copied' | 'failed'>('idle');
 
 	async function copyMarkdown() {
-		const markdown = await fetch(markdownHref).then((r) => r.text());
-		copyState = (await copyText(markdown)) ? 'copied' : 'failed';
+		try {
+			const response = await fetch(markdownHref);
+			if (!response.ok) throw new Error('Markdown unavailable');
+			copyState = (await copyText(await response.text())) ? 'copied' : 'failed';
+		} catch {
+			copyState = 'failed';
+		}
 		setTimeout(() => (copyState = 'idle'), 2000);
 	}
 
@@ -43,21 +48,22 @@
 
 <!-- The Markdown twin of this page, for agents and anything else that would rather read plain text. -->
 <svelte:head>
-	<link rel="alternate" type="text/markdown" href={`${page.url.pathname}.md`} />
+	<link rel="alternate" type="text/markdown" href={markdownHref} />
 </svelte:head>
 
 <!-- Three columns divided by single 1px rules; the prose measure is capped by `.prose`. -->
 <div class="relative flex h-full">
-	<nav class="border-rule hidden w-60 shrink-0 border-r lg:block">
+	<aside class="border-rule hidden w-60 shrink-0 border-r lg:block">
 		<!-- 60px header, so sticky content clears at top-15. -->
-		<div class="top-15 sticky">
+		<div class="top-15 sticky h-[calc(100dvh-3.75rem)]">
 			<div
-				class="flex h-[calc(100%-6.5rem)] max-h-[calc(100%-6.5rem)] min-h-0 flex-col overflow-y-auto py-12 pr-6"
+				class="h-full overflow-y-auto overscroll-contain py-8 pr-6 [scrollbar-gutter:stable]"
+				data-docs-scroll="contents"
 			>
 				<DocumentationSidebar />
 			</div>
 		</div>
-	</nav>
+	</aside>
 	<!--
 		No `dark:prose-invert`: the brand prose tokens in app.css already flip under
 		`.dark`, and the plugin's inverted greys would override them.
@@ -117,8 +123,7 @@
 			</div>
 			{#if notApplicable}
 				<Callout variant="warning" title="{appliesTo} only">
-					This guide applies to the {appliesTo} adapter. The {framework.meta.label} adapter renders client-side
-					only, so nothing here is needed there.
+					This guide applies to the {appliesTo} adapter. Select that framework to follow its examples.
 				</Callout>
 			{/if}
 			<PageComponent />
@@ -153,7 +158,10 @@
 		</article>
 	</div>
 	<aside class="border-rule hidden w-60 shrink-0 border-l xl:block">
-		<div class="top-15 sticky flex flex-col gap-6 py-12 pl-6">
+		<div
+			class="top-15 sticky max-h-[calc(100dvh-3.75rem)] overflow-y-auto overscroll-contain py-8 pl-6 [scrollbar-gutter:stable]"
+			data-docs-scroll="page"
+		>
 			<Toc />
 		</div>
 	</aside>

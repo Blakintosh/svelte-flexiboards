@@ -1,6 +1,9 @@
 import type { FlexiCommonProps as CoreFlexiCommonProps } from '@flexiboards/core';
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
 
+/** Layout timing in the browser, without React 18's server layout-effect warning. */
+export const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 /**
  * Props every Flexiboards component accepts. Core's version also carries a
  * `controller` bindable, which has no React equivalent: read the controller
@@ -97,7 +100,7 @@ export function useOnce(fn: () => void) {
  */
 export function useOnceCommitted(fn: () => void) {
 	const ran = useRef(false);
-	useLayoutEffect(() => {
+	useClientLayoutEffect(() => {
 		if (ran.current) return;
 		ran.current = true;
 		fn();

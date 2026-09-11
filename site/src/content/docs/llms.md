@@ -7,6 +7,7 @@ published: true
 
 <script lang="ts">
 	import InstallCommand from '$lib/components/docs/install-command.svelte';
+	import Only from '$lib/components/docs/only.svelte';
 </script>
 
 These docs follow the [llms.txt convention](https://llmstxt.org), so an assistant can read them without scraping HTML. Every page on this site also has a Markdown twin.
@@ -19,11 +20,31 @@ These docs follow the [llms.txt convention](https://llmstxt.org), so an assistan
 | [/llms-full.txt](/llms-full.txt) | The full text of every docs page in one file, for tools that want everything in context at once.                                |
 | `/docs/<page>.md`                | Any docs page as Markdown, at the page's own URL with `.md` appended. [/docs/flow-grids.md](/docs/flow-grids.md), for example.  |
 
-The Markdown pages contain both the Svelte and the React code samples, each under its own lead line, and the API tables rendered as Markdown tables. Each HTML page links to its twin with `<link rel="alternate" type="text/markdown">`, so a tool that fetches a page can find the plain version on its own.
+## Choose a framework
+
+Markdown accepts a `framework` query parameter. It selects the examples, framework-specific prose, prop names, and API tables—not just code fences. Shared explanations appear once.
+
+<Only svelte>
+
+- [One page](/docs/flow-grids.md?framework=svelte): `/docs/flow-grids.md?framework=svelte`
+- [Full docs](/llms-full.txt?framework=svelte): `/llms-full.txt?framework=svelte`
+
+</Only>
+
+<Only react>
+
+- [One page](/docs/flow-grids.md?framework=react): `/docs/flow-grids.md?framework=react`
+- [Full docs](/llms-full.txt?framework=react): `/llms-full.txt?framework=react`
+
+</Only>
+
+Omit the query or use `?framework=all` for both frameworks, useful when comparing adapters. These URLs are independent of cookies, so sharing a link always shares the same version. Framework-only migration pages are omitted from the other framework's full docs and return 404 when explicitly requested for it.
+
+Each HTML page advertises the selected version with `<link rel="alternate" type="text/markdown">`, so tools can discover the appropriate plain-text URL.
 
 ## Copy a page
 
-Every docs page has a **Copy as Markdown** action under its title, next to the edit link. It puts the page's Markdown on your clipboard, ready to paste into a chat. **Open Markdown** beside it opens the twin in a new tab if you would rather link to it.
+Every docs page has a **Copy as Markdown** action under its title, next to the edit link. It copies only the currently selected framework's documentation. **Open Markdown** opens that same version in a new tab. Both actions follow the framework picker automatically.
 
 ## Skill
 

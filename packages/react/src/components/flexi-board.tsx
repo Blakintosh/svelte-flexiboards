@@ -29,9 +29,15 @@ import { FlexiAnnouncer } from './flexi-announcer.js';
 import { FlexiLayoutLoader } from './flexi-layout-loader.js';
 import { FlexiPortal } from './flexi-portal.js';
 import { FlexiSuspenseBoundary, type FlexiBoardSuspenseReason } from './flexi-suspense-boundary.js';
+import type { FlexiBoardConfiguration } from '../types.js';
 
-export type FlexiBoardProps = Omit<FlexiBoardPropsPrimitive<string>, 'class' | 'controller'> &
+export type FlexiBoardProps = Omit<
+	FlexiBoardPropsPrimitive<string>,
+	'class' | 'controller' | 'config'
+> &
 	FlexiCommonProps<FlexiBoardController> & {
+		/** Board configuration, including React widget render functions and components. */
+		config?: FlexiBoardConfiguration;
 		/**
 		 * The child content of the board, which should contain the inner
 		 * FlexiTarget and FlexiWidget components.
@@ -107,10 +113,9 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 	// --- Suspense (framework-managed skeleton) ---------------------------------
 	// The fallback must exist in the SSR HTML and through hydration: before JS
 	// runs, only CSS can decide whether to show it. The breakpoint case is the
-	// subtle one: `breakpointPending` is null on the client from the first
-	// render (matchMedia answers immediately), but the server HTML contains the
-	// fallback — so until mount we reconstruct the server's reason from the
-	// environment-independent assumed breakpoint, keeping the trees identical.
+	// subtle one: a responsive controller retains the assumed breakpoint
+	// through hydration, then confirms it after commit. Until mount, retain
+	// the server's reason even if a parent's layout effect already resolved it.
 	// false on the server and through hydration, true once mounted — the
 	// hydration-safe "has mounted" flag, with no state write in an effect.
 	const mounted = useSyncExternalStore(
@@ -119,19 +124,21 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 		() => false
 	);
 	const hasSuspense = !!suspense;
-	const suspenseReason = useFromCore(
-		useCallback((): FlexiBoardSuspenseReason | null => {
-			if (!hasSuspense) return null;
-			if (board.layoutPending) return { reason: 'layout' };
-			const serverAssumed = board.breakpointPending;
-			if (serverAssumed !== null) return { reason: 'breakpoint', assumed: serverAssumed };
-			if (!mounted) {
-				const assumed = board.ssrAssumedBreakpoint;
-				if (assumed !== null) return { reason: 'breakpoint', assumed };
-			}
-			return null;
-		}, [board, hasSuspense, mounted])
+	// External-store snapshots must be stable: subscribe to a scalar and only
+	// construct the public reason object afterwards.
+	const breakpointAssumed = useFromCore(
+		useCallback(
+			() => board.breakpointPending ?? (!mounted ? board.ssrAssumedBreakpoint : null),
+			[board, mounted]
+		)
 	);
+	const suspenseReason: FlexiBoardSuspenseReason | null = !hasSuspense
+		? null
+		: pending === 'layout'
+			? { reason: 'layout' }
+			: breakpointAssumed !== null
+				? { reason: 'breakpoint', assumed: breakpointAssumed }
+				: null;
 
 	const boardContent = (
 		<>

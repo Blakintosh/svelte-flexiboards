@@ -1,5 +1,19 @@
-import { effect } from '@flexiboards/core';
-import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
+import { effect, ReactiveMap, ReactiveSet } from '@flexiboards/core';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useClientLayoutEffect } from './utils.js';
+
+// Collection objects keep their identity across mutations. Reading their
+// contents here both tracks their signal and snapshots membership/order.
+function snapshot(value: unknown): unknown[] {
+	if (value instanceof ReactiveMap) return [value, ...Array.from(value).flat()];
+	if (value instanceof ReactiveSet) return [value, ...value];
+	if (Array.isArray(value)) return [...value];
+	return [value];
+}
+
+function equal(a: unknown[] | undefined, b: unknown[]): boolean {
+	return !!a && a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
+}
 
 /**
  * The React twin of the Svelte adapter's `reactive()` proxy: wraps a core
@@ -13,6 +27,7 @@ import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
  * on its own) pass straight through and subscribe nothing.
  *
  * Tracking is top-level: `widget.metadata.type` subscribes to `metadata`.
+ * ReactiveSet/ReactiveMap values also subscribe to collection mutations.
  * Recorded keys are never forgotten, so a key read in one branch stays
  * subscribed — harmless over-subscription rather than a missed update.
  */
@@ -23,6 +38,7 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 	const tracked = useRef(new Set<PropertyKey>());
 	const rendering = useRef(false);
 	const bound = useRef(new Map<PropertyKey, unknown>());
+	const rendered = useRef(new Map<PropertyKey, unknown[]>());
 
 	// The render-time ref writes/reads below are the mechanism, not a mistake:
 	// the proxy must know whether a property read happens during render (to
@@ -30,7 +46,7 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 	// effect and never influence rendered output directly.
 	/* eslint-disable react-hooks/refs */
 	rendering.current = true;
-	useLayoutEffect(() => {
+	useClientLayoutEffect(() => {
 		rendering.current = false;
 	});
 
@@ -43,11 +59,16 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 		subscribed.current?.dispose();
 		let first = true;
 		const dispose = effect(() => {
-			for (const key of tracked.current) void Reflect.get(controller, key, controller);
-			// The effect body runs once at creation to establish tracking; only
-			// later runs mean something changed.
-			if (first) first = false;
-			else rerender();
+			let missedUpdate = false;
+			for (const key of tracked.current) {
+				const current = snapshot(Reflect.get(controller, key, controller));
+				if (!equal(rendered.current.get(key), current)) missedUpdate = true;
+			}
+			// Layout effects (including onfirstcreate) may have changed core
+			// after render but before this subscription existed. Reconcile that
+			// window instead of unconditionally ignoring the initial notification.
+			if (!first || missedUpdate) rerender();
+			first = false;
 		});
 		subscribed.current = { size, dispose };
 	});
@@ -62,6 +83,7 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 	return useMemo(() => {
 		tracked.current.clear();
 		bound.current.clear();
+		rendered.current.clear();
 		// Accepting a missing controller lets a parent hold one it receives later
 		// (via onfirstcreate) in state and read it reactively once it arrives.
 		if (!controller) return undefined;
@@ -76,7 +98,10 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 					}
 					return fn;
 				}
-				if (rendering.current) tracked.current.add(key);
+				if (rendering.current) {
+					tracked.current.add(key);
+					rendered.current.set(key, snapshot(value));
+				}
 				return value;
 			},
 			// Writes go straight to the controller's own setters (e.g.

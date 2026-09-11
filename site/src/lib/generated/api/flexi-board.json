@@ -46,8 +46,8 @@
 		},
 		{
 			"name": "config",
-			"type": "FlexiBoardConfiguration<string> | undefined",
-			"description": ""
+			"type": "FlexiBoardConfiguration",
+			"description": "Board configuration, including React widget render functions and components."
 		},
 		{
 			"name": "children",

@@ -29,7 +29,8 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -C packages/core build && pnpm -C packages/svelte build && pnpm -C packages/react build
+      - run: pnpm -r --filter './packages/*' build
+      - run: pnpm check:artifacts
       # With pending changesets this opens (or updates) a "Version packages" PR;
       # once that PR is merged it publishes to npm. Needs the NPM_TOKEN secret.
       - uses: changesets/action@v1

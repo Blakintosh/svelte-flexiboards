@@ -6,21 +6,30 @@ published: true
 ---
 
 <script>
+	import FrameworkText from '$lib/components/docs/framework-text.svelte';
 	import Callout from '$lib/components/docs/callout.svelte';
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
 <Only react>
 
-<Callout variant="note" title="Same behaviour, React spelling">
-	Everything on this page applies to the React adapter too: boards render with <code>renderToString</code> (Next.js, Remix and friends), <code>initialLayout</code> works the same way, and <code>suspense</code> is a prop taking a function of the reason rather than a snippet. The Svelte snippets below each have a React twin. The examples on this site's own pages are mounted client-side, which is a choice of this site, not a limit of the adapter.
+<Callout variant="note" title="Server rendering and hydration">
+	Declared widgets and <code>initialLayout</code> render with <code>renderToString</code> and hydrate with <code>hydrateRoot</code>. This site's interactive examples mount client-side, but the package does not require client-only rendering.
 </Callout>
 
 </Only>
 
 ## Introduction
 
-By default, a Flexiboard supports server-side rendering with SvelteKit. Default layouts, or layouts loaded during the server's load, therefore appear exactly as they should before hydration.
+Flexiboards supports server-side rendering with <FrameworkText svelte="SvelteKit" react="React" />. Declared layouts, or layouts supplied as server data, appear before hydration.
+
+<Only react>
+
+In React, the first hydration render retains the server's layout and assumed breakpoint. After commit, the adapter reads client storage and the actual viewport, then updates the board. `onfirstcreate` runs on the client, so use `initialLayout` or `initialLayouts` for data that must appear in the server HTML.
+
+In Next.js App Router, compose the board inside a `'use client'` component. Client Components can still be server-rendered; the directive enables the hooks and interaction handlers. Pass serializable layout data from your Server Component and define registry render functions in the client component.
+
+</Only>
 
 This works because placement is pure logic. Widget positions are computed from your declared configuration, not measured from the DOM, and idle widgets are styled with CSS grid line placement (`grid-column` / `grid-row`) rather than pixel values. The pixel-measuring parts of the library, such as dragging, resizing and pointer tracking, only activate on interaction, which doesn't happen on a server.
 
@@ -33,7 +42,11 @@ The rest of this guide covers how to handle these two scenarios.
 
 ## Server-stored layouts
 
-A layout the _server_ already has, such as a user's saved board fetched from your database in a SvelteKit `load`, doesn't need any of the suspense machinery below. Pass it as `initialLayout`: a plain layout value (not a callback), applied during the initial render pass on both the server and the client.
+A layout the _server_ already has, such as a user's saved board fetched from your database, doesn't need any of the suspense machinery below. Pass it as `initialLayout`: a plain layout value (not a callback), applied during the initial render pass on both the server and the client.
+
+<Only svelte>
+
+Fetch the layout in a server `load` function and pass it through page data:
 
 ```ts
 // +page.server.ts
@@ -58,7 +71,25 @@ export async function load({ locals }) {
 </FlexiBoard>
 ```
 
-The board server-renders at the layout's final positions with no pending window, and SvelteKit hands the same data to the client, so hydration matches by construction. Like `importLayout`, entries resolve through the [registry](/docs/guides/exporting-importing-boards) via their `type`; targets without an entry in the layout fall back to their declared widgets. On responsive boards the equivalent is `initialLayouts`, keyed by breakpoint.
+</Only>
+
+<Only react>
+
+Pass the server-fetched layout as a prop to your board component. Use the same value during hydration:
+
+```tsx
+function SavedBoard({ layout }) {
+	return (
+		<FlexiBoard config={{ registry: widgetRegistry, initialLayout: layout }}>
+			<FlexiTarget keyName="main" />
+		</FlexiBoard>
+	);
+}
+```
+
+</Only>
+
+The board server-renders at the layout's final positions with no pending window. Give the client the same data so hydration matches. Like `importLayout`, entries resolve through the [registry](/docs/guides/exporting-importing-boards) via their `type`; targets without an entry in the layout fall back to their declared widgets. On responsive boards the equivalent is `initialLayouts`, keyed by breakpoint.
 
 If a client-side `loadLayout` is also configured (say, local drafts beating the server copy), it still runs at hydration and overrides the initial layout. The board is marked pending until it does, as described next.
 
@@ -70,7 +101,7 @@ A board configured with `loadLayout` (or a responsive board with `loadLayouts`) 
 	Because of the way <code>loadLayout</code> works, you do not need to use a <code>browser</code> guard around it. Guards are still sensible if the callback is called from elsewhere in your own code.
 </Callout>
 
-Until that import resolves, the board's rendered layout may be wrong, since a returning user's saved arrangement can differ arbitrarily from the declared one. Rather than flash the wrong board, give `FlexiBoard` a `suspense` snippet:
+Until that import resolves, the board's rendered layout may be wrong, since a returning user's saved arrangement can differ arbitrarily from the declared one. Give `FlexiBoard` a `suspense` <FrameworkText svelte="snippet" react="render function" /> to show a fallback:
 
 <Only svelte>
 
@@ -100,7 +131,7 @@ The fallback is server-rendered alongside the board and shown in its place from 
 
 ### Styling it yourself with CSS
 
-If you'd rather keep the real board visible and veil it (skeleton tints over the stand-in's geometry, say), skip the snippet. A pending board always marks its root element, which you can target with plain CSS:
+If you'd rather keep the real board visible and veil it (skeleton tints over the stand-in's geometry, say), omit the suspense fallback. A pending board always marks its root element, which you can target with plain CSS:
 
 ```html
 <div role="application" data-flexi-pending="layout" aria-busy="true">…</div>
@@ -157,6 +188,8 @@ A `ResponsiveFlexiBoard` picks its breakpoint with `matchMedia`, which we can't 
 
 The first strategy for this is to tell the server which breakpoint to assume, with `ssrBreakpoint`:
 
+<Only svelte>
+
 ```svelte
 <ResponsiveFlexiBoard
 	config={{
@@ -168,11 +201,23 @@ The first strategy for this is to tell the server which breakpoint to assume, wi
 </ResponsiveFlexiBoard>
 ```
 
+</Only>
+
+<Only react>
+
+```tsx
+<ResponsiveFlexiBoard config={{ breakpoints: { lg: 1024, sm: 640 }, ssrBreakpoint: 'lg' }}>
+	{/* boards */}
+</ResponsiveFlexiBoard>
+```
+
+</Only>
+
 Set this to the breakpoint most of your visitors land on. That reduces how often the rendered breakpoint mismatches theirs.
 
 ### Handling mismatches
 
-The second strategy decides what a visitor sees when the breakpoint mismatches, before hydration has a chance to apply. The same `suspense` snippet covers this. Pass it to the `FlexiBoard` inside your responsive board:
+The second strategy decides what a visitor sees when the breakpoint mismatches, before hydration has a chance to apply. The same `suspense` <FrameworkText svelte="snippet" react="render function" /> covers this. Pass it to the `FlexiBoard` inside your responsive board:
 
 <Only svelte>
 
@@ -258,7 +303,7 @@ The media query ranges are hardcoded to your own breakpoint thresholds. That is 
 The guess is also exposed on the controller as `board.breakpointPending` (`string | null`).
 
 <Callout variant="note" title="Client-side rendering">
-	None of the above applies under client-side rendering, whether that's a route with <code>ssr = false</code>, a <code>browser</code> guard, or the React adapter. The board first appears in its final state, since nothing is rendered before the client knows the layout and the breakpoint.
+	A client-only route has no server HTML to hydrate. Both adapters support this mode too. Client storage and responsive breakpoints resolve when the board mounts; use the same suspense fallback if you want to hide its provisional content.
 </Callout>
 
 ## Summary

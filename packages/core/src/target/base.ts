@@ -4,6 +4,9 @@ import type { FlexiWidgetController } from '../widget/base.js';
 import type { FlexiWidgetConfiguration, FlexiWidgetDefaults } from '../widget/types.js';
 
 export interface FlexiTargetController {
+	/** The stable target identifier used in exported layouts and drop callbacks. */
+	readonly key: string;
+
 	/**
 	 * The reactive configuration of the target.
 	 */

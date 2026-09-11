@@ -22,7 +22,7 @@ export const directory: DocSection[] = [
 			{ title: 'Accessibility', href: '/docs/accessibility' },
 			{ title: 'Docs for LLMs', href: '/docs/llms' },
 			{ title: 'Changelog', href: '/docs/changelog' },
-			{ title: 'Migrating to v1.0', href: '/docs/breaking-changes-to-10' },
+			{ title: 'Migrating to v1.0', href: '/docs/breaking-changes-to-10', frameworks: ['svelte'] },
 			// Predates the React adapter.
 			{
 				title: 'Breaking Changes in v0.4',
@@ -47,11 +47,21 @@ export const directory: DocSection[] = [
 			{ title: 'Responsive Layouts', href: '/docs/guides/responsive-layouts' },
 			{ title: 'Server-Side Rendering', href: '/docs/guides/server-side-rendering' },
 			{ title: 'Testing', href: '/docs/guides/testing' },
-			{ title: 'Registry (preview)', href: '/docs/guides/registry' }
+			{ title: 'Registry', href: '/docs/guides/registry' }
 		]
 	},
 	{
-		section: 'Component API',
+		section: 'Registry components',
+		pages: [
+			{ title: 'Dashboard', href: '/docs/registry/dashboard' },
+			{ title: 'Sortable List', href: '/docs/registry/sortable-list' },
+			{ title: 'Board', href: '/docs/registry/board' },
+			{ title: 'Grabber', href: '/docs/registry/grabber' },
+			{ title: 'Resizer', href: '/docs/registry/resizer' }
+		]
+	},
+	{
+		section: 'Primitive API',
 		pages: [
 			{ title: 'FlexiBoard', href: '/docs/components/board' },
 			{ title: 'FlexiTarget', href: '/docs/components/target' },

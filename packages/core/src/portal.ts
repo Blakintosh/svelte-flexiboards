@@ -123,7 +123,9 @@ export class FlexiPortalController {
 			if (originalPosition.originalParent) {
 				originalPosition.originalParent.insertBefore(
 					originalPosition.element,
-					originalPosition.nextSibling
+					originalPosition.nextSibling?.parentNode === originalPosition.originalParent
+						? originalPosition.nextSibling
+						: null
 				);
 			} else {
 				// Nowhere to return to — discard rather than strand in the portal.

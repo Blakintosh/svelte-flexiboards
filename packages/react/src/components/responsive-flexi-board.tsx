@@ -1,5 +1,6 @@
 import {
 	InternalResponsiveFlexiBoardController,
+	markSsrEnvironment,
 	type ResponsiveFlexiBoardController,
 	type ResponsiveFlexiBoardProps as ResponsiveFlexiBoardPropsPrimitive
 } from '@flexiboards/core';
@@ -7,6 +8,7 @@ import { Fragment, useCallback, useEffect, type ReactNode } from 'react';
 import { ResponsiveFlexiBoardContext } from '../adapters/responsive.js';
 import {
 	renderChildren,
+	useClientLayoutEffect,
 	useOnceCommitted,
 	useSingleRef,
 	type FlexiChildren,
@@ -55,12 +57,13 @@ export function ResponsiveFlexiBoard({
 	onfirstcreate
 }: ResponsiveFlexiBoardProps) {
 	const board = useSingleRef(() => {
-		// Core's contract is just { config } — adapter-level props stay out.
-		const b = new InternalResponsiveFlexiBoardController({ config });
-		b.oninitialloadcomplete();
-
-		return b;
+		if (typeof window === 'undefined') markSsrEnvironment();
+		return new InternalResponsiveFlexiBoardController({ config }, true);
 	});
+
+	// Hydrate the assumed breakpoint first. Resolve viewport/storage before
+	// paint, with client layout imports queued until the child boards are ready.
+	useClientLayoutEffect(() => board.oninitialloadcomplete(), [board]);
 
 	useOnceCommitted(() => onfirstcreate?.(board as ResponsiveFlexiBoardController));
 

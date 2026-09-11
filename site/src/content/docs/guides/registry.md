@@ -1,115 +1,73 @@
 ---
-title: Registry (preview)
-description: Add ready-made Flexiboards pieces to a shadcn project with one command.
+title: Registry
+description: Composable Flexiboards components, copied into your project and styled by your shadcn theme.
 category: Guides
 published: true
 ---
 
 <script lang="ts">
-	import InstallCommand from '$lib/components/docs/install-command.svelte';
-	import Only from '$lib/components/docs/only.svelte';
+ import Only from '$lib/components/docs/only.svelte';
+ import FrameworkText from '$lib/components/docs/framework-text.svelte';
 </script>
 
-Flexiboards publishes a small registry in the shadcn format, one for [shadcn-svelte](https://www.shadcn-svelte.com/docs/registry) and one for [shadcn](https://ui.shadcn.com/docs/registry). The items are copied into your project as source, so they use your theme tokens and you can change them. This is a preview: two items per framework, and the shapes may still move.
+The registry is a source library for <FrameworkText svelte="Svelte" react="React" />. Install a component family, compose its parts, and own the code. It adds a small amount of opinionated styling on top of the headless primitives—not a separate theme or an application shell.
 
-## Handles
+## Components
 
-Grab and resize handles for a widget, as `Grabber` and `Resizer` components.
+| Component                                     | Use it for                                                     |
+| --------------------------------------------- | -------------------------------------------------------------- |
+| [Dashboard](/docs/registry/dashboard)         | Free-form tiles with headers, content, grabbers, and resizers. |
+| [Sortable List](/docs/registry/sortable-list) | Reorderable rows with any content you need.                    |
+| [Board](/docs/registry/board)                 | Custom layouts and multiple targets on one board.              |
+| [Grabber](/docs/registry/grabber)             | A themed drag handle for any widget.                           |
+| [Resizer](/docs/registry/resizer)             | A themed resize handle for any resizable widget.               |
+
+Each page has a working preview, source example, installation command, and API notes. The docs framework menu selects the API and examples throughout.
+
+## Composition
+
+Families use namespace imports: `Dashboard.Root`, `Dashboard.Item`, `Dashboard.Header`, and so on. You control the content and decide where handles belong. The wrappers preserve the underlying configuration and controller APIs.
+
+These are components, not blocks. Full dashboard layouts and other application-level compositions can be added later without replacing these building blocks.
+
+## Your theme, your source
 
 <Only svelte>
 
-<InstallCommand action="dlx" package="shadcn-svelte@latest add https://flexiboards.dev/r/svelte/flexi-handles.json" />
-
-```svelte
-<FlexiWidget class="flex items-center gap-2 rounded-lg border p-2">
-	<Grabber />
-	<span class="flex-1">Only the handle drags this row</span>
-	<Resizer />
-</FlexiWidget>
-```
+Start with a Tailwind project configured for [shadcn-svelte](https://www.shadcn-svelte.com/docs/installation), including its theme variables and `cn` utility.
 
 </Only>
 
 <Only react>
 
-<InstallCommand action="dlx" package="shadcn@latest add https://flexiboards.dev/r/react/flexi-handles.json" />
-
-```tsx
-<FlexiWidget className="flex items-center gap-2 rounded-lg border p-2">
-	<Grabber />
-	<span className="flex-1">Only the handle drags this row</span>
-	<Resizer />
-</FlexiWidget>
-```
+Start with a Tailwind project configured for [shadcn](https://ui.shadcn.com/docs/installation), including its theme variables and `cn` utility.
 
 </Only>
 
-## Sortable list
+The CLI copies source and resolves the required framework adapter, icons, and utility.
 
-A reorderable list of rows with grab handles. Pass `items` with an `id` and a `label`, and read the new order from the reorder callback after every drop. It pulls the handles in as a dependency.
+Surfaces inherit `card`, `card-foreground`, `border`, and `muted`; handles inherit `accent` and `ring`. Your existing light and dark theme applies automatically. No fonts, global CSS, or color variables are overwritten.
+
+Use <FrameworkText svelte="class" react="className" code /> to adjust the defaults. Widget class functions can respond to controller state, and consumer classes are merged last. For deeper changes, edit the installed source.
+
+## Registry endpoints
 
 <Only svelte>
 
-<InstallCommand action="dlx" package="shadcn-svelte@latest add https://flexiboards.dev/r/svelte/flexi-sortable-list.json" />
-
-```svelte
-<script lang="ts">
-	import SortableList from '$lib/components/flexi-sortable-list/sortable-list.svelte';
-
-	let items = $state([
-		{ id: 'a', label: 'Write the docs' },
-		{ id: 'b', label: 'Record the demo' },
-		{ id: 'c', label: 'Ship it' }
-	]);
-</script>
-
-<SortableList {items} onreorder={(ids) => console.log(ids)} />
-```
+The [registry index](/r/svelte/registry.json) lists the installable items.
 
 </Only>
 
 <Only react>
 
-<InstallCommand action="dlx" package="shadcn@latest add https://flexiboards.dev/r/react/flexi-sortable-list.json" />
-
-```tsx
-import { SortableList } from '@/components/flexi-sortable-list/sortable-list';
-
-const items = [
-	{ id: 'a', label: 'Write the docs' },
-	{ id: 'b', label: 'Record the demo' },
-	{ id: 'c', label: 'Ship it' }
-];
-
-export function Todo() {
-	return <SortableList items={items} onReorder={(ids) => console.log(ids)} />;
-}
-```
+The [registry index](/r/react/registry.json) lists the installable items.
 
 </Only>
 
-## What each item installs
+`flexi-handles` remains available as a combined grabber/resizer install, and the old convenience sortable list API is retained.
 
-<Only svelte>
+The registry is currently unversioned. Review source diffs before asking the CLI to overwrite an existing installation; copied files do not update automatically with npm package upgrades.
 
-| Item                  | Files                              | Depends on                                                |
-| --------------------- | ---------------------------------- | --------------------------------------------------------- |
-| `flexi-handles`       | `grabber.svelte`, `resizer.svelte` | `@flexiboards/svelte`, `@lucide/svelte`, the `utils` item |
-| `flexi-sortable-list` | `sortable-list.svelte`             | the handles item                                          |
+## Two meanings of registry
 
-The registry index is at [/r/svelte/registry.json](/r/svelte/registry.json).
-
-</Only>
-
-<Only react>
-
-| Item                  | Files                        | Depends on                                             |
-| --------------------- | ---------------------------- | ------------------------------------------------------ |
-| `flexi-handles`       | `grabber.tsx`, `resizer.tsx` | `@flexiboards/react`, `lucide-react`, the `utils` item |
-| `flexi-sortable-list` | `sortable-list.tsx`          | the handles item                                       |
-
-The registry index is at [/r/react/registry.json](/r/react/registry.json).
-
-</Only>
-
-A versioned registry is next, once the shapes settle.
+This source registry is separate from `FlexiBoard.config.registry`. The latter maps widget types to components or snippets when [restoring saved layouts](/docs/guides/exporting-importing-boards). The installed components can be used in those renderers, but installing them does not register persisted widget types for you.

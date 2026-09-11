@@ -33,6 +33,7 @@ export function FlexiResize({ className, children }: FlexiResizeProps) {
 
 	return (
 		<button
+			type="button"
 			className={derivedClassName}
 			disabled={!enabled}
 			style={{

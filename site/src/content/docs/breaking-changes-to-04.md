@@ -3,6 +3,7 @@ title: Breaking Changes in v0.4
 description: The breaking changes in the v0.4 update.
 category: Introduction
 published: true
+framework: svelte
 ---
 
 _Applies to `svelte-flexiboards` v0.4.0, released 7 February 2026. This page is kept for reference; new projects should install `@flexiboards/svelte` and follow [Migrating to v1.0](/docs/breaking-changes-to-10)._

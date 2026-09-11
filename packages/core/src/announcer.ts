@@ -43,6 +43,11 @@ export class FlexiAnnouncerController {
 	get id() {
 		return this.#id;
 	}
+
+	destroy() {
+		if (this.#resetTimeout) clearTimeout(this.#resetTimeout);
+		this.#resetTimeout = null;
+	}
 }
 
 export function flexiannouncer(provider: InternalFlexiBoardController) {

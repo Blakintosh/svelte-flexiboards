@@ -622,6 +622,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	}
 
 	oninitialloadcomplete() {
+		if (this.#ready) return;
 		this.#ready = true;
 
 		// Check for stored layout from early import attempt
@@ -896,6 +897,18 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	 * Cleanup method to be called when the board is destroyed
 	 */
 	destroy() {
+		// A route change can unmount a board before pointerup/Escape arrives.
+		// Restore only a lock owned by this board; idle boards must not undo
+		// another board's active interaction.
+		if (this.#cursorStyle) this.#unlockViewport();
+		const widget = this.#currentWidgetAction$()?.widget;
+		if (widget) {
+			this.#pointerService.disableKeyboardControls();
+			this.portal?.returnWidgetFromPortal(widget);
+		}
+		this.#currentWidgetAction$(null);
+		this.#announcer?.destroy();
+
 		// Clean up all targets (which will clean up their widgets)
 		this.#targets.forEach((target) => target.destroy());
 		this.#targets.clear();
