@@ -1,7 +1,7 @@
 <script module lang="ts">
 	/**
 	 * The three boards on this page. Every drop the library reports belongs to
-	 * exactly one of them — which is the claim the log exists to make falsifiable.
+	 * exactly one of them, which the log makes checkable.
 	 */
 	export type DropScope = 'compound' | 'team' | 'tasks';
 	export type DropCounts = Record<DropScope, number>;
@@ -24,10 +24,10 @@
 	let { drops, flashed }: DropLogProps = $props();
 </script>
 
-<!-- Footer band of the sheet: one line per board, so the log reads as a legend. -->
+<!-- Footer band of the sheet: one line per board, acting as a legend. -->
 <ul class="grid w-full grid-cols-3 gap-2">
 	{#each boards as board (board.scope)}
-		<!-- The board that just took a drop is provisional state, so it answers in fx-accent. -->
+		<!-- The board that just took a drop is highlighted in fx-accent. -->
 		<li
 			aria-live="polite"
 			class={cn(

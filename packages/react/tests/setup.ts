@@ -5,5 +5,5 @@ import { configure, installResizeObserver } from '@flexiboards/testing';
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 installResizeObserver();
-// Every helper dispatch commits inside act(), so the DOM is settled when it returns.
+// Every helper dispatch commits inside act(), so the DOM is settled on return.
 configure({ flush: act });

@@ -36,9 +36,9 @@ export type RenderedFlexiWidgetProps = {
 };
 
 /**
- * Props shared by the grab and resize handles. Like the Svelte components,
- * they render a <button> that owns the pointer/keyboard wiring, so children
- * are plain content (or a render function receiving the widget).
+ * Props shared by the grab and resize handles. They render a <button> that
+ * owns the pointer and keyboard wiring, so children are plain content or a
+ * render function receiving the widget.
  */
 export type FlexiWidgetSubProps = {
 	/** Classes applied to the rendered button: a string, or a function deriving one from the widget's state. */

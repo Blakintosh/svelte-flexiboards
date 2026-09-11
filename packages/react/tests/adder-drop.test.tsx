@@ -52,8 +52,8 @@ describe.each([{ strict: false }, { strict: true }])(
 	'dropping a widget created by an adder (strict: $strict)',
 	({ strict }) => {
 		it('completes the drop without stranding the dragged element', () => {
-			// Mirrors the Svelte regression test: the release must not throw
-			// anywhere along the chain, and the portal must be empty afterwards.
+			// Mirrors the Svelte regression test: the release must not throw, and
+			// the portal must be empty afterwards.
 			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 			mounted = mount(<AdderBoard />, { strict });
@@ -79,7 +79,7 @@ describe.each([{ strict: false }, { strict: true }])(
 			const grid = document.querySelector<HTMLElement>('[role="grid"]')!;
 
 			layoutGrid();
-			// Start with the pointer outside the target, as it would be over a real adder.
+			// Start with the pointer outside the target, as over a real adder.
 			pointerMove(-50, -50);
 			keydown(adder, 'Enter');
 			// Carry the new widget over the target and release it there.

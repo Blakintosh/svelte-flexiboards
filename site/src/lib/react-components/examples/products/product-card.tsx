@@ -33,13 +33,12 @@ export type ProductCardProps = {
 	phone?: boolean;
 };
 
-// Cards are soft, rounded tiles at rest; hover deepens the shadow, never adds
-// a border.
+// Cards are soft, rounded tiles at rest. Hover deepens the shadow, never adds a border.
 const cardClass =
 	'group relative flex h-full overflow-hidden rounded-[14px] border border-rule-soft bg-panel shadow-card transition-shadow duration-[150ms] hover:shadow-card-lg';
 
-// At rest a card is only its product. Grab, menu and resize chrome fades in on
-// hover, and on focus-within so keyboard users can still reach it.
+// At rest a card is only its product. Grab, menu and resize chrome fade in on hover
+// and on focus-within, so keyboard users can still reach them.
 const chromeClass =
 	'z-10 opacity-0 transition-opacity duration-[120ms] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none';
 
@@ -60,11 +59,11 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 	const widget = useFlexiWidget();
 	const isWide = widget.width > 1;
 
-	// The card's overflow menu is a native <details>: the summary is the trigger,
-	// the panel is a plain list of buttons. No JS popover, no roving tabindex.
+	// The overflow menu is a native <details>: summary is the trigger, panel is a
+	// plain list of buttons. No JS popover, no roving tabindex.
 	const menu = useRef<HTMLDetailsElement | null>(null);
 
-	// One badge per card: a live promotion is the only thing worth a fill. The
+	// One badge per card. A live promotion is the only thing worth a fill; the
 	// rest ("Featured", "New", "Bestseller") is demoted to the category line.
 	const discount = product.originalPrice
 		? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -88,7 +87,7 @@ export default function ProductCard({ product, phone = false }: ProductCardProps
 		{ label: 'Delete', icon: Trash2, separator: true, danger: true }
 	];
 
-	// Thumbnails are placeholders — a plain recessed stage, never stock imagery.
+	// Thumbnails are placeholders, a plain recessed stage, never stock imagery.
 	const thumbnail = (iconSize: string) => (
 		<>
 			<div className="bg-stage absolute inset-0"></div>

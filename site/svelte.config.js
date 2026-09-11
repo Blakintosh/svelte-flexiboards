@@ -34,7 +34,7 @@ const mdsvexOptions = {
 				}
 			}
 		],
-		// Live React examples: ```tsx example fences (see the script).
+		// Live React examples: ```tsx example fences, handled by the script above.
 		[tsxExamples, { Wrapper: '/src/lib/components/ui/code-example/code-example.svelte' }]
 	],
 	rehypePlugins: [rehypeSlug]
@@ -54,9 +54,9 @@ const config = {
 		adapter: adapter({
 			runtime: 'nodejs22.x'
 		}),
-		// The generated tsconfig only includes .js/.ts/.svelte, so the React
-		// example sources would sit outside the project: no $lib alias and no
-		// JSX setting for the editor or svelte-check.
+		// The generated tsconfig only includes .js/.ts/.svelte, so React example
+		// sources would sit outside the project: no $lib alias, no JSX setting for
+		// the editor or svelte-check.
 		// The registry's React items import the way they will in a consumer's
 		// project (shadcn's `@/` alias), so those paths point back into this repo.
 		alias: {

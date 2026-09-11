@@ -56,7 +56,7 @@ export default function TeamBoard({ onCommit }: { onCommit: (scope: DropScope) =
 				An inner board. Grab triggers are left at the library default (mouse
 				immediate, touch/pen long-press), so a finger swipe over the tile still
 				scrolls the page. The avatars carry no FlexiGrab, so the whole square is
-				the drag surface — and the pointerdown never reaches the outer tile,
+				the drag surface, and the pointerdown never reaches the outer tile,
 				which suppresses direct grabs because it *does* have a grabber.
 			*/}
 			<FlexiBoard className="min-w-0 shrink-0" config={config}>

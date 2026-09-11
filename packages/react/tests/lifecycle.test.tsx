@@ -98,7 +98,7 @@ describe('lifecycle under StrictMode', () => {
 		expect(boardDestroy).toHaveBeenCalledTimes(1);
 		// Once from its own cleanup and once cascaded from the board, as in Svelte.
 		expect(targetDestroy).toHaveBeenCalled();
-		// Window listeners are gone: a stray pointerup must not reach a dead board.
+		// Window listeners are gone, so a stray pointerup cannot reach a dead board.
 		expect(() => window.dispatchEvent(new Event('pointerup'))).not.toThrow();
 	});
 

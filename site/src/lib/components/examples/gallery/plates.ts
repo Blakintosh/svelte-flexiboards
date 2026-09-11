@@ -1,9 +1,9 @@
 /**
- * Gallery — plate catalogue, artwork recipes and layout maths.
+ * Gallery: plate catalogue, artwork recipes and layout maths.
  *
- * Framework-free on purpose: everything here is plain TypeScript over the
- * library's layout types, so a React port imports the same file and only swaps
- * the package the `ResponsiveFlexiLayout` type comes from.
+ * Framework-free on purpose. Everything here is plain TypeScript over the
+ * library's layout types, so a React port imports the same file and swaps
+ * only the package the `ResponsiveFlexiLayout` type comes from.
  */
 import type { FlexiWidgetLayoutEntry, ResponsiveFlexiLayout } from '@flexiboards/svelte';
 
@@ -14,7 +14,7 @@ export type Breakpoint = 'lg' | 'sm' | 'default';
 export type Plate = {
 	/** Catalogue number, printed in the plate's caption. */
 	id: string;
-	/** Descriptive title — read out to assistive tech, not printed. */
+	/** Descriptive title, read out to assistive tech, not printed. */
 	title: string;
 	motif: Motif;
 	/** Index into {@link INKS}. */
@@ -24,9 +24,9 @@ export type Plate = {
 };
 
 /**
- * The cyanotype ramp. These are fixed hexes rather than theme tokens on
- * purpose — a print keeps its ink whichever way the room is lit — but two of
- * the five are grounded on deep blue so the mosaic reads in both site themes.
+ * The cyanotype ramp. Fixed hexes rather than theme tokens on purpose: a
+ * print keeps its ink whichever way the room is lit. Two of the five are
+ * grounded on deep blue so the mosaic reads in both site themes.
  */
 const INKS = [
 	{
@@ -125,14 +125,14 @@ function motifLayers(motif: Motif, c: Ink): { layers: string[]; sizes: string[] 
 }
 
 /**
- * The full inline style for one plate's artwork: a ground colour, a fine print
+ * Full inline style for one plate's artwork: a ground colour, a fine print
  * screen, and the motif's own gradient layers. No images, no assets.
  */
 export function plateStyle(motif: Motif, pair: number): string {
 	const c = INKS[pair % INKS.length];
 	const { layers, sizes } = motifLayers(motif, c);
 
-	// The screen sits on top of everything, like the halftone of a real print.
+	// Screen sits on top of everything, like the halftone of a real print.
 	const allLayers = [
 		`repeating-linear-gradient(90deg, ${c.screen} 0 1px, transparent 1px 4px)`,
 		...layers
@@ -233,7 +233,7 @@ function entry(id: string, x: number, y: number, bp: Breakpoint, index: number) 
 		metadata: {
 			plateId: plate.id,
 			title: plate.title,
-			// Short caption name where the plate has one — "PL-02 · panorama".
+			// Short caption name where the plate has one, e.g. "PL-02 · panorama".
 			note: plateNote(plate),
 			motif: plate.motif,
 			pair: plate.pair,
@@ -243,7 +243,7 @@ function entry(id: string, x: number, y: number, bp: Breakpoint, index: number) 
 	} satisfies FlexiWidgetLayoutEntry;
 }
 
-/** `[id, x, y]` triples — the designed mosaic, per breakpoint. */
+/** `[id, x, y]` triples for the designed mosaic, per breakpoint. */
 const DEFAULT_PLACEMENTS: Record<Breakpoint, [string, number, number][]> = {
 	lg: [
 		['PL-01', 0, 0],
@@ -316,8 +316,8 @@ function occupy(cells: boolean[][], x: number, y: number, w: number, h: number) 
 
 /**
  * First-fit, row-major packing of a plate order into one breakpoint's grid,
- * capped at `rowCap` rows. Returns null if any plate cannot be placed — the
- * caller re-rolls rather than letting `importLayout` warn and drop a plate.
+ * capped at `rowCap` rows. Returns null if any plate cannot be placed, so
+ * the caller re-rolls rather than letting `importLayout` warn and drop a plate.
  */
 function packLayout(
 	bp: Breakpoint,
@@ -392,10 +392,10 @@ function layoutsFor(order: Plate[], rowCap: (bp: Breakpoint) => number) {
 /**
  * Re-deals the mosaic for every breakpoint.
  *
- * The plate areas total exactly `columns × minRows` at every breakpoint, so a
- * shuffle is asked to tile the grid perfectly: random orders are tried first
- * (that is where the variety comes from), and a largest-first order — which
- * always tiles — is the fallback. Either way the mosaic still fits without
+ * Plate areas total exactly `columns × minRows` at every breakpoint, so a
+ * shuffle is asked to tile the grid perfectly. Random orders are tried first
+ * (that's where the variety comes from), and a largest-first order, which
+ * always tiles, is the fallback. Either way the mosaic still fits without
  * scrolling; growing the grid stays the user's move to make. An arrangement
  * identical to the one on screen is rejected, so Shuffle is never silent.
  */
@@ -409,7 +409,7 @@ export function buildShuffledLayouts(current?: ResponsiveFlexiLayout): Responsiv
 		return layouts;
 	}
 
-	// Largest-first, ties broken at random: tiles the grid every time.
+	// Largest first, ties broken at random: tiles the grid every time.
 	const byArea = shuffled(PLATES).sort((a, b) => {
 		const area = (plate: Plate) => SPANS.lg[plate.id][0] * SPANS.lg[plate.id][1];
 		return area(b) - area(a);

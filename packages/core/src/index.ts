@@ -1,4 +1,4 @@
-// Reactivity façade — adapters bridge framework reactivity from effect()/signal().
+// Reactivity facade. Adapters bridge framework reactivity via effect()/signal().
 export * from './reactivity.js';
 
 // Shared public types.
@@ -11,15 +11,15 @@ export * from './widget/index.js';
 export * from './grid/index.js';
 export * from './responsive/index.js';
 
-// Adder / deleter.
+// Adder and deleter.
 export * from './misc/adder.js';
 export * from './misc/deleter.js';
 
-// Announcer + portal.
+// Announcer and portal.
 export * from './announcer.js';
 export * from './portal.js';
 
-// Shared infrastructure used by adapter composition roots.
+// Shared infrastructure for adapter composition roots.
 export * from './shared/event-bus.js';
 export * from './shared/ssr.js';
 export * from './shared/reactive-collections.js';

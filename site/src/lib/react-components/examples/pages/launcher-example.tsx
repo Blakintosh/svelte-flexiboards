@@ -32,9 +32,9 @@ import {
 } from '../launcher/layouts';
 import type { BreakpointKey, Pin } from '../launcher/layouts';
 
-// A home-screen icon is its own handle, so tiles are grabbed whole — no grip
+// A home-screen icon is its own handle, so tiles are grabbed whole, no grip
 // chrome. With no grabbers the library makes the widget root focusable and
-// keyboard-operable for free; all this adds is the focus ring.
+// keyboard-operable for free; this only adds the focus ring.
 const FOCUS_RING =
 	'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent';
 const APP_BASE =
@@ -44,7 +44,7 @@ const PANEL_BASE =
 const FEATURE_BASE =
 	'flex cursor-grab select-none overflow-hidden rounded-[10px] border border-rule-soft bg-panel shadow-card active:cursor-grabbing';
 
-// Provisional states — the tile in hand, the drop shadow — are the only
+// Provisional states, the tile in hand and the drop shadow, are the only
 // fx-accent on the page. Routed through cn() so the lifted/placeholder look
 // reliably beats the resting one.
 const tileClass = (base: string) => (widget: FlexiWidgetController) =>
@@ -54,7 +54,7 @@ const tileClass = (base: string) => (widget: FlexiWidgetController) =>
 		// In hand: no accent border, just a lift off the plate and a small tilt.
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
 		widget.isGrabbed && 'shadow-lift rotate-[2.5deg] opacity-95',
-		// Nowhere to go: the tile in hand fades and greys until it is somewhere it fits.
+		// Nowhere to go: the tile in hand fades and greys until it finds somewhere it fits.
 		widget.dropRejected && 'border-rule-soft opacity-30 saturate-0',
 		widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent'
 	);
@@ -67,9 +67,9 @@ const boardConfig: FlexiBoardConfiguration = {
 		transition: cssTransitionConfig()
 	},
 	registry: {
-		// importLayout() resolves every entry's `type` here, and sizes come from
-		// the layout entries — the registry can't carry width/height, so matched
-		// min/max lock each tile to its intended footprint instead.
+		// importLayout() resolves every entry's `type` here. Sizes come from
+		// the layout entries, since the registry can't carry width/height, so
+		// matched min/max lock each tile to its intended footprint instead.
 		app: {
 			component: LauncherAppTile,
 			className: tileClass(APP_BASE),
@@ -105,7 +105,7 @@ const boardConfig: FlexiBoardConfiguration = {
 	}
 };
 
-// One target configuration per breakpoint, built once — the FlexiTarget prop
+// One target configuration per breakpoint, built once: the FlexiTarget prop
 // seam compares by identity.
 const TARGET_CONFIGS = Object.fromEntries(
 	(Object.keys(BREAKPOINTS) as BreakpointKey[]).map((key) => {
@@ -140,9 +140,9 @@ export default function LauncherExample() {
 	const boardRef = useRef<ResponsiveFlexiBoardController | null>(null);
 	const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// The target's widget set is reactive, so asking it who is in hand needs no
-	// per-tile plumbing. The layout only re-exports on drop, so the marked
-	// coordinates are the ones the tile is leaving — they tick over as it lands.
+	// The target's widget set is reactive, so asking it who is in hand needs
+	// no per-tile plumbing. The layout only re-exports on drop, so marked
+	// coordinates are the ones the tile is leaving; they update once it lands.
 	// onfirstcreate runs during the target's render, so the state write is
 	// deferred a microtask.
 	const [apps, setApps] = useState<FlexiTargetController | null>(null);
@@ -158,21 +158,20 @@ export default function LauncherExample() {
 
 	// Deliberately in-memory: a returning visitor always meets the designed
 	// arrangement, and Reset needs no storage-clearing branch. onLayoutsChange
-	// feeds the live JSON panel, which teaches the callback better than a
-	// silent localStorage write would.
+	// feeds the live JSON panel instead of writing silently to localStorage.
 	const loadLayouts = useCallback(() => structuredClone(DEFAULT_LAYOUTS), []);
 	const onLayoutsChange = useCallback((layouts: ResponsiveFlexiLayout) => {
 		setLiveLayouts(layouts);
 	}, []);
 
-	// Identity stays put while `pin` does, so the prop seam is inert; when it
-	// changes, only the threshold *values* differ — which is exactly what the
-	// controller's shallow comparison notices.
+	// Identity stays put while `pin` does, so the prop seam is inert. When it
+	// changes, only the threshold values differ, which the controller's
+	// shallow comparison picks up.
 	const responsiveConfig = useMemo(
 		() => ({
 			breakpoints: breakpointsFor(pin),
-			// Server renders can't match a media query; assume the desktop plate so
-			// the pre-hydration skeleton has the width most visitors will end up with.
+			// Server renders can't match a media query, so assume the desktop plate:
+			// the pre-hydration skeleton then matches the width most visitors get.
 			ssrBreakpoint: 'lg',
 			loadLayouts,
 			onLayoutsChange
@@ -203,7 +202,7 @@ export default function LauncherExample() {
 			await navigator.clipboard.writeText(formatLayouts(layouts ?? liveLayouts));
 			flashCopyState('copied');
 		} catch {
-			// Fall back to a manual copy rather than failing silently.
+			// Fall back to a manual copy instead of failing silently.
 			flashCopyState('failed', 6000);
 		}
 	}
@@ -211,16 +210,16 @@ export default function LauncherExample() {
 	function resetLayout() {
 		const layouts = structuredClone(DEFAULT_LAYOUTS);
 		// Every breakpoint reverts, not just the visible one. The pin is left
-		// alone: which layout you're looking at is a different axis from what
-		// the layouts contain.
+		// alone: which layout you're viewing is a different axis from what the
+		// layouts contain.
 		boardRef.current?.importLayout(layouts);
 		setLiveLayouts(layouts);
 	}
 
 	return (
 		/*
-			The JSON bar docks flush to the bottom edge, so the page gutters live on the
-			sections rather than on <main>.
+			The JSON bar docks flush to the bottom edge, so the page gutters live
+			on the sections rather than on <main>.
 		*/
 		<main className="bg-paper flex h-full min-h-0 w-full flex-col overflow-hidden">
 			<header className="border-rule-soft mx-4 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b pb-3 pt-4 sm:pt-5 lg:mx-12 lg:pt-8">
@@ -231,7 +230,7 @@ export default function LauncherExample() {
 				<BreakpointSwitcher value={pin} onChange={setPin} />
 			</header>
 
-			{/* Only the board region scrolls, so the switcher and the JSON bar never leave. Recessed stage ground behind the plate. */}
+			{/* Only the board region scrolls, so the switcher and JSON bar stay put. Recessed stage ground behind the plate. */}
 			<div className="bg-stage min-h-0 w-full flex-1 overflow-y-auto px-4 py-4 lg:px-12 lg:py-6">
 				<div className="flex min-h-full w-full items-center justify-center">
 					<ResponsiveFlexiBoard
@@ -270,9 +269,9 @@ export default function LauncherExample() {
 												{key} · {bp.grid}
 											</span>
 											{/*
-												The long half is gated on the *breakpoint*, not the viewport: the strip
-												sits on the plate, and the plate is 212px wide at sm however wide the
-												window is.
+												The long half is gated on the breakpoint, not the viewport: the strip
+												sits on the plate, and the plate stays 212px wide at sm regardless of
+												window width.
 											*/}
 											<span className="text-faint truncate whitespace-nowrap text-[9px] font-semibold">
 												{pin === 'auto' ? 'Auto' : 'Pinned'}

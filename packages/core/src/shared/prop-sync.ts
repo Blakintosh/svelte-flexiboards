@@ -2,10 +2,10 @@
  * Helpers for the adapter prop seams (`updateProps` / `updateConfig`).
  *
  * Adapters call these seams from inside their own framework effect, so every
- * seam MUST be a no-op when nothing meaningful changed. An effect that writes
- * unconditionally can be re-entered by the invalidation it caused, which is how
- * prop-sync turns into an infinite loop. Dedupe here is the loop guard, not an
- * optimisation — do not remove it.
+ * seam must be a no-op when nothing meaningful changed. An effect that writes
+ * unconditionally can be re-entered by the invalidation it caused, turning
+ * prop-sync into an infinite loop. The dedupe here is the loop guard, not an
+ * optimisation. Do not remove it.
  */
 
 /**

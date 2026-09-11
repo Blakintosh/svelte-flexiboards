@@ -11,8 +11,8 @@ import { cells, flushTimers, mount, type Mounted } from './helpers.js';
 
 let mounted: Mounted | undefined;
 
-// A controllable matchMedia: every query gets the same match state, and
-// setWidth() flips them and notifies listeners like a real viewport change.
+// A controllable matchMedia: every query shares one match state, and setWidth()
+// flips it and notifies listeners like a real viewport change.
 type Listener = (e: { matches: boolean }) => void;
 let queries: { query: string; listeners: Set<Listener> }[] = [];
 let width = 1280;

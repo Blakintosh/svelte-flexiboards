@@ -2,11 +2,11 @@ import { effect } from '@flexiboards/core';
 import { useCallback, useSyncExternalStore, type CSSProperties } from 'react';
 
 /**
- * Wraps a read of core signal-backed state so that React component
- * reading it re-renders when the underlying core signal changes.
+ * Wraps a read of core signal-backed state so the React component reading it
+ * re-renders when the core signal changes.
  *
- * The `read` function must actually read the reactive value (call signals,
- * touch getters) — tracking happens at read time, not at reference time.
+ * `read` must actually read the reactive value by calling signals or touching
+ * getters. Tracking happens at read time, not at reference time.
  */
 export function useFromCore<T>(read: () => T): T {
 	const subscribe = useCallback(

@@ -22,8 +22,8 @@
 
 	const PageComponent = $derived(data.doc.content);
 	const location = $derived(locateDoc(page.url.pathname, framework.current));
-	// A framework-specific page viewed under another framework gets a notice
-	// rather than a redirect: the content is still readable.
+	// A framework-specific page viewed under another framework gets a notice,
+	// not a redirect, so the content stays readable.
 	const excluded = $derived(excludedFrameworks(page.url.pathname));
 	const notApplicable = $derived(excluded.includes(framework.current));
 	const appliesTo = $derived(

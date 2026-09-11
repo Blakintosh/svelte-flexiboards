@@ -4,11 +4,11 @@
 
 	/**
 	 * Why a board's suspense fallback is being rendered.
-	 * - 'layout': a loadLayout/loadLayouts hasn't resolved yet, so the content
-	 *   itself is provisional, so the fallback shows at every viewport.
+	 * - 'layout': a loadLayout or loadLayouts has not resolved, so the content
+	 *   is provisional and the fallback shows at every viewport.
 	 * - 'breakpoint': only the server's breakpoint guess (`assumed`) is
-	 *   unconfirmed, so the fallback shows only where the viewport doesn't
-	 *   match the guess, via a media query the board generates itself.
+	 *   unconfirmed, so the fallback shows only where the viewport does not
+	 *   match the guess, via a media query the board generates.
 	 */
 	export type FlexiBoardSuspenseReason =
 		| { reason: 'layout' }
@@ -33,10 +33,10 @@
 
 		/**
 		 * Fallback content shown while the board's server-rendered layout is
-		 * provisional: a stored layout that hasn't been imported yet, or an
-		 * unconfirmed responsive breakpoint guess. Server-rendered alongside
-		 * the board and toggled by generated CSS, so it applies from the very
-		 * first paint; it unmounts once the layout is confirmed at hydration.
+		 * provisional: a stored layout not yet imported, or an unconfirmed
+		 * responsive breakpoint guess. It is server-rendered alongside the board
+		 * and toggled by generated CSS, so it applies from the first paint. It
+		 * unmounts once the layout is confirmed at hydration.
 		 */
 		suspense?: Snippet<[FlexiBoardSuspenseReason]>;
 	};
@@ -58,25 +58,26 @@
 
 	let { controller = $bindable(), onfirstcreate, ...boardProps }: FlexiBoardProps = $props();
 
-	// The adapter owns the board's lifecycle (boardEvents at mount, destroy at unmount).
-	// Config is snapshotted so core never aliases the live `$state` proxy (see snapshotConfig).
+	// The adapter owns the board's lifecycle: boardEvents at mount, destroy at
+	// unmount. Config is snapshotted so core never aliases the live `$state`
+	// proxy, see snapshotConfig.
 	const board = flexiboard({ ...boardProps, config: snapshotConfig(boardProps.config) });
 	const publicBoard = reactive(board as FlexiBoardController);
 	controller = publicBoard;
 
 	onfirstcreate?.(publicBoard);
 
-	// $props.id() rather than generateUniqueId(): this id is emitted into the
-	// markup (aria-describedby), and core's counter is process-global — on a
-	// long-lived server it drifts from the client's, breaking hydration.
+	// $props.id() rather than generateUniqueId(), because this id is emitted into
+	// the markup as aria-describedby and core's counter is process-global. On a
+	// long-lived server it drifts from the client's and breaks hydration.
 	const assistiveTextId = $props.id();
 
-	// Prop seam: push config changes into core. Safe to run as an effect because
-	// updateProps() is inert unless `config` actually changed, so the invalidation
-	// it causes can't feed back in and re-trigger this. Reads `props` only — never
+	// Prop seam: push config changes into core. Safe as an effect because
+	// updateProps() is inert unless `config` changed, so the invalidation it
+	// causes cannot feed back and re-trigger this. Reads `props` only, never
 	// `publicBoard`, whose proxy reads would subscribe us to our own writes.
 	// snapshotConfig() reads every nested config property, so in-place mutations
-	// of a `$state` config re-run this seam as well as wholesale replacement.
+	// of a `$state` config re-run this seam too.
 	$effect(() => {
 		board.updateProps({ ...boardProps, config: snapshotConfig(boardProps.config) });
 	});
@@ -85,27 +86,27 @@
 
 	// A function call in the template, not $derived: on the server $derived
 	// snapshots at init, and this must reflect the board's state at render
-	// position (see FlexiTarget). One attribute, reason in the value, so
-	// stylesheets need a single hook: `data-flexi-pending="layout"` means the
-	// content itself is provisional (a loadLayout hasn't run — veil at every
-	// viewport); a breakpoint key (e.g. "lg") means only the breakpoint is
-	// unconfirmed, so styles can show the board where the viewport matches the
-	// guess and skeleton it where it doesn't. Content-pending wins when both
-	// apply. Absent once nothing is provisional.
+	// position, see FlexiTarget. One attribute with the reason in its value, so
+	// stylesheets need a single hook. `data-flexi-pending="layout"` means the
+	// content is provisional at every viewport. A breakpoint key such as "lg"
+	// means only the breakpoint is unconfirmed, so styles can show the board
+	// where the viewport matches the guess and skeleton it elsewhere.
+	// Content-pending wins when both apply, and the attribute is absent once
+	// nothing is provisional.
 	const pending = fromCore(() =>
 		board.layoutPending ? 'layout' : (board.breakpointPending ?? undefined)
 	);
 
 	// --- Suspense (framework-managed skeleton) ---------------------------------
-	// The fallback must exist in the SSR HTML and through hydration: before JS
-	// runs, only CSS can decide whether to show it. So it renders whenever a
+	// The fallback must exist in the SSR HTML and through hydration, because only
+	// CSS can decide whether to show it before JS runs. So it renders whenever a
 	// server render would have rendered it, and unmounts after mount.
 	//
 	// The breakpoint case is the subtle one: `breakpointPending` is null on the
-	// client from the first render (matchMedia answers immediately), but the
-	// server HTML contains the fallback — so through hydration we reconstruct
-	// the server's reason from the environment-independent assumed breakpoint,
-	// keeping the trees identical. onMount then drops it.
+	// client from the first render, since matchMedia answers immediately, but
+	// the server HTML contains the fallback. So through hydration we rebuild the
+	// server's reason from the assumed breakpoint, which keeps the two trees
+	// identical. onMount then drops it.
 	import { onMount } from 'svelte';
 	let mounted = $state(false);
 	onMount(() => {
@@ -162,8 +163,8 @@
 	{/if}
 </div>
 
-<!-- Component that tells the board it can start importing stuff, if needed. -->
+<!-- Tells the board it can start importing layouts, if needed. -->
 <FlexiLayoutLoader />
 
-<!-- Component that uses a shared portal for rendering grabbed widgets over the pointer. -->
+<!-- Shared portal for rendering grabbed widgets over the pointer. -->
 <FlexiPortal />

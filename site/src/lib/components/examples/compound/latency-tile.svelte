@@ -15,7 +15,7 @@
 	<span class="text-ink truncate font-serif text-xl font-semibold tracking-[-0.01em] lg:text-3xl"
 		>{value}</span
 	>
-	<!-- A chart, unmistakably: it can never be confused with the two draggable lists beside it. -->
+	<!-- A chart, unmistakably, so it's not confused with the two draggable lists beside it. -->
 	<ul class="flex min-h-0 flex-1 flex-col justify-center gap-1.5">
 		{#each series as point (point.at)}
 			<li class="flex items-center gap-1.5">

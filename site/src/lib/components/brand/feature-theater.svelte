@@ -1,13 +1,13 @@
 <script lang="ts">
 	/*
-	  §02 "One engine to power them all" — an accordion of the six capabilities,
-	  each backed by a looping schematic of that capability drawn as a dark
-	  drafting screen. The screens stack as a deck fanned to the lower right;
-	  choosing an item springs its screen to the front.
+	  §02 "One engine to power them all". An accordion of the six capabilities,
+	  each backed by a looping schematic drawn as a dark drafting screen. The
+	  screens stack as a deck fanned to the lower right; choosing an item
+	  springs its screen to the front.
 
-	  Every screen is a board sketched in 1px frames on a lattice: solid faint
-	  frames are placed widgets, the dashed frame is the shadow (drop preview),
-	  the accent frame is the widget in motion, and the white dot is the cursor.
+	  Every screen is a board sketched in 1px frames on a lattice. Solid faint
+	  frames are placed widgets, the dashed frame is the drop preview, the
+	  accent frame is the widget in motion, and the white dot is the cursor.
 	*/
 	let active = $state(0);
 

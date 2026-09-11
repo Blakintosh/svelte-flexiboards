@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex items-center gap-2">
-	<!-- One mode control: a pill switch, the chosen segment lifts with shadow-seg. -->
+	<!-- One mode control: a pill switch. The chosen segment lifts with shadow-seg. -->
 	<div
 		class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]"
 		role="group"
@@ -45,7 +45,7 @@
 		{/each}
 	</div>
 
-	<!-- Shuffle keeps an outline pill; Reset is the quiet one beside it. -->
+	<!-- Shuffle keeps an outline pill. Reset is the quiet one beside it. -->
 	<Button
 		variant="outline"
 		size="sm"

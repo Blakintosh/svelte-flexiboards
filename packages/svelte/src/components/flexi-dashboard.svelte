@@ -75,8 +75,8 @@
 <script lang="ts">
 	/*
 	  A dashboard is one free-form target on one board. This preset turns the
-	  min/max column and row settings into `columns`, `rows` and `maxRows`, and
-	  a `resizable` switch; everything else is the underlying components.
+	  min/max column and row settings into `columns`, `rows` and `maxRows`, plus
+	  a `resizable` switch. Everything else is the underlying components.
 	*/
 	import FlexiBoard from './flexi-board.svelte';
 	import FlexiTarget from './flexi-target.svelte';

@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "direction",
@@ -47,12 +47,12 @@
 		{
 			"name": "config",
 			"type": "FlexiBoardConfiguration<ClassValue>",
-			"description": "Board configuration merged over the preset's defaults (widgets fully draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts."
+			"description": "Board configuration merged over the preset's defaults, which make widgets fully draggable. Anything a FlexiBoard accepts: callbacks, registry, layouts."
 		},
 		{
 			"name": "targetConfig",
 			"type": "Omit<FlexiTargetPartialConfiguration<ClassValue>, 'layout'>",
-			"description": "Target configuration merged over the preset's. The layout is fixed by `direction`; sizing and widget defaults are yours to set."
+			"description": "Target configuration merged over the preset's. `direction` fixes the layout, and sizing and widget defaults are yours to set."
 		},
 		{
 			"name": "children",
@@ -64,7 +64,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "direction",
@@ -96,12 +96,12 @@
 		{
 			"name": "config",
 			"type": "FlexiBoardConfiguration",
-			"description": "Board configuration merged over the preset's defaults (widgets fully draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts. Keep it referentially stable."
+			"description": "Board configuration merged over the preset's defaults, which make widgets fully draggable. Anything a FlexiBoard accepts: callbacks, registry, layouts. Keep it referentially stable."
 		},
 		{
 			"name": "targetConfig",
 			"type": "Omit<FlexiTargetPartialConfiguration, 'layout'>",
-			"description": "Target configuration merged over the preset's. The layout is fixed by `direction`; sizing and widget defaults are yours to set."
+			"description": "Target configuration merged over the preset's. `direction` fixes the layout, and sizing and widget defaults are yours to set."
 		},
 		{
 			"name": "children",

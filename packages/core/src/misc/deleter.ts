@@ -23,8 +23,8 @@ export class FlexiDeleteController {
 	constructor(provider: InternalFlexiBoardController) {
 		this.#provider = provider;
 
-		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
-		// make it universal with our keyboard pointer.
+		// Emulate pointer enter/leave events instead of relying on browser ones, so this
+		// also works with the keyboard pointer.
 
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('pointer:moved', this.#onPointerMoved.bind(this))
@@ -65,7 +65,6 @@ export class FlexiDeleteController {
 	 * component is destroyed.
 	 */
 	destroy() {
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}

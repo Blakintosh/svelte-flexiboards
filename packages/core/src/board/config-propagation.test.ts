@@ -126,8 +126,8 @@ describe('widget config seam', () => {
 		});
 		expect(runs).toBe(1);
 
-		// A fresh array with identical contents — an inline `class={['a','b']}`
-		// re-created on each render — must not invalidate.
+		// A fresh array with identical contents, an inline `class={['a','b']}`
+		// re-created on each render, must not invalidate.
 		for (let i = 0; i < 20; i++) {
 			widget.updateConfig({ x: 0, y: 0, width: 1, height: 1, className: ['a', 'b'] } as any);
 		}

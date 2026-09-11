@@ -17,8 +17,8 @@ const options: { id: Pin; label: string; title: string }[] = [
 
 /*
 	One pill row on a recessed stage ground: the active segment lifts to a panel
-	chip. No eyebrow — "Auto / LG / MD / SM" reads as a breakpoint control on its
-	own.
+	chip. No eyebrow needed, "Auto / LG / MD / SM" reads as a breakpoint control
+	on its own.
 */
 export default function BreakpointSwitcher({ value, onChange }: BreakpointSwitcherProps) {
 	return (

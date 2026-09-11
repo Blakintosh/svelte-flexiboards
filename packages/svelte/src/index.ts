@@ -30,15 +30,14 @@ import {
 	spring
 } from '@flexiboards/core';
 
-// All public types come from core; the Svelte-specific component prop types
-// exported below shadow their core namesakes where both exist.
+// All public types come from core. The Svelte prop types exported below shadow
+// their core namesakes where both exist.
 export type * from '@flexiboards/core';
 
-// Svelte instantiations of core's class-generic types: class values are
-// Svelte's ClassValue (strings, arrays, records — resolved natively by
-// class={...}). These explicit aliases shadow the bare (unknown-instantiated)
-// star re-exports above, so consumers annotating with these names never see
-// the generic.
+// Svelte instantiations of core's class-generic types. Class values are
+// Svelte's ClassValue: strings, arrays and records, resolved natively by
+// class={...}. These aliases shadow the unknown-instantiated star re-exports
+// above, so consumers annotating with these names never see the generic.
 import type { ClassValue } from 'svelte/elements';
 import type {
 	AdderWidgetConfiguration as CoreAdderWidgetConfiguration,

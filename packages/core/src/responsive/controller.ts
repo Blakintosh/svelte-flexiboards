@@ -121,7 +121,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Falls back to 'default' if no breakpoint matches.
 	 */
 	#currentBreakpoint$: ReadonlySignal<string> = computed(() => {
-		// No media query can match on the server — use the configured stand-in
+		// No media query can match on the server, so use the configured stand-in
 		// so the server-rendered layout matches the most likely viewport.
 		if (isSsrEnvironment()) {
 			return this.config$()?.ssrBreakpoint ?? DEFAULT_BREAKPOINT;
@@ -147,24 +147,21 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#previousBreakpoint: string = DEFAULT_BREAKPOINT;
 
 	constructor(props: ResponsiveFlexiBoardProps) {
-		// Normalised through the seam so identity never matches the caller's object
-		// — see InternalFlexiBoardController's constructor.
+		// Normalised through the seam so identity never matches the caller's
+		// object. See InternalFlexiBoardController's constructor.
 		this.updateProps(props);
 		this.#eventBus = getFlexiEventBus();
 
-		// Subscribe to board layout changes
 		this.#unsubscribers.push(
 			this.#eventBus.subscribe('board:layoutchange', this.#onBoardLayoutChange.bind(this))
 		);
 
-		// Initialize media queries when breakpoints config changes
 		this.#stopEffects.push(
 			effect(() => {
 				this.#initializeMediaQueries();
 			})
 		);
 
-		// Detect and handle breakpoint changes
 		this.#stopEffects.push(
 			effect(() => {
 				const current = this.currentBreakpoint;
@@ -183,7 +180,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * The adapter's prop seam: call whenever the component's props change.
 	 */
 	updateProps(props: ResponsiveFlexiBoardProps): void {
-		// Inert when unchanged — see InternalFlexiBoardController.updateProps for
+		// Inert when unchanged. See InternalFlexiBoardController.updateProps for
 		// why this guard is load-bearing rather than an optimisation.
 		const previous = untracked(() => this.#rawProps$());
 
@@ -198,12 +195,11 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Handles layout change events from child boards.
 	 */
 	#onBoardLayoutChange(event: InternalBoardLayoutChangeEvent) {
-		// Only handle events from boards under our control
+		// Only handle events from boards under our control.
 		if (event.board.responsiveController !== this) {
 			return;
 		}
 
-		// Store the layout for this breakpoint
 		if (event.breakpoint) {
 			this.#storedLayouts$()[event.breakpoint] = event.layout;
 			trigger(() => this.#storedLayouts$());
@@ -218,11 +214,10 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#initializeMediaQueries() {
 		const breakpoints = this.config$()?.breakpoints ?? {};
 
-		// Clear existing queries
 		this.#mediaQueries.forEach((query) => query.destroy());
 		this.#mediaQueries.clear();
 
-		// Create min-width queries for each breakpoint (except 'default')
+		// One min-width query per breakpoint, except 'default'.
 		for (const [key, minWidth] of Object.entries(breakpoints)) {
 			if (key === DEFAULT_BREAKPOINT) {
 				continue;
@@ -313,7 +308,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		this.#storedLayouts$({ ...layout });
 		this.#hasStoredLayouts = true;
 
-		// Notify child boards to reload their layout from the stored layouts
+		// Tell child boards to reload their layout from the stored layouts.
 		this.#eventBus.dispatch('responsive:layoutimport', {
 			responsiveController: this
 		});
@@ -366,7 +361,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		}
 		this.#ready = true;
 
-		// Not on the server — loadLayouts callbacks read client storage. The
+		// Not on the server: loadLayouts callbacks read client storage. The
 		// server renders the declared layouts, flagged via layoutPending; the
 		// client's init pass runs this again and imports.
 		if (isSsrEnvironment()) {
@@ -386,8 +381,8 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#clientLayoutsResolved$: Signal<boolean> = signal(false);
 
 	/**
-	 * Whether the layouts are provisional — `loadLayouts` is configured but
-	 * hasn't run yet (always, during a server render). See
+	 * Whether the layouts are provisional: `loadLayouts` is configured but
+	 * hasn't run yet (always true during a server render). See
 	 * InternalFlexiBoardController.layoutPending.
 	 */
 	get layoutPending(): boolean {
@@ -402,10 +397,10 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * it's real. Non-null only while server-rendering: the server can't match a
 	 * media query, so whatever breakpoint it renders (ssrBreakpoint, else
 	 * 'default') is a guess. Adapters emit it into the markup
-	 * (data-flexi-pending), which lets a stylesheet make the guess
-	 * honest — e.g. veil the board except under a media query matching the
-	 * guessed breakpoint's own range. On the client matchMedia answers
-	 * immediately, so this is null from the first client render.
+	 * (data-flexi-pending), which lets a stylesheet make the guess honest,
+	 * e.g. veil the board except under a media query matching the guessed
+	 * breakpoint's own range. On the client matchMedia answers immediately,
+	 * so this is null from the first client render.
 	 */
 	get breakpointPending(): string | null {
 		if (!isSsrEnvironment()) {
@@ -415,8 +410,8 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	}
 
 	/**
-	 * The breakpoint a server render assumes (ssrBreakpoint, else 'default') —
-	 * environment-independent, unlike breakpointPending. Adapters use it to
+	 * The breakpoint a server render assumes (ssrBreakpoint, else 'default').
+	 * Environment-independent, unlike breakpointPending. Adapters use it to
 	 * keep suspense markup identical between the server render and the
 	 * client's hydration pass.
 	 */
@@ -472,14 +467,13 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Cleanup method to be called when the responsive board is destroyed.
 	 */
 	destroy(): void {
-		// Stop effects before tearing down the media queries they track
+		// Stop effects before tearing down the media queries they track.
 		this.#stopEffects.forEach((stop) => stop());
 		this.#stopEffects = [];
 
 		this.#mediaQueries.forEach((query) => query.destroy());
 		this.#mediaQueries.clear();
 
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 

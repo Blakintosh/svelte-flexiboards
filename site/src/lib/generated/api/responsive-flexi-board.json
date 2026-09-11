@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "config",
@@ -25,34 +25,34 @@
 		{
 			"name": "lg",
 			"type": "Snippet",
-			"description": "Snippet for large breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the large breakpoint."
 		},
 		{
 			"name": "md",
 			"type": "Snippet",
-			"description": "Snippet for medium breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the medium breakpoint."
 		},
 		{
 			"name": "sm",
 			"type": "Snippet",
-			"description": "Snippet for small breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the small breakpoint."
 		},
 		{
 			"name": "xs",
 			"type": "Snippet",
-			"description": "Snippet for extra-small breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the extra-small breakpoint."
 		},
 		{
 			"name": "children",
 			"type": "Snippet<[BreakpointSnippetParams]>",
-			"description": "Children snippet used as fallback when no specific breakpoint snippet matches. Receives `{ currentBreakpoint: string }` as a parameter."
+			"description": "Fallback content used when no breakpoint-specific snippet matches. Receives `{ currentBreakpoint: string }`."
 		}
 	],
 	"propsReact": [
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "config",
@@ -62,27 +62,27 @@
 		{
 			"name": "lg",
 			"type": "ReactNode",
-			"description": "Production for large breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the large breakpoint."
 		},
 		{
 			"name": "md",
 			"type": "ReactNode",
-			"description": "Production for medium breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the medium breakpoint."
 		},
 		{
 			"name": "sm",
 			"type": "ReactNode",
-			"description": "Production for small breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the small breakpoint."
 		},
 		{
 			"name": "xs",
 			"type": "ReactNode",
-			"description": "Production for extra-small breakpoint (no params - breakpoint is implicit)."
+			"description": "Content rendered at the extra-small breakpoint."
 		},
 		{
 			"name": "children",
 			"type": "ReactNode | ((params: { currentBreakpoint: string }) => ReactNode)",
-			"description": "Children snippet used as fallback when no specific breakpoint snippet matches. Receives `{ currentBreakpoint: string }` as a parameter."
+			"description": "Fallback content used when no breakpoint-specific content matches. Receives `{ currentBreakpoint: string }`."
 		}
 	],
 	"controller": {

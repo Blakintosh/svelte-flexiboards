@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { cells, frameworks, slugs, trackErrors } from './helpers';
 
-// Every example renders a board with widgets in both adapters, without an
-// uncaught error. This is the smoke test that the ports and the adapters agree.
+// Smoke test: every example renders a board with widgets in both adapters,
+// without an uncaught error, confirming the ports and adapters agree.
 for (const fw of frameworks) {
 	for (const slug of slugs) {
 		test(`${fw}: ${slug} renders`, async ({ page }) => {

@@ -3,9 +3,9 @@ import type { FlexiWidgetLayoutEntry } from '@flexiboards/svelte';
 /*
   Mocks a server-stored layout for the initialLayout board: each request picks
   one of two arrangements, the way a real app would fetch a user's saved board
-  from a database. SvelteKit serializes the picked data to the client, so the
-  hydration pass renders from the same layout the server did — the page's
-  diagnostics then prove the server HTML and hydrated DOM agree.
+  from a database. SvelteKit serializes the pick to the client, so hydration
+  renders from the same layout the server did, letting the page's diagnostics
+  prove the server HTML and hydrated DOM agree.
 */
 
 const LAYOUT_A: FlexiWidgetLayoutEntry[] = [
@@ -21,8 +21,8 @@ const LAYOUT_B: FlexiWidgetLayoutEntry[] = [
 ];
 
 export function load({ url }: { url: URL }) {
-	// ?variant=A|B pins the pick — the page's diagnostics re-fetch their own
-	// URL and must get the same layout the live DOM was rendered from.
+	// ?variant=A|B pins the pick: the page's diagnostics re-fetch their own URL
+	// and must get the same layout the live DOM was rendered from.
 	const pinned = url.searchParams.get('variant');
 	const variant = pinned === 'A' || pinned === 'B' ? pinned : Math.random() < 0.5 ? 'A' : 'B';
 	return {

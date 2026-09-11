@@ -14,13 +14,12 @@ import {
 } from './helpers.js';
 
 /*
-  Regression (the Notes example's nested kanban board): a drop inside a board
+  Regression, the Notes example's nested kanban board: a drop inside a board
   nested in another board's widget flew in from the wrong place. The nested
-  board is mounted after the outer board's portal has subscribed to the bus,
-  so on release the portal returned the element to the grid before the board
-  captured its on-screen box — and in the grid the in-hand absolute style
-  resolves against the nested board's own containing block. Twin of the
-  Svelte suite's test.
+  board mounts after the outer board's portal has subscribed to the bus, so on
+  release the portal returned the element to the grid before the board captured
+  its on-screen box, and in the grid the in-hand absolute style resolves
+  against the nested board's own containing block. Twin of the Svelte test.
 */
 
 let mounted: Mounted | undefined;
@@ -51,9 +50,8 @@ let outerBoard: FlexiBoardController | undefined;
 let innerBoard: FlexiBoardController | undefined;
 
 function Inner() {
-	// The nested board appears after the outer board has mounted (content that
-	// arrives later, as on the Notes page), so it subscribes to the bus after
-	// the outer board's portal has.
+	// The nested board appears after the outer board has mounted, as on the
+	// Notes page, so it subscribes to the bus after the outer board's portal.
 	const [ready, setReady] = useState(false);
 	useEffect(() => {
 		const id = setTimeout(() => setReady(true));
@@ -106,13 +104,13 @@ describe('drop inside a nested board', () => {
 		expect(portal.contains(card)).toBe(true);
 		// Only the inner widget is in hand: core stopped the keydown, and the
 		// adapter must carry that through React's own propagation so the outer
-		// block (focusable, no grab handle) is not grabbed by the same key press.
+		// block, which is focusable with no grab handle, is not grabbed too.
 		expect(innerBoard!.currentWidgetAction?.action).toBe('grab');
 		expect(outerBoard!.currentWidgetAction).toBeNull();
 		expect(portal.children.length).toBe(1);
 
 		// In hand over the inner grid's far cell. Back in the grid, the same
-		// in-hand absolute style would read somewhere else entirely.
+		// in-hand absolute style would read somewhere else.
 		const inPortal = () => document.getElementById('flexi-portal')!.contains(card);
 		card.getBoundingClientRect = () =>
 			(inPortal()

@@ -12,7 +12,7 @@ const contextKey = Symbol('responsive-flexiboard');
 export function responsiveflexiboard(
 	props: ResponsiveFlexiBoardProps
 ): InternalResponsiveFlexiBoardController {
-	// See flexiboard(): core must know before controller construction.
+	// See flexiboard(). Core must know before controller construction.
 	if (typeof window === 'undefined') {
 		markSsrEnvironment();
 	}

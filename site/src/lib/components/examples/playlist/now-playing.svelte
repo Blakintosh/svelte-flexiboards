@@ -10,10 +10,9 @@
 	let { current, next, playing }: NowPlayingProps = $props();
 
 	/*
-	  When the track changes, the title/artist dissolve out and the replacement
-	  condenses back in out of a short blur. Same staging idea as the splash
-	  page's framework switch, but tuned for a small card: quicker, a softer
-	  blur, and no tracking stretch (see .track-out/.track-in below).
+	  On track change, title/artist dissolve out and the replacement condenses
+	  back in from a blur. Same idea as the splash page's framework switch,
+	  scaled down: quicker, softer blur, no tracking stretch.
 	*/
 	const SWAP_OUT_MS = 280;
 	const SWAP_IN_MS = 480;
@@ -75,9 +74,9 @@
 </div>
 
 <style>
-	/* Track change, phase classes. The leaving title dissolves upward into a
+	/* Phase classes for the track change. Leaving title dissolves upward into a
 	   soft blur; the replacement condenses back out of it. Reduced motion skips
-	   the phases entirely in the script, so no override is needed here. */
+	   these phases in the script, so no override is needed here. */
 	.track-out {
 		opacity: 0;
 		filter: blur(6px);

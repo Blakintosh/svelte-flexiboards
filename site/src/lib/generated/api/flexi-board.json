@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "children",
@@ -35,14 +35,14 @@
 		{
 			"name": "suspense",
 			"type": "Snippet<[FlexiBoardSuspenseReason]>",
-			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout that hasn't been imported yet, or an unconfirmed responsive breakpoint guess. Server-rendered alongside the board and toggled by generated CSS, so it applies from the very first paint; it unmounts once the layout is confirmed at hydration."
+			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout not yet imported, or an unconfirmed responsive breakpoint guess. It is server-rendered alongside the board and toggled by generated CSS, so it applies from the first paint. It unmounts once the layout is confirmed at hydration."
 		}
 	],
 	"propsReact": [
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "config",
@@ -62,7 +62,7 @@
 		{
 			"name": "suspense",
 			"type": "(reason: FlexiBoardSuspenseReason) => ReactNode",
-			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout that hasn't been imported yet, or an unconfirmed responsive breakpoint guess. Server-rendered alongside the board and toggled by generated CSS, so it applies from the very first paint; it unmounts once the layout is confirmed after mount."
+			"description": "Fallback content shown while the board's server-rendered layout is provisional: a stored layout not yet imported, or an unconfirmed responsive breakpoint guess. It is server-rendered alongside the board and toggled by generated CSS, so it applies from the first paint. It unmounts once the layout is confirmed after mount."
 		}
 	],
 	"controller": {
@@ -225,12 +225,12 @@
 			{
 				"name": "rowSizing",
 				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target."
+				"description": "The value inside the target's `grid-template-rows` `repeat()` function."
 			},
 			{
 				"name": "columnSizing",
 				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target."
+				"description": "The value inside the target's `grid-template-columns` `repeat()` function."
 			},
 			{
 				"name": "layout",

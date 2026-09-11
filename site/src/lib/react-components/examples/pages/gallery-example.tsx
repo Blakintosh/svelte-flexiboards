@@ -28,7 +28,7 @@ import {
 } from '../gallery/plates';
 import type { Breakpoint } from '../gallery/plates';
 
-// Anything provisional — the drop preview, the plate in hand — is fx-accent.
+// Anything provisional, the drop preview or the plate in hand, is fx-accent.
 const className = (widget: FlexiWidgetController) =>
 	clsx([
 		'rounded-[14px] outline-offset-2 focus-visible:outline-2 focus-visible:outline-fx-accent motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -54,7 +54,7 @@ const REGISTRY: FlexiBoardConfiguration['registry'] = {
 		className,
 		draggability: 'full',
 		resizability: 'both',
-		// A panorama is wide by definition: it can never be made narrow or tall.
+		// A panorama is wide by definition. It can never be made narrow or tall.
 		minWidth: 2,
 		minHeight: 1,
 		maxWidth: 3,
@@ -90,18 +90,18 @@ const TARGET_CONFIGS: Record<Breakpoint, FlexiTargetPartialConfiguration> = Obje
 export default function GalleryExample() {
 	const [motion, setMotion] = useState<Motion>('spring');
 
-	// Not React state: only ever read inside handlers and the one-shot loadLayouts.
+	// Not React state, only ever read inside handlers and the one-shot loadLayouts.
 	const layouts = useRef<ResponsiveFlexiLayout>(DEFAULT_LAYOUTS);
 	const responsiveRef = useRef<ResponsiveFlexiBoardController | null>(null);
 
-	// The live readouts need the controllers to be *reactive*, not merely
-	// reachable, so they land in state as well — deferred a microtask because
+	// The live readouts need the controllers to be reactive, not merely
+	// reachable, so they land in state as well, deferred a microtask because
 	// onfirstcreate runs during the child's render.
 	const [responsive, setResponsive] = useState<ResponsiveFlexiBoardController | null>(null);
 	const [target, setTarget] = useState<FlexiTargetController | null>(null);
 
 	/*
-		The transition lives on the board's widget defaults and nowhere else — a
+		The transition lives on the board's widget defaults and nowhere else. A
 		registry entry would shadow it and dead-lock the toggle. The interpolator
 		re-reads it when the next animation starts, so a swap needs no remount.
 	*/
@@ -168,7 +168,7 @@ export default function GalleryExample() {
 				fig="Gallery · free 2D grid · packing: none"
 				aside={`transition: ${transitionCall}`}
 			>
-				{/* The toolbar lives in the sheet's own header rather than a band of its own. */}
+				{/* The toolbar lives in the sheet's own header, not a band of its own. */}
 				<header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-3 pt-4 lg:px-9 lg:pt-5">
 					<div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
 						<h1 className="text-ink font-serif text-2xl lg:text-[30px]">Gallery</h1>

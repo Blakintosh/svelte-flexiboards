@@ -15,5 +15,5 @@
 	const style = $derived(plateStyle(motif, pair));
 </script>
 
-<!-- The print itself: gradients only, no images and no assets. -->
+<!-- The print itself: gradients only, no images, no assets. -->
 <div class="h-full w-full" {style} aria-hidden="true"></div>

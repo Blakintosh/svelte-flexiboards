@@ -13,9 +13,8 @@ export type FlexiGridProps = {
 export function FlexiGrid({ className, children }: FlexiGridProps) {
 	const target = useInternalFlexiTarget();
 
-	// The grid may already exist (a layout import can create it before this
-	// component renders); reuse it rather than replacing it and losing the
-	// widgets already placed in it.
+	// A layout import can create the grid before this component renders. Reuse
+	// it, or the widgets already placed in it are lost.
 	const grid = useSingleRef(() => target.ensureGrid());
 
 	const columns = useFromCore(useCallback(() => grid.columns, [grid]));
@@ -23,8 +22,8 @@ export function FlexiGrid({ className, children }: FlexiGridProps) {
 	const styleString = useFromCore(useCallback(() => grid.style, [grid]));
 	const style = useMemo(() => parseStyleString(styleString), [styleString]);
 
-	// Tell the grid's dimension tracker to watch the grid element.
-	// watchGridElementDimensions returns its cleanup — return it to the effect.
+	// watchGridElementDimensions returns its own cleanup, so hand it to the
+	// effect.
 	useEffect(() => grid.watchGridElementDimensions(), [grid]);
 
 	return (

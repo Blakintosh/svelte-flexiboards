@@ -4,8 +4,8 @@ import { getContext, setContext } from 'svelte';
 const contextKey = Symbol('flexieventbus');
 
 export function flexiEventBus(): FlexiEventBus {
-	// Distribute core's bus — the instance the controllers subscribe on. Creating a
-	// separate instance here would split adapter dispatches from core's listeners.
+	// Distribute core's bus, the instance the controllers subscribe on. A separate
+	// instance here would split adapter dispatches from core's listeners.
 	const eventBus = getFlexiEventBus();
 
 	setContext(contextKey, eventBus);

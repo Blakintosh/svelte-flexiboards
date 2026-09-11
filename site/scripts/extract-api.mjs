@@ -165,7 +165,7 @@ project.addSourceFilesAtPaths(path.join(repoRoot, 'packages/core/src/**/*.ts'));
 
 /**
  * Aliases that are plain string-literal unions (e.g. WidgetResizability) get
- * expanded inline in the docs — the alias name alone tells a reader nothing.
+ * expanded inline in the docs. The alias name alone tells a reader nothing.
  */
 const literalAliases = new Map();
 for (const file of project.getSourceFiles()) {
@@ -229,7 +229,7 @@ function extractMembers(type, { bindables = new Set(), location, labels } = {}) 
 	for (const symbol of type.getProperties()) {
 		// A member re-declared on a later intersection arm (e.g. width on both
 		// FlexiWidgetDefaults and FlexiWidgetConfiguration) is documented by the
-		// most specific — last — JSDoc'd declaration.
+		// most specific, last, JSDoc'd declaration.
 		const decls = symbol.getDeclarations();
 		const decl =
 			decls

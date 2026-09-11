@@ -9,8 +9,8 @@ export const load = (async ({ url, parent }) => {
 		redirect(302, '/examples/dashboard');
 	}
 
-	// In React mode an unported example redirects to the first ported one, so
-	// the server never renders (and the sidebar never links) a Svelte fallback.
+	// In React mode, an unported example redirects to the first ported one, so
+	// the server never renders, and the sidebar never links, a Svelte fallback.
 	const { framework } = await parent();
 	if (framework === 'react' && !reactSlugs.includes(slug)) {
 		redirect(302, `/examples/${reactSlugs[0]}`);

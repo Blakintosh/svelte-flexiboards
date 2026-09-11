@@ -20,8 +20,8 @@
 
 <!--
 	One pill row on a recessed stage ground: the active segment lifts to a panel
-	chip. No eyebrow — "Auto / LG / MD / SM" reads as a breakpoint control on its
-	own.
+	chip. No eyebrow needed, "Auto / LG / MD / SM" reads as a breakpoint control
+	on its own.
 -->
 <div
 	class="bg-stage flex items-center gap-0.5 rounded-full p-[3px]"

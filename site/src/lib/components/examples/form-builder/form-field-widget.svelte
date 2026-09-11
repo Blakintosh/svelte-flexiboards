@@ -2,7 +2,7 @@
 	export type FormFieldWidgetProps = {
 		/** Passed in by the board registry's `componentProps`. */
 		onSelect: (widget: FlexiWidgetController) => void;
-		/** Reads the page's selection state — a getter, since `componentProps` is built once. */
+		/** Reads the page's selection state. A getter, since `componentProps` is built once. */
 		isSelected: (uid: string) => boolean;
 	};
 </script>
@@ -16,8 +16,8 @@
 
 	let { onSelect, isSelected }: FormFieldWidgetProps = $props();
 
-	// The widget controller *is* the field: everything rendered below is read
-	// straight off its metadata, so an inspector write re-renders this card.
+	// The widget controller is the field: everything below is read straight
+	// off its metadata, so an inspector write re-renders this card.
 	const widget = getFlexiwidgetCtx();
 
 	const meta = $derived(widget.metadata as FieldMeta | undefined);
@@ -27,7 +27,7 @@
 
 {#if meta && spec}
 	<div class="flex w-full min-w-0 items-start gap-2">
-		<!-- The only drag affordance. Its own z-layer, so it wins over the select button. -->
+		<!-- The only drag affordance. Its own z-layer wins over the select button. -->
 		<Grabber size={14} class="relative z-10 -ml-1 shrink-0" />
 
 		<div class="min-w-0 flex-1">
@@ -39,7 +39,7 @@
 						{meta.label}{#if meta.required}<span class="text-fx-accent"> *</span>{/if}
 					</span>
 				{/if}
-				<!-- The metadata story, told on the card instead of only in the JSON. -->
+				<!-- The metadata, shown on the card too instead of only in the JSON. -->
 				<span
 					class={cn(
 						'hidden shrink-0 font-mono text-[10px] sm:inline',
@@ -57,7 +57,7 @@
 
 	<!--
 		One full-bleed tab stop for selection, sitting under the grip. Clicking
-		anywhere on the card (including "on" an inert input) selects the field.
+		anywhere on the card, including on an inert input, selects the field.
 	-->
 	<button
 		type="button"

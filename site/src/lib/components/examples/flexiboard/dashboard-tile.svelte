@@ -12,10 +12,10 @@
 
 	const widget = getFlexiwidgetCtx();
 	let mediaQuery = $state(new MediaQuery('(min-width: 1024px)'));
-	// Larger handles on mobile for better touch targets
+	// Larger handles on mobile for bigger touch targets
 	let grabberSize = $derived(mediaQuery.current ? 18 : 22);
 
-	// Sub-registry mapping tile types to their content and label.
+	// Maps tile types to their content and label.
 	const tileRegistry = {
 		mrr: { component: MrrTile, title: 'MRR' },
 		subscriptions: { component: SubscriptionsTile, title: 'Subscriptions' },
@@ -31,7 +31,7 @@
 
 <!--
 	Every widget is the same soft plate: white card, rounded corners, a resting
-	shadow, and — only while the board is editable — a visible grab handle next
+	shadow, and, only while the board is editable, a visible grab handle next
 	to the label.
 -->
 <div

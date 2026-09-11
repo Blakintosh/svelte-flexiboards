@@ -73,7 +73,7 @@ export function FlexiTarget({
 
 	useOnceCommitted(() => onfirstcreate?.(target as FlexiTargetController));
 
-	// Prop seam — see FlexiBoard. Runs every render; inert unless `config`
+	// Prop seam, see FlexiBoard. Runs every render, inert unless `config`
 	// differs by value.
 	useEffect(() => {
 		target.updateConfig(config);
@@ -97,9 +97,9 @@ export function FlexiTarget({
 
 				<FlexiGrid className={className}>
 					{children && (
-						// The FlexiWidget declarations in here register their configs and
-						// render no markup, so the wrapper is inert. display:none (not
-						// visibility) so it never occupies a grid cell of its own.
+						// The FlexiWidget declarations here register their configs and
+						// render no markup. display:none rather than visibility, so
+						// the wrapper never occupies a grid cell.
 						<div style={{ display: 'none' }}>{children}</div>
 					)}
 
@@ -119,14 +119,13 @@ export function FlexiTarget({
 				{renderChildren(footer, { target: publicTarget })}
 			</div>
 
-			{/* Creates the registered widgets at render time, in this same render
-		    pass: after the children (registrations happen inside the grid's
-		    subtree, which React renders first) and before the board's own
-		    loader (a later sibling of every target), so stored layouts replace
-		    the declared widgets rather than stacking on top of them — the
-		    Svelte init ordering. The grid read orderedWidgets before this ran;
-		    useSyncExternalStore re-checks its snapshot on subscribe, so it
-		    re-renders with the created widgets. */}
+			{/* Creates the registered widgets in this same render pass: after the
+		    children, whose registrations happen in the grid's subtree, and
+		    before the board's own loader, a later sibling of every target. That
+		    ordering matches Svelte's, so stored layouts replace the declared
+		    widgets instead of stacking on them. The grid read orderedWidgets
+		    before this ran, but useSyncExternalStore re-checks its snapshot on
+		    subscribe and re-renders with the created widgets. */}
 			<FlexiTargetLoader />
 		</FlexiTargetContext.Provider>
 	);

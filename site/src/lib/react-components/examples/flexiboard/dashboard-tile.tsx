@@ -4,7 +4,7 @@ import Grabber from '../common/grabber';
 import Resizer from '../common/resizer';
 import { ActiveTile, ChurnTile, MrrTile, RevenueTile, SubscriptionsTile } from './tiles';
 
-// Sub-registry mapping tile types to their content and label.
+// Maps tile types to their content and label.
 const tileRegistry = {
 	mrr: { component: MrrTile, title: 'MRR' },
 	subscriptions: { component: SubscriptionsTile, title: 'Subscriptions' },
@@ -17,7 +17,7 @@ export default function DashboardTile() {
 	// Reactive proxy: draggability/resizable reads re-render when edit mode flips.
 	const widget = useFlexiWidget();
 	const desktop = useMediaQuery('(min-width: 1024px)');
-	// Larger handles on mobile for better touch targets.
+	// Larger handles on mobile for bigger touch targets.
 	const grabberSize = desktop ? 18 : 22;
 
 	const tileType = widget.metadata?.type as keyof typeof tileRegistry;
@@ -25,8 +25,7 @@ export default function DashboardTile() {
 	const ContentComponent = tileConfig.component;
 
 	// Every widget is the same soft plate: white card, rounded corners, a resting
-	// shadow, and — only while the board is editable — a visible grab handle next
-	// to the label.
+	// shadow, and a grab handle next to the label, but only while the board is editable.
 	return (
 		<div
 			className="bg-panel border-rule-soft shadow-card relative flex h-full w-full flex-col rounded-[14px] border p-3.5 lg:p-4"

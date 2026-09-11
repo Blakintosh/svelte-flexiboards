@@ -60,9 +60,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		onCreated?: (widget: FlexiWidgetController) => void;
 	}> = [];
 
-	/**
-	 * Stores the underlying state of the target.
-	 */
+	// Underlying target state.
 	#hovered$: Signal<boolean> = signal(false);
 	#actionWidget$: Signal<FlexiTargetActionWidget | null> = signal(null);
 	#prepared$: Signal<boolean> = signal(false);
@@ -79,7 +77,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		y: 0
 	});
 
-	// Raw (fractional) cell position - used for resize snapping (rounds instead of floors)
+	// Raw (fractional) cell position, used for resize snapping (rounds instead of floors).
 	#rawMouseCellPosition$: Signal<Position> = signal({
 		x: 0,
 		y: 0
@@ -155,8 +153,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	#trackPointerHover() {
-		// Emulate pointer enter/leave events instead of relying on browser ones, so that we can
-		// make it universal with our keyboard pointer.
+		// Emulate pointer enter/leave events instead of relying on browser ones, so this
+		// also works with the keyboard pointer.
 		this.#stopEffects.push(
 			effect(() => {
 				const grid = this.#grid$();
@@ -373,40 +371,35 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const deleted = this.widgets.delete(widget);
 		this.grid.removeWidget(widget);
 
-		// Update the ordered widgets list to reflect the deletion
 		if (deleted) {
 			this.#updateOrderedWidgets();
 		}
 
 		// TODO: this might not be the best way to handle this. Check whether deleteWidget
 		// is still needed.
-		// Clean up the widget when it's removed from the target
 		if (deleted && 'destroy' in widget) {
 			(widget as InternalFlexiWidgetController).destroy();
 		}
 
-		// Drop the pre-grab snapshot if it was taken for this widget. The snapshot
-		// predates the grab, so the board's safety net would otherwise restore it
-		// in a microtask and bring the deleted widget's cells back — leaving it
-		// out of this.widgets (so nothing renders it) while it still occupies grid
-		// space and collides with everything around it.
+		// Drop the pre-grab snapshot if it belongs to this widget. The snapshot predates
+		// the grab, so the board's safety net would otherwise restore it in a microtask,
+		// bringing back the deleted widget's cells: absent from this.widgets (so nothing
+		// renders it) but still occupying grid space and colliding with its neighbors.
 		//
-		// Keyed on the snapshot's own widget rather than actionWidget, because
-		// dropping onto a deleter means the pointer left the target first, and
-		// leaving already cleared actionWidget.
+		// Keyed on the snapshot's own widget, not actionWidget, because dropping onto a
+		// deleter clears actionWidget when the pointer leaves the target first.
 		if (this.#preGrabSnapshotWidget === widget) {
 			this.forgetPreGrabSnapshot();
 		}
 
-		// If the widget is still mid-action here (deleted programmatically rather
-		// than via a deleter), end the action and drop the dropzone with it —
-		// otherwise our own widget:release subscriber runs next and drops the
-		// just-deleted widget straight back into the grid.
+		// If the widget is still mid-action (deleted programmatically rather than via a
+		// deleter), end the action and drop the dropzone with it. Otherwise the
+		// widget:release subscriber runs next and drops the deleted widget back into the grid.
 		if (this.actionWidget?.widget === widget) {
 			this.cancelDrop();
 		}
 
-		// Apply any deferred operations like row collapsing now that the operation is complete
+		// Apply deferred operations (e.g. row collapsing) now the operation is complete.
 		this.applyGridPostCompletionOperations();
 
 		return deleted;
@@ -469,11 +462,10 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * @returns The layout of widgets.
 	 */
 	exportLayout(): FlexiWidgetLayoutEntry[] {
-		// Prevent reactive subscriptions onto exportLayout directly - they should use onLayoutChange.
+		// Untracked so callers don't create a reactive subscription here; use onLayoutChange instead.
 		return untracked(() => {
 			const result: FlexiWidgetLayoutEntry[] = [];
 
-			// Likely much more information than needed, but we've got it.
 			for (const widget of this.internalWidgets) {
 				const entry: FlexiWidgetLayoutEntry = {
 					...(widget.type !== undefined && { type: widget.type }),
@@ -583,7 +575,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			widget.isBeingDropped = false;
 		}
 
-		// Apply any deferred operations like row collapsing now that the operation is complete
+		// Apply deferred operations (e.g. row collapsing) now the operation is complete.
 		if (result) {
 			this.applyGridPostCompletionOperations();
 			// Clear any pre-grab snapshot for same-target moves
@@ -612,12 +604,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			widget: event.widget
 		};
 
-		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
-		// we can restore the grid to its original state.
+		// Snapshot the grid before removing the widget, to restore it if placement fails.
 		this.#preGrabSnapshot = this.grid.takeSnapshot();
 		this.#preGrabSnapshotWidget = event.widget;
 
-		// Remove the widget from the grid as it's now in a floating state.
+		// The widget is now floating, so remove it from the grid.
 		this.grid.removeWidget(event.widget);
 		this.grid.forceUpdatePointerPosition(event.clientX, event.clientY);
 
@@ -634,12 +625,11 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			widget: event.widget
 		};
 
-		// Take a snapshot of the grid before the widget is removed, so if the widget is not successfully placed
-		// we can restore the grid to its original state.
+		// Snapshot the grid before removing the widget, to restore it if placement fails.
 		this.#preGrabSnapshot = this.grid.takeSnapshot();
 		this.#preGrabSnapshotWidget = event.widget;
 
-		// Remove the widget from the grid as it's now in a floating state.
+		// The widget is now floating, so remove it from the grid.
 		this.grid.removeWidget(event.widget);
 		this.grid.forceUpdatePointerPosition(event.clientX, event.clientY);
 
@@ -666,10 +656,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		const actionWidget = this.actionWidget;
 		const action = actionWidget.action;
 
-		// Capture the original source target BEFORE tryDropWidget updates the widget target
+		// Capture the source target before tryDropWidget updates the widget's target.
 		const originalSourceTarget = actionWidget.widget.internalTarget;
 
-		// We're trying to drop it on our target, so check this is possible.
 		const succeeded = this.tryDropWidget(actionWidget.widget);
 
 		if (!succeeded) {
@@ -685,20 +674,16 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	onWidgetDropped(event: InternalWidgetDroppedEvent) {
-		// No-op if the widget was dropped back onto the same target
+		// No-op if the widget was dropped back onto the same target.
 		if (event.newTarget == event.oldTarget) {
 			return;
 		}
 
-		// If this was the source target, then we need to remove the widget from it.
+		// This was the source target, so remove the widget from it.
 		if (event.oldTarget == this) {
-			// Ensure the widget is no longer tracked by this (source) target
 			this.widgets.delete(event.widget);
-			// Update the ordered widgets list to reflect the removal
 			this.#updateOrderedWidgets();
-			// Clear any pre-grab snapshot now that the operation completed successfully
 			this.forgetPreGrabSnapshot();
-			// Apply any deferred grid operations (e.g., row/column collapsing)
 			this.applyGridPostCompletionOperations();
 		}
 	}
@@ -822,7 +807,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		}
 		const grid = this.grid;
 
-		// Take a snapshot of the grid so we can restore its state if the hover stops.
+		// Snapshot the grid so it can be restored when the hover stops.
 		this.#gridSnapshot = grid.takeSnapshot();
 		grid.setDragSnapshot(this.#gridSnapshot, this.#dragOrigin());
 
@@ -846,7 +831,7 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 			this.#isDropzoneWidgetAdded$(true);
 		}
 
-		// TODO: patch - dropzone widget doesn't reflect the classes of the target it's being moved under.
+		// TODO: dropzone widget doesn't reflect the classes of the target it's being moved under.
 		// if (added) {
 		// 	this.widgets.add(this.dropzoneWidget);
 		// 	this.dropzoneWidget.target = this;
@@ -925,8 +910,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#getNewWidgetHeightAndWidth(widget: FlexiWidgetController, mouseCellPosition: Position) {
 		const grid = this.grid;
 
-		// Use raw (fractional) position with rounding for smoother resize snapping
-		// This makes the widget snap to the next cell when more than halfway through
+		// Round the raw (fractional) position so the widget snaps to the next cell
+		// once the pointer is more than halfway through it.
 		const roundedX = Math.round(this.#rawMouseCellPosition$().x);
 		const roundedY = Math.round(this.#rawMouseCellPosition$().y);
 
@@ -1006,7 +991,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		this.#dropzoneWidgetDestroy?.();
 		this.#dropzoneWidgetDestroy = null;
 
-		// Clean up the shadow widget's event subscriptions and reset counters
 		dropzoneWidget.destroy();
 	}
 
@@ -1118,7 +1102,6 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	 * Cleanup method to be called when the target is destroyed
 	 */
 	destroy() {
-		// Clean up all widgets
 		// TODO: this.widgets should be internally accessible as a set of InternalFlexiWidgetController
 		this.widgets.forEach((widget) => {
 			if ('destroy' in widget) {
@@ -1127,11 +1110,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		});
 		this.widgets.clear();
 
-		// Stop effects owned by this controller
 		this.#stopEffects.forEach((stop) => stop());
 		this.#stopEffects = [];
 
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}

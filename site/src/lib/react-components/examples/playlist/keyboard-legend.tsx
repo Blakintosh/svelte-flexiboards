@@ -7,9 +7,9 @@ export type KeyboardLegendProps = {
 };
 
 /*
-	The key bindings are on the sheet before anyone presses anything, and the strip
-	swaps to the in-flight bindings while a row is held. FlexiBoard already owns the
-	aria-live channel (FlexiAnnouncer), so this stays a visual affordance only.
+	Key bindings show before anyone presses anything, then the strip swaps to
+	the in-flight bindings while a row is held. FlexiBoard already owns the
+	aria-live channel (FlexiAnnouncer), so this is a visual affordance only.
 */
 export default function KeyboardLegend({ movingTitle }: KeyboardLegendProps) {
 	const moving = movingTitle !== null;

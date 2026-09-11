@@ -2,11 +2,11 @@ import { createSubscriber } from 'svelte/reactivity';
 import { effect } from '@flexiboards/core';
 
 /**
- * Wraps a read of core signal-backed state so that Svelte effects/templates
- * reading it re-run when the underlying core signal changes.
+ * Wraps a read of core signal-backed state so the Svelte effects and templates
+ * reading it re-run when the core signal changes.
  *
- * The `read` function must actually read the reactive value (call signals,
- * touch getters) — tracking happens at read time, not at reference time.
+ * `read` must actually read the reactive value by calling signals or touching
+ * getters. Tracking happens at read time, not at reference time.
  */
 export function fromCore<T>(read: () => T): () => T {
 	const subscribe = createSubscriber((update) => {
@@ -28,16 +28,16 @@ const proxyCache = new WeakMap<object, object>();
 
 /**
  * Wraps a core controller in a Proxy whose property reads register as Svelte
- * dependencies (via fromCore), preserving the old runes-era contract that
+ * dependencies, via fromCore. This keeps the runes-era contract that
  * controllers handed to consumer code are reactive to read from anywhere.
  *
  * Applied at every consumer-facing boundary: public context getters, snippet
  * parameters, `controller` bindables and `onfirstcreate` arguments. Adapter
  * internals keep using the raw controllers.
  *
- * Shallow: nested objects returned from properties are not wrapped. Methods
- * are bound to the raw controller so private fields keep working; writes are
- * forwarded straight through to the controller's setters.
+ * The wrapping is shallow, so nested objects returned from properties are not
+ * wrapped. Methods are bound to the raw controller so private fields keep
+ * working, and writes go straight to the controller's setters.
  */
 export function reactive<T extends object>(controller: T): T {
 	const cached = proxyCache.get(controller);
@@ -45,7 +45,7 @@ export function reactive<T extends object>(controller: T): T {
 		return cached as T;
 	}
 
-	// Per-property caches so each property gets one stable subscriber/binding.
+	// Per-property caches so each property gets one stable subscriber and binding.
 	const readers = new Map<PropertyKey, () => unknown>();
 	const boundFns = new Map<PropertyKey, unknown>();
 
@@ -89,21 +89,21 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Deep-reads and shallow-clones the plain-object/array parts of a config value.
+ * Deep-reads and shallow-clones the plain object and array parts of a config.
  *
- * Adapter prop seams push config into core from inside an `$effect`. Core compares
- * against the config it last stored and memoises on core signals, so two things
- * defeat an in-place mutation of a `$state` config (`config.widgetDefaults.transition = …`):
+ * Adapter prop seams push config into core from inside an `$effect`. Core
+ * compares against the config it last stored and memoises on core signals, so
+ * two things defeat an in-place mutation of a `$state` config:
  *
  * - The effect only tracked the top-level `config` read, so it never re-runs.
  *   Walking every nested property here registers each one as a dependency.
  * - Core's stored copy shares nested objects with the live proxy, so comparing
- *   "previous" against "next" compares the proxy with itself. Cloning the plain
+ *   previous against next compares the proxy with itself. Cloning the plain
  *   objects and arrays gives core an independent snapshot to compare against.
  *
- * Functions, class instances, Maps, etc. (snippets, components, adapters, registries)
- * are passed through by reference — they're identity-compared, never walked. This is
- * `$state.snapshot` without the uncloneable-value warnings.
+ * Functions, class instances and Maps, such as snippets, components, adapters
+ * and registries, pass through by reference and are identity-compared, never
+ * walked. This is `$state.snapshot` without the uncloneable-value warnings.
  */
 export function snapshotConfig<T>(value: T): T {
 	return snapshotValue(value, new Map()) as T;

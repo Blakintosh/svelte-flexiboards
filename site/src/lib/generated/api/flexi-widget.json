@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiWidgetController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "draggability",
@@ -134,7 +134,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiWidgetController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "component",
@@ -243,7 +243,7 @@
 			{
 				"name": "target",
 				"type": "FlexiTargetController | undefined",
-				"description": "The target this widget is under. This is not defined if the widget has not yet been dropped in the board."
+				"description": "The target this widget is under. Undefined until the widget is dropped in the board."
 			},
 			{
 				"name": "ref",

@@ -16,10 +16,10 @@ export function FlexiResize({ className, children }: FlexiResizeProps) {
 		return { destroy: () => widget.removeResizer() };
 	});
 
-	// Event watchers are stateful — create once per component instance.
+	// Event watchers are stateful, so create them once per component instance.
 	const [events] = useState(() => widgetResizerEvents(widget));
 	const publicWidget = useReactive(widget as FlexiWidgetController);
-	// useFromCore: the class function may read signal-backed widget state.
+	// useFromCore, because the class function may read signal-backed widget state.
 	const derivedClassName = useFromCore(
 		useCallback(
 			() => (typeof className === 'function' ? className(widget) : className),

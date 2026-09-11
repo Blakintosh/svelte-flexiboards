@@ -1,7 +1,7 @@
 <script module lang="ts">
 	export type FieldInspectorProps = {
 		field: FieldEntry | undefined;
-		/** Keys used by more than one field — warned about, never blocked. */
+		/** Keys used by more than one field. Warned about, never blocked. */
 		duplicateNames: Set<string>;
 		onchange: (patch: Partial<FieldMeta>) => void;
 	};
@@ -17,7 +17,7 @@
 	const controls = $derived(new Set(spec?.inspector ?? []));
 
 	// Local drafts for the two controls that must not be rewritten mid-keystroke:
-	// the key (sanitised on commit) and the options list (line-based).
+	// the key (sanitised on commit) and the options list.
 	let nameDraft = $state('');
 	let optionsDraft = $state('');
 	let seededUid: string | undefined = undefined;
@@ -35,15 +35,15 @@
 
 	const isDuplicate = $derived(!!field && duplicateNames.has(field.meta.name));
 
-	// Native controls on the site tokens — the example depends on Tailwind and
-	// the tokens only, no component library.
+	// Native controls on site tokens: the example depends only on Tailwind and
+	// the tokens, no component library.
 	const inputClass =
 		'h-8 w-full rounded-[9px] border border-rule-soft bg-paper px-3 text-[13px] text-ink placeholder:text-faint shadow-none outline-none transition-[border-color] duration-[120ms] focus-visible:border-blue';
 
 	const labelClass = 'text-faint text-[11.5px] font-semibold';
 
-	// A checkbox painted as a toggle: real input, real semantics, Tailwind-only
-	// track and thumb.
+	// A checkbox painted as a toggle: real input, real semantics, track and
+	// thumb in Tailwind only.
 	const switchClass =
 		'relative h-[18px] w-8 shrink-0 cursor-pointer appearance-none rounded-full bg-rule outline-none transition-colors duration-[130ms] before:absolute before:top-[2px] before:left-[2px] before:size-[14px] before:rounded-full before:bg-paper before:shadow-sm before:transition-transform before:duration-[130ms] before:content-[""] checked:bg-blue checked:before:translate-x-[14px] focus-visible:ring-[3px] focus-visible:ring-ring/50';
 

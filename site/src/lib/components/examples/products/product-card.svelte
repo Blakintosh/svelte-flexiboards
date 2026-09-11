@@ -42,8 +42,8 @@
 
 	let isWide = $derived(widget.width > 1);
 
-	// Cards are soft, rounded tiles at rest; hover deepens the shadow, never adds
-	// a border.
+	// Cards are soft, rounded tiles at rest. Hover deepens the shadow, never
+	// adds a border.
 	const cardClass =
 		'group relative flex h-full overflow-hidden rounded-[14px] border border-rule-soft bg-panel shadow-card transition-shadow duration-[150ms] hover:shadow-card-lg';
 
@@ -94,7 +94,7 @@
 	] as { label: string; icon: typeof Eye; separator?: boolean; danger?: boolean }[]);
 </script>
 
-<!-- Thumbnails are placeholders — a plain recessed stage, never stock imagery. -->
+<!-- Thumbnails are placeholders: a plain recessed stage, never stock imagery. -->
 {#snippet thumbnail(iconSize: string)}
 	<div class="bg-stage absolute inset-0"></div>
 	<div class="absolute inset-0 flex items-center justify-center">

@@ -24,7 +24,7 @@ export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
 	};
 
 /**
- * Registers a widget with the surrounding FlexiTarget. Renders nothing itself —
+ * Registers a widget with the surrounding FlexiTarget. Renders nothing itself;
  * the target renders the created widget via RenderedFlexiWidget.
  */
 export function FlexiWidget({
@@ -33,18 +33,19 @@ export function FlexiWidget({
 	onfirstcreate,
 	...propsConfig
 }: FlexiWidgetProps) {
-	// The widget is created lazily by the target — during the target loader's
-	// render, in the same pass as this component — so the controller lives in a
-	// ref (a state write from inside another component's render is illegal) and
-	// the effects below pick it up after commit. The target always creates
-	// internal controllers; updateConfig lives on the internal type.
+	// The target creates the widget during the target loader's render, in this
+	// same pass, so the controller lives in a ref: a state write from inside
+	// another component's render is illegal. The effects below pick it up after
+	// commit. The target always creates internal controllers, and updateConfig
+	// lives on the internal type.
 	const createdWidget = useRef<InternalFlexiWidgetController | undefined>(undefined);
 	const firstCreateFired = useRef(false);
 
 	const assembleConfig = (): CoreFlexiWidgetConfiguration<string> => ({
 		...propsConfig,
 		...(className !== undefined && { className }),
-		// Plain nodes become a constant snippet; functions get the widget + events.
+		// Plain nodes become a constant snippet. Functions receive the widget and
+		// its events.
 		...(children !== undefined && {
 			snippet: typeof children === 'function' ? children : () => children
 		})
@@ -54,24 +55,22 @@ export function FlexiWidget({
 		createdWidget.current = widget as InternalFlexiWidgetController;
 	});
 
-	// onfirstcreate fires once the widget exists, from a layout effect (like the
-	// other components' useOnceCommitted), so the consumer may set state in it.
+	// onfirstcreate fires once the widget exists, from a layout effect like the
+	// other components' useOnceCommitted, so the consumer may set state in it.
 	useLayoutEffect(() => {
 		if (firstCreateFired.current || !createdWidget.current) return;
 		firstCreateFired.current = true;
 		onfirstcreate?.(createdWidget.current);
 	});
 
-	// Prop seam — see FlexiBoard. updateConfig() merges only the keys that
-	// actually changed, so it never clobbers state set imperatively on the
-	// controller and writes nothing when a key is unchanged.
+	// Prop seam, see FlexiBoard. updateConfig() merges only the keys that
+	// changed, so it never clobbers state set imperatively on the controller.
 	//
-	// Deliberately NO dependency array: unlike Svelte (where snippets and inline
-	// functions are stable consts because a component's setup runs once), React
-	// rebuilds `children` and inline class functions on every parent render —
-	// each render's values are genuinely the current content, so the seam must
-	// observe every render. Identity-changed keys (like a fresh children tree)
-	// being re-written each time is the semantically correct React behaviour.
+	// No dependency array on purpose. Svelte's snippets and inline functions are
+	// stable because a component's setup runs once, but React rebuilds
+	// `children` and inline class functions on every parent render. Each
+	// render's values are the current content, so the seam must observe every
+	// render and re-write identity-changed keys such as a fresh children tree.
 	useEffect(() => {
 		createdWidget.current?.updateConfig(assembleConfig());
 	});

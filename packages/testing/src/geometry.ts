@@ -20,7 +20,7 @@ export function rect({ left = 0, top = 0, width = 100, height = 100 }: Partial<B
 	} as DOMRect;
 }
 
-/** Stubs an element's layout box; a DOM without layout reports zeros otherwise. */
+/** Stubs an element's layout box. A DOM without layout reports zeros. */
 export function setRect(element: Element, box: Partial<Box> = {}) {
 	const r = rect(box);
 	element.getBoundingClientRect = () => r;
@@ -35,10 +35,10 @@ export type LayoutGridOptions = {
 };
 
 /**
- * Gives a mounted board real geometry: the board and grid become a square
- * grid of `cellPx`-sized tracks that core can read, and each cell gets its
- * box from its aria position. Call after mount, and again after any change to
- * the widget set. Returns a function that restores `getComputedStyle`.
+ * Gives a mounted board real geometry. The board and grid become a square grid
+ * of `cellPx`-sized tracks that core can read, and each cell gets its box from
+ * its aria position. Call after mount, and again after any change to the widget
+ * set. Returns a function that restores `getComputedStyle`.
  */
 export function layoutGrid(cellPx = 100, { grid, left = 0, top = 0 }: LayoutGridOptions = {}) {
 	const target = grid ?? document.querySelector<HTMLElement>('[role="grid"]');
@@ -63,7 +63,7 @@ export function layoutGrid(cellPx = 100, { grid, left = 0, top = 0 }: LayoutGrid
 	}
 
 	// Core reads the grid's tracks from computed style, which never resolves to
-	// pixels without layout. Answer for this grid only; leave everything else.
+	// pixels without layout. Answer for this grid only.
 	const original = window.getComputedStyle;
 	const tracks: Record<string, string> = {
 		'grid-template-columns': Array(columns).fill(`${cellPx}px`).join(' '),
@@ -97,8 +97,8 @@ export const cells = (root: ParentNode = document) =>
 
 /**
  * Cells excluding the drop preview a target renders mid-grab. The grabbed
- * widget itself is re-parented into the portal, so a document-wide query still
- * finds it.
+ * widget is re-parented into the portal, so a document-wide query still finds
+ * it.
  */
 export const realCells = (root: ParentNode = document) =>
 	cells(root).filter((c) => c.getAttribute('aria-label') !== 'Widget action preview');

@@ -52,8 +52,8 @@ function Status() {
 	);
 }
 
-// The shadow renders the same children, so read the status of the real widget
-// (which may have been lifted into the portal).
+// The shadow renders the same children, so read the status of the real widget,
+// which may have been lifted into the portal.
 const status = () =>
 	document.querySelector('[role="cell"]:not([aria-label="Widget action preview"]) .status')!
 		.textContent;
@@ -133,7 +133,7 @@ describe('keyboard grab via FlexiGrab', () => {
 		keydown(document.querySelector('button.grab')!, 'Enter');
 		expect(status()).toBe('grabbed:0,0');
 
-		// Move the (keyboard-driven) pointer into the second column and confirm.
+		// Move the keyboard-driven pointer into the second column and confirm.
 		pointerMove(150, 50);
 		keydown(window, 'Enter');
 		expect(status()).toBe('idle:1,0');
@@ -229,7 +229,7 @@ describe('FlexiDelete', () => {
 		expect(cells()[0].textContent).toBe('keep');
 		expect(document.getElementById('flexi-portal')!.children.length).toBe(0);
 
-		// The pointer left with the drop: hover state must not linger.
+		// The pointer left with the drop, so hover state must not linger.
 		act(() => {
 			window.dispatchEvent(new PointerEvent('pointermove', { clientX: 50, clientY: 50 }));
 		});

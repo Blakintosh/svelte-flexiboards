@@ -16,8 +16,8 @@ export type PlaylistRowProps = {
 };
 
 /*
-	The row body is ordinary interactive markup. Only the FlexiGrab handle starts a
-	drag, so the buttons below stay clickable — that is the point of the example.
+	The row body is ordinary interactive markup. Only the FlexiGrab handle
+	starts a drag, so the buttons below stay clickable. That's the point.
 */
 export default function PlaylistRow({
 	track,
@@ -36,7 +36,7 @@ export default function PlaylistRow({
 				isCurrent && 'border-blue bg-tint border-l-2'
 			)}
 		>
-			{/* Vermillion means movement: the handle answers in accent on hover and focus. */}
+			{/* Vermillion means movement, so the handle turns accent on hover and focus. */}
 			<FlexiGrab
 				className={cn(
 					'text-faint flex h-10 w-8 shrink-0 items-center justify-center rounded-[8px] transition-colors duration-[120ms]',

@@ -4,7 +4,7 @@
 	export type LayoutJsonBarProps = {
 		json: string;
 		copyState: CopyState;
-		/** Layout id of the tile currently in hand, if any — its x/y are marked. */
+		/** Layout id of the tile currently in hand, if any. Its x/y are marked. */
 		highlightId?: string;
 		oncopy: () => void;
 		onreset: () => void;
@@ -27,7 +27,7 @@
 	);
 
 	// The coordinate pair inside one entry, so only the numbers that move get the
-	// accent — the rest of the line stays in the resting listing colour.
+	// accent. The rest of the line stays in the resting listing colour.
 	const XY = /("x": -?\d+, "y": -?\d+)/;
 
 	const lines = $derived(
@@ -47,7 +47,7 @@
 	);
 
 	// Clipboard writes can be refused. When that happens the listing takes focus with
-	// its text selected, so the layout can still be copied by hand — an invisible
+	// its text selected, so the layout can still be copied by hand. An invisible
 	// action must never fail silently.
 	$effect(() => {
 		if (copyState !== 'failed') {
@@ -69,8 +69,8 @@
 </script>
 
 <!--
-	Docked to the bottom of the frame on the terminal ground: `bg-field` stays dark
-	in both themes, so the listing reads as output rather than as more page.
+	Docked to the bottom of the frame on the terminal ground. `bg-field` stays dark
+	in both themes, so the listing reads as output rather than more page.
 -->
 <div class="bg-field flex shrink-0 flex-col gap-1.5 px-4 py-2.5">
 	<div class="flex items-center justify-between gap-4">
@@ -104,7 +104,7 @@
 	</div>
 
 	<!--
-		Focusable on purpose: it is a scrollable region (WCAG 2.1.1) and the
+		Focusable on purpose: it's a scrollable region (WCAG 2.1.1), and the
 		manual-copy fallback focuses it to select the layout.
 	-->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->

@@ -10,7 +10,7 @@
 </script>
 
 <Sidebar {header} {footer}>
-	<!-- One group, three destinations. The demo is the board, not the nav. -->
+	<!-- One group, three destinations: the demo is the board, not the nav. -->
 	<SidebarItem active>
 		<LayoutDashboard class="size-4" />
 		<span>Overview</span>
@@ -32,7 +32,7 @@
 		</div>
 		<div class="flex flex-col">
 			<span class="text-ink font-serif text-sm">Flexiboard</span>
-			<!-- The tenant, not the page: the sheet's caption band already names the view. -->
+			<!-- The tenant, not the page: the sheet's caption band already names it. -->
 			<span class="text-faint text-[10.5px] font-semibold">Acme Analytics</span>
 		</div>
 	</div>

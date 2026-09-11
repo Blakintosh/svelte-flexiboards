@@ -41,11 +41,11 @@ export type TargetSizing = TargetSizingFn | string;
 
 export type FlexiTargetDefaults = {
 	/**
-	 * Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target.
+	 * The value inside the target's `grid-template-rows` `repeat()` function.
 	 */
 	rowSizing?: TargetSizing;
 	/**
-	 * Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target.
+	 * The value inside the target's `grid-template-columns` `repeat()` function.
 	 */
 	columnSizing?: TargetSizing;
 

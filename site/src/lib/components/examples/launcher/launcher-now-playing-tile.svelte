@@ -7,7 +7,7 @@
 
 <!--
 	2 × 2, the one feature tile. The transport glyphs are decorative: no hover, no
-	cursor change, no handler — the whole tile is a grab target and nothing here
+	cursor change, no handler. The whole tile is a grab target, and nothing here
 	should read as a second thing to click.
 -->
 <div class="flex h-full w-full flex-col gap-2 overflow-hidden p-3">

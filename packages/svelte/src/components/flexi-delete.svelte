@@ -37,7 +37,7 @@
 	controller = publicDeleter;
 	onfirstcreate?.(publicDeleter);
 
-	// fromCore: the user's class function may read signal-backed state (e.g. deleter.isHovered).
+	// fromCore, because the class function may read signal-backed deleter state.
 	let derivedClassName = $derived.by(
 		fromCore(() => {
 			if (typeof className === 'function') {

@@ -25,7 +25,7 @@ function Metric({
 	);
 }
 
-// The Domine value is the headline; a rise reads blue — fx-accent is kept for
+// The Domine value is the headline. A rise reads blue, fx-accent is kept for
 // the one metric that needs attention.
 export function MrrTile() {
 	return <Metric value="$45,231" note="+20.1% MoM" />;
@@ -40,7 +40,7 @@ export function ChurnTile() {
 	return <Metric value="2.1%" note="+0.3 pt" accent />;
 }
 
-// Six monthly readings, drawn as rounded bars: the drafting-blue ramp climbs
+// Six monthly readings, drawn as rounded bars. The drafting-blue ramp climbs
 // toward the latest reading, which takes the accent as the one live value.
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 const points = [135, 98, 118, 104, 52, 38];
@@ -81,7 +81,7 @@ export function RevenueTile() {
 	);
 }
 
-// A slow ease rather than the terminal caret's hard steps() — this is a
+// A slow ease rather than the terminal caret's hard steps(), this is a
 // heartbeat, not a cursor. Stilled under reduced motion.
 const liveDotCss = `
 @media (prefers-reduced-motion: no-preference) {

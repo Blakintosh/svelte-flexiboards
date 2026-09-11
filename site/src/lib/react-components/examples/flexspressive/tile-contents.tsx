@@ -12,10 +12,11 @@ export type TileContentsProps = {
 };
 
 /**
- * State is a fill, never a colour swap: on is ink, off is a tinted card, and the
- * fill survives edit mode so both readings stay legible at once. The tile being
- * edited takes the fx-accent dashed frame; the tile in hand takes the lifted-card
- * look instead, and the placeholder left behind takes the same dashed frame.
+ * State is a fill, never a colour swap: on is ink, off is a tinted card. The
+ * fill survives edit mode so both readings stay legible together. The tile
+ * being edited gets the fx-accent dashed frame, the tile in hand gets the
+ * lifted-card look instead, and the placeholder left behind keeps the same
+ * dashed frame.
  */
 export default function TileContents({
 	title,
@@ -31,8 +32,7 @@ export default function TileContents({
 
 	const node = useRef<HTMLButtonElement | null>(null);
 
-	// Leaving edit mode drops the tile out of its editing state, whether or not
-	// it was the tile being edited.
+	// Leaving edit mode drops the tile out of editing state either way.
 	useEffect(() => {
 		if (editMode) return;
 

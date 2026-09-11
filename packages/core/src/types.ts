@@ -10,9 +10,8 @@ export type { Signal, ReadonlySignal } from './reactivity.js';
 /**
  * Framework-erased render types. Core stores these opaquely; each framework
  * adapter narrows them (Svelte: Component/Snippet, React: ComponentType/render prop).
- * TODO(adapter-generics): consider replacing with a generic parameter threaded
- * through the widget/target/board configuration types so adapter re-exports
- * stay fully type-safe.
+ * TODO(adapter-generics): replace with a generic parameter threaded through the
+ * widget/target/board configuration types so adapter re-exports stay type-safe.
  */
 export type FlexiComponent = unknown;
 export type FlexiContent = unknown;
@@ -30,7 +29,7 @@ export type FlexiCommonProps<T> = {
 	controller?: T;
 
 	/**
-	 * A callback that fires when the component's controller is first created.
+	 * Fires when the component's controller is first created.
 	 */
 	onfirstcreate?: (instance: T) => void;
 };
@@ -99,7 +98,7 @@ export type WidgetEvent = {
 	widget: FlexiWidgetController;
 };
 
-// Event objects
+// Event objects.
 export type WidgetGrabbedEvent = WidgetEvent & {
 	adder?: FlexiAddController;
 	clientX: number;
@@ -150,7 +149,7 @@ export type TargetEvent = {
 export type MouseGridCellMoveEvent = {
 	cellX: number;
 	cellY: number;
-	// Raw (fractional) cell coordinates before rounding - useful for resize snapping
+	// Raw fractional cell coordinates before rounding, used for resize snapping.
 	rawCellX: number;
 	rawCellY: number;
 };

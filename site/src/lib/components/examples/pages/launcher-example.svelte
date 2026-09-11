@@ -35,9 +35,9 @@
 		type Pin
 	} from '$lib/components/examples/launcher/layouts.js';
 
-	// A home-screen icon is its own handle, so tiles are grabbed whole — no grip
-	// chrome. With no grabbers the library makes the widget root focusable and
-	// keyboard-operable for free; all this adds is the focus ring.
+	// A home-screen icon is its own handle, so tiles are grabbed whole, no grip
+	// chrome needed. With no grabbers the library makes the widget root
+	// focusable and keyboard-operable for free; this just adds the focus ring.
 	const FOCUS_RING =
 		'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent';
 	const APP_BASE =
@@ -47,7 +47,7 @@
 	const FEATURE_BASE =
 		'flex cursor-grab select-none overflow-hidden rounded-[10px] border border-rule-soft bg-panel shadow-card active:cursor-grabbing';
 
-	// Provisional states — the tile in hand, the drop shadow — are the only
+	// Provisional states (the tile in hand, the drop shadow) are the only
 	// fx-accent on the page. Routed through cn() so the lifted/placeholder look
 	// reliably beats the resting one.
 	const tileClass = (base: string) => (widget: FlexiWidgetController) =>
@@ -71,7 +71,7 @@
 		},
 		registry: {
 			// importLayout() resolves every entry's `type` here, and sizes come from
-			// the layout entries — the registry can't carry width/height, so matched
+			// the layout entries. The registry can't carry width/height, so matched
 			// min/max lock each tile to its intended footprint instead.
 			app: {
 				component: LauncherAppTile,
@@ -114,7 +114,7 @@
 	let board: ResponsiveFlexiBoardController | undefined = $state();
 	// The target's widget set is reactive, so asking it who is in hand needs no
 	// per-tile plumbing. The layout only re-exports on drop, so the marked
-	// coordinates are the ones the tile is leaving — they tick over as it lands.
+	// coordinates are the ones the tile is leaving; they tick over as it lands.
 	let apps: FlexiTargetController | undefined = $state();
 
 	const grabbedId = $derived.by(() => {
@@ -139,7 +139,7 @@
 	}
 
 	// Identity stays put while `pin` does, so the prop seam is inert; when it
-	// changes, only the threshold *values* differ — which is exactly what the
+	// changes, only the threshold *values* differ, which is exactly what the
 	// controller's shallow comparison notices.
 	const responsiveConfig = $derived({
 		breakpoints: breakpointsFor(pin),

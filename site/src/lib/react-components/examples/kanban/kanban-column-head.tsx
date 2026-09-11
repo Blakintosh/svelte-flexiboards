@@ -17,7 +17,7 @@ export type KanbanColumnHeadProps = {
 	 * Reports the heading's live grid position back to the page, which turns it
 	 * into a CSS `order` for the card list below. Svelte read `heads[key].x`
 	 * off a bound controller; React has no `bind:`, so the reactive read lives
-	 * here — where `useFlexiWidget()` makes it re-render — and travels upward.
+	 * here, where `useFlexiWidget()` makes it re-render, and travels upward.
 	 */
 	onPosition: (key: string, x: number | undefined, grabbed: boolean) => void;
 };

@@ -63,7 +63,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 		return this.#coordinateSystem$()!;
 	}
 
-	// Track whether collapsing is needed to defer it until operations complete
+	// Deferred until operations complete, then run once.
 	#needsPostEditOperations: boolean = false;
 
 	constructor(target: InternalFlexiTargetController, targetConfig: FlexiTargetConfiguration) {
@@ -96,20 +96,18 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			isGrabbedWidget
 		);
 
-		// Constrain the width/height of the widget to the min/max values.
+		// Constrain to the widget's min/max.
 		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
 		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
 
-		// We need to try expand the grid if the widget is moving beyond the current bounds,
-		// but if this is not possible then the operation fails.
+		// Expand the grid if this moves beyond current bounds; fail if that's not possible.
 		if (!this.adjustGridDimensionsToFit(x, y, width, height)) {
 			return false;
 		}
 
-		// Get proposed operations up-front, so we can cancel if needed.
+		// Collect proposed operations up front so they can be cancelled.
 		const operations: Map<InternalFlexiWidgetController, MoveOperation> = new Map();
 
-		// Try to resolve any collisions, if not possible then the operation fails.
 		if (!this.#resolveCollisions({ widget, x, y, width, height }, operations)) {
 			this.#rollbackOperations(operations, new Map());
 			return false;
@@ -125,7 +123,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			);
 		}
 
-		// Place the widget now that all other widgets have been moved out of the way.
+		// Place the widget now that others have moved out of the way.
 		this.#coordinateSystem.addWidget(widget, x, y, width, height);
 		widget.setBounds(x, y, width, height);
 		this.#widgets.add(widget);
@@ -143,21 +141,17 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	): boolean {
 		const { x: newX, y: newY, width, height } = move;
 
-		// We need to try expand the grid if the widget is moving beyond the current bounds,
-		// but if this is not possible then the operation fails.
+		// Expand the grid if this moves beyond current bounds; fail if that's not possible.
 		if (!this.adjustGridDimensionsToFit(newX, newY, width, height)) {
 			return false;
 		}
 
-		// Looking row-by-row, we can identify collisions using the bitmaps. Scan from the far
-		// corner back towards the origin: widgets are pushed right/down, so handling the
-		// farthest one first means nearer ones land behind it instead of leapfrogging it.
+		// Scan row-by-row from the far corner back to the origin: widgets are pushed right/down,
+		// so resolving the farthest one first means nearer ones land behind it, not leapfrog it.
 		for (let i = newY + height - 1; i >= newY; i--) {
 			for (let j = newX + width - 1; j >= newX; j--) {
-				// Find the first column that a collision occurs on this row, if any.
 				const collidingWidget = this.#coordinateSystem.getCollidingWidgetIfAny(j, i);
 
-				// No collision, all good.
 				if (!collidingWidget) {
 					continue;
 				}
@@ -166,13 +160,13 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					return false;
 				}
 
-				// The widget may already have a pending move; collisions happen at wherever it currently sits.
+				// The widget may already have a pending move; collisions happen wherever it currently sits.
 				const { x: currentX, y: currentY } = this.#pendingPositionOf(collidingWidget, operations);
 
-				// Take the colliding widget out of the coordinate system so it can't collide with itself.
+				// Remove it from the coordinate system so it can't collide with itself.
 				this.#coordinateSystem.removeWidgetAt(collidingWidget, currentX, currentY);
 
-				// Try move the colliding widget along the x-axis if this is allowed and possible.
+				// Try displacing along x, then along y.
 				if (
 					displaceX &&
 					this.#attemptDisplacement(
@@ -187,7 +181,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					continue;
 				}
 
-				// If the x-axis move failed, try move the colliding widget along the y-axis if this is allowed and possible.
 				if (
 					displaceY &&
 					this.#attemptDisplacement(
@@ -202,7 +195,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 					continue;
 				}
 
-				// Neither worked: put the widget back where it was and let the caller unwind.
+				// Neither worked: put the widget back and let the caller unwind.
 				this.#coordinateSystem.addWidget(
 					collidingWidget,
 					currentX,
@@ -217,11 +210,9 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	removeWidget(widget: InternalFlexiWidgetController): boolean {
-		// Delete it from the grid, incl the coordinate system.
 		this.#widgets.delete(widget);
 		this.#coordinateSystem.removeWidget(widget);
 
-		// Mark that collapsing is needed, but don't apply it immediately
 		this.#needsPostEditOperations = true;
 
 		return true;
@@ -291,7 +282,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 	}
 
 	restoreFromSnapshot(snapshot: FreeFormGridSnapshot) {
-		// Must deep copy these again, as the snapshot may be re-used.
+		// Deep copy again since the snapshot may be reused.
 		this.#coordinateSystem.bitmaps = [...snapshot.bitmaps];
 		this.#coordinateSystem.layout = snapshot.layout.map((row) => [...row]);
 
@@ -307,7 +298,6 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			widget.widget.setBounds(widget.x, widget.y, widget.width, widget.height);
 		}
 
-		// Restore the collapsing flag
 		this.#needsPostEditOperations = snapshot.needsPostEditOperations;
 	}
 
@@ -328,7 +318,7 @@ export class FreeFormFlexiGrid extends FlexiGrid {
 			);
 		}
 
-		// Make sure the grabbed widget can only expand the grid relative from its current dimensions.
+		// A grabbed widget can only expand the grid relative to its current dimensions.
 		if (isGrabbedWidget) {
 			if (x >= this.#columns) {
 				x = this.#columns - 1;
@@ -576,10 +566,8 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	getBitmap(start: number, length: number): number {
-		// Create a bitmap with 1s for the width of the widget starting at the given position
 		let bitmap = 0;
 
-		// Set bits from start to start + length
 		for (let i = start; i < start + length; i++) {
 			bitmap |= 1 << i;
 		}
@@ -590,7 +578,6 @@ class FreeFormGridCoordinateSystem {
 	getCollidingWidgetIfAny(start: number, row: number): InternalFlexiWidgetController | null {
 		const occupancy = this.bitmaps[row] & this.getBitmap(start, 1);
 
-		// No collision, good to go.
 		if (occupancy === 0) {
 			return null;
 		}
@@ -621,7 +608,6 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
-		// Add rows.
 		if (newRows > oldRows) {
 			this.layout.push(
 				...Array.from({ length: newRows - oldRows }, () => new Array(this.#columns).fill(null))
@@ -629,7 +615,6 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
-		// Remove rows.
 		this.layout.splice(newRows);
 	}
 
@@ -638,13 +623,11 @@ class FreeFormGridCoordinateSystem {
 			return;
 		}
 
-		// Add columns.
 		if (newColumns > oldColumns) {
 			this.layout.forEach((row) => row.push(...new Array(newColumns - oldColumns).fill(null)));
 			return;
 		}
 
-		// Remove columns.
 		this.layout.forEach((row) => row.splice(newColumns));
 	}
 
@@ -676,7 +659,7 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	applyHorizontalPacking(): void {
-		// Pack the widgets that are closest to the left first.
+		// Pack widgets closest to the left first.
 		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).sort((a, b) => {
 			if (a.x == b.x) {
 				return a.y - b.y;
@@ -685,7 +668,6 @@ class FreeFormGridCoordinateSystem {
 		});
 
 		for (const widget of sortedWidgets) {
-			// We can already automatically eliminate any widget that's at x = 0.
 			if (widget.x === 0) {
 				continue;
 			}
@@ -695,7 +677,7 @@ class FreeFormGridCoordinateSystem {
 
 			let minimumAvailableShift = 0;
 
-			// Compute the best shift to the left we can achieve for this widget.
+			// Find the largest shift left that stays clear.
 			let blocked = false;
 			for (let j = x - 1; j >= 0; j--) {
 				for (let i = y; i < y + widget.height; i++) {
@@ -715,7 +697,7 @@ class FreeFormGridCoordinateSystem {
 				continue;
 			}
 
-			// Remove and re-add the widget so the bitmaps are updated correctly.
+			// Remove and re-add so the bitmaps update correctly.
 			this.removeWidget(widget);
 
 			widget.setBounds(widget.x - minimumAvailableShift, widget.y, widget.width, widget.height);
@@ -724,7 +706,7 @@ class FreeFormGridCoordinateSystem {
 	}
 
 	applyVerticalPacking(): void {
-		// Pack the widgets that are closest to the top first.
+		// Pack widgets closest to the top first.
 		const sortedWidgets = Array.from(this.#grid.getWidgetsForModification()).sort((a, b) => {
 			if (a.y == b.y) {
 				return a.x - b.x;
@@ -733,7 +715,6 @@ class FreeFormGridCoordinateSystem {
 		});
 
 		for (const widget of sortedWidgets) {
-			// We can already automatically eliminate any widget that's at y = 0.
 			if (widget.y === 0) {
 				continue;
 			}
@@ -743,7 +724,7 @@ class FreeFormGridCoordinateSystem {
 
 			let minimumAvailableShift = 0;
 
-			// Compute the best shift to the top we can achieve for this widget.
+			// Find the largest shift up that stays clear.
 			let blocked = false;
 			for (let i = y - 1; i >= 0; i--) {
 				for (let j = x; j < x + widget.width; j++) {
@@ -763,7 +744,7 @@ class FreeFormGridCoordinateSystem {
 				continue;
 			}
 
-			// Remove and re-add the widget so the bitmaps are updated correctly.
+			// Remove and re-add so the bitmaps update correctly.
 			this.removeWidget(widget);
 
 			widget.setBounds(widget.x, widget.y - minimumAvailableShift, widget.width, widget.height);
@@ -783,61 +764,53 @@ class FreeFormGridCoordinateSystem {
 		let newRows = currentRows;
 		let rowsToRemove: number[] = [];
 
-		// Collect all rows that need to be removed based on collapsibility type
 		if (collapsibility === 'any') {
-			// Remove all empty rows
 			for (let i = 0; i < currentRows && currentRows - rowsToRemove.length > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
 					rowsToRemove.push(i);
 				}
 			}
 		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
-			// Remove empty rows from the beginning
 			for (let i = 0; i < currentRows && currentRows - rowsToRemove.length > minRows; i++) {
 				if (this.#isRowEmpty(i)) {
 					rowsToRemove.push(i);
 				} else {
-					// Stop when we hit the first non-empty row for leading collapsibility
+					// Stop at the first non-empty row.
 					break;
 				}
 			}
 		}
 
 		if (collapsibility === 'trailing' || collapsibility === 'endings') {
-			// Remove empty rows from the end
 			for (let i = currentRows - 1; i >= 0 && currentRows - rowsToRemove.length > minRows; i--) {
 				if (this.#isRowEmpty(i) && !rowsToRemove.includes(i)) {
 					rowsToRemove.push(i);
 				} else {
-					// Stop when we hit the first non-empty row for trailing collapsibility
+					// Stop at the first non-empty row.
 					break;
 				}
 			}
 		}
 
-		// Calculate final row count
 		newRows = currentRows - rowsToRemove.length;
 
-		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		// Descending order, so removal from the end doesn't shift earlier indices.
 		rowsToRemove.sort((a, b) => b - a);
 
-		// Remove rows and update widget positions
 		for (const rowIndex of rowsToRemove) {
-			// Collect widgets to shift BEFORE modifying arrays
+			// Collect widgets to shift before modifying the arrays.
 			const widgetsToShift = this.#grid
 				.getWidgetsForModification()
 				.filter((widget) => widget.y > rowIndex);
 
-			// Remove widgets from coordinate system BEFORE splicing
+			// Remove from the coordinate system before splicing.
 			for (const widget of widgetsToShift) {
 				this.removeWidget(widget);
 			}
 
-			// Splice the row from layout and bitmaps
 			this.layout.splice(rowIndex, 1);
 			this.bitmaps.splice(rowIndex, 1);
 
-			// Update widget positions and re-add to coordinate system
 			for (const widget of widgetsToShift) {
 				const newY = widget.y - 1;
 				widget.setBounds(widget.x, newY, widget.width, widget.height);
@@ -860,9 +833,7 @@ class FreeFormGridCoordinateSystem {
 		let newColumns = currentColumns;
 		let columnsToRemove: number[] = [];
 
-		// Collect all columns that need to be removed based on collapsibility type
 		if (collapsibility === 'any') {
-			// Remove all empty columns
 			for (
 				let i = 0;
 				i < currentColumns && currentColumns - columnsToRemove.length > minColumns;
@@ -873,7 +844,6 @@ class FreeFormGridCoordinateSystem {
 				}
 			}
 		} else if (collapsibility === 'leading' || collapsibility === 'endings') {
-			// Remove empty columns from the beginning
 			for (
 				let i = 0;
 				i < currentColumns && currentColumns - columnsToRemove.length > minColumns;
@@ -882,14 +852,13 @@ class FreeFormGridCoordinateSystem {
 				if (this.#isColumnEmpty(i)) {
 					columnsToRemove.push(i);
 				} else {
-					// Stop when we hit the first non-empty column for leading collapsibility
+					// Stop at the first non-empty column.
 					break;
 				}
 			}
 		}
 
 		if (collapsibility === 'trailing' || collapsibility === 'endings') {
-			// Remove empty columns from the end
 			for (
 				let i = currentColumns - 1;
 				i >= 0 && currentColumns - columnsToRemove.length > minColumns;
@@ -898,39 +867,34 @@ class FreeFormGridCoordinateSystem {
 				if (this.#isColumnEmpty(i) && !columnsToRemove.includes(i)) {
 					columnsToRemove.push(i);
 				} else {
-					// Stop when we hit the first non-empty column for trailing collapsibility
+					// Stop at the first non-empty column.
 					break;
 				}
 			}
 		}
 
-		// Calculate final column count
 		newColumns = currentColumns - columnsToRemove.length;
 
-		// Sort in descending order to remove from end to beginning (avoids index shifting issues)
+		// Descending order, so removal from the end doesn't shift earlier indices.
 		columnsToRemove.sort((a, b) => b - a);
 
-		// Remove columns and update widget positions
 		for (const columnIndex of columnsToRemove) {
-			// Collect widgets to shift BEFORE modifying arrays
+			// Collect widgets to shift before modifying the arrays.
 			const widgetsToShift = this.#grid
 				.getWidgetsForModification()
 				.filter((widget) => widget.x > columnIndex);
 
-			// Remove widgets from coordinate system BEFORE splicing
+			// Remove from the coordinate system before splicing.
 			for (const widget of widgetsToShift) {
 				this.removeWidget(widget);
 			}
 
-			// Remove the column from the layout
 			this.layout.forEach((row) => row.splice(columnIndex, 1));
 
-			// Update bitmaps by removing the column bit and shifting
 			for (let rowIndex = 0; rowIndex < this.bitmaps.length; rowIndex++) {
 				this.bitmaps[rowIndex] = this.#removeColumnFromBitmap(this.bitmaps[rowIndex], columnIndex);
 			}
 
-			// Update widget positions and re-add to coordinate system
 			for (const widget of widgetsToShift) {
 				const newX = widget.x - 1;
 				widget.setBounds(newX, widget.y, widget.width, widget.height);
@@ -957,7 +921,6 @@ class FreeFormGridCoordinateSystem {
 
 		for (let sourceBit = 0; sourceBit < 32; sourceBit++) {
 			if (sourceBit === columnIndex) {
-				// Skip this bit (remove the column)
 				continue;
 			}
 

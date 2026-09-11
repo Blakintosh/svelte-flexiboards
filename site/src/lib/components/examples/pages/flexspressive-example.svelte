@@ -32,8 +32,8 @@
 
 	let editMode = $derived(editor.editMode);
 
-	// Snap, don't float: the CSS defaults, with the resize snap pulled to 160ms
-	// so a tile widening under the nub lands as fast as the fill it sits beside.
+	// Snap, don't float: CSS defaults, with the resize snap pulled to 160ms so a
+	// tile widening under the nub lands as fast as the fill it sits beside.
 	const boardConfig: FlexiBoardConfiguration = {
 		widgetDefaults: {
 			draggability: 'none',

@@ -8,8 +8,8 @@ import type { Motif } from './plates';
 
 /*
 	A plate's component can be re-created outside a deal (e.g. the drop preview),
-	so remember which plates have entered since the last deal: the stagger runs
-	once per deal and never on a drop.
+	so track which plates have entered since the last deal. The stagger runs
+	once per deal, never on a drop.
 */
 const dealt = new Set<string>();
 
@@ -29,7 +29,7 @@ type PlateMetadata = {
 
 /*
 	Shuffle and Reset re-create every widget, so a re-deal cannot be animated
-	by the library — it is dressed as a deal instead: one short staggered
+	by the library. It is dressed as a deal instead, one short staggered
 	entrance, never a loop. Scoped-style twin of `gallery-plate.svelte`.
 */
 const plateInCss = `
@@ -61,12 +61,12 @@ export default function GalleryPlate() {
 	const pair = meta.pair ?? 0;
 	const plateId = meta.plateId ?? 'PL-00';
 	const title = meta.title ?? 'Cyanotype plate';
-	// "PL-02 · panorama" — the catalogue number, plus a name where the plate has one.
+	// "PL-02 · panorama": the catalogue number, plus a name where the plate has one.
 	const caption = meta.note ? `${plateId} · ${meta.note}` : plateId;
 
-	// Grabbing a plate detaches its element and dropping re-inserts it, which restarts
-	// any CSS animation still on it — so the entrance class is shed as soon as it ends.
-	// Decided in a ref rather than a state initializer: StrictMode invokes
+	// Grabbing a plate detaches its element; dropping re-inserts it, which restarts
+	// any CSS animation still on it. So the entrance class is shed as soon as it ends.
+	// Decided in a ref rather than a state initializer: StrictMode runs
 	// initializers twice, and this one reads a module-level set.
 	const firstDeal = useRef<boolean | null>(null);
 	if (firstDeal.current === null) {
@@ -101,7 +101,7 @@ export default function GalleryPlate() {
 					className={cn(
 						'absolute bottom-1 right-1 rounded-[7px] p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
 						'focus-visible:text-fx-accent focus-visible:outline-fx-accent hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
-						// Mid-resize the mark is the live control, so it takes a soft accent fill.
+						// Mid-resize, the mark is the live control, so it takes a soft accent fill.
 						widget.isResizing ? 'bg-tint-accent text-fx-accent' : 'bg-panel/85 text-faint'
 					)}
 				>

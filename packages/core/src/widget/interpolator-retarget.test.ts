@@ -5,8 +5,8 @@ import { InternalFlexiBoardController } from '../board/controller.js';
   Regression: a dropped widget's flight aimed at the placeholder's box as
   measured the instant the placeholder mounted. In a flow grid the grid reflows
   right after (the drop preview leaves, siblings shift), so by the time the
-  animation was pointed at that box it described where the slot *used* to be —
-  the widget flew to the stale slot and snapped to its real one on settle.
+  animation targeted that box it described where the slot used to be. The
+  widget flew to the stale slot and snapped to its real one on settle.
 */
 
 const rect = (left: number, top: number, width = 100, height = 50) =>

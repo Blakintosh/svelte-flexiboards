@@ -1,9 +1,10 @@
 <script lang="ts">
 	/*
-	  The mark: three stacked bars of decreasing width. Bars 1-2 in ink, bar 3 in
-	  fx-accent — the widget that just moved. Bar height equals the gap x 2;
-	  widths step 26/17/9 at large size, 18/12/6 in nav. The fx-accent bar never
-	  inverts, so `inverted` only flips the first two to paper.
+	  The mark: three stacked bars of decreasing width. Bars 1-2 are ink, bar 3
+	  is fx-accent, representing the widget that just moved. Bar height equals
+	  the gap x 2. Widths step 26/17/9 at large size, 18/12/6 in nav. The
+	  fx-accent bar never inverts, so `inverted` only flips the first two to
+	  paper.
 	*/
 	type Size = 'nav' | 'lg';
 

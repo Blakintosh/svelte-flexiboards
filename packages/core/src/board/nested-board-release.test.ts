@@ -9,8 +9,8 @@ import { getPointerService } from '../shared/utils.js';
   Regression (seen on the Notes example's nested kanban board in React): the
   flight after a drop started from the wrong place. The board captures the
   released widget's on-screen box in its release handler, assuming it is the
-  first subscriber on the bus. A board constructed *after* the shared portal —
-  a nested board an adapter mounts later — subscribes after it, so the portal
+  first subscriber on the bus. A board constructed *after* the shared portal
+  (a nested board an adapter mounts later) subscribes after it, so the portal
   had already returned the element to the grid (where its in-hand absolute
   style resolves against a different containing block) before the capture.
 */

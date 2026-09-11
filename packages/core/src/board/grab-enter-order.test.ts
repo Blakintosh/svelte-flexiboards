@@ -12,7 +12,7 @@ describe('grabbing with the pointer outside the target', () => {
 	it('lets the target the grab point lands in receive the widget', () => {
 		// Regression: the grab moved the pointer before recording the action, so
 		// the target:pointerenter that move caused saw no action and the target
-		// never got widget:entertarget — no drop preview, and the release was
+		// never got widget:entertarget, no drop preview, and the release was
 		// refused. A keyboard grab always jumps the pointer like this.
 		const board = new InternalFlexiBoardController({ config: {} } as any, null);
 		const target = board.createTarget(
@@ -51,7 +51,7 @@ describe('grabbing with the pointer outside the target', () => {
 		// widget's own target had removed the widget made that target (the same
 		// one, here) build its drop preview around a grid that still held the
 		// widget. Leaving the target restored that snapshot: a phantom row that
-		// stayed empty for the rest of the session — the "leftover gap".
+		// stayed empty for the rest of the session, the "leftover gap".
 		const board = new InternalFlexiBoardController({ config: {} } as any, null);
 		const target = board.createTarget(
 			{ layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' } } as any,

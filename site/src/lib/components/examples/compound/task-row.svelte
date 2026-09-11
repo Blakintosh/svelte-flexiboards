@@ -25,7 +25,7 @@
 
 	let { task }: TaskRowProps = $props();
 
-	// One column of flow, so the row index is the queue position.
+	// One column of flow: the row index is the queue position.
 	const widget = getFlexiwidgetCtx();
 	const position = $derived(widget.y + 1);
 </script>

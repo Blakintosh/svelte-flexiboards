@@ -24,8 +24,8 @@
 
 	let { onCommit }: { onCommit: (scope: DropScope) => void } = $props();
 
-	// The drop preview reads as a dashed placeholder; the avatar in hand lifts
-	// off the strip instead of taking an accent outline.
+	// The drop preview is a dashed placeholder; the grabbed avatar lifts off
+	// the strip instead of taking an accent outline.
 	const memberClass = (widget: FlexiWidgetController) =>
 		cn(
 			'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -37,11 +37,11 @@
 
 <div class="flex h-full min-h-0 min-w-0 items-center gap-4">
 	<!--
-		An inner board. Grab triggers are left at the library default (mouse
+		An inner board. Grab triggers stay at the library default (mouse
 		immediate, touch/pen long-press), so a finger swipe over the tile still
-		scrolls the page. The avatars carry no FlexiGrab, so the whole square is
-		the drag surface — and the pointerdown never reaches the outer tile,
-		which suppresses direct grabs because it *does* have a grabber.
+		scrolls the page. Avatars carry no FlexiGrab, so the whole square is the
+		drag surface, and the pointerdown never reaches the outer tile, which
+		suppresses direct grabs since it does have a grabber.
 	-->
 	<FlexiBoard
 		class="min-w-0 shrink-0"
@@ -77,6 +77,6 @@
 		</FlexiTarget>
 	</FlexiBoard>
 
-	<!-- The strip's own geometry, annotated the way the sheet annotates the outer board. -->
+	<!-- The strip's geometry, annotated the way the sheet annotates the outer board. -->
 	<span class="text-faint ml-auto hidden text-[10px] font-semibold lg:inline">flow · 1 × 6</span>
 </div>

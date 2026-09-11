@@ -43,10 +43,10 @@
 
 	// The widget is created lazily by the target, so hold the controller in state
 	// and let the prop seam below run once it exists. The target always creates
-	// internal controllers; updateConfig lives on the internal type.
+	// internal controllers, and updateConfig lives on the internal type.
 	let createdWidget: InternalFlexiWidgetController | undefined = $state();
 
-	// Callback so that we still fulfil these props.
+	// Fulfils the controller and onfirstcreate props once the widget exists.
 	function onWidgetCreated(widget: FlexiWidgetController) {
 		createdWidget = widget as InternalFlexiWidgetController;
 
@@ -57,16 +57,16 @@
 
 	flexiwidget(config, onWidgetCreated);
 
-	// Prop seam — see FlexiBoard. updateConfig() merges only the keys that
-	// actually changed, so this neither clobbers state set imperatively on the
-	// controller nor writes anything when the props are unchanged.
+	// Prop seam, see FlexiBoard. updateConfig() merges only the keys that
+	// changed, so this neither clobbers state set imperatively on the controller
+	// nor writes anything when the props are unchanged.
 	//
-	// Snippets and inline functions are safe to compare by identity here: a
-	// component's setup runs once, so `{#snippet}` declarations and inline arrows
-	// are stable consts rather than per-render allocations. A snippet's *contents*
-	// were always reactive independently of this — it closes over the consumer's
-	// state and re-reads it when rendered — so what this adds is propagation when
-	// the consumer swaps in a structurally different snippet or class.
+	// Snippets and inline functions are safe to compare by identity here,
+	// because a component's setup runs once, so `{#snippet}` declarations and
+	// inline arrows are stable consts. A snippet's contents were already
+	// reactive on their own, since it closes over the consumer's state. What
+	// this adds is propagation when the consumer swaps in a structurally
+	// different snippet or class.
 	$effect(() => {
 		createdWidget?.updateConfig({
 			...propsConfig,
@@ -86,7 +86,7 @@
 	// let assistiveTextId = generateUniqueId();
 </script>
 
-<!-- Only use noscript as an SSR fallback, because it won't look the same as the hydrated version. -->
+<!-- noscript only as an SSR fallback, since it will not look like the hydrated version. -->
 <!-- <noscript style="display: contents;">
 	<div
 		class={derivedClassName}

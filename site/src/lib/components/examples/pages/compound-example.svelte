@@ -22,9 +22,9 @@
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
 
 	/**
-	 * Three boards are live on this page: the outer free grid of tiles, and the
-	 * two inner flow boards that live inside two of those tiles. Each one reports
-	 * its own drops, so the log below can name which board took the pointer.
+	 * Three boards live on this page: the outer free grid of tiles, and the two
+	 * inner flow boards inside two of those tiles. Each reports its own drops,
+	 * so the log below can name which board took the pointer.
 	 */
 	let drops: DropCounts = $state({ compound: 0, team: 0, tasks: 0 });
 	let flashed: DropScope | null = $state(null);
@@ -42,15 +42,15 @@
 		clearTimeout(flashTimer);
 		drops = { compound: 0, team: 0, tasks: 0 };
 		flashed = null;
-		// Remounting the subtree re-flushes the declarative widget registrations,
-		// restoring all three boards to their initial arrangement.
+		// Remounting the subtree re-flushes the widget registrations, restoring
+		// all three boards to their initial arrangement.
 		resetToken += 1;
 	}
 
 	onDestroy(() => clearTimeout(flashTimer));
 
-	// The drop preview reads as a dashed placeholder; the tile in hand lifts
-	// off the stage instead of taking an accent outline.
+	// The drop preview is a dashed placeholder; the tile in hand lifts off the
+	// stage instead of taking an accent outline.
 	const tileClass = (widget: FlexiWidgetController) =>
 		cn(
 			'min-w-0 motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -65,8 +65,8 @@
 			resizability: 'none',
 			transition: cssTransitionConfig(),
 			// Trigger maps replace wholesale, so all four keys are given. Outer tiles
-			// are grabbable only through the header handle, so an immediate touch grab
-			// cannot fight page scrolling — unlike the inner boards, which keep the
+			// grab only through the header handle, so an immediate touch grab can't
+			// fight page scrolling, unlike the inner boards, which keep the
 			// library's long-press default for touch.
 			grabTrigger: {
 				default: immediateTriggerConfig(),
@@ -91,7 +91,7 @@
 	];
 </script>
 
-<!-- Soft sheet: the nesting claim is annotation, so it belongs in the fig band. -->
+<!-- The nesting claim is annotation, so it belongs in the fig band. -->
 <main class="bg-paper flex h-full min-h-0 w-full flex-col p-3 lg:p-5">
 	<Sheet
 		class="min-h-0 flex-1"

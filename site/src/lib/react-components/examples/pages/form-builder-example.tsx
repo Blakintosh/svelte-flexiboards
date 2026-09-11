@@ -39,9 +39,9 @@ const canvasConfig = {
 } as const;
 
 /**
- * Runs the page's canvas snapshot whenever the target re-renders — the React
+ * Runs the page's canvas snapshot whenever the target re-renders. The React
  * stand-in for Svelte's `$effect` on `canvasTarget`. Mounted through the
- * target's `header` slot (it renders nothing) because that is the one place
+ * target's `header` slot (it renders nothing) because that's the one place
  * that re-renders with the target's own reactive state.
  */
 function CanvasSync({
@@ -63,19 +63,19 @@ export default function FormBuilderExample() {
 	const canvasTarget = useRef<FlexiTargetController | undefined>(undefined);
 
 	// `target.widgets` is a set whose identity never changes, so it can't be read
-	// reactively through the adapter. The example snapshots it instead: this array
-	// is what the count, the inspector and the JSON all read.
+	// reactively through the adapter. The example snapshots it instead. This array
+	// is what the count, the inspector, and the JSON all read.
 	const [fields, setFields] = useState<FieldEntry[]>([]);
 	const [selectedUid, setSelectedUid] = useState<string | undefined>(undefined);
 	// Mirrors of the two state values, so the registry's class function and
-	// `componentProps` — both built once and handed to core — read them live.
+	// `componentProps`, both built once and handed to core, read them live.
 	const fieldsRef = useRef<FieldEntry[]>(fields);
 	const selectedUidRef = useRef<string | undefined>(selectedUid);
 	fieldsRef.current = fields;
 	selectedUidRef.current = selectedUid;
 
-	// The target renders nothing until it is mounted and prepared, so the canvas
-	// is legitimately empty on the first render. `ready` keeps the count and the
+	// The target renders nothing until it's mounted and prepared, so the canvas
+	// is legitimately empty on the first render. `ready` stops the count and the
 	// empty-state overlay from claiming otherwise before the first sync.
 	const [ready, setReady] = useState(false);
 
@@ -103,7 +103,7 @@ export default function FormBuilderExample() {
 	}, [fields]);
 
 	// Below lg the panes are stacked, so a selection off-screen would be silent.
-	// Scrolls this example's own `main` — never scrollIntoView(), which would
+	// Scrolls this example's own `main`, never scrollIntoView(), which would
 	// propagate out of the embed iframe.
 	const scrollInspectorIntoView = useCallback(() => {
 		const main = mainEl.current;
@@ -132,7 +132,7 @@ export default function FormBuilderExample() {
 	/**
 	 * Snapshots the canvas into `fields`, ordered by the flow grid's row order.
 	 * Unlike the Svelte version this runs on every target render, so it returns
-	 * the previous array unchanged when nothing moved — otherwise the state write
+	 * the previous array unchanged when nothing moved. Otherwise the state write
 	 * would re-render the board, which would sync again.
 	 */
 	const syncFields = useCallback(
@@ -162,8 +162,8 @@ export default function FormBuilderExample() {
 
 			setReady(true);
 
-			// A user adds exactly one field at a time; several appearing at once is
-			// the seeded layout (or an import) arriving, which selects nothing.
+			// A user adds exactly one field at a time. Several appearing at once means
+			// the seeded layout (or an import) arrived, which selects nothing.
 			const appeared = next.filter((field) => !previous.some((entry) => entry.uid === field.uid));
 			const added = autoSelect && appeared.length === 1 ? appeared[0] : undefined;
 
@@ -180,11 +180,11 @@ export default function FormBuilderExample() {
 		[selectField]
 	);
 
-	// The board only ever sees this one config object: `registry` closes over the
+	// The board only ever sees this one config object. `registry` closes over the
 	// refs above, so nothing here has to change when the selection does.
 	const [{ registry, boardConfig }] = useState(() => {
-		// Blue is selection (persistent, board furniture); fx-accent stays reserved
-		// for provisional things — the widget in hand and the drop preview.
+		// Blue is selection (persistent, board furniture). fx-accent stays reserved
+		// for provisional things: the widget in hand and the drop preview.
 		function fieldClass(widget: FlexiWidgetController) {
 			const meta = widget.metadata as FieldMeta | undefined;
 
@@ -198,7 +198,7 @@ export default function FormBuilderExample() {
 			);
 		}
 
-		// One registry entry per field kind, all generated from the same table the
+		// One registry entry per field kind, generated from the same table the
 		// palette and the inspector read.
 		const registry: Record<string, FlexiRegistryEntry> = Object.fromEntries(
 			FIELD_KINDS.map((spec) => [
@@ -214,8 +214,8 @@ export default function FormBuilderExample() {
 					draggability: 'full',
 					resizability: 'none',
 					transition: cssTransitionConfig(),
-					// The grip is a dedicated target that never needs to scroll, so the
-					// default long-press-on-touch is pure friction here.
+					// The grip is a dedicated target that never needs to scroll, so
+					// the default long-press-on-touch is pure friction here.
 					grabTrigger: {
 						default: immediateTriggerConfig(),
 						mouse: immediateTriggerConfig(),
@@ -230,8 +230,8 @@ export default function FormBuilderExample() {
 			registry,
 			widgetDefaults: { resizability: 'none' },
 			loadLayout: () => ({ canvas: defaultFields() }),
-			// A change *signal*, not the payload: it fires on drop and delete only,
-			// debounced, so the schema is re-derived from metadata rather than from it.
+			// A change signal, not the payload. Fires on drop and delete only, debounced,
+			// so the schema is re-derived from metadata rather than from it.
 			onLayoutChange: () => syncFieldsRef.current()
 		};
 
@@ -242,8 +242,8 @@ export default function FormBuilderExample() {
 	syncFieldsRef.current = syncFields;
 
 	/**
-	 * `FlexiAdd` builds its widget directly — it neither forwards `type` nor reads
-	 * the registry — so the entry is spread in by hand from the same table.
+	 * `FlexiAdd` builds its widget directly. It neither forwards `type` nor reads
+	 * the registry, so the entry is spread in by hand from the same table.
 	 */
 	const addWidget = useCallback(
 		(spec: FieldKindSpec): AdderWidgetConfiguration => {
@@ -304,7 +304,7 @@ export default function FormBuilderExample() {
 				</Button>
 			</header>
 
-			{/* Below lg nothing is height-constrained: the panes stack at their natural
+			{/* Below lg nothing is height-constrained. Panes stack at their natural
 			    height and `main` is the only scroller. */}
 			<div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-6">
 				<FlexiBoard
@@ -314,7 +314,7 @@ export default function FormBuilderExample() {
 				>
 					<FieldPalette onAdd={addWidget} />
 
-					{/* The canvas is the page's one lifted card: it is the figure. */}
+					{/* The canvas is the page's one lifted card, the figure. */}
 					<section className="border-rule-soft bg-panel shadow-card flex flex-col overflow-hidden rounded-[14px] border lg:min-h-0 lg:flex-1">
 						<header className="border-rule-faint flex shrink-0 items-baseline justify-between gap-3 border-b px-4 py-3">
 							<h2 className="text-ink font-serif text-[15px]">Contact form</h2>
@@ -324,7 +324,7 @@ export default function FormBuilderExample() {
 						</header>
 
 						{/*
-							overflow-x-clip, as in the dashboard example: a widget interpolating to
+							overflow-x-clip, as in the dashboard example. A widget interpolating to
 							its new row is absolutely positioned and briefly widens the grid, which
 							would otherwise flash a horizontal scrollbar.
 						*/}

@@ -38,14 +38,15 @@
 		boardClass?: ClassValue;
 
 		/**
-		 * Board configuration merged over the preset's defaults (widgets fully
-		 * draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts.
+		 * Board configuration merged over the preset's defaults, which make widgets
+		 * fully draggable. Anything a FlexiBoard accepts: callbacks, registry,
+		 * layouts.
 		 */
 		config?: FlexiBoardConfiguration<ClassValue>;
 
 		/**
-		 * Target configuration merged over the preset's. The layout is fixed by
-		 * `direction`; sizing and widget defaults are yours to set.
+		 * Target configuration merged over the preset's. `direction` fixes the
+		 * layout, and sizing and widget defaults are yours to set.
 		 */
 		targetConfig?: Omit<FlexiTargetPartialConfiguration<ClassValue>, 'layout'>;
 
@@ -58,9 +59,8 @@
 
 <script lang="ts">
 	/*
-	  A sortable list is one flow target on one board. This preset spells that
-	  out so the first board someone writes is three lines; the moment they need
-	  a second list, the same props move onto FlexiBoard and FlexiTarget.
+	  A sortable list is one flow target on one board. When a second list is
+	  needed, the same props move onto FlexiBoard and FlexiTarget.
 	*/
 	import FlexiBoard from './flexi-board.svelte';
 	import FlexiTarget from './flexi-target.svelte';

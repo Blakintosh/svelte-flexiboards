@@ -4,12 +4,12 @@ import { FIELD_KIND, slugify, type FieldEntry, type FieldMeta } from './field-ty
 
 export type FieldInspectorProps = {
 	field: FieldEntry | undefined;
-	/** Keys used by more than one field — warned about, never blocked. */
+	/** Keys used by more than one field, warned about but never blocked. */
 	duplicateNames: Set<string>;
 	onchange: (patch: Partial<FieldMeta>) => void;
 };
 
-// Native controls on the site tokens — the example depends on Tailwind and
+// Native controls on the site tokens. The example depends on Tailwind and
 // the tokens only, no component library.
 const inputClass =
 	'h-8 w-full rounded-[9px] border border-rule-soft bg-paper px-3 text-[13px] text-ink placeholder:text-faint shadow-none outline-none transition-[border-color] duration-[120ms] focus-visible:border-blue';
@@ -22,9 +22,9 @@ const switchClass =
 	'relative h-[18px] w-8 shrink-0 cursor-pointer appearance-none rounded-full bg-rule outline-none transition-colors duration-[130ms] before:absolute before:top-[2px] before:left-[2px] before:size-[14px] before:rounded-full before:bg-paper before:shadow-sm before:transition-transform before:duration-[130ms] before:content-[""] checked:bg-blue checked:before:translate-x-[14px] focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
 /**
- * Mounted under a `key` of the selected field's uid, so the two local drafts —
- * the key (sanitised on commit) and the options list (line-based) — are seeded
- * per selection rather than rewritten mid-keystroke.
+ * Mounted under a `key` of the selected field's uid, so the two local drafts
+ * (the sanitised key and the line-based options list) are seeded per
+ * selection instead of rewritten mid-keystroke.
  */
 export default function FieldInspector({ field, duplicateNames, onchange }: FieldInspectorProps) {
 	const [nameDraft, setNameDraft] = useState(field?.meta.name ?? '');

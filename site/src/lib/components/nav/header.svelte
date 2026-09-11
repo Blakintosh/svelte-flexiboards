@@ -41,7 +41,7 @@
 			.catch(() => {});
 	});
 
-	// The active item takes a 1px fx-accent underline — never a fill.
+	// The active item takes a 1px fx-accent underline, never a fill.
 	function isActive(match: string) {
 		return match === '/docs'
 			? page.url.pathname === '/docs' || page.url.pathname.startsWith('/docs/')

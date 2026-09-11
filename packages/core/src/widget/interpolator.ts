@@ -49,12 +49,8 @@ export class WidgetMoveInterpolator {
 	#lastTarget: AnimationBox | undefined;
 
 	/**
-	 * True while the widget's element is hosted in the board's portal for the
-	 * flight. A drop starts outside the board's box (wherever the pointer let
-	 * go), and the board locks `overflow: hidden` during interpolations — so an
-	 * in-grid flight would clip at the board edge and paint behind later
-	 * siblings. The portal is fixed, full-viewport and z-indexed above the app,
-	 * which solves both; the element returns to the grid when the flight ends.
+	 * Hosts the flight in the viewport portal to avoid the board's overflow
+	 * clipping and sibling stacking. Returns the element to the grid afterward.
 	 */
 	#portalled$: Signal<boolean> = signal(false);
 
@@ -69,9 +65,9 @@ export class WidgetMoveInterpolator {
 		const prefix = extra ? extra + ' ' : '';
 
 		// While portalled, positions resolve against the portal's fixed,
-		// viewport-filling container — so convert the containing-block box back
-		// into viewport space (the inverse of #toBox), re-read each frame so
-		// scrolling mid-flight stays accurate.
+		// viewport-filling container. Convert the containing-block box back into
+		// viewport space (the inverse of #toBox); re-read each frame so scrolling
+		// mid-flight stays accurate.
 		if (this.#portalled$()) {
 			const block = this.#containingBlock();
 			if (block) {
@@ -84,7 +80,7 @@ export class WidgetMoveInterpolator {
 			}
 		}
 
-		// The widget keeps an elevated z-index for the whole flight — without it, an
+		// The widget keeps an elevated z-index for the whole flight. Without it, an
 		// absolutely-positioned widget mid-interpolation paints behind any sibling
 		// that follows it in the DOM.
 		return `${prefix}position: absolute; top: ${top}px; left: ${left}px; width: ${width}px; height: ${height}px; z-index: 2;`;
@@ -172,7 +168,7 @@ export class WidgetMoveInterpolator {
 		// A resize restart interrupts the previous leg mid-flight: an axis the latest step deems
 		// "unchanged" may still be animating from that leg, so freezing its min-lock at the
 		// current on-screen (interpolated) size would strand it there until the placeholder
-		// unmounts — carry the previous placeholder's locks and px through instead.
+		// unmounts. Carry the previous placeholder's locks and px through instead.
 		const resizeRestart = restart && animation === 'resize' && this.#animation$() === 'resize';
 		const previousPlaceholder = this.#placeholderPosition$();
 		const lockMinWidth =
@@ -227,7 +223,7 @@ export class WidgetMoveInterpolator {
 		this.#trackPlaceholder(handle);
 
 		// A drop released outside the board's box flies in across its edge, which
-		// the overflow lock would clip — boards that need that (portalDropFlights)
+		// the overflow lock would clip. Boards that need that (portalDropFlights)
 		// host the flight in the viewport portal. Everyone else flies in-grid, so
 		// the flight clips and stacks with the board like any sibling, which is
 		// what a scrollable board expects.
@@ -262,11 +258,9 @@ export class WidgetMoveInterpolator {
 	}
 
 	/**
-	 * Follows the placeholder for the life of the flight. Its box can change
-	 * without its own style changing — the grid reflows around it as the drop
-	 * preview leaves, siblings' flights end and their placeholders unmount — and
-	 * none of that is observable through mutations, so it is re-measured each
-	 * frame and the animation retargeted when it has moved.
+	 * Remeasures the placeholder each frame and retargets the flight when it moves.
+	 * Grid reflows from disappearing previews or sibling placeholders can move
+	 * its box without changing its attributes, so a mutation observer is insufficient.
 	 */
 	#trackPlaceholder(handle: AnimationHandle<AnimationBox>) {
 		if (typeof requestAnimationFrame !== 'function') {
@@ -357,7 +351,7 @@ export class WidgetMoveInterpolator {
 		}
 		this.#portalled$(false);
 		const widget = this.#widget$();
-		// A re-grab mid-flight keeps the element in the portal — it is now the
+		// A re-grab mid-flight keeps the element in the portal: it is now the
 		// grabbed element, and the portal's own release handling owns its return.
 		if (widget.isGrabbed || widget.isResizing) {
 			return;
@@ -375,8 +369,8 @@ export class WidgetMoveInterpolator {
 	}
 
 	onPlaceholderMove(rect?: DOMRect) {
-		// Wait a frame so the starting box has painted before retargeting — and
-		// measure *then*, not now: between the placeholder mounting and the next
+		// Wait a frame so the starting box has painted before retargeting, and
+		// measure then, not now: between the placeholder mounting and the next
 		// frame the grid reflows (the drop preview unmounts, siblings settle), so
 		// a box captured at mount aims the flight at where the slot used to be.
 		requestAnimationFrame(() => {

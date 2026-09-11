@@ -1,8 +1,8 @@
 <script module lang="ts">
 	/*
-		A plate's component can be re-created outside a deal (e.g. the drop preview),
-		so remember which plates have entered since the last deal: the stagger runs
-		once per deal and never on a drop.
+		A plate's component can be re-created outside a deal (the drop preview,
+		for example), so track which plates have entered since the last deal.
+		The stagger runs once per deal, never on a drop.
 	*/
 	const dealt = new Set<string>();
 
@@ -35,11 +35,11 @@
 	const pair = $derived(meta.pair ?? 0);
 	const plateId = $derived(meta.plateId ?? 'PL-00');
 	const title = $derived(meta.title ?? 'Cyanotype plate');
-	// "PL-02 · panorama" — the catalogue number, plus a name where the plate has one.
+	// "PL-02 · panorama": the catalogue number, plus a name where the plate has one.
 	const caption = $derived(meta.note ? `${plateId} · ${meta.note}` : plateId);
 
-	// Grabbing a plate detaches its element and dropping re-inserts it, which restarts
-	// any CSS animation still on it — so the entrance class is shed as soon as it ends.
+	// Grabbing a plate detaches its element, and dropping re-inserts it, which restarts
+	// any CSS animation still on it. So the entrance class is shed as soon as it ends.
 	let entering = $state(!dealt.has(plateId));
 	dealt.add(plateId);
 
@@ -56,7 +56,7 @@
 </script>
 
 {#if widget.isShadow}
-	<!-- The drop preview is provisional: the widget's own dashed fx-accent frame says it all. -->
+	<!-- Drop preview is provisional: the widget's own dashed fx-accent frame says it all. -->
 	<div class="h-full w-full"></div>
 {:else}
 	<figure
@@ -70,12 +70,12 @@
 		<div class="relative min-h-0 flex-1 overflow-hidden rounded-[9px]">
 			<PlateArtwork {motif} {pair} />
 
-			<!-- Resizing is movement too, so the corner mark answers in fx-accent. -->
+			<!-- Resizing counts as movement too, so the corner mark answers in fx-accent. -->
 			<FlexiResize
 				class={[
 					'absolute bottom-1 right-1 rounded-[7px] p-1.5 transition-colors duration-[120ms] focus-visible:outline-2',
 					'focus-visible:text-fx-accent focus-visible:outline-fx-accent hover:bg-tint hover:text-fx-accent active:bg-tint-accent active:text-fx-accent',
-					// Mid-resize the mark is the live control, so it takes a soft accent fill.
+					// Mid-resize, the mark is the live control, so it takes a soft accent fill.
 					widget.isResizing ? 'bg-tint-accent text-fx-accent' : 'bg-panel/85 text-faint'
 				]}
 			>
@@ -101,7 +101,7 @@
 <style>
 	/*
 		Shuffle and Reset re-create every widget, so a re-deal cannot be animated
-		by the library — it is dressed as a deal instead: one short staggered
+		by the library. It's dressed as a deal instead: one short staggered
 		entrance, never a loop.
 	*/
 	.plate-in {

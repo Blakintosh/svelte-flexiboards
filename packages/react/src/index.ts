@@ -40,8 +40,8 @@ export {
 	spring
 } from '@flexiboards/core';
 
-// All public types come from core; the React-specific component prop types
-// exported above shadow their core namesakes where both exist.
+// All public types come from core. The React prop types exported above shadow
+// their core namesakes where both exist.
 export type * from '@flexiboards/core';
 
 // React instantiations of core's class-generic types and render types.

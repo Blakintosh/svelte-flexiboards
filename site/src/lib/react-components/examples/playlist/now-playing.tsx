@@ -9,17 +9,17 @@ export type NowPlayingProps = {
 };
 
 /*
-  When the track changes, the title/artist dissolve out and the replacement
-  condenses back in out of a short blur. Same staging idea as the splash
-  page's framework switch, but tuned for a small card: quicker, a softer
-  blur, and no tracking stretch (see .track-out/.track-in below).
+  When the track changes, the title and artist dissolve out, then the
+  replacement condenses back in from a short blur. Same staging idea as the
+  splash page's framework switch, tuned smaller: quicker, softer blur, no
+  tracking stretch (see .track-out/.track-in below).
 */
 const SWAP_OUT_MS = 280;
 const SWAP_IN_MS = 480;
 
-/* Scoped-style twin of `now-playing.svelte`'s <style> block. The leaving title
-   dissolves upward into a soft blur; the replacement condenses back out of it.
-   Reduced motion skips the phases entirely below, so no override is needed. */
+/* Scoped-style twin of `now-playing.svelte`'s <style> block. The leaving
+   title dissolves upward into a soft blur, and the replacement condenses
+   back out of it. Reduced motion skips these phases, so no override needed. */
 const swapCss = `
 .track-out {
 	opacity: 0;
@@ -69,7 +69,7 @@ export default function NowPlaying({ current, next, playing }: NowPlayingProps) 
 			inTimer.current = setTimeout(() => setPhase(null), SWAP_IN_MS);
 		}, SWAP_OUT_MS);
 
-		// StrictMode runs this twice; the timers restart rather than overlap.
+		// StrictMode runs this twice, so restart the timers instead of overlapping.
 		return () => {
 			clearTimeout(outTimer.current);
 			clearTimeout(inTimer.current);
@@ -77,7 +77,7 @@ export default function NowPlaying({ current, next, playing }: NowPlayingProps) 
 	}, [current, displayed?.id]);
 
 	return (
-		// The one boxed object on the sheet: it summarises the order, so it earns a card.
+		// The one boxed object on the sheet, since it summarises the order.
 		<div className="bg-tint shadow-card shrink-0 rounded-[14px] px-4 py-3.5">
 			<style>{swapCss}</style>
 			<span className="text-blue text-[11.5px] font-semibold">

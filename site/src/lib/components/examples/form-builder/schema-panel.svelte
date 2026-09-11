@@ -30,7 +30,7 @@
 
 	type Token = { text: string; class?: string };
 
-	// Just enough JSON highlighting for this payload: keys take the blue tint,
+	// Minimal JSON highlighting for this payload: keys take the blue tint,
 	// string values the sage one, everything else stays plain on-ink.
 	const TOKEN = /"(?:[^"\\]|\\.)*"(\s*:)?|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d+)?/g;
 
@@ -64,7 +64,7 @@
 	}
 
 	// The example runs in an iframe, where the async clipboard API is often
-	// unavailable; the textarea fallback still works there.
+	// unavailable. The textarea fallback still works there.
 	function copyFallback(text: string): boolean {
 		const scratch = document.createElement('textarea');
 		scratch.value = text;
@@ -100,8 +100,8 @@
 	}
 </script>
 
-<!-- The payoff panel sits on the dark field ground: it is a terminal, so it
-     should read as one — a rounded card like every other, just inverted. -->
+<!-- The payoff panel sits on the dark field ground: it's a terminal, so it
+     reads as one, a rounded card like every other, just inverted. -->
 <section
 	class="bg-field text-on-ink border-rule-soft shadow-card flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[14px] border sm:flex-1 lg:flex-1"
 >
@@ -126,7 +126,7 @@
 		</div>
 	</div>
 
-	<!-- Output only. Clicking a block does not select its field: one pane is the
+	<!-- Output only. Clicking a block doesn't select its field: one pane is the
 	     source, this one is the result. -->
 	<div
 		class="min-h-0 overflow-auto p-3 font-mono text-[10px] leading-relaxed max-lg:max-h-72 lg:flex-1 lg:text-[11px]"

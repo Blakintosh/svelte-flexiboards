@@ -28,7 +28,7 @@
 		type Breakpoint
 	} from '$lib/components/examples/gallery/plates.js';
 
-	// Anything provisional — the drop preview, the plate in hand — is fx-accent.
+	// Anything provisional (the drop preview, the plate in hand) is fx-accent.
 	const className = (widget: FlexiWidgetController) => [
 		'rounded-[14px] outline-offset-2 focus-visible:outline-2 focus-visible:outline-fx-accent motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
 		widget.isShadow && 'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
@@ -45,7 +45,7 @@
 	let layouts: ResponsiveFlexiLayout = DEFAULT_LAYOUTS;
 
 	/*
-		The transition lives on the board's widget defaults and nowhere else — a
+		The transition lives on the board's widget defaults and nowhere else. A
 		registry entry would shadow it and dead-lock the toggle. The interpolator
 		re-reads it when the next animation starts, so a swap needs no remount.
 	*/

@@ -109,7 +109,7 @@
 	];
 
 	let searchQuery = $state('');
-	// '' is "All categories" — a native <select> option can't carry null.
+	// '' is "All categories"; a native <select> option can't carry null.
 	let selectedCategory = $state('');
 	let sortBy = $state<'name' | 'price' | 'rating'>('name');
 
@@ -152,8 +152,8 @@
 		}
 	});
 
-	// The drop preview is dashed fx-accent; the widget in hand lifts instead —
-	// shadow-lift and a slight tilt, no border.
+	// The drop preview is dashed fx-accent; the widget in hand lifts instead,
+	// with shadow-lift and a slight tilt, no border.
 	const className = (widget: FlexiWidgetController) => [
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
 		widget.isShadow &&
@@ -179,7 +179,7 @@
 		</Button>
 	</header>
 
-	<!-- Toolbar: one row — search, category, sort, and the status key it explains. -->
+	<!-- Toolbar: one row of search, category, sort, and the status key it explains. -->
 	<div class="flex shrink-0 flex-wrap items-center gap-2">
 		<div class="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
 			<Search class="text-faint absolute left-3 top-1/2 size-4 -translate-y-1/2" />

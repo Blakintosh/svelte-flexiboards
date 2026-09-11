@@ -41,11 +41,11 @@ const STORAGE_KEY = 'flexiboards-kanban-v1';
 type SavedBoard = { columns: ColumnKey[]; cards: FlexiLayout };
 
 function card(id: string, y: number, metadata: KanbanCardData): FlexiWidgetLayoutEntry {
-	// One column of a flow grid: x is always 0 and y *is* the position.
+	// One column of a flow grid: x stays 0, y is the position.
 	return { id, type: 'card', x: 0, y, width: 1, height: 1, metadata };
 }
 
-/** A fresh copy every call, so the seed can never be mutated by an import. */
+/** A fresh copy every call, so an import can never mutate the seed. */
 function seedCards(): FlexiLayout {
 	return {
 		backlog: [
@@ -132,8 +132,7 @@ function seedCards(): FlexiLayout {
 
 /**
  * Deep-enough copy, normalised: entries sorted by y and renumbered, so a
- * re-import lands every card back in the order it was left in whatever order
- * the export happened to emit.
+ * re-import lands every card back in whatever order the export used.
  */
 function cloneLayout(layout: FlexiLayout): FlexiLayout {
 	const copy: FlexiLayout = {};
@@ -162,12 +161,12 @@ function totalOf(layout: FlexiLayout): number {
 
 /**
  * Maps the rail's live widget positions onto CSS `order` values for the card
- * lists below, so a column's cards follow its heading while it is dragged.
+ * lists below, so a column's cards follow its heading while dragged.
  *
  * The heading in hand keeps a stale `x` (the grid drops it at grab time and
- * puts a shadow in its place), so it is skipped and given whichever slot the
- * other three left free. Defensive throughout: a missing controller or a
- * duplicate `x` degrades to a stable order rather than to overlapping lists.
+ * puts a shadow in its place), so it's skipped and given whichever slot the
+ * other three left free. A missing controller or duplicate `x` degrades to a
+ * stable order rather than overlapping lists.
  */
 function computeSlots(
 	keys: readonly string[],
@@ -219,7 +218,7 @@ function readSaved(): SavedBoard | null {
 		const columns = Array.isArray(parsed.columns)
 			? parsed.columns.filter((key): key is ColumnKey => key in COLUMNS)
 			: [];
-		// Anything short of all four columns is a stale key; start clean.
+		// Fewer than all four columns means a stale key; start clean.
 		if (new Set(columns).size !== SEED_ORDER.length) return null;
 
 		return { columns, cards: cloneLayout(parsed.cards) };
@@ -228,8 +227,8 @@ function readSaved(): SavedBoard | null {
 	}
 }
 
-// Anything provisional — the drop preview — stays fx-accent; the widget in
-// hand instead picks up a lifted shadow (the tilt lives on the card contents).
+// The drop preview stays fx-accent; the widget in hand picks up a lifted
+// shadow instead (the tilt lives on the card contents).
 const cardClass = (widget: FlexiWidgetController) =>
 	clsx([
 		'min-w-0 cursor-grab rounded-[14px] border border-rule-soft bg-panel px-3.5 py-3 shadow-card transition-shadow duration-[120ms] select-none hover:shadow-card-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent',
@@ -238,9 +237,9 @@ const cardClass = (widget: FlexiWidgetController) =>
 			'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent shadow-none [&>*]:invisible'
 	]);
 
-// The heading is a status chip plus its count in the margin; the widget
-// itself is only the frame, so it carries no fill until it is in motion,
-// when it picks up the same lifted-card treatment as a card.
+// The heading is a status chip plus its count in the margin. The widget
+// itself is only the frame, so it carries no fill until it's in motion,
+// when it picks up the same lifted-card treatment.
 const headClass = (widget: FlexiWidgetController) =>
 	clsx([
 		'flex min-w-0 items-center gap-2.5 rounded-[10px] border border-transparent px-1.5 py-1 transition-shadow duration-[120ms] select-none',
@@ -249,8 +248,8 @@ const headClass = (widget: FlexiWidgetController) =>
 			'border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent [&>*]:invisible'
 	]);
 
-// The archive tray *is* the sheet's bottom annotation band: a soft-ruled
-// strip, going fx-accent only while a card is held over it.
+// The archive tray is the sheet's bottom annotation band: a soft-ruled
+// strip that goes fx-accent only while a card is held over it.
 const trayClass = (deleter: FlexiDeleteController) =>
 	clsx([
 		'flex shrink-0 items-center gap-3 border-t border-rule-faint bg-panel px-4 py-2.5 text-faint transition-colors duration-[120ms] lg:px-8',
@@ -258,8 +257,8 @@ const trayClass = (deleter: FlexiDeleteController) =>
 	]);
 
 const railTargetConfig: FlexiTargetPartialConfiguration = {
-	// Identical tracks and gap to the lists grid below, so the headings stay
-	// aligned with their columns at every width — including while scrolled.
+	// Same tracks and gap as the lists grid below, so headings stay aligned
+	// with their columns at every width, including while scrolled.
 	columnSizing: 'minmax(216px, 1fr)',
 	layout: {
 		type: 'flow',
@@ -274,21 +273,21 @@ const railTargetConfig: FlexiTargetPartialConfiguration = {
 type HeadPosition = { x: number | undefined; grabbed: boolean };
 
 export default function KanbanExample() {
-	// The saved board is read once, on the client (React embeds never SSR).
+	// Read once, on the client (React embeds never SSR).
 	const [saved] = useState(readSaved);
 
-	// Only ever read by loadLayout and reset() — never rendered, so it stays out
-	// of React state.
+	// Only ever read by loadLayout and reset(), never rendered, so it stays
+	// out of React state.
 	const pendingCards = useRef<FlexiLayout>(saved?.cards ?? seedCards());
 	const lastLayout = useRef<FlexiLayout>(cloneLayout(pendingCards.current));
 	const lastTotal = useRef<number>(totalOf(pendingCards.current));
 
-	// The order the headings are *declared* in. `placementStrategy: 'append'`
+	// The order the headings are declared in. `placementStrategy: 'append'`
 	// turns that into x = 0…3, and the lists follow via computeSlots().
 	const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(saved?.columns ?? [...SEED_ORDER]);
 
 	const [counts, setCounts] = useState<Record<string, number>>(countsOf(pendingCards.current));
-	// Card total for the sheet's fig-caption aside ("10 cards · 2 boards").
+	// Total for the sheet's fig-caption aside ("10 cards · 2 boards").
 	const totalCards = SEED_ORDER.reduce((sum, key) => sum + (counts[key] ?? 0), 0);
 	const [undoLayout, setUndoLayout] = useState<FlexiLayout | null>(null);
 	const [resetToken, setResetToken] = useState(0);
@@ -296,10 +295,10 @@ export default function KanbanExample() {
 	const cardsBoard = useRef<FlexiBoardController | null>(null);
 	const cardTargets = useRef<Record<string, FlexiTargetController | undefined>>({});
 
-	// Svelte bound the heading controllers and read `heads[key].x` in a $derived;
-	// React has no `bind:`, so each heading reports its own live position from
-	// inside the widget (where the read is reactive) and the page keeps the
-	// collected positions in state.
+	// Svelte bound the heading controllers and read `heads[key].x` in a
+	// $derived. React has no `bind:`, so each heading reports its own live
+	// position from inside the widget, and the page keeps the positions in
+	// state.
 	const [headPositions, setHeadPositions] = useState<Record<string, HeadPosition>>({});
 	const onHeadPosition = useCallback((key: string, x: number | undefined, grabbed: boolean) => {
 		setHeadPositions((current) => {
@@ -319,7 +318,7 @@ export default function KanbanExample() {
 		[headPositions]
 	);
 	// The class functions and the persist/sync closures below are stable, but
-	// `slots` is not — so orderedColumns() reads it through a ref.
+	// `slots` is not, so orderedColumns() reads it through a ref.
 	const slotsRef = useRef(slots);
 	slotsRef.current = slots;
 
@@ -332,20 +331,20 @@ export default function KanbanExample() {
 				JSON.stringify({ columns, cards: layout } satisfies SavedBoard)
 			);
 		} catch {
-			// Private browsing or a full quota: the board still works, it just
+			// Private browsing or a full quota: the board still works, just
 			// won't be remembered.
 		}
 	}, []);
 
 	/**
 	 * The single place card state is reconciled. `onLayoutChange` hands us the
-	 * whole board, so counts, the archive-undo offer and localStorage all come
-	 * from one export rather than from three separate reads.
+	 * whole board, so counts, the archive-undo offer, and localStorage all
+	 * come from one export instead of three separate reads.
 	 */
 	const syncCards = useCallback(
 		(layout: FlexiLayout) => {
 			const total = totalOf(layout);
-			// A drop only ever moves a card; a smaller board means one was archived.
+			// A drop only ever moves a card, so a smaller board means one was archived.
 			setUndoLayout(total < lastTotal.current ? lastLayout.current : null);
 			lastLayout.current = cloneLayout(layout);
 			lastTotal.current = total;
@@ -373,9 +372,9 @@ export default function KanbanExample() {
 			} satisfies KanbanCardData
 		});
 
-		// TRAP WORTH KNOWING: the board's onLayoutChange only fires on
-		// `widget:dropped` and `widget:delete`. createWidget() dispatches
-		// neither, so an added card has to be exported and persisted by hand.
+		// Gotcha: onLayoutChange only fires on `widget:dropped` and
+		// `widget:delete`. createWidget() dispatches neither, so an added
+		// card must be exported and persisted by hand.
 		syncCards(cardsBoard.current?.exportLayout() ?? lastLayout.current);
 	}
 
@@ -384,7 +383,7 @@ export default function KanbanExample() {
 		if (!layout || !cardsBoard.current) return;
 
 		cardsBoard.current.importLayout(layout);
-		// importLayout is silent too — same reason as above.
+		// importLayout is silent too, same reason as above.
 		lastLayout.current = cloneLayout(layout);
 		lastTotal.current = totalOf(layout);
 		setCounts(countsOf(layout));
@@ -411,15 +410,16 @@ export default function KanbanExample() {
 		cardsBoard.current = null;
 
 		// Remounting re-runs loadLayout and re-declares the headings in seed
-		// order, which is the only way to put the rail's grid back as it was.
+		// order; that's the only way to put the rail's grid back as it was.
 		setResetToken((token) => token + 1);
 	}
 
-	// Both configs are created once: a fresh identity would push an update into
-	// core, and everything they close over lives in refs or stable callbacks.
+	// Both configs are created once: a fresh identity would push an update
+	// into core, and everything they close over lives in refs or stable
+	// callbacks.
 	const cardsConfig = useMemo<FlexiBoardConfiguration>(
 		() => ({
-			// One place for all four lists: a 1-column flow grid, appended to.
+			// One place for all four lists: a 1-column flow grid that appends.
 			targetDefaults: {
 				layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append', columns: 1 }
 			},
@@ -455,7 +455,7 @@ export default function KanbanExample() {
 
 	return (
 		<main className="bg-paper text-ink flex h-full min-h-0 w-full flex-col p-3 lg:p-6">
-			{/* The board sheet: a live card count sits in the caption band. */}
+			{/* The board sheet: a live card count sits in the caption band */}
 			<Sheet
 				className="min-h-0 flex-1"
 				fig="Sprint board · 4 flow targets · append"
@@ -486,9 +486,9 @@ export default function KanbanExample() {
 				</header>
 
 				{/*
-					Board A — the cards. Four targets, one per column; a card grabbed in any
-					of them can be dropped into any other, which is the whole point of the
-					example. No widgets are declared here: they arrive through loadLayout.
+					Board A, the cards. Four targets, one per column. A card grabbed in
+					any of them can be dropped into any other, which is the point of the
+					example. No widgets are declared here, they arrive through loadLayout.
 					`key={resetToken}` is the React twin of Svelte's `{#key}` block.
 				*/}
 				<FlexiBoard
@@ -499,8 +499,8 @@ export default function KanbanExample() {
 				>
 					<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-3 pt-5 lg:px-8">
 						{/*
-							Board B — the column headings. A second, independent FlexiBoard
-							nested in the first one's DOM: the two never exchange widgets,
+							Board B, the column headings. A second, independent FlexiBoard
+							nested in the first one's DOM. The two never exchange widgets,
 							because every board ignores events that aren't its own.
 						*/}
 						<FlexiBoard className="shrink-0" config={railConfig}>
@@ -514,9 +514,9 @@ export default function KanbanExample() {
 						</FlexiBoard>
 
 						{/*
-							The lists. Same track template and gap as the rail above, and CSS
-							`order` driven by the live heading positions, so a column's cards
-							travel with its heading.
+							The lists. Same track template and gap as the rail above; CSS
+							`order` is driven by the live heading positions, so a column's
+							cards travel with its heading.
 						*/}
 						<div className="grid shrink-0 grid-cols-[repeat(4,minmax(216px,1fr))] items-start gap-4">
 							{SEED_ORDER.map((key) => (
@@ -539,8 +539,8 @@ export default function KanbanExample() {
 					</div>
 
 					{/*
-						Archive — the sheet's bottom annotation band. Deleting is offered with
-						a way back, never silently.
+						Archive, the sheet's bottom annotation band. Deleting is offered
+						with a way back, never silently.
 					*/}
 					<FlexiDelete className={trayClass}>
 						<Archive className="size-4 shrink-0" />

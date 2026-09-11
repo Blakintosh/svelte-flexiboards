@@ -48,7 +48,7 @@
 	controller = publicAdder;
 	onfirstcreate?.(publicAdder);
 
-	// fromCore: the user's class function may read signal-backed adder state.
+	// fromCore, because the class function may read signal-backed adder state.
 	let derivedClassName = $derived.by(
 		fromCore(() => {
 			if (typeof className === 'function') {
@@ -61,8 +61,7 @@
 
 	const assistiveTextId = $props.id();
 
-	// The adapter owns the adder's lifecycle (destroy at unmount).
-	// The read must *call* the signal — tracking happens at read time.
+	// The read must call the signal, since tracking happens at read time.
 	let newWidget = $derived.by(fromCore(() => adder.newWidget$()));
 </script>
 
@@ -81,7 +80,7 @@
 </button>
 
 <div style="display: none;">
-	<!-- Mimics the behaviour of a FlexiTarget, as we need to render the widget so that we can "drag it in" from -->
+	<!-- Mimics a FlexiTarget: the widget must be rendered before it can be dragged in. -->
 	{#if newWidget}
 		<RenderedFlexiWidget widget={newWidget} />
 	{/if}

@@ -19,28 +19,27 @@ export type BreakpointSnippetParams = { currentBreakpoint: string };
 export type ResponsiveFlexiBoardProps = Omit<ResponsiveFlexiBoardPropsPrimitive, 'controller'> &
 	FlexiCommonProps<ResponsiveFlexiBoardController> & {
 		/**
-		 * Production for large breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the large breakpoint.
 		 */
 		lg?: ReactNode;
 
 		/**
-		 * Production for medium breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the medium breakpoint.
 		 */
 		md?: ReactNode;
 
 		/**
-		 * Production for small breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the small breakpoint.
 		 */
 		sm?: ReactNode;
 		/**
-		 *
-		 * Production for extra-small breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the extra-small breakpoint.
 		 */
 		xs?: ReactNode;
 
 		/**
-		 * Children snippet used as fallback when no specific breakpoint snippet matches.
-		 * Receives `{ currentBreakpoint: string }` as a parameter.
+		 * Fallback content used when no breakpoint-specific content matches.
+		 * Receives `{ currentBreakpoint: string }`.
 		 */
 		children?: FlexiChildren<{ currentBreakpoint: string }>;
 	};
@@ -55,7 +54,7 @@ export function ResponsiveFlexiBoard({
 	onfirstcreate
 }: ResponsiveFlexiBoardProps) {
 	const board = useSingleRef(() => {
-		// Core's contract is just { config } — adapter-level props stay out.
+		// Core's contract is just { config }, so adapter props stay out.
 		const b = new InternalResponsiveFlexiBoardController({ config });
 		b.oninitialloadcomplete();
 
@@ -69,7 +68,7 @@ export function ResponsiveFlexiBoard({
 	const currentBreakpoint = useFromCore(useCallback(() => board.currentBreakpoint, [board]));
 	const active = productions[currentBreakpoint];
 
-	// Prop seam — see FlexiBoard. Runs every render; inert unless `config`
+	// Prop seam, see FlexiBoard. Runs every render, inert unless `config`
 	// differs by value.
 	useEffect(() => {
 		board.updateProps({ config });

@@ -24,8 +24,8 @@ const BY_ID = new Map(TRACKS.map((track) => [track.id, track]));
 
 // A settled row is just a hairline divider; the row in hand lifts off the
 // list on its own shadow instead of an accent outline. The shadow's
-// contents are hidden rather than rendered twice, so the landing slot
-// reads as a dashed accent placeholder with no duplicate controls.
+// contents are hidden rather than rendered twice, so the landing slot reads
+// as a dashed accent placeholder with no duplicate controls.
 const rowClass = (widget: FlexiWidgetController) =>
 	[
 		!widget.isGrabbed && !widget.isShadow && 'border-b border-rule-faint',
@@ -49,7 +49,7 @@ const queueConfig: FlexiTargetPartialConfiguration = {
 };
 
 export default function PlaylistExample() {
-	/** The committed order. Only rewritten when a drop actually lands. */
+	/** The committed order. Only rewritten when a drop lands. */
 	const [order, setOrder] = useState<string[]>(() => TRACKS.map((track) => track.id));
 	const [liked, setLiked] = useState<Record<string, boolean>>({
 		'weather-systems': true,
@@ -59,9 +59,9 @@ export default function PlaylistExample() {
 
 	const listRef = useRef<HTMLDivElement | null>(null);
 
-	// The target's widget set is reactive, so asking it which row is in hand needs
-	// no per-row plumbing. Each row carries its track id in metadata — the widget
-	// controller doesn't expose the id it was declared with.
+	// The target's widget set is reactive, so asking it which row is in hand
+	// needs no per-row plumbing. Each row carries its track id in metadata,
+	// since the widget controller doesn't expose the id it was declared with.
 	const [queueTarget, setQueueTarget] = useState<FlexiTargetController | null>(null);
 
 	const movingId = useFromCore(
@@ -79,8 +79,8 @@ export default function PlaylistExample() {
 	const next = queue[1];
 	const totalLabel = formatDuration(queue.reduce((sum, track) => sum + track.seconds, 0));
 
-	// The whole integration surface: one callback, one array of ids. In a 1-column
-	// flow grid the widget's y *is* its index in the list.
+	// The whole integration surface: one callback, one array of ids. In a
+	// 1-column flow grid, the widget's y is its index in the list.
 	const [boardConfig] = useState<FlexiBoardConfiguration>(() => ({
 		onLayoutChange: (layout: FlexiLayout) => {
 			const entries = layout.queue;
@@ -97,24 +97,25 @@ export default function PlaylistExample() {
 			track: {
 				className: rowClass,
 				transition: cssTransitionConfig(),
-				// The handle is the only grab surface, so a press should start the drag at
-				// once — no long press on touch.
+				// The handle is the only grab surface, so a press starts the drag
+				// immediately, no long press on touch.
 				grabTrigger: { default: immediateTriggerConfig() }
 			}
 		}
 	}));
 
-	// The portal detaches the row's node while it is in hand, which blurs the handle
-	// in most browsers. Hand focus back to the same handle once the board has
-	// committed or cancelled on this key, so a keyboard user never loses their place.
+	// The portal detaches the row's node while it's in hand, which blurs the
+	// handle in most browsers. Hand focus back to the same handle once the
+	// board commits or cancels on this key, so a keyboard user never loses
+	// their place.
 	const movingTrackId = movingTrack?.id;
 	useEffect(() => {
 		function onKeyDown(event: KeyboardEvent) {
 			if (event.key !== 'Enter' && event.key !== 'Escape') return;
 			if (!movingTrackId) return;
 
-			// Capture phase, so this reads the grabbed track before the board's own
-			// window listener releases it. The refocus itself waits a tick.
+			// Capture phase, so this reads the grabbed track before the board's
+			// own window listener releases it. The refocus waits a tick.
 			setTimeout(() => {
 				listRef.current
 					?.querySelector<HTMLButtonElement>(`[data-track="${movingTrackId}"] button`)

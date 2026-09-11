@@ -10,7 +10,7 @@
 		onCommit: (scope: 'compound' | 'team' | 'tasks') => void;
 	};
 
-	/** Title, and — for the two tiles that are themselves boards — the board's name. */
+	/** Title, and, for the two tiles that are themselves boards, the board's name. */
 	const info: Record<TileKind, { title: string; board?: string }> = {
 		deploys: { title: 'Deploys' },
 		errors: { title: 'Error rate' },
@@ -70,10 +70,10 @@
 	data-tile-kind={kind}
 >
 	<!--
-		The handle is the only way to move a tile, and it is always visible rather
-		than hover-revealed. Because the tile has a grabber, the library suppresses
-		direct grabs on the tile body — which is exactly what lets the inner boards
-		be drag-anywhere.
+		The handle is the only way to move a tile, and stays visible rather than
+		hover-revealed. Because the tile has a grabber, the library suppresses
+		direct grabs on the tile body, which is what lets the inner boards be
+		drag-anywhere.
 	-->
 	<div class="border-rule-faint flex shrink-0 items-center gap-1 border-b px-2 py-1.5 lg:px-2.5">
 		<Grabber size={16} class="-ml-0.5 p-1 lg:p-1.5 [&_svg]:size-4 lg:[&_svg]:size-5" />

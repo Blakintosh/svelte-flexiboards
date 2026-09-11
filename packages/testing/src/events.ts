@@ -29,7 +29,7 @@ export function pointerDown(
 	});
 }
 
-/** Moves the pointer; core tracks it on the window while a widget is grabbed. */
+/** Moves the pointer. Core tracks it on the window while a widget is grabbed. */
 export function pointerMove(clientX: number, clientY: number) {
 	run(() => {
 		window.dispatchEvent(new PointerEvent('pointermove', { clientX, clientY, bubbles: true }));
@@ -37,7 +37,7 @@ export function pointerMove(clientX: number, clientY: number) {
 }
 
 /**
- * Releases the pointer; the board turns this into a drop. Dispatched on the
+ * Releases the pointer, which the board turns into a drop. Dispatched on the
  * document so it bubbles to the window, where the board listens, after the
  * trigger's own document listener.
  */
@@ -48,8 +48,8 @@ export function pointerUp() {
 }
 
 /**
- * Picks a widget up by keyboard. Focus the widget (or its grab handle) and
- * press Enter; the widget then follows the arrow keys and the pointer.
+ * Picks a widget up by keyboard. Focus the widget or its grab handle and press
+ * Enter, after which the widget follows the arrow keys and the pointer.
  */
 export function grabByKeyboard(target: EventTarget) {
 	keydown(target, 'Enter');
@@ -72,7 +72,7 @@ export function arrow(...keys: ('ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRi
 
 /**
  * The whole pointer gesture: press on `target`, move to `(x, y)`, release.
- * Assumes the widget's trigger is immediate (the default); for a long-press
+ * Assumes the widget's trigger is immediate, the default. For a long-press
  * trigger, drive `pointerDown` and fake timers yourself.
  */
 export function dragTo(

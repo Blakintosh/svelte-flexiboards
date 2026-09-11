@@ -17,8 +17,8 @@ describe('FlexiEventBus dispatch', () => {
 		bus.subscribe('widget:release', () => {
 			throw new Error('boom');
 		});
-		// Cleanup subscribers (portal return, viewport unlock) register last, so a
-		// throw upstream used to strand the dragged widget in the portal.
+		// Cleanup subscribers (portal return, viewport unlock) register last.
+		// A throw upstream used to strand the dragged widget in the portal.
 		bus.subscribe('widget:release', () => {
 			ran.push('cleanup');
 		});

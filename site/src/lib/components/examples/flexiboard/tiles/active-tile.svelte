@@ -5,7 +5,7 @@
 <div class="flex flex-col gap-2">
 	<div class="flex items-center gap-2.5">
 		<span class="text-ink font-serif text-[26px] font-semibold tracking-[-0.01em]">573</span>
-		<!-- The permitted loop on this sheet: a dot marking a live count. Stilled under reduced motion. -->
+		<!-- The one permitted loop on this sheet: a dot marking a live count. Stilled under reduced motion. -->
 		<span class="live-dot bg-fx-accent block size-2 rounded-full"></span>
 	</div>
 	<div class="flex items-center gap-1.5">
@@ -15,7 +15,7 @@
 </div>
 
 <style>
-	/* A slow ease rather than the terminal caret's hard steps() — this is a
+	/* A slow ease rather than the terminal caret's hard steps(). This is a
 	   heartbeat, not a cursor. */
 	@media (prefers-reduced-motion: no-preference) {
 		.live-dot {

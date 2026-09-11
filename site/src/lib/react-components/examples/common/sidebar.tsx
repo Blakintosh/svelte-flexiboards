@@ -3,8 +3,8 @@ import { cn } from '$lib/utils.js';
 
 /**
  * Static app-sidebar shell for the app-concept examples (dashboard, notes).
- * Twin of `examples/common/sidebar.svelte`: no collapse, no mobile drawer —
- * it simply hides below lg.
+ * Twin of `examples/common/sidebar.svelte`. No collapse, no mobile drawer,
+ * it hides below lg.
  */
 export type SidebarProps = {
 	header?: ReactNode;

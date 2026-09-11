@@ -6,12 +6,11 @@
 
 	let { children } = $props();
 
-	// The splash runs edge to edge — its sections supply their own gutters so the
-	// 1px rules between them can reach the viewport edge.
+	// The splash runs edge to edge. Its sections supply their own gutters so the
+	// 1px rules between them reach the viewport edge.
 	const fullBleed = $derived(page.url.pathname === '/');
-	// The header and footer gutters read --page-max. The examples viewer runs
-	// wider (sidebar + stage + features rail) and the docs' three columns span
-	// the whole viewport, so match the chrome to each route's measure.
+	// Header and footer gutters read --page-max. Match it to each route's width:
+	// examples runs wider (sidebar + stage + features rail), docs spans full width.
 	const pageMax = $derived(
 		page.url.pathname.startsWith('/docs')
 			? '100%'
@@ -45,7 +44,7 @@
 			heading: 'Project',
 			links: [
 				{ label: 'GitHub', href: 'https://github.com/Blakintosh/svelte-flexiboards' },
-				// Follows the framework picker: the npm page for the adapter in use.
+				// npm page for the adapter set by the framework picker.
 				{ label: 'npm', href: `https://www.npmjs.com/package/${framework.meta.package}` },
 				{ label: 'Examples', href: '/examples' }
 			]

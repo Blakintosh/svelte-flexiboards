@@ -94,12 +94,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
 		}
 
-		// Grab action
 		if (currentAction.action == 'grab') {
 			return this.#getGrabbedWidgetStyle(currentAction);
 		}
 
-		// Resize action
 		if (currentAction.action == 'resize') {
 			return this.#getResizingWidgetStyle(currentAction);
 		}
@@ -111,8 +109,8 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		return this.style$();
 	}
 
-	// Unique within the page and, thanks to the random suffix, very unlikely to
-	// collide with ids from an earlier session once exported and stored.
+	// Unique within the page. The random suffix also keeps it from colliding
+	// with an id from an earlier session once exported and stored.
 	readonly id = generateUniqueId('flexiwidget-') + '-' + Math.random().toString(36).slice(2, 8);
 
 	#getCursorStyle() {
@@ -142,7 +140,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 	#getPlacedWidgetStyle() {
 		if (!this.interpolator?.active$()) {
 			// The shadow sits under anything mid-interpolation (z: 2) by rule, not
-			// DOM order — otherwise the stack order flickers as elements re-sort.
+			// DOM order. Otherwise the stack order flickers as elements re-sort.
 			const layer = this.isShadow ? ' z-index: 1;' : '';
 			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};${layer}`;
 		}
@@ -154,7 +152,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		const locationOffsetX = this.#pointerService.position.x - action.offsetX;
 		const locationOffsetY = this.#pointerService.position.y - action.offsetY;
 
-		// Fixed when it's a grabbed widget.
+		// Size stays fixed at what was captured on grab.
 		const height = action.capturedHeightPx;
 		const width = action.capturedWidthPx;
 
@@ -212,11 +210,10 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
 		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
 
-		// For resizing, top and left should remain fixed at their initial positions.
+		// Top and left stay fixed at their initial positions during a resize.
 		const top = action.top;
 		const left = action.left;
 
-		// Calculate new dimensions based on resizability
 		let height = action.capturedHeightPx;
 		let width = action.capturedWidthPx;
 
@@ -245,27 +242,22 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		switch (this.resizability) {
 			case 'horizontal':
-				// NOTE: Use the pre-calculated deltaX here
 				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 			case 'vertical':
-				// NOTE: Use the pre-calculated deltaY here
 				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
 				break;
 			case 'both':
-				// NOTE: Use the pre-calculated deltaX and deltaY here
 				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
 				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
 				break;
 		}
 
-		// Return the style string for the absolutely positioned widget
 		const cursor = this.dropRejected ? 'not-allowed' : 'nwse-resize';
 		return `pointer-events: none; user-select: none; cursor: ${cursor}; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
 	}
 
 	constructor(params: FlexiWidgetConstructorParams) {
-		// Initialise the state proxy.
 		super(
 			{
 				currentAction: null,
@@ -288,7 +280,6 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.#type = params.type;
 		this.#userProvidedId = params.config.id;
 
-		// Create the widget's interpolator
 		this.interpolator = new WidgetMoveInterpolator(this.provider, this);
 
 		this.#eventBus = getFlexiEventBus();
@@ -318,7 +309,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		this.#lastActionType = 'grab';
 
-		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		// Wait a tick: the widget may need to be portalled before it can be focused.
 		setTimeout(() => {
 			this.ref?.focus();
 		}, 0);
@@ -341,7 +332,7 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		this.#lastActionType = 'resize';
 		this.#preResizeSizePx = { width: event.capturedWidthPx, height: event.capturedHeightPx };
 
-		// We probably need to wait for the widget to be portalled before we can acquire its focus.
+		// Wait a tick: the widget may need to be portalled before it can be focused.
 		setTimeout(() => {
 			this.ref?.focus();
 		}, 0);
@@ -607,23 +598,19 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 		}
 
 		this.currentAction$(null);
-
-		// Clean up event subscriptions when widget is deleted
 		this.destroy();
 	}
 
 	/**
-	 * Cleanup method to be called when the widget is destroyed
+	 * Cleanup method to be called when the widget is destroyed.
 	 */
 	destroy() {
-		// Mark as disposed to ignore any deferred cleanup callbacks
+		// Ignore any deferred cleanup callbacks that arrive after this.
 		this.#disposed = true;
 
-		// Reset counters
 		this.#grabbers = 0;
 		this.#resizers = 0;
 
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}

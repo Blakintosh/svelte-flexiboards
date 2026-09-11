@@ -2,10 +2,10 @@ import { SunMedium } from 'lucide-react';
 import { useState } from 'react';
 
 /**
- * A gauge, softened into a pill: ink fill in a rounded trough. The Svelte
- * example uses bits-ui's Slider; there is no React equivalent in the site's
- * dependencies, so this is a native range input laid transparently over the
- * same visuals — same look, same keyboard behaviour, one element fewer.
+ * A gauge softened into a pill: ink fill in a rounded trough. The Svelte
+ * example uses bits-ui's Slider, but the site has no React equivalent, so
+ * this is a native range input laid over the same visuals. Same look, same
+ * keyboard behaviour, one element fewer.
  */
 export default function BrightnessSlider() {
 	const [value, setValue] = useState(80);

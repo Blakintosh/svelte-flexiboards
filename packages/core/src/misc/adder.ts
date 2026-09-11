@@ -104,7 +104,6 @@ export class InternalFlexiAddController implements FlexiAddController {
 			return;
 		}
 
-		// Create a widget under this FlexiAdd.
 		this.newWidget$(
 			new InternalFlexiWidgetController({
 				config: config.widget,
@@ -127,7 +126,6 @@ export class InternalFlexiAddController implements FlexiAddController {
 			return;
 		}
 
-		// Start the grab event.
 		this.#eventBus.dispatch('widget:grabbed', {
 			board: this.provider,
 			widget: event.widget,
@@ -158,10 +156,9 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 
 	/**
-	 * Cleanup method to be called when the adder is destroyed
+	 * Called when the adder is destroyed.
 	 */
 	destroy() {
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}

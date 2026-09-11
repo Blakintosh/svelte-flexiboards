@@ -12,12 +12,12 @@ export class FlexiPortalController {
 	#widgetRefs = new Map<
 		FlexiWidgetController,
 		{
-			// The element captured at move time. Return this exact node — by
-			// release time widget.ref may already point at a NEW element (the
-			// target mounts its own render of the same controller on drop).
+			// The element captured at move time. Return this exact node.
+			// By release time widget.ref may already point at a new element
+			// (the target mounts its own render of the same controller on drop).
 			element: HTMLElement;
 			// Null when the element was detached at grab time (an adapter may
-			// tear the node down mid-drag); the element is discarded on return.
+			// tear the node down mid-drag). The element is discarded on return.
 			originalParent: Node | null;
 			nextSibling: Node | null;
 		}
@@ -34,7 +34,6 @@ export class FlexiPortalController {
 	}
 
 	createPortal() {
-		// Create container element
 		this.#containerElement = document.createElement('div');
 		this.#containerElement.id = 'flexi-portal';
 		this.#containerElement.style.position = 'fixed';
@@ -45,7 +44,6 @@ export class FlexiPortalController {
 		this.#containerElement.style.pointerEvents = 'none';
 		this.#containerElement.style.zIndex = '9999';
 
-		// Append to body
 		document.body.appendChild(this.#containerElement);
 
 		this.#unsubscribers.push(
@@ -65,11 +63,10 @@ export class FlexiPortalController {
 			return;
 		}
 
-		// The element is about to leave the portal, and the flight that follows
-		// must start from where it is now. Whether the widget's board has already
-		// captured that depends on bus subscription order — a board created after
-		// this portal (a nested board mounted later, as React does) runs after it —
-		// so the capture is made here, where the move actually happens.
+		// The flight that follows must start from the element's position now, before
+		// it leaves the portal. Bus subscription order means a board created after
+		// this portal (a nested board mounted later, as React does) would otherwise
+		// run its own capture too late, so the capture happens here instead.
 		event.widget.captureReleaseState();
 		this.returnWidgetFromPortal(event.widget);
 		this.#hasPortalledWidget = false;
@@ -98,19 +95,17 @@ export class FlexiPortalController {
 		}
 
 		// Already hosted (e.g. a widget re-grabbed mid-flight): keep the original
-		// record — overwriting it would make the portal its own return target.
+		// record. Overwriting it would make the portal its own return target.
 		if (this.#widgetRefs.has(widget)) {
 			return;
 		}
 
-		// Store original position info
 		this.#widgetRefs.set(widget, {
 			element: widget.ref,
 			originalParent: widget.ref.parentNode,
 			nextSibling: widget.ref.nextSibling
 		});
 
-		// Move to portal
 		this.#containerElement!.appendChild(widget.ref);
 	}
 
@@ -126,7 +121,7 @@ export class FlexiPortalController {
 					originalPosition.nextSibling
 				);
 			} else {
-				// Nowhere to return to — discard rather than strand in the portal.
+				// Nowhere to return to, discard rather than strand in the portal.
 				originalPosition.element.remove();
 			}
 			this.#widgetRefs.delete(widget);
@@ -137,11 +132,10 @@ export class FlexiPortalController {
 	 * Destroys the portal container and resets the singleton instance
 	 */
 	destroy() {
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 
-		// First return any widgets still in the portal
+		// Return any widgets still in the portal before tearing it down.
 		this.#widgetRefs.forEach((position) => {
 			if (position.originalParent) {
 				position.originalParent.insertBefore(position.element, position.nextSibling);
@@ -182,7 +176,7 @@ export function flexiportal(board: InternalFlexiBoardController) {
 		throw new Error('flexiportal() was called outside of a FlexiBoard context.');
 	}
 
-	// We use a singleton instance of the portal, avoiding duplication in the DOM.
+	// Singleton portal, shared across boards, so the DOM has only one instance.
 	if (!portal) {
 		portal = new FlexiPortalController();
 	}
@@ -194,7 +188,7 @@ export function flexiportal(board: InternalFlexiBoardController) {
 }
 
 export function destroyFlexiportal() {
-	// Stop tracking this dependency, destroying the portal if no other boards are depending on it.
+	// Stop tracking this dependency, destroying the portal if no other boards depend on it.
 	if (portal) {
 		portal.removeDependency();
 	}

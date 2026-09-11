@@ -23,8 +23,8 @@
 
 	let { onCommit }: { onCommit: (scope: DropScope) => void } = $props();
 
-	// The drop preview reads as a dashed placeholder; the row in hand lifts off
-	// the queue instead of taking an accent outline.
+	// The drop preview is a dashed placeholder; the grabbed row lifts off the
+	// queue instead of taking an accent outline.
 	const rowClass = (widget: FlexiWidgetController) =>
 		cn(
 			'min-w-0',
@@ -36,7 +36,7 @@
 
 <!--
 	A second inner board, this one a single column: rows reflow vertically and
-	renumber themselves from their own y. Dragging a row never moves the tile.
+	renumber from their own y. Dragging a row never moves the tile.
 -->
 <FlexiBoard
 	class="h-full min-h-0 min-w-0"

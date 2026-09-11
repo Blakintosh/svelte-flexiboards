@@ -18,7 +18,7 @@ import DashboardTile from '../flexiboard/dashboard-tile';
 import Sheet from '../common/sheet';
 import Button from '../common/button';
 
-// Bumped when the tile set changed (score/sales → mrr/churn/revenue), so a
+// Bumped when the tile set changed (score/sales to mrr/churn/revenue) so a
 // stale saved layout can't resurrect widget types that no longer exist.
 const STORAGE_KEY = 'flexiboards-dashboard-responsive-layout-v2';
 
@@ -63,9 +63,9 @@ const responsiveConfig = {
 };
 
 export default function DashboardExample() {
-	// Edit mode is React state; the board config derives from it, so FlexiBoard's
-	// prop seam sees a new object only when the mode actually flips (the Svelte
-	// version mutates its $state config in place instead).
+	// Edit mode is React state, and the board config derives from it, so
+	// FlexiBoard's prop seam sees a new object only when the mode flips.
+	// The Svelte version mutates its $state config in place instead.
 	const [editMode, setEditMode] = useState(false);
 	const responsiveBoard = useRef<ResponsiveFlexiBoardController>(null);
 
@@ -78,8 +78,8 @@ export default function DashboardExample() {
 			registry: {
 				default: {
 					component: DashboardTile,
-					// Grabbed tiles lift and tilt rather than taking an accent border;
-					// the drop placeholder stays a soft dashed plate, never a pulse.
+					// Grabbed tiles lift and tilt rather than taking an accent border.
+					// The drop placeholder stays a soft dashed plate, never a pulse.
 					className: (widget: FlexiWidgetController) =>
 						clsx(
 							'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -103,7 +103,7 @@ export default function DashboardExample() {
 		responsiveBoard.current?.importLayout(DEFAULT_LAYOUTS);
 	}
 
-	// Layout is already auto-saved, so "Done" just leaves edit mode.
+	// Layout auto-saves already, so "Done" just leaves edit mode.
 	const editFooter = (
 		<>
 			<div className="flex items-center gap-3">
@@ -155,8 +155,8 @@ export default function DashboardExample() {
 			<AppSidebar />
 			<main className="bg-paper flex min-h-0 w-full grow flex-col p-4 lg:p-6">
 				{/*
-					The sheet's caption band names the grid; the aside carries the one live
-					status this example has — an accent pill while it is being edited.
+					The sheet's caption band names the grid. The aside carries the one
+					live status this example has, an accent pill while editing.
 				*/}
 				<Sheet
 					className="min-h-0 flex-1"

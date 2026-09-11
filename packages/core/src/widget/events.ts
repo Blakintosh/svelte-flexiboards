@@ -23,7 +23,6 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 				return;
 			}
 
-			// Invoke the trigger watcher which respects trigger configuration (immediate vs long press).
 			grabWatcher.onstartpointerdown(event);
 		},
 		onkeydown: (event: KeyboardEvent) => {
@@ -46,7 +45,6 @@ export function widgetGrabberEvents(widget: InternalFlexiWidgetController) {
 		onpointerdown: (event: PointerEvent) => {
 			// Don't propagate to parent widget, preventing double-grab dispatch
 			event.stopPropagation();
-			// Use the trigger watcher which respects trigger configuration (immediate vs long press)
 			grabWatcher.onstartpointerdown(event);
 		},
 		onkeydown: (event: KeyboardEvent) => dispatchKeyDownGrab(eventBus, widget, board, event)
@@ -62,7 +60,6 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 	return {
 		onpointerdown: (event: PointerEvent) => {
 			event.stopPropagation();
-			// Invoke the trigger watcher which respects trigger configuration (immediate vs long press).
 			resizeWatcher.onstartpointerdown(event);
 		},
 		onkeydown: (event: KeyboardEvent) => {
@@ -73,10 +70,7 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 }
 
 /**
- * Resolves clientX/clientY coordinates from a keyboard event, before dispatching a 'widget:grabbed' event.
- * @param eventBus The event bus to dispatch the event to.
- * @param widget The widget that was grabbed.
- * @param event The keyboard event.
+ * Resolves clientX/clientY from a keyboard event, then dispatches 'widget:grabbed'.
  */
 function dispatchKeyDownGrab(
 	eventBus: FlexiEventBus,
@@ -108,10 +102,6 @@ function dispatchKeyDownGrab(
 
 /**
  * Dispatches a 'widget:grabbed' event to the event bus.
- * @param eventBus The event bus to dispatch the event to.
- * @param widget The widget that was grabbed.
- * @param clientX The x-coordinate of the pointer event.
- * @param clientY The y-coordinate of the pointer event.
  */
 function dispatchGrab(
 	eventBus: FlexiEventBus,
@@ -144,10 +134,7 @@ function dispatchGrab(
 }
 
 /**
- * Resolves clientX/clientY coordinates from a keyboard event, before dispatching a 'widget:resizing' event.
- * @param eventBus The event bus to dispatch the event to.
- * @param widget The widget that was resized.
- * @param event The keyboard event.
+ * Resolves clientX/clientY from a keyboard event, then dispatches 'widget:resizing'.
  */
 function dispatchKeyDownResize(
 	eventBus: FlexiEventBus,
@@ -180,7 +167,7 @@ function dispatchKeyDownResize(
 
 	const { x, y } = getElementMidpoint(event.target as HTMLElement);
 
-	// Calculate position relative to board container (same as resize trigger logic)
+	// Position relative to the board container, matching the resize trigger logic.
 	const left = rect.left - boardRect.left + board.ref!.scrollLeft;
 	const top = rect.top - boardRect.top + board.ref!.scrollTop;
 

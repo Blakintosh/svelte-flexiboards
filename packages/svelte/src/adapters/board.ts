@@ -16,9 +16,9 @@ import { reactive } from '../adapter.svelte.js';
 const contextKey = Symbol('flexiboard');
 
 export function flexiboard(props: FlexiBoardProps): InternalFlexiBoardController {
-	// Tell core when we're server-rendering, before any controller is
-	// constructed: SSR never runs onDestroy, so core must avoid registering
-	// this render's controllers against process-level singletons.
+	// Tell core we are server-rendering before any controller is constructed.
+	// SSR never runs onDestroy, so core must not register this render's
+	// controllers against process-level singletons.
 	if (typeof window === 'undefined') {
 		markSsrEnvironment();
 	}

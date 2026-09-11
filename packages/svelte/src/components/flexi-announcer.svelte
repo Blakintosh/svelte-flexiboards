@@ -14,7 +14,7 @@
 
 	const controller = flexiannouncer(provider);
 
-	// SSR-stable id — see FlexiBoard's assistiveTextId. Nothing references the
+	// SSR-stable id, see FlexiBoard's assistiveTextId. Nothing references the
 	// controller's own generated id, so the rendered element uses this one.
 	const id = $props.id();
 

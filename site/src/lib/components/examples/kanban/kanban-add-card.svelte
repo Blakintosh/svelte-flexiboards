@@ -36,7 +36,7 @@
 		open = false;
 	}
 
-	// The board listens for Enter (grab/drop) and Escape (cancel) too, so the
+	// The board also listens for Enter (grab/drop) and Escape (cancel), so the
 	// composer swallows both rather than letting a typed Enter reach a widget.
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {

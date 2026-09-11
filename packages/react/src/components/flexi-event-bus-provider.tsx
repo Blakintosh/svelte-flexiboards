@@ -11,10 +11,10 @@ export type FlexiEventBusProviderProps = {
 
 /** @internal Rendered by FlexiBoard; distributes core's event bus via context. */
 export function FlexiEventBusProvider({ children }: FlexiEventBusProviderProps) {
-	// Distribute core's bus — the instance the controllers subscribe on. Creating a
-	// separate instance here would split adapter dispatches from core's listeners.
-	// getFlexiEventBus() is an idempotent read of core's module singleton, so
-	// calling it during render is safe.
+	// Distribute core's bus, the instance the controllers subscribe on. A
+	// separate instance here would split adapter dispatches from core's
+	// listeners. getFlexiEventBus() is an idempotent read of core's module
+	// singleton, so calling it during render is safe.
 	const eventBus = getFlexiEventBus();
 
 	return <FlexiEventBusContext.Provider value={eventBus}>{children}</FlexiEventBusContext.Provider>;

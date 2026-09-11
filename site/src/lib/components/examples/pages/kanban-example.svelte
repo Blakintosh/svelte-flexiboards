@@ -111,8 +111,8 @@
 
 	/**
 	 * Deep-enough copy, normalised: entries sorted by y and renumbered, so a
-	 * re-import lands every card back in the order it was left in whatever order
-	 * the export happened to emit.
+	 * re-import lands every card back in the order it was left, regardless of
+	 * the order the export emitted them in.
 	 */
 	function cloneLayout(layout: FlexiLayout): FlexiLayout {
 		const copy: FlexiLayout = {};
@@ -141,12 +141,12 @@
 
 	/**
 	 * Maps the rail's live widget positions onto CSS `order` values for the card
-	 * lists below, so a column's cards follow its heading while it is dragged.
+	 * lists below, so a column's cards follow its heading while dragged.
 	 *
 	 * The heading in hand keeps a stale `x` (the grid drops it at grab time and
 	 * puts a shadow in its place), so it is skipped and given whichever slot the
-	 * other three left free. Defensive throughout: a missing controller or a
-	 * duplicate `x` degrades to a stable order rather than to overlapping lists.
+	 * other three left free. A missing controller or duplicate `x` falls back to
+	 * a stable order instead of overlapping lists.
 	 */
 	function computeSlots(
 		keys: readonly string[],
@@ -237,7 +237,7 @@
 
 	const saved = readSaved();
 
-	// Only ever read by loadLayout and reset() — never rendered, so it stays out
+	// Only ever read by loadLayout and reset(), never rendered, so it stays out
 	// of $state.
 	let pendingCards: FlexiLayout = saved?.cards ?? seedCards();
 	let lastLayout: FlexiLayout = cloneLayout(pendingCards);
@@ -258,7 +258,7 @@
 	let heads = $state<Record<string, FlexiWidgetController | undefined>>({});
 
 	// Bound controllers are wrapped for Svelte, so these signal reads are tracked.
-	// (`target.widgets` is not — hence counts come from the exported layout.)
+	// (`target.widgets` is not, hence counts come from the exported layout.)
 	const slots = $derived(
 		computeSlots(
 			SEED_ORDER,
@@ -287,7 +287,7 @@
 	/**
 	 * The single place card state is reconciled. `onLayoutChange` hands us the
 	 * whole board, so counts, the archive-undo offer and localStorage all come
-	 * from one export rather than from three separate reads.
+	 * from one export instead of three separate reads.
 	 */
 	function syncCards(layout: FlexiLayout) {
 		const total = totalOf(layout);
@@ -317,9 +317,9 @@
 			} satisfies KanbanCardData
 		});
 
-		// TRAP WORTH KNOWING: the board's onLayoutChange only fires on
-		// `widget:dropped` and `widget:delete`. createWidget() dispatches
-		// neither, so an added card has to be exported and persisted by hand.
+		// Gotcha: onLayoutChange only fires on `widget:dropped` and
+		// `widget:delete`. createWidget() dispatches neither, so an added
+		// card has to be exported and persisted by hand.
 		syncCards(cardsBoard?.exportLayout() ?? lastLayout);
 	}
 
@@ -328,7 +328,7 @@
 		if (!layout || !cardsBoard) return;
 
 		cardsBoard.importLayout(layout);
-		// importLayout is silent too — same reason as above.
+		// importLayout is silent too, same reason as above.
 		lastLayout = cloneLayout(layout);
 		lastTotal = totalOf(layout);
 		counts = countsOf(layout);
@@ -360,8 +360,8 @@
 		resetToken += 1;
 	}
 
-	// Anything provisional — the drop preview — stays fx-accent; the widget in
-	// hand instead picks up a lifted shadow (the tilt lives on the card contents).
+	// The drop preview stays fx-accent; the widget in hand instead picks up a
+	// lifted shadow (the tilt lives on the card contents).
 	const cardClass = (widget: FlexiWidgetController) => [
 		'min-w-0 cursor-grab rounded-[14px] border border-rule-soft bg-panel px-3.5 py-3 shadow-card transition-shadow duration-[120ms] select-none hover:shadow-card-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fx-accent',
 		widget.isGrabbed && 'shadow-lift opacity-85',
@@ -411,7 +411,7 @@
 
 	const railTargetConfig: FlexiTargetPartialConfiguration = {
 		// Identical tracks and gap to the lists grid below, so the headings stay
-		// aligned with their columns at every width — including while scrolled.
+		// aligned with their columns at every width, including while scrolled.
 		columnSizing: 'minmax(216px, 1fr)',
 		layout: {
 			type: 'flow',
@@ -446,7 +446,7 @@
 	<span
 		class="flex min-w-0 items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold {chip.chip}"
 	>
-		<!-- The status tick, a small dot. -->
+		<!-- Status tick. -->
 		<span class="size-2 shrink-0 rounded-full {chip.tick}"></span>
 		<span class="min-w-0 truncate">{widget.metadata?.title ?? ''}</span>
 	</span>
@@ -485,9 +485,10 @@
 
 		{#key resetToken}
 			<!--
-				Board A — the cards. Four targets, one per column; a card grabbed in any
-				of them can be dropped into any other, which is the whole point of the
-				example. No widgets are declared here: they arrive through loadLayout.
+				Board A, the cards. Four targets, one per column; a card grabbed in
+				any of them can be dropped into any other, which is the whole point
+				of the example. No widgets are declared here, they arrive through
+				loadLayout.
 			-->
 			<FlexiBoard
 				class="flex min-h-0 flex-1 flex-col"
@@ -499,8 +500,8 @@
 				{/snippet}
 				<div class="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-3 pt-5 lg:px-8">
 					<!--
-						Board B — the column headings. A second, independent FlexiBoard
-						nested in the first one's DOM: the two never exchange widgets,
+						Board B, the column headings. A second, independent FlexiBoard
+						nested in the first one's DOM. The two never exchange widgets,
 						because every board ignores events that aren't its own.
 					-->
 					<FlexiBoard class="shrink-0" config={railConfig}>
@@ -517,7 +518,7 @@
 					</FlexiBoard>
 
 					<!--
-						The lists. Same track template and gap as the rail above, and CSS
+						The lists. Same track template and gap as the rail above, with CSS
 						`order` driven by the live heading positions, so a column's cards
 						travel with its heading.
 					-->
@@ -542,7 +543,7 @@
 				</div>
 
 				<!--
-					Archive — the sheet's bottom annotation band. Deleting is offered with
+					Archive, the sheet's bottom annotation band. Deleting is offered with
 					a way back, never silently.
 				-->
 				<FlexiDelete class={trayClass}>

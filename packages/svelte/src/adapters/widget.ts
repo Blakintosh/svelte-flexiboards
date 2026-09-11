@@ -29,7 +29,7 @@ export function renderedflexiwidget(widget: InternalFlexiWidgetController) {
 	if (hasInternalFlexiaddCtx()) {
 		const adder = getInternalFlexiaddCtx();
 
-		// Core dispatches the drag-in immediately; the mount timing is ours.
+		// Core dispatches the drag-in immediately, but the mount timing is ours.
 		onMount(() => {
 			dragInOnceMounted(adder, widget);
 		});
@@ -88,8 +88,8 @@ export function getInternalFlexiwidgetCtx() {
 }
 
 export function getFlexiwidgetCtx() {
-	// Consumers read controller state from their own templates/effects, so the
-	// public surface must be Svelte-reactive.
+	// Consumers read controller state from their own templates and effects, so
+	// the public surface must be Svelte-reactive.
 	return reactive(getInternalFlexiwidgetCtx() as FlexiWidgetController);
 }
 

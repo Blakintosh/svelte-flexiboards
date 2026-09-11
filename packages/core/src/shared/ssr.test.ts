@@ -105,7 +105,7 @@ describe('SSR environment flag', () => {
 		});
 		expect(server.currentBreakpoint).toBe('lg');
 		expect(server.breakpointPending).toBe('lg');
-		// Without a hint, the guess is the 'default' breakpoint — still flagged.
+		// Without a hint, the guess is the 'default' breakpoint, still flagged.
 		const unhinted = new InternalResponsiveFlexiBoardController({
 			config: { breakpoints: { lg: 1024, sm: 640 } }
 		});

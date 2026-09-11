@@ -7,14 +7,14 @@ export type CopyState = 'idle' | 'copied' | 'failed';
 export type LayoutJsonBarProps = {
 	json: string;
 	copyState: CopyState;
-	/** Layout id of the tile currently in hand, if any — its x/y are marked. */
+	/** Layout id of the tile currently in hand, if any. Its x/y are marked. */
 	highlightId?: string;
 	onCopy: () => void;
 	onReset: () => void;
 };
 
 // The coordinate pair inside one entry, so only the numbers that move get the
-// accent — the rest of the line stays in the resting listing colour.
+// accent. The rest of the line stays in the resting listing colour.
 const XY = /("x": -?\d+, "y": -?\d+)/;
 
 /*
@@ -48,7 +48,7 @@ export default function LayoutJsonBar({
 	});
 
 	// Clipboard writes can be refused. When that happens the listing takes focus with
-	// its text selected, so the layout can still be copied by hand — an invisible
+	// its text selected, so the layout can still be copied by hand. An invisible
 	// action must never fail silently.
 	useEffect(() => {
 		if (copyState !== 'failed') {

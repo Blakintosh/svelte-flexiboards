@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "columns",
@@ -82,7 +82,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiBoardController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "columns",

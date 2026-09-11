@@ -11,8 +11,8 @@ export type LauncherApp = {
 };
 
 /**
- * The six 1x1 app tiles. A widget carries its app key in `metadata.app`, which is
- * the documented way to attach per-widget data that survives export / import.
+ * The six 1x1 app tiles. A widget carries its app key in `metadata.app`, the
+ * documented way to attach per-widget data that survives export / import.
  */
 export const APPS: Record<string, LauncherApp> = {
 	mail: { label: 'Mail', icon: Mail },

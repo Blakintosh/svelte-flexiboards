@@ -45,10 +45,10 @@ export type FlexiBoardProps = Omit<FlexiBoardPropsPrimitive<string>, 'class' | '
 
 		/**
 		 * Fallback content shown while the board's server-rendered layout is
-		 * provisional: a stored layout that hasn't been imported yet, or an
-		 * unconfirmed responsive breakpoint guess. Server-rendered alongside the
-		 * board and toggled by generated CSS, so it applies from the very first
-		 * paint; it unmounts once the layout is confirmed after mount.
+		 * provisional: a stored layout not yet imported, or an unconfirmed
+		 * responsive breakpoint guess. It is server-rendered alongside the board
+		 * and toggled by generated CSS, so it applies from the first paint. It
+		 * unmounts once the layout is confirmed after mount.
 		 */
 		suspense?: (reason: FlexiBoardSuspenseReason) => ReactNode;
 	};
@@ -65,9 +65,9 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 	const responsiveParent = useInternalResponsiveFlexiBoardOrNull();
 
 	const board = useSingleRef(() => {
-		// Tell core when we're server-rendering, before any controller is
-		// constructed: the server never runs effect cleanups, so core must avoid
-		// registering this render's controllers against process-level singletons.
+		// Tell core we are server-rendering before any controller is constructed.
+		// The server never runs effect cleanups, so core must not register this
+		// render's controllers against process-level singletons.
 		if (typeof window === 'undefined') {
 			markSsrEnvironment();
 		}
@@ -80,11 +80,11 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 	// boardEvents attaches window listeners and returns its cleanup.
 	useEffect(() => boardEvents(board), [board]);
 
-	// Prop seam — push config changes into core after every render, like the
-	// Svelte adapter's effect. No dependency array on purpose: updateProps() is
-	// inert unless `config` differs by value (one level deep), so an inline
-	// `config={{ ... }}` literal costs a cheap comparison per render, and a
-	// config mutated in place is still picked up.
+	// Prop seam: push config changes into core after every render, like the
+	// Svelte adapter's effect. No dependency array on purpose. updateProps() is
+	// inert unless `config` differs by value one level deep, so an inline config
+	// literal costs one cheap comparison per render, and a config mutated in
+	// place is still picked up.
 	useEffect(() => {
 		board.updateProps({ config });
 	});
@@ -93,10 +93,11 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 
 	const styleString = useFromCore(useCallback(() => board.style, [board]));
 
-	// One attribute, reason in the value, so stylesheets need a single hook:
-	// `data-flexi-pending="layout"` means the content itself is provisional
-	// (veil at every viewport); a breakpoint key means only the breakpoint is
-	// unconfirmed. Content-pending wins when both apply; absent otherwise.
+	// One attribute with the reason in its value, so stylesheets need a single
+	// hook. `data-flexi-pending="layout"` means the content is provisional at
+	// every viewport. A breakpoint key means only the breakpoint is unconfirmed.
+	// Content-pending wins when both apply, and the attribute is absent
+	// otherwise.
 	const pending = useFromCore(
 		useCallback(
 			() => (board.layoutPending ? 'layout' : (board.breakpointPending ?? undefined)),
@@ -105,14 +106,14 @@ export const FlexiBoard = forwardRef(function FlexiBoard(
 	);
 
 	// --- Suspense (framework-managed skeleton) ---------------------------------
-	// The fallback must exist in the SSR HTML and through hydration: before JS
-	// runs, only CSS can decide whether to show it. The breakpoint case is the
-	// subtle one: `breakpointPending` is null on the client from the first
-	// render (matchMedia answers immediately), but the server HTML contains the
-	// fallback — so until mount we reconstruct the server's reason from the
-	// environment-independent assumed breakpoint, keeping the trees identical.
-	// false on the server and through hydration, true once mounted — the
-	// hydration-safe "has mounted" flag, with no state write in an effect.
+	// The fallback must exist in the SSR HTML and through hydration, because
+	// only CSS can decide whether to show it before JS runs. The breakpoint case
+	// is the subtle one: `breakpointPending` is null on the client from the
+	// first render, since matchMedia answers immediately, but the server HTML
+	// contains the fallback. So until mount we rebuild the server's reason from
+	// the assumed breakpoint, which keeps the two trees identical.
+	// mounted is false on the server and through hydration, true once mounted,
+	// with no state write in an effect.
 	const mounted = useSyncExternalStore(
 		() => () => {},
 		() => true,

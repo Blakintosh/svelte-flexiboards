@@ -40,33 +40,34 @@
 
 	const targetSnippet = `layout: { type: 'free',\n  minColumns: 4 }`;
 
-	// The hero's "grab me" widget breathes until it's first hovered (or pressed,
-	// for touch); the margin note bows out the first time any bar is grabbed.
+	// The hero's "grab me" widget breathes until first hovered or pressed.
+	// The margin note bows out the first time any bar is grabbed.
 	let heroTouched = $state(false);
 	let heroHovered = $state(false);
 	let heroGrabbed = $state(false);
 
-	// springTransitionConfig(), exaggerated for the shop window: a touch more
-	// bounce than an app would want, so the drop visibly *lands*.
+	// springTransitionConfig(), exaggerated for the shop window: more bounce
+	// than an app would want, so the drop visibly lands.
 	const heroTransition: FlexiWidgetTransitionConfiguration = {
 		move: spring({ duration: 0.3, bounce: 0.1 }),
 		drop: spring({ duration: 0.4, bounce: 0.25 }),
 		resize: spring({ duration: 0.25, bounce: 0 })
 	};
 
-	// Every bar of the F drags. The widget element stays bare — the library
-	// measures its box, so nothing scaled may live on it. All visuals and scale
-	// motion sit on an inner div: the drop preview condenses in (`shadow-enter`
-	// — @starting-style blur/opacity/scale); a hovered bar rises on a soft
-	// shadow; a grabbed bar tilts and scales up. The dropped element remounts
-	// in its resting pose — no settle animation, it flickered against the lerp.
+	// Every bar of the F drags. The widget element stays bare since the library
+	// measures its box, so nothing scaled can live on it. Visuals and scale
+	// motion sit on an inner div instead: the drop preview condenses in
+	// (`shadow-enter`, @starting-style blur/opacity/scale), a hovered bar rises
+	// on a soft shadow, a grabbed bar tilts and scales up. The dropped element
+	// remounts in its resting pose with no settle animation, since that
+	// flickered against the lerp.
 	const heroShell = (widget: FlexiWidgetController) => [
 		'h-full w-full outline-hidden',
 		!widget.isShadow && 'cursor-grab active:cursor-grabbing'
 	];
 
 	// The library grabs a draggable widget on pointerdown, so a press on a real
-	// bar (not its drop shadow) *is* the first grab — no events API needed.
+	// bar (not its drop shadow) is the first grab. No events API needed.
 	const onBarGrab = (widget: FlexiWidgetController) => () => {
 		if (!widget.isShadow) heroGrabbed = true;
 	};
@@ -86,7 +87,7 @@
 				'hover:-translate-y-[4px] hover:shadow-[0_6px_16px_rgba(16,32,46,0.14)]',
 			!widget.isShadow && widget.isGrabbed && 'shadow-lift -rotate-[2.5deg] scale-[1.045]',
 			// Nowhere to land: the bar in hand greys out and flattens until the
-			// pointer finds a legal spot (core swaps the cursor to not-allowed).
+			// pointer finds a legal spot. Core swaps the cursor to not-allowed.
 			!widget.isShadow && widget.dropRejected && 'rotate-0 opacity-40 saturate-0',
 			pulse && !widget.isShadow && !heroTouched && !heroHovered && 'animate-fb-pulse'
 		]
@@ -115,7 +116,7 @@
 	];
 
 	// Each thumbnail is the arrangement its example demonstrates, drawn as cells.
-	// `moving` marks the one widget in motion — the dashed fx-accent frame.
+	// `moving` marks the one widget in motion, shown as the dashed fx-accent frame.
 	const examples = [
 		{
 			href: '/examples/dashboard',
@@ -287,10 +288,10 @@
 	</div>
 
 	<!--
-		The hero board is the FlexiMark logo recreated as a *real* board — three
-		bars of decreasing width, the moving third in the accent — because a
-		drag-and-drop library should let you drag on its own front page. Only the
-		accent bar is draggable; the ink and blue bars are the logo, fixed.
+		The hero board is the FlexiMark logo recreated as a real board: three
+		bars of decreasing width, the moving third in the accent. A
+		drag-and-drop library should let you drag on its own front page. Only
+		the accent bar is draggable; the ink and blue bars are the fixed logo.
 	-->
 	<div
 		class="animate-fb-rise relative self-start [--rise:18px] [animation-delay:280ms]"
@@ -301,7 +302,7 @@
 		>
 			<div class="relative w-[340px] max-w-full">
 				<!-- Drops on the hero are often released outside its small box, so flights
-					     fly in across the edge — portal them so the overflow lock can't clip them. -->
+					     fly in across the edge. Portal them so the overflow lock can't clip them. -->
 				<FlexiBoard
 					config={{
 						widgetDefaults: { transition: heroTransition },
@@ -354,8 +355,8 @@
 		</figure>
 
 		<!-- Hand-drawn margin note: the one italic on the page. Once any bar has
-		     been grabbed it has done its job — it sinks out on a fade and shrink
-		     (opacity only under reduced motion). -->
+		     been grabbed it has done its job, so it sinks out on a fade and
+		     shrink (opacity only under reduced motion). -->
 		<div
 			class="absolute -bottom-[54px] left-1/2 hidden -translate-x-[64%] transition-[opacity,translate,scale] duration-[420ms] ease-[var(--ease-snap)] lg:block {heroGrabbed
 				? 'pointer-events-none opacity-0 motion-safe:translate-y-3 motion-safe:scale-90'
@@ -397,8 +398,8 @@
 </section>
 
 <!-- ===== §03 CODE + RESULT ===== -->
-<!-- The ink and paper halves must still meet edge to edge, so the measure is
-     capped on a wrapper rather than as section padding. -->
+<!-- The ink and paper halves must meet edge to edge, so the measure is capped
+     on a wrapper rather than as section padding. -->
 <section class="border-rule border-t">
 	<div class="page-inner grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))]">
 		<div use:reveal>
@@ -434,7 +435,7 @@
 			<div class="label text-faint mb-4.5 text-[11px]">Result · styled entirely by you</div>
 			<!--
 				The one deliberately un-Blueprint corner of the page: rounded cards,
-				soft shadows, a mid-drag tile — proof the library carries *your* look,
+				soft shadows, a mid-drag tile. Proof the library carries your look,
 				not this site's.
 			-->
 			<div class="grid grid-cols-2 gap-4">
@@ -576,9 +577,9 @@
 				use:reveal={{ delay: 100 + STAGGER * i, rise: i === 0 ? 14 : 8 }}
 			>
 				<!--
-					Thumbnails are boards, drawn as cells: never stock imagery. Each
-					one is the arrangement that example actually demonstrates, with a
-					dashed fx-accent cell marking the widget in motion.
+					Thumbnails are boards drawn as cells, never stock imagery. Each one
+					is the arrangement that example demonstrates, with a dashed
+					fx-accent cell marking the widget in motion.
 				-->
 				<div
 					class="mb-3.5 grid h-[74px] gap-1.5"
@@ -601,15 +602,15 @@
 	</div>
 </section>
 
-<!-- ===== SUPPORT CTA — the one fx-accent band on the page ===== -->
+<!-- ===== SUPPORT CTA, the one fx-accent band on the page ===== -->
 <section class="page-gutter border-ink bg-fx-accent border-t py-11 text-white">
 	<div class="flex flex-wrap items-center justify-between gap-8" use:reveal={{ rise: 0 }}>
 		<div>
 			<h2 class="m-0 mb-1.5 font-serif text-[26px]">Support the development of Flexiboards</h2>
 			<p class="m-0 text-[15px] opacity-90">Any support is appreciated.</p>
 		</div>
-		<!-- Vermillion is the one colour that doesn't invert, so nothing inside the
-	     CTA band may either: `bg-field`, not `bg-ink`. -->
+		<!-- Vermillion is the one colour that doesn't invert, so nothing inside
+	     the CTA band may either: `bg-field`, not `bg-ink`. -->
 		<div class="flex flex-wrap gap-3">
 			<a
 				href="https://github.com/blakintosh/svelte-flexiboards"
@@ -632,13 +633,13 @@
 <style>
 	/*
 	  Splash-only motion. These classes reach elements rendered through library
-	  snippets and runtime-applied classes (the `reveal` action), so they are
-	  declared :global — but they load with this page and nothing else uses the
+	  snippets and runtime-applied classes (the `reveal` action), so they're
+	  declared :global. They load with this page and nothing else uses the
 	  names, so they never leak in practice.
 	*/
 	:global {
 		/* One-shot entrances: the hero rises on load, sections rise as they scroll
-		   in. Steep ease-out, 12–14px of travel — a snap into place, not a float. */
+		   in. Steep ease-out, 12-14px of travel: a snap into place, not a float. */
 		@keyframes fb-rise {
 			from {
 				opacity: 0;
@@ -653,7 +654,7 @@
 			animation: fb-rise 900ms var(--ease-snap) both;
 		}
 
-		/* The hero's idle nudge — "grab me" breathes until someone does. */
+		/* The hero's idle nudge: "grab me" breathes until someone does. */
 		@keyframes fb-pulse {
 			0%,
 			78%,
@@ -707,7 +708,7 @@
 		}
 
 		@media (prefers-reduced-motion: reduce) {
-			/* Entrances keep the fade (it prevents a pop) but drop the travel. */
+			/* Entrances keep the fade, which prevents a pop, but drop the travel. */
 			.animate-fb-rise {
 				animation-name: fb-fade;
 				animation-delay: 0ms;

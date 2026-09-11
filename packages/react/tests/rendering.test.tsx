@@ -79,8 +79,8 @@ describe('widget rendering', () => {
 		);
 		const grid = document.querySelector<HTMLElement>('[role="grid"]')!;
 		// Direct grid children are the hidden declarations wrapper and the
-		// display:contents shields around each cell; nothing else may take a
-		// grid cell of its own.
+		// display:contents shields around each cell. Nothing else may take a
+		// grid cell.
 		const others = Array.from(grid.children).filter(
 			(c) => (c as HTMLElement).style.display !== 'contents'
 		);
@@ -128,7 +128,7 @@ describe('widget rendering', () => {
 		expect(cell.className).toBe('w');
 		expect(cell.getAttribute('aria-colindex')).toBe('1');
 		expect(cell.getAttribute('aria-rowindex')).toBe('2');
-		// Core's placed style is a CSS string; it must survive the object conversion.
+		// Core's placed style is a CSS string and must survive the object conversion.
 		expect(cell.style.gridColumnStart || cell.style.gridColumn).not.toBe('');
 		expect(document.querySelector('.board')!.getAttribute('role')).toBe('application');
 	});

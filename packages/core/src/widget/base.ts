@@ -42,7 +42,7 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * The target this widget is under. This is not defined if the widget has not yet been dropped in the board.
+	 * The target this widget is under. Undefined until the widget is dropped in the board.
 	 */
 	#target$: Signal<FlexiTargetController | undefined> = signal(undefined);
 
@@ -60,8 +60,8 @@ export class FlexiWidgetController {
 	#rawConfig$: Signal<FlexiWidgetConfiguration> = signal({} as FlexiWidgetConfiguration);
 
 	/**
-	 * The last config the adapter pushed in, used to tell an actual prop change
-	 * apart from state that was set imperatively on this controller.
+	 * Last config the adapter pushed in. Used to tell a real prop change apart
+	 * from state set imperatively on this controller.
 	 */
 	#lastSyncedConfig: FlexiWidgetConfiguration | undefined = undefined;
 
@@ -82,8 +82,7 @@ export class FlexiWidgetController {
 	#dropRejected$: Signal<boolean> = signal(false);
 
 	/**
-	 * The reactive configuration of the widget. When these properties are changed, either due to a change in the widget's configuration,
-	 * or a change in the target's, or the board's, they will be updated to reflect the new values.
+	 * Reactive widget config. Recomputes when the widget's, target's, or board's config changes.
 	 */
 	#config$: ReadonlySignal<FlexiWidgetDerivedConfiguration> = computed(() => ({
 		component:
@@ -187,7 +186,7 @@ export class FlexiWidgetController {
 	// Getters and setters
 
 	/**
-	 * The target this widget is under. This is not defined if the widget has not yet been dropped in the board.
+	 * The target this widget is under. Undefined until the widget is dropped in the board.
 	 */
 	get target() {
 		return this.#target$();
@@ -271,14 +270,13 @@ export class FlexiWidgetController {
 	 * Updates the configuration backing this widget's reactive state.
 	 * The adapter's prop seam: call whenever the component's config props change.
 	 *
-	 * Merges only the keys that actually changed since the last sync, rather than
-	 * replacing wholesale. Two reasons: the raw config also holds registry
-	 * defaults and any values set imperatively (`widget.draggability = ...`),
-	 * which a wholesale replace would clobber; and staying inert when nothing
-	 * changed is what stops an adapter effect from re-entering itself.
+	 * Merges only the keys that changed since the last sync, not a wholesale replace.
+	 * A wholesale replace would clobber registry defaults and values set imperatively
+	 * (`widget.draggability = ...`), which also live in the raw config. Staying inert
+	 * when nothing changed also stops an adapter effect from re-entering itself.
 	 *
-	 * Lives here (protected) because it needs the private config fields;
-	 * exposed publicly via InternalFlexiWidgetController.updateConfig.
+	 * Protected because it needs the private config fields; exposed publicly via
+	 * InternalFlexiWidgetController.updateConfig.
 	 */
 	protected syncConfig(config: FlexiWidgetConfiguration): void {
 		const previous = this.#lastSyncedConfig;
@@ -303,7 +301,7 @@ export class FlexiWidgetController {
 		}
 
 		// Mutated in place to preserve registry defaults, so subscribers need an
-		// explicit nudge — the signal's identity hasn't changed.
+		// explicit nudge: the signal's identity hasn't changed.
 		trigger(() => this.#rawConfig$());
 	}
 

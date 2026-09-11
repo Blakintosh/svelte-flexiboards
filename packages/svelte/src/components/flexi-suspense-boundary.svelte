@@ -5,7 +5,7 @@
 
 	export type FlexiSuspenseBoundaryProps = {
 		board: InternalFlexiBoardController;
-		/** Why the fallback is showing; null renders the content plainly. */
+		/** Why the fallback is showing. Null renders the content plainly. */
 		reason: FlexiBoardSuspenseReason | null;
 		fallback: Snippet<[FlexiBoardSuspenseReason]>;
 		children: Snippet;
@@ -15,18 +15,18 @@
 <script lang="ts">
 	/*
 	  Internal: the rendering half of FlexiBoard's suspense. The board's real
-	  content lives in a layout-transparent `display: contents` wrapper — kept
-	  mounted for the board's lifetime so resolving suspense never recreates
-	  the targets — and the fallback sits beside it. Which one shows is decided
-	  without JavaScript, so it holds from the very first server-rendered paint:
+	  content lives in a `display: contents` wrapper that stays mounted for the
+	  board's lifetime, so resolving suspense never recreates the targets. The
+	  fallback sits beside it. CSS alone decides which one shows, so it holds
+	  from the first server-rendered paint:
 
-	  - reason 'layout': the content is provisional at every viewport. Inline
-	    styles alone toggle the pair.
+	  - reason 'layout': the content is provisional at every viewport, and
+	    inline styles toggle the pair.
 	  - reason 'breakpoint': the server's breakpoint guess is unconfirmed, and
 	    whether it matched is a media-query decision. The suspended state is
-	    still inline; a <style> element whose `media` attribute carries the
-	    assumed breakpoint's viewport range (derived from the breakpoints
-	    config) flips both elements back inside that range. The !important is
+	    still inline. A <style> element whose `media` attribute carries the
+	    assumed breakpoint's viewport range, derived from the breakpoints
+	    config, flips both elements back inside that range. The !important is
 	    what lets the sheet beat the inline styles there.
 
 	  Once the reason resolves on the client, the fallback and style element
@@ -37,9 +37,9 @@
 
 	const id = $props.id();
 
-	// The assumed breakpoint's viewport range as a media condition, or null
-	// when there is nothing to gate. Thresholds are coerced to numbers so
-	// config values can't smuggle CSS into the media attribute.
+	// The assumed breakpoint's viewport range as a media condition, or null when
+	// there is nothing to gate. Thresholds are coerced to numbers so config
+	// values cannot smuggle CSS into the media attribute.
 	const mediaCondition = $derived.by(() => {
 		if (reason?.reason !== 'breakpoint') {
 			return null;
@@ -55,9 +55,8 @@
 		return parts.length ? parts.join(' and ') : null;
 	});
 
-	// A breakpoint guess whose range covers every viewport (or an unknown key
-	// with no range at all — nothing sensible to gate on) is treated as
-	// confirmed rather than suspended.
+	// A breakpoint guess whose range covers every viewport, or an unknown key
+	// with no range, counts as confirmed rather than suspended.
 	const suspended = $derived(
 		reason !== null && (reason.reason === 'layout' || mediaCondition !== null)
 	);
@@ -72,7 +71,7 @@
 		{@render fallback(reason)}
 	</div>
 	{#if mediaCondition}
-		<!-- svelte:element rather than a literal style tag: preprocessors
+		<!-- svelte:element rather than a literal style tag, because preprocessors
 		     treat any literal <style> in the source as component CSS. -->
 		<svelte:element this={'style'} media={mediaCondition}>
 			{`[data-flexi-content="${id}"] { display: contents !important; } [data-flexi-fallback="${id}"] { display: none !important; }`}

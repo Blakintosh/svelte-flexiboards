@@ -42,7 +42,7 @@ function persist(fw: Framework) {
   The accent is the framework's colour: fx-accent for Svelte, drafting-process
   blue for React. A switch ripples the change out radially from the last click
   (per-section transition delays), overshooting through a hotter tone before
-  settling — see the `--fx-accent` @property block in app.css.
+  settling. See the `--fx-accent` @property block in app.css.
 */
 const ACCENT_END: Record<Framework, string> = {
 	svelte: '#e2452b',
@@ -135,7 +135,7 @@ class FrameworkStore {
 		return frameworks.find((f) => f.id === this.#current) ?? frameworks[0];
 	}
 
-	/** Meta for the *selected* framework — badges and pickers read this. */
+	/** Meta for the *selected* framework. Badges and pickers read this. */
 	get selectedMeta() {
 		return frameworks.find((f) => f.id === this.#selected) ?? frameworks[0];
 	}

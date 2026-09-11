@@ -22,9 +22,10 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	// widget is a core-owned mutable controller, not React-managed state.
 	/* eslint-disable react-hooks/immutability */
 	useEffect(() => {
-		// Core dispatches the drag-in immediately; the mount timing is ours. Once
-		// per widget: StrictMode re-runs this effect, and a second grab would be
-		// ignored by the board but still re-arm the keyboard pointer.
+		// Core dispatches the drag-in immediately, but the mount timing is ours.
+		// Run it once per widget: StrictMode re-runs this effect, and a second
+		// grab would be ignored by the board yet still re-arm the keyboard
+		// pointer.
 		if (adder && !draggedIn.current) {
 			draggedIn.current = true;
 			dragInOnceMounted(adder, widget);
@@ -41,9 +42,9 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 		const wrapper = wrapperRef.current;
 		const inner = innerRef.current;
 
-		// A StrictMode fake unmount scheduled a sweep — we're alive, cancel it.
-		// (An adder widget is mid-drag from its very first mount, so "node not
-		// in the wrapper" does NOT imply a real unmount.)
+		// A StrictMode fake unmount scheduled a sweep. We are alive, so cancel
+		// it. An adder widget is mid-drag from its first mount, so a node
+		// outside the wrapper does not imply a real unmount.
 		if (orphanSweepTimer.current !== undefined) {
 			clearTimeout(orphanSweepTimer.current);
 			orphanSweepTimer.current = undefined;
@@ -51,10 +52,9 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 
 		return () => {
 			// React only removes the shield wrapper it owns. If core's portal
-			// moved the inner node out of the wrapper and nothing returned it,
-			// that node would linger in the portal overlay — sweep the orphan
-			// (Svelte-style tolerant teardown), on a grace period so only a
-			// real unmount goes through with it.
+			// moved the inner node out and nothing returned it, that node would
+			// linger in the portal overlay, so sweep the orphan. The grace
+			// period means only a real unmount follows through.
 			orphanSweepTimer.current = setTimeout(() => {
 				if (inner && inner.parentElement !== wrapper) {
 					inner.remove();
@@ -63,7 +63,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 		};
 	}, []);
 
-	// Event watchers are stateful — create once per component instance.
+	// Event watchers are stateful, so create them once per component instance.
 	const [events] = useState(() => widgetEvents(widget));
 
 	// Bridge reads of core's signal-backed state into React's reactivity.
@@ -93,7 +93,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 		}, [widget])
 	);
 
-	// Core stores render types opaquely (FlexiContent/FlexiComponent) — narrow them to React's here.
+	// Core stores render types opaquely, so narrow them to React's here.
 	const snippet = useFromCore(
 		useCallback(() => widget.snippet as FlexiWidgetChildren | undefined, [widget])
 	);
@@ -103,8 +103,8 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 			[widget]
 		)
 	);
-	// Read raw (may be undefined) — defaulting to {} inside the read would build
-	// a fresh object per snapshot and break Object.is comparison.
+	// Read raw, possibly undefined. Defaulting to {} inside the read would build
+	// a fresh object per snapshot and break the Object.is comparison.
 	const componentProps = useFromCore(
 		useCallback(() => widget.componentProps as Record<string, unknown> | undefined, [widget])
 	);
@@ -118,8 +118,8 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	return (
 		<FlexiWidgetContext.Provider value={widget}>
 			{/* Shield node: core's portal re-parents the inner widget element
-			    during drags, which React must never find out about — React
-			    unmounts THIS wrapper (which core never moves), so its strict
+			    during drags, which React must not see. React unmounts this
+			    wrapper, which core never moves, so its strict
 			    parent.removeChild always succeeds. display:contents keeps the
 			    inner div a direct grid participant. */}
 			<div style={{ display: 'contents' }} ref={wrapperRef}>
@@ -153,9 +153,8 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 				</div>
 			</div>
 
-			{/* When it exists, this temporarily occupies the widget's destination space,
-			    allowing the widget to be absolutely positioned to interpolate to its
-			    final destination. */}
+			{/* This occupies the widget's destination space so the widget can be
+			    absolutely positioned while it interpolates there. */}
 			{shouldDrawPlaceholder && <WidgetTransitionPlaceholder />}
 		</FlexiWidgetContext.Provider>
 	);

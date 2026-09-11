@@ -22,7 +22,7 @@
 	import RotateCcw from 'lucide-svelte/icons/rotate-ccw';
 	import Check from 'lucide-svelte/icons/check';
 
-	// Bumped when the tile set changed (score/sales → mrr/churn/revenue), so a
+	// Bumped when the tile set changed (score/sales to mrr/churn/revenue), so a
 	// stale saved layout can't resurrect widget types that no longer exist.
 	const STORAGE_KEY = 'flexiboards-dashboard-responsive-layout-v2';
 

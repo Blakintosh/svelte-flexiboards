@@ -16,7 +16,7 @@ describe('dropping a widget created by an adder', () => {
 		// Regression: RenderedFlexiWidget read its controller through a $props()
 		// getter. FlexiAdd clears that state partway through the release, so the
 		// next core write re-ran the bridged read against undefined and threw,
-		// aborting the portal's cleanup and leaving the widget stuck on screen.
+		// which aborted the portal's cleanup and left the widget on screen.
 		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		component = mount(AdderBoard, { target: document.body });
@@ -33,15 +33,15 @@ describe('dropping a widget created by an adder', () => {
 		expect(portal).not.toBeNull();
 		expect(portal!.children.length).toBe(1);
 
-		// Release. The board's window handler dispatches widget:release, which is
-		// where FlexiAdd clears its pending widget mid-flight.
+		// Release. The board's window handler dispatches widget:release, where
+		// FlexiAdd clears its pending widget mid-flight.
 		window.dispatchEvent(new Event('pointerup'));
 		flushSync();
 
 		// Nothing may be left behind in the portal.
 		expect(portal!.children.length).toBe(0);
 
-		// And the release must not have thrown anywhere along the chain.
+		// And the release must not have thrown.
 		expect(errorSpy).not.toHaveBeenCalled();
 	});
 });

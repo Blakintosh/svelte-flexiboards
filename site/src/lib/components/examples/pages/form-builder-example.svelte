@@ -56,7 +56,7 @@
 	});
 
 	// Blue is selection (persistent, board furniture); fx-accent stays reserved
-	// for provisional things — the widget in hand and the drop preview.
+	// for provisional things, the widget in hand and the drop preview.
 	function fieldClass(widget: FlexiWidgetController) {
 		const meta = widget.metadata as FieldMeta | undefined;
 
@@ -147,8 +147,8 @@
 	}
 
 	/**
-	 * `FlexiAdd` builds its widget directly — it neither forwards `type` nor reads
-	 * the registry — so the entry is spread in by hand from the same table.
+	 * `FlexiAdd` builds its widget directly. It neither forwards `type` nor reads
+	 * the registry, so the entry is spread in by hand from the same table.
 	 */
 	function addWidget(spec: FieldKindSpec): AdderWidgetConfiguration {
 		const meta = spec.defaults();
@@ -183,7 +183,7 @@
 	let asideEl: HTMLElement | undefined = $state();
 
 	// Below lg the panes are stacked, so a selection off-screen would be silent.
-	// Scrolls this example's own `main` — never scrollIntoView(), which would
+	// Scrolls this example's own `main`, never scrollIntoView(), which would
 	// propagate out of the embed iframe.
 	function scrollInspectorIntoView() {
 		if (!mainEl || !asideEl || mainEl.scrollHeight <= mainEl.clientHeight) {

@@ -3,9 +3,9 @@ import { useEffect } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 
 /**
- * @internal Rendered by FlexiBoard. Initialises the shared portal used to
- * render grabbed widgets over the pointer; reference-counted in core, so
- * multiple boards share one portal element.
+ * @internal Rendered by FlexiBoard. Initialises the shared portal that renders
+ * grabbed widgets over the pointer. Core reference-counts it, so multiple
+ * boards share one portal element.
  */
 export function FlexiPortal() {
 	const board = useInternalFlexiBoard();

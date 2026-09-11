@@ -67,9 +67,9 @@ export abstract class FlexiGrid {
 	_target: InternalFlexiTargetController;
 	/**
 	 * The target's live configuration: sizing changes pushed through the
-	 * adapter's prop seam show up in the grid's style. (The layout itself is
-	 * fixed for the grid's lifetime — each grid class snapshots it at
-	 * construction.)
+	 * adapter's prop seam show up in the grid's style. The layout itself is
+	 * fixed for the grid's lifetime; each grid class snapshots it at
+	 * construction.
 	 */
 	get _targetConfig(): FlexiTargetConfiguration {
 		return this._target.config;
@@ -171,7 +171,7 @@ export abstract class FlexiGrid {
 	abstract clear(): void;
 
 	forceUpdatePointerPosition(clientX: number, clientY: number) {
-		// TODO: just a test, don't think this does anything.
+		// TODO: test only, probably does nothing.
 		untracked(() => {
 			this.#updatePointerPosition(clientX, clientY);
 		});

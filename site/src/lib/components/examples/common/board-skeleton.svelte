@@ -2,8 +2,8 @@
 	/**
 	 * Suspense fallback shared by the examples whose boards load client-side
 	 * (stored layouts) or serve a guessed breakpoint: soft rounded bars in the
-	 * rough shape of the board that's coming. Static by design — the site's
-	 * one permitted motion loop is the terminal caret.
+	 * rough shape of the board that's coming. Static by design, since the
+	 * site's one permitted motion loop is the terminal caret.
 	 */
 	type BoardSkeletonProps = {
 		/** Number of skeleton bars. */

@@ -4,7 +4,7 @@ import UserDropdown from './user-dropdown';
 
 /**
  * Twin of `examples/flexiboard/app-sidebar.svelte`, on the shared example
- * sidebar shell: no collapse, no mobile drawer — it hides below lg. The demo
+ * sidebar shell. No collapse, no mobile drawer, it hides below lg. The demo
  * is the board, not the nav.
  */
 export default function AppSidebar() {

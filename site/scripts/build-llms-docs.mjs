@@ -403,7 +403,7 @@ for (const slug of slugs) {
 	});
 }
 
-// llms.txt — curated, in the order the site's sidebar uses.
+// llms.txt: curated, in the order the site's sidebar uses.
 const generated = new Date().toISOString().slice(0, 10);
 const listed = new Set();
 const sections = [];

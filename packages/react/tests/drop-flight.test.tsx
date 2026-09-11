@@ -12,12 +12,12 @@ import {
 } from './helpers.js';
 
 /*
-  Regression (seen on the Notes example's blocks): a dropped widget's flight
-  was aimed at the placeholder's box as measured the instant the placeholder
-  mounted. The grid reflows right after — the drop preview leaves, siblings
-  settle — so the flight went to where the slot used to be, then snapped.
-  This drives a real keyboard drop through the adapter and checks the flight
-  targets the placeholder's *settled* box.
+  Regression, seen on the Notes example's blocks: a dropped widget's flight was
+  aimed at the placeholder's box as measured the instant the placeholder
+  mounted. The grid reflows right after, as the drop preview leaves and
+  siblings settle, so the flight went to where the slot used to be and then
+  snapped. This drives a keyboard drop through the adapter and checks the
+  flight targets the placeholder's settled box.
 */
 
 let mounted: Mounted | undefined;
@@ -88,9 +88,9 @@ describe('drop flight', () => {
 		);
 		layoutGrid();
 
-		// The placeholder reports a stale slot for as long as it is mounted
-		// synchronously with the drop (however many times the adapter reads it),
-		// and its real one only once the grid has settled before the next frame.
+		// The placeholder reports a stale slot while it is mounted synchronously
+		// with the drop, and its real one only once the grid has settled before
+		// the next frame.
 		let settled = false;
 		HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
 			if (isPlaceholder(this)) {

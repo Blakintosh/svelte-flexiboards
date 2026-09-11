@@ -3,8 +3,8 @@
 
 	/**
 	 * Static app-sidebar shell for the app-concept examples (dashboard, notes).
-	 * Replaces the shadcn sidebar: no collapse, no mobile drawer — the demo is
-	 * the board, not the nav — so it simply hides below lg.
+	 * Replaces the shadcn sidebar: no collapse, no mobile drawer. The demo is
+	 * the board, not the nav, so it hides below lg.
 	 */
 	type SidebarProps = {
 		header?: Snippet;

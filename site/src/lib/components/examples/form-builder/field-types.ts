@@ -2,12 +2,12 @@
  * The form builder's data model.
  *
  * Everything the example knows about a field lives in the widget's `metadata`.
- * The board only ever decides the *order* of those objects — this file is the
- * single source of truth for what they contain, shared by the palette, the
- * registry, the adder, the inspector and the schema listing.
+ * The board only decides the order of those objects. This file is the single
+ * source of truth for their contents, shared by the palette, registry, adder,
+ * inspector and schema listing.
  *
- * Deliberately free of markup and of any Flexiboards adapter import, so the
- * React port can use it unchanged.
+ * Free of markup and of any Flexiboards adapter import, so the React port can
+ * use it unchanged.
  */
 
 export type FieldKind = 'text' | 'email' | 'textarea' | 'select' | 'checkbox' | 'section';
@@ -35,8 +35,8 @@ export type FieldKindSpec = {
 };
 
 /**
- * The minimum a widget controller has to look like for this example to drive it.
- * Structurally satisfied by both `FlexiWidgetController` adapters.
+ * The minimum shape a widget controller needs for this example to drive it.
+ * Both `FlexiWidgetController` adapters satisfy it structurally.
  */
 export type FieldWidgetHandle = { metadata: Record<string, unknown> | undefined };
 
@@ -59,8 +59,8 @@ export type FieldLayoutEntry = {
 let uidCounter = 0;
 
 /**
- * `FlexiWidgetController` exposes no public id, so selection is keyed on a uid
- * the example mints itself and carries in metadata.
+ * `FlexiWidgetController` exposes no public id, so selection is keyed on a
+ * uid the example mints itself and stores in metadata.
  */
 export function nextUid(): string {
 	uidCounter += 1;
@@ -221,7 +221,7 @@ const SEED_FIELDS: FieldLayoutEntry[] = [
 	}
 ];
 
-/** A fresh copy of the seed layout — core adopts metadata objects by reference. */
+/** A fresh copy of the seed layout. Core adopts metadata objects by reference. */
 export function defaultFields(): FieldLayoutEntry[] {
 	return SEED_FIELDS.map((entry) => ({ ...entry, metadata: cloneMeta(entry.metadata) }));
 }

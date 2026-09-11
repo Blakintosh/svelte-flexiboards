@@ -51,7 +51,7 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 	const assistiveTextId = useId();
 	const publicAdder = useReactive(adder as FlexiAddController);
 
-	// useFromCore: the user's class function may read signal-backed adder state.
+	// useFromCore, because the class function may read signal-backed adder state.
 	const derivedClassName = useFromCore(
 		useCallback(() => {
 			if (typeof className === 'function') {
@@ -61,8 +61,7 @@ export function FlexiAdd({ children, className, addWidget, onfirstcreate }: Flex
 		}, [adder, className])
 	);
 
-	// The adapter owns the adder's lifecycle (destroy at unmount).
-	// The read must *call* the signal — tracking happens at read time.
+	// The read must call the signal, since tracking happens at read time.
 	const newWidget = useFromCore(useCallback(() => adder.newWidget$(), [adder]));
 
 	return (

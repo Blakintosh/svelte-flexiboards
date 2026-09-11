@@ -30,7 +30,7 @@ export default function FlexionKanbanList({
 	const target = useRef<FlexiTargetController | null>(null);
 	const addInput = useRef<HTMLInputElement | null>(null);
 
-	// Auto focus the add input when it's being added.
+	// Focus the add input when it opens.
 	useEffect(() => {
 		if (adding) {
 			addInput.current?.focus();

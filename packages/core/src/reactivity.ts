@@ -1,5 +1,5 @@
 /**
- * Reactivity façade for Flexiboards core.
+ * Reactivity facade for Flexiboards core.
  *
  * This is the ONLY module in core that may import from 'alien-signals'.
  * Everything else imports from here, so that the underlying signal library

@@ -27,8 +27,8 @@ export type PointerTriggerCondition =
 	| PointerLongPressTriggerCondition;
 
 /**
- * Watches pointer events on a widget, issuing a grab event to the widget if the event satisfies the configured behaviour.
- * (e.g. long press for touch)
+ * Watches pointer events on a widget and issues a grab event when they satisfy the
+ * configured trigger behaviour (e.g. long press for touch).
  */
 export class WidgetPointerEventWatcher {
 	#widget$: Signal<InternalFlexiWidgetController> = signal({} as InternalFlexiWidgetController);
@@ -93,12 +93,11 @@ export class WidgetPointerEventWatcher {
 		const startY = event.clientY;
 		const pointerId = event.pointerId;
 
-		const moveThreshold = 16; // 16px movement threshold
+		const moveThreshold = 16;
 		let isPointerDown = true;
 		let currentX = startX;
 		let currentY = startY;
 
-		// Track if pointer is still down and its position
 		const pointerUpHandler = (e: PointerEvent) => {
 			if (e.pointerId === pointerId) {
 				isPointerDown = false;
@@ -108,7 +107,6 @@ export class WidgetPointerEventWatcher {
 			}
 		};
 
-		// Track pointer movement
 		const pointerMoveHandler = (e: PointerEvent) => {
 			if (e.pointerId === pointerId) {
 				e.preventDefault();
@@ -145,7 +143,7 @@ export class WidgetPointerEventWatcher {
 			return;
 		}
 
-		// Layout rect, not gBCR — see getLayoutRect: user transforms on the widget
+		// Layout rect, not gBCR. See getLayoutRect: user transforms on the widget
 		// must not skew grab/resize offset math.
 		const rect = getLayoutRect(ref);
 		if (!rect) {

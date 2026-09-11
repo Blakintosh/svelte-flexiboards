@@ -4,9 +4,9 @@ import type { AnimationAdapter, AnimationBox } from '@flexiboards/core';
 type SvelteSpringOptions = NonNullable<ConstructorParameters<typeof Spring<AnimationBox>>[1]>;
 
 /**
- * Apple-style (SwiftUI `.spring(duration:bounce:)`) parameters.
- * - `duration`: perceptual settle time in seconds (≈ the period of the spring).
- * - `bounce`: 0 = critically damped, 1 = no damping. Defaults to 0.
+ * Apple-style parameters, as in SwiftUI's `.spring(duration:bounce:)`.
+ * - `duration`: perceptual settle time in seconds, about the spring's period.
+ * - `bounce`: 0 is critically damped, 1 is no damping. Defaults to 0.
  */
 export type AppleSpringOptions = { duration: number; bounce?: number };
 
@@ -15,15 +15,17 @@ export type SpringOptions = SvelteSpringOptions | AppleSpringOptions;
 const FRAME_MS = 1000 / 60;
 
 /**
- * Translates Apple-style parameters into Svelte's frame-normalised `stiffness`/`damping`.
+ * Translates Apple-style parameters into Svelte's frame-normalised `stiffness`
+ * and `damping`.
  *
- * Svelte's integrator is `a = -stiffness * x - damping * v` per 60fps frame, i.e. a unit-mass
- * oscillator with ω0 = √stiffness rad/frame and ζ = damping / (2√stiffness). Apple's
- * `duration` is the response period T = 2π/ω0 and `bounce` = 1 - ζ. Approximate, since
- * Svelte integrates discretely, but perceptually close for typical values.
+ * Svelte's integrator is `a = -stiffness * x - damping * v` per 60fps frame, a
+ * unit-mass oscillator with ω0 = √stiffness rad/frame and ζ = damping /
+ * (2√stiffness). Apple's `duration` is the response period T = 2π/ω0 and
+ * `bounce` = 1 - ζ. Svelte integrates discretely, so this is approximate but
+ * perceptually close for typical values.
  *
- * Svelte clamps `damping` to [0, 1], so very short, low-bounce springs (roughly
- * `duration < 0.21s` at `bounce: 0`) will be slightly under-damped compared to Apple's.
+ * Svelte clamps `damping` to [0, 1], so very short, low-bounce springs, roughly
+ * `duration < 0.21s` at `bounce: 0`, come out slightly under-damped.
  */
 export function appleSpring({ duration, bounce = 0 }: AppleSpringOptions): SvelteSpringOptions {
 	const omega = (2 * Math.PI) / ((duration * 1000) / FRAME_MS); // rad per frame
@@ -40,9 +42,9 @@ function toSvelteSpringOptions(options?: SpringOptions): SvelteSpringOptions | u
 type TweenOptions = ConstructorParameters<typeof Tween<AnimationBox>>[1];
 
 /**
- * Bridges a Svelte motion value (Spring or Tween) into a Flexiboards animation handle:
- * an effect root forwards `current` into core on every frame, and `set()`'s promise
- * signals settling.
+ * Bridges a Svelte Spring or Tween into a Flexiboards animation handle. An
+ * effect root forwards `current` into core on every frame, and `set()`'s
+ * promise signals settling.
  */
 function motionAdapter(
 	create: (from: AnimationBox) => Spring<AnimationBox> | Tween<AnimationBox>
@@ -64,13 +66,13 @@ function motionAdapter(
 					const mine = ++generation;
 					motion.set(to).then(
 						() => {
-							// Only the latest target's settle counts; an interrupted set() also resolves.
+							// Only the latest target's settle counts, since an interrupted set() also resolves.
 							if (!stopped && mine === generation) {
 								onSettle();
 							}
 						},
 						() => {
-							// Svelte rejects the previous set()'s promise with 'Aborted' on retarget; that's expected.
+							// Svelte rejects the previous set()'s promise with 'Aborted' on retarget, which is expected.
 						}
 					);
 				},

@@ -28,14 +28,14 @@ describe('findCell', () => {
 	describe('with content-based size (fix)', () => {
 		it('returns fractional cell when pointer is within scrolled content', () => {
 			// Grid element left=54, content is 1240px wide.
-			// Pointer at clientX=1278 is ~1224px into content — should be in column 5.
+			// Pointer at clientX=1278 is ~1224px into content, in column 5.
 			const result = findCell(1278, 54, totalSize, gap, columns);
 			expect(result).toBeGreaterThan(5);
 			expect(result).toBeLessThan(6);
 		});
 
 		it('returns fractional cell for middle columns when scrolled', () => {
-			// Pointer at clientX=500, grid left=54 → 446px into content → column 2
+			// Pointer at clientX=500, grid left=54: 446px into content, column 2.
 			const result = findCell(500, 54, totalSize, gap, columns);
 			expect(result).toBeGreaterThan(2);
 			expect(result).toBeLessThan(3);
@@ -59,9 +59,9 @@ describe('findCell', () => {
 			// Pointer at 1278px, grid left at 54. start + elementWidth = 54 + 598 = 652.
 			// 1278 >= 652, so it would clamp to 6 (the end).
 			const buggyResult = findCell(1278, 54, elementWidth, gap, columns);
-			expect(buggyResult).toBe(6); // Clamped — wrong!
+			expect(buggyResult).toBe(6); // Clamped, wrong.
 
-			// With content-based size, we get a fractional value.
+			// With content-based size, the result is fractional.
 			const fixedResult = findCell(1278, 54, totalSize, gap, columns);
 			expect(fixedResult).not.toBe(6);
 			expect(fixedResult).toBeGreaterThan(5);

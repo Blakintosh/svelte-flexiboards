@@ -35,15 +35,15 @@ export type FlexiSortableProps = FlexiCommonProps<FlexiBoardController> & {
 	boardClassName?: string;
 
 	/**
-	 * Board configuration merged over the preset's defaults (widgets fully
-	 * draggable). Anything a FlexiBoard accepts: callbacks, registry, layouts.
-	 * Keep it referentially stable.
+	 * Board configuration merged over the preset's defaults, which make widgets
+	 * fully draggable. Anything a FlexiBoard accepts: callbacks, registry,
+	 * layouts. Keep it referentially stable.
 	 */
 	config?: FlexiBoardConfiguration;
 
 	/**
-	 * Target configuration merged over the preset's. The layout is fixed by
-	 * `direction`; sizing and widget defaults are yours to set.
+	 * Target configuration merged over the preset's. `direction` fixes the
+	 * layout, and sizing and widget defaults are yours to set.
 	 */
 	targetConfig?: Omit<FlexiTargetPartialConfiguration, 'layout'>;
 
@@ -54,9 +54,8 @@ export type FlexiSortableProps = FlexiCommonProps<FlexiBoardController> & {
 };
 
 /**
- * A sortable list: one flow target on one board. The first board someone
- * writes is three lines; the moment they need a second list, the same props
- * move onto FlexiBoard and FlexiTarget.
+ * A sortable list: one flow target on one board. When a second list is needed,
+ * the same props move onto FlexiBoard and FlexiTarget.
  */
 export function FlexiSortable({
 	direction = 'vertical',

@@ -66,32 +66,32 @@
 		onfirstcreate
 	}: FlexiTargetProps = $props();
 
-	// Snapshotted so core never aliases the live `$state` proxy (see snapshotConfig).
+	// Snapshotted so core never aliases the live `$state` proxy, see snapshotConfig.
 	const { target } = flexitarget(snapshotConfig(config), key);
 
-	// Target created, allow the caller to access it (reactive consumer-facing handle).
+	// The reactive consumer-facing handle.
 	const publicTarget = reactive(target as FlexiTargetController);
 	controller = publicTarget;
 	onfirstcreate?.(publicTarget);
 
-	// Cleanup target subscriptions when component is destroyed
+	// Clean up the target's subscriptions when the component is destroyed.
 	onDestroy(() => {
 		target.destroy();
 	});
 
-	// Prop seam — see FlexiBoard. Inert unless `config` actually changed.
-	// snapshotConfig() reads every nested property, so in-place mutations of a
-	// `$state` config (e.g. `config.widgetDefaults.transition = …`) re-run this too.
+	// Prop seam, see FlexiBoard. Inert unless `config` changed. snapshotConfig()
+	// reads every nested property, so in-place mutations of a `$state` config
+	// re-run this too.
 	$effect(() => {
 		target.updateConfig(snapshotConfig(config));
 	});
 
 	// Bridge core-signal reads into Svelte's reactivity. These are plain
-	// functions called from the template rather than $derived values: on the
-	// server, $derived snapshots once during script init — before the widgets
-	// are created below — which would server-render an empty board. A call in
-	// the template reads at render position (after the loader has run), and on
-	// the client fromCore's createSubscriber still registers reactivity.
+	// functions called from the template rather than $derived values, because on
+	// the server $derived snapshots once during script init, before the widgets
+	// are created below, which would server-render an empty board. A call in the
+	// template reads at render position, after the loader has run, and on the
+	// client fromCore's createSubscriber still registers reactivity.
 	const prepared = fromCore(() => target.prepared);
 	const orderedWidgets = fromCore(() => target.orderedWidgets);
 	const dropzoneWidget = fromCore(() => target.dropzoneWidget);
@@ -102,22 +102,22 @@
 	{@render header?.({ target: publicTarget })}
 
 	{#if children}
-		<!-- Keep the initial widgets 'rendered' so that state inside children snippet doesn't get lost.
-		     The FlexiWidget components in here register their configs during their init; they render
-		     no markup of their own, so the div is inert and permanently hidden. -->
+		<!-- Keep the initial widgets rendered so state inside the children snippet
+		     is not lost. The FlexiWidget components here register their configs
+		     during init and render no markup, so the div stays hidden. -->
 		<div style="display: none;">
 			{@render children()}
 		</div>
 	{/if}
 	<!-- Creates the registered widgets during its own init, in this same render
-	     pass. Ordered deliberately: after the children snippet (registrations),
-	     before FlexiGrid — so on the server the grid renders with its final
-	     dimensions and the widgets block below renders the placed widgets. -->
+	     pass. The order matters: after the children snippet's registrations and
+	     before FlexiGrid, so on the server the grid renders with its final
+	     dimensions and the block below renders the placed widgets. -->
 	<FlexiTargetLoader />
 
 	<FlexiGrid class={className}>
 		{#if prepared()}
-			<!-- Render widgets in deterministic order for tabbing and consistent DOM ordering -->
+			<!-- Deterministic order, for tabbing and consistent DOM ordering. -->
 			{#each orderedWidgets() as widget (widget.id)}
 				<RenderedFlexiWidget {widget} />
 			{/each}

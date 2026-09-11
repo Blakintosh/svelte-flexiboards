@@ -8,7 +8,7 @@ import { FIELD_KIND, type FieldMeta } from './field-types';
 export type FormFieldWidgetProps = {
 	/** Passed in by the board registry's `componentProps`. */
 	onSelect: (widget: FlexiWidgetController) => void;
-	/** Reads the page's selection state — a getter, since `componentProps` is built once. */
+	/** Reads the page's selection state as a getter, since `componentProps` is built once. */
 	isSelected: (uid: string) => boolean;
 };
 

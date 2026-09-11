@@ -4,11 +4,10 @@ import type { FlexiTargetConfiguration } from '../target/types.js';
 import type { InternalFlexiTargetController } from '../target/controller.js';
 import { FlowFlexiGrid, type FlowTargetLayout } from './flow-grid.js';
 
-// TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
+// TODO: the test suite can't resolve the FlexiGrid class otherwise, so mock it directly.
 vi.mock('./base.js', () => ({
 	FlexiGrid: class FlexiGrid {
 		constructor() {}
-		// Mock any methods used in the test
 	}
 }));
 
@@ -453,13 +452,11 @@ describe('FlowFlexiGrid', () => {
 
 	describe('Drag and drop with snapshot restoration', () => {
 		it('should compact widgets when shadow moves from front to back', () => {
-			// This tests the scenario:
-			// 1. Initial: 1x1 at position 0, 2x1 at position 1-2
-			// 2. User grabs 2x1, places shadow in front of 1x1 (displacing it)
-			// 3. User then moves shadow behind 1x1
-			// Expected: 1x1 should return to position 0, shadow at position 1-2
+			// Scenario: 1x1 at 0, 2x1 at 1-2. User grabs the 2x1, drops its shadow in
+			// front of the 1x1 (displacing it), then moves the shadow behind it.
+			// Expected: 1x1 back at 0, shadow at 1-2.
 
-			// Use a 4-column grid for clarity
+			// 4-column grid for clarity.
 			const wideGrid = new FlowFlexiGrid(mockTarget, {
 				...targetConfig,
 				layout: {
@@ -469,59 +466,47 @@ describe('FlowFlexiGrid', () => {
 				}
 			});
 
-			// Initial state: 1x1 at position 0
 			const widget1x1 = createMockWidget(0, 0, 1, 1);
 			wideGrid.tryPlaceWidget(widget1x1, 0, 0, 1, 1);
 
-			// State: [1x1@0]
 			expect(widget1x1.x).toBe(0);
 			expect(widget1x1.y).toBe(0);
 
-			// Simulate grabbing a 2x1 widget (remove it, take snapshot)
-			// In this case, we'll just take the snapshot with 1x1 in place
+			// Snapshot with 1x1 in place, simulating the grab of a 2x1 widget.
 			const snapshot = wideGrid.takeSnapshot();
 
-			// Create a shadow widget (2-wide)
 			const shadow = createMockWidget(0, 0, 2, 1);
 
-			// Place shadow in front of 1x1 (at position 0)
+			// Place shadow in front of 1x1.
 			wideGrid.tryPlaceWidget(shadow, 0, 0, 2, 1);
 
-			// After placing shadow at 0, 1x1 should be displaced to position 2
 			expect(shadow.x).toBe(0);
 			expect(shadow.y).toBe(0);
-			expect(widget1x1.x).toBe(2); // Displaced to position 2
+			expect(widget1x1.x).toBe(2); // Displaced to position 2.
 			expect(widget1x1.y).toBe(0);
 
-			// Now simulate moving the shadow behind 1x1
-			// First, remove shadow and restore from snapshot
+			// Move the shadow behind 1x1 by removing it and restoring the snapshot.
 			wideGrid.removeWidget(shadow);
 			wideGrid.restoreFromSnapshot(snapshot);
 
-			// After restoration, 1x1 should be back at position 0
 			expect(widget1x1.x).toBe(0);
 			expect(widget1x1.y).toBe(0);
 
-			// Reset mock to track new placement
 			(shadow.setBounds as ReturnType<typeof vi.fn>).mockClear();
 
-			// Place shadow at position behind 1x1 (position 1)
+			// Place shadow behind 1x1.
 			wideGrid.tryPlaceWidget(shadow, 1, 0, 2, 1);
 
-			// Shadow should be at position 1-2, 1x1 stays at position 0
 			expect(shadow.x).toBe(1);
 			expect(shadow.y).toBe(0);
-			expect(widget1x1.x).toBe(0); // 1x1 should still be at position 0!
+			expect(widget1x1.x).toBe(0); // Still at position 0.
 			expect(widget1x1.y).toBe(0);
 		});
 
 		it('should not leave gaps when moving shadow from front to back in a crowded grid', () => {
-			// Use a 3-column grid
-			// Initial: a at 0, shadow at 1-2
-			// Move shadow to position 3 (behind a)
-			// Expected: a at 0, shadow at 1-2 (compacted)
+			// 3-column grid: a at 0, shadow moves from 1-2 to behind a (position 3).
+			// Expected: a stays at 0, shadow compacts back to 1-2.
 
-			// Create a fresh 3-column grid
 			const smallGrid = new FlowFlexiGrid(mockTarget, {
 				...targetConfig,
 				layout: {
@@ -531,83 +516,61 @@ describe('FlowFlexiGrid', () => {
 				}
 			});
 
-			// Place 1x1 widget
 			const a = createMockWidget(0, 0, 1, 1);
 			smallGrid.tryPlaceWidget(a, 0, 0, 1, 1);
 			expect(a.x).toBe(0);
 			expect(a.y).toBe(0);
 
-			// Take snapshot (this is what happens when we start dragging)
+			// Snapshot marks the start of the drag.
 			const snapshot = smallGrid.takeSnapshot();
 
-			// Place shadow at position 0 (in front of a)
+			// Shadow in front of a, displacing it.
 			const shadow = createMockWidget(0, 0, 2, 1);
 			smallGrid.tryPlaceWidget(shadow, 0, 0, 2, 1);
 
-			// a should be displaced
 			expect(shadow.x).toBe(0);
-			expect(a.x).toBe(2); // Displaced to position 2
+			expect(a.x).toBe(2);
 
-			// Now user moves shadow to position after a (say, position 3)
-			// Remove shadow and restore
+			// User moves the shadow behind a: remove and restore from snapshot.
 			smallGrid.removeWidget(shadow);
 			smallGrid.restoreFromSnapshot(snapshot);
 
-			// a should be back at 0
 			expect(a.x).toBe(0);
 			expect(a.y).toBe(0);
 
-			// Place shadow at position 3 (user hovering there thinking it's behind a@2)
-			// The flow grid should compact it to position 1 (right after a)
+			// Hover at position 3 (thinking it's behind a@2); should compact to position 1.
 			(shadow.setBounds as ReturnType<typeof vi.fn>).mockClear();
-			smallGrid.tryPlaceWidget(shadow, 0, 1, 2, 1); // (0, 1) = position 3 in 3-col grid
+			smallGrid.tryPlaceWidget(shadow, 0, 1, 2, 1); // (0, 1) = position 3 in a 3-col grid.
 
-			// Shadow should be compacted to position 1 (adjacent to a)
 			expect(shadow.x).toBe(1);
 			expect(shadow.y).toBe(0);
 
-			// a should still be at position 0
 			expect(a.x).toBe(0);
 			expect(a.y).toBe(0);
 		});
 
 		it('should fill gaps when removing a widget that left a gap before it', () => {
-			// This is the exact repro from the user:
-			// Grid with 3 columns:
-			// - 2x1 widget A at positions 0-1 (row 0)
-			// - 2x1 widget B can't fit at position 2, so goes to position 3-4 (row 1)
-			// - 1x1 widget C at position 5 (row 1)
-			//
-			// State:
-			// AA-   (row 0: A at 0-1, gap at 2)
-			// BBC   (row 1: B at 0-1, C at 2)
-			//
-			// When B is removed, C should move to position 2 (the gap after A),
-			// NOT to position 3 (where B was).
+			// 3-column grid: A(2-wide) at 0-1, B(2-wide) can't fit at 2 so wraps to
+			// row 1 (0-1), C(1-wide) at row 1 position 2.
+			// State: AA- / BBC
+			// Removing B should move C into the gap after A (position 2), not to
+			// B's old slot (position 3).
 
-			// Place widgets
 			const a = mockWidgetPlacement({ width: 2, height: 1 });
 			const b = mockWidgetPlacement({ width: 2, height: 1 });
 			const c = mockWidgetPlacement({ width: 1, height: 1 });
 
-			// Verify initial state
-			// A at (0, 0) = position 0-1
 			expect(a.x).toBe(0);
 			expect(a.y).toBe(0);
 
-			// B can't fit at position 2, wraps to position 3 = (0, 1)
 			expect(b.x).toBe(0);
 			expect(b.y).toBe(1);
 
-			// C at position 5 = (2, 1)
 			expect(c.x).toBe(2);
 			expect(c.y).toBe(1);
 
-			// Now remove B
 			grid.removeWidget(b);
 
-			// C should move to position 2 = (2, 0) to fill the gap after A
-			// NOT to position 3 = (0, 1) where B was
 			expect(c.x).toBe(2);
 			expect(c.y).toBe(0);
 		});
@@ -615,10 +578,8 @@ describe('FlowFlexiGrid', () => {
 
 	describe('Widget resizing', () => {
 		it('should apply the new width when resizing a widget in row flow', () => {
-			// Create a widget with width 1
 			const widget = createMockWidget(0, 0, 1, 1, true, 1, 3); // minWidth=1, maxWidth=3
 
-			// Place it initially
 			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 			expect(result).toBe(true);
 
@@ -629,13 +590,10 @@ describe('FlowFlexiGrid', () => {
 
 			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 1 });
 
-			// Now remove and re-add with a larger width (simulating resize)
+			// Simulate a resize: remove and re-add with a larger width.
 			grid.removeWidget(widget);
-
-			// Reset the mock to track the new call
 			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
 
-			// Re-place with width 2
 			const resizeResult = grid.tryPlaceWidget(widget, 0, 0, 2, 1);
 			expect(resizeResult).toBe(true);
 
@@ -644,7 +602,6 @@ describe('FlowFlexiGrid', () => {
 			// ---
 			// ---
 
-			// The widget should now have width 2
 			expectPlacement(widget, { x: 0, y: 0, width: 2, height: 1 });
 		});
 
@@ -657,10 +614,8 @@ describe('FlowFlexiGrid', () => {
 				}
 			});
 
-			// Create a widget with height 1
 			const widget = createMockWidget(0, 0, 1, 1, true, 1, 3, 1, 3); // minHeight=1, maxHeight=3
 
-			// Place it initially
 			const result = columnGrid.tryPlaceWidget(widget, 0, 0, 1, 1);
 			expect(result).toBe(true);
 
@@ -671,13 +626,10 @@ describe('FlowFlexiGrid', () => {
 
 			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 1 });
 
-			// Now remove and re-add with a larger height (simulating resize)
+			// Simulate a resize: remove and re-add with a larger height.
 			columnGrid.removeWidget(widget);
-
-			// Reset the mock to track the new call
 			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
 
-			// Re-place with height 2
 			const resizeResult = columnGrid.tryPlaceWidget(widget, 0, 0, 1, 2);
 			expect(resizeResult).toBe(true);
 
@@ -686,7 +638,6 @@ describe('FlowFlexiGrid', () => {
 			// a
 			// -
 
-			// The widget should now have height 2
 			expectPlacement(widget, { x: 0, y: 0, width: 1, height: 2 });
 		});
 
@@ -699,14 +650,12 @@ describe('FlowFlexiGrid', () => {
 			// ---
 			// ---
 
-			// Remove widget a
 			grid.removeWidget(a);
 
-			// Reset mocks
 			(a.setBounds as ReturnType<typeof vi.fn>).mockClear();
 			(b.setBounds as ReturnType<typeof vi.fn>).mockClear();
 
-			// Re-place widget a with width 2 (this should push b)
+			// Re-place a with width 2, which should push b along.
 			const resizeResult = grid.tryPlaceWidget(a, 0, 0, 2, 1);
 			expect(resizeResult).toBe(true);
 
@@ -720,20 +669,16 @@ describe('FlowFlexiGrid', () => {
 		});
 
 		it('should respect maxWidth constraint when resizing', () => {
-			// Create a widget with maxWidth of 2
 			const widget = createMockWidget(0, 0, 1, 1, true, 1, 2); // maxWidth=2
 
-			// Place it initially
 			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 
-			// Remove and try to resize beyond maxWidth
 			grid.removeWidget(widget);
 			(widget.setBounds as ReturnType<typeof vi.fn>).mockClear();
 
-			// Try to place with width 3 (should be constrained to 2)
+			// Width 3 should be constrained to maxWidth of 2.
 			grid.tryPlaceWidget(widget, 0, 0, 3, 1);
 
-			// Should be constrained to maxWidth of 2
 			expectPlacement(widget, { x: 0, y: 0, width: 2, height: 1 });
 		});
 	});

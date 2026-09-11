@@ -9,24 +9,24 @@
 		 */
 		config?: ResponsiveFlexiBoardConfiguration;
 		/**
-		 * Snippet for large breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the large breakpoint.
 		 */
 		lg?: Snippet;
 		/**
-		 * Snippet for medium breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the medium breakpoint.
 		 */
 		md?: Snippet;
 		/**
-		 * Snippet for small breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the small breakpoint.
 		 */
 		sm?: Snippet;
 		/**
-		 * Snippet for extra-small breakpoint (no params - breakpoint is implicit).
+		 * Content rendered at the extra-small breakpoint.
 		 */
 		xs?: Snippet;
 		/**
-		 * Children snippet used as fallback when no specific breakpoint snippet matches.
-		 * Receives `{ currentBreakpoint: string }` as a parameter.
+		 * Fallback content used when no breakpoint-specific snippet matches.
+		 * Receives `{ currentBreakpoint: string }`.
 		 */
 		children?: Snippet<[BreakpointSnippetParams]>;
 	};
@@ -56,17 +56,17 @@
 	const publicBoard = reactive(board as ResponsiveFlexiBoardController);
 	controller = publicBoard;
 
-	// Prop seam — see FlexiBoard. Inert unless `config` actually changed.
+	// Prop seam, see FlexiBoard. Inert unless `config` changed.
 	$effect(() => {
 		board.updateProps({ config });
 	});
 
-	// Load layouts immediately so child FlexiBoards can access them
+	// Load layouts immediately so child FlexiBoards can read them.
 	board.oninitialloadcomplete();
 
 	onfirstcreate?.(publicBoard);
 
-	// Map breakpoint names to snippets (without params)
+	// Breakpoint name to snippet.
 	const snippets: Record<string, Snippet | undefined> = $derived({
 		lg,
 		md,
@@ -74,20 +74,18 @@
 		xs
 	});
 
-	// The adapter owns the board's lifecycle (destroy at unmount).
+	// The adapter owns the board's lifecycle, destroying it at unmount.
 	const currentBreakpoint = $derived.by(fromCore(() => board.currentBreakpoint));
 </script>
 
 <!--
-	Key on currentBreakpoint to force re-render when breakpoint changes.
-	This ensures the board is re-created with the correct breakpoint context.
+	Keyed on currentBreakpoint so the board is re-created with the right
+	breakpoint context when the breakpoint changes.
 -->
 {#key currentBreakpoint}
 	{#if snippets[currentBreakpoint]}
-		<!-- Specific breakpoint snippet (no params) -->
 		{@render snippets[currentBreakpoint]!()}
 	{:else if children}
-		<!-- Children snippet receives { currentBreakpoint } -->
 		{@render children({ currentBreakpoint })}
 	{/if}
 {/key}

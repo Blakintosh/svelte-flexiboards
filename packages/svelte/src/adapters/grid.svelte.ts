@@ -7,15 +7,14 @@ const contextKey = Symbol('flexigrid');
 export function flexigrid() {
 	const target = getInternalFlexitargetCtx();
 
-	// The grid controller may already exist: initial widget creation runs
-	// before this component and ensures it. Reuse it — replacing it here would
-	// throw away the widgets already placed in it.
+	// The grid controller may already exist, since initial widget creation runs
+	// before this component and ensures it. Reuse it, or the widgets already
+	// placed in it are lost.
 	const grid = target.ensureGrid();
 	setContext(contextKey, grid);
 
-	// Tell the grid's dimension tracker to watch the grid element.
-	// watchGridElementDimensions returns its cleanup — return it as the
-	// effect's teardown so the watcher is unsubscribed on destroy.
+	// watchGridElementDimensions returns its own cleanup, so hand it to the
+	// effect as its teardown and the watcher unsubscribes on destroy.
 	$effect(() => grid.watchGridElementDimensions());
 
 	return {

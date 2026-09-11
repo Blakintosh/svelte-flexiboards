@@ -43,7 +43,6 @@ export class FlexiEventBus {
 	} = {};
 
 	dispatch<K extends keyof EventMap>(eventName: K, data: EventMap[K]): void {
-		// Notify event listeners that the event happened.
 		// console.log('[event-bus] dispatching event', eventName, data);
 		const eventListeners = this.listeners[eventName];
 
@@ -51,17 +50,15 @@ export class FlexiEventBus {
 			return;
 		}
 
-		// Iterated over a copy, because handlers may subscribe or unsubscribe
-		// while the event is being dispatched.
+		// Copy the array: handlers may subscribe or unsubscribe mid-dispatch.
 		for (const listener of [...eventListeners]) {
 			try {
 				listener(data);
 			} catch (error) {
-				// Subscribers are independent, and the release/cancel events are
-				// what drive cleanup — returning portalled widgets to the DOM,
-				// unlocking the viewport, clearing action state. Letting one
-				// failure abort the rest leaves the board visibly stuck, so
-				// failures are contained and surfaced rather than propagated.
+				// Subscribers are independent. Release/cancel events drive cleanup
+				// (returning portalled widgets, unlocking the viewport, clearing
+				// action state), so one failure must not abort the rest and strand
+				// the board. Contain and log instead of propagating.
 				console.error(`[flexiboards] a "${eventName}" subscriber threw:`, error);
 			}
 		}
@@ -71,11 +68,11 @@ export class FlexiEventBus {
 		eventName: K,
 		listener: EventListener<EventMap[K]>
 	): () => void {
-		// The bus is a module-level singleton, but SSR never runs unmount hooks —
-		// a subscription made while server-rendering would pin its whole
-		// controller tree in memory for the life of the server process. Events
-		// only ever fire from user interaction, so on the server the
-		// subscription would also never be called: drop it.
+		// The bus is a module-level singleton, but SSR never runs unmount hooks.
+		// A subscription made while server-rendering would pin its whole
+		// controller tree in memory for the server process's lifetime, and
+		// events only fire from user interaction so it would never be called
+		// anyway. Drop it.
 		if (isSsrEnvironment()) {
 			return () => {};
 		}
@@ -104,9 +101,9 @@ export class FlexiEventBus {
 let flexiEventBusInstance: FlexiEventBus | undefined = undefined;
 
 /**
- * Module-level singleton event bus. All events carry their board reference and
- * handlers filter on it, so a shared bus preserves multi-board isolation.
- * TODO(injection): consider constructor-injecting a per-board-tree bus instead,
+ * Module-level singleton event bus. Events carry their board reference and
+ * handlers filter on it, so a shared bus still keeps multi-board isolation.
+ * TODO(injection): consider a per-board-tree bus injected via constructor,
  * decided alongside the adapter plumbing.
  */
 export function getFlexiEventBus() {

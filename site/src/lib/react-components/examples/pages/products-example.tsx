@@ -140,8 +140,8 @@ const responsiveConfig = {
 	ssrBreakpoint: 'lg'
 };
 
-// The drop preview is dashed fx-accent; the widget in hand lifts instead —
-// shadow-lift and a slight tilt, no border.
+// The drop preview is dashed fx-accent; the widget in hand lifts instead,
+// with a shadow-lift and slight tilt, no border.
 const className = (widget: FlexiWidgetController) =>
 	clsx([
 		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -172,7 +172,7 @@ const phoneTargetConfig = targetConfig('minmax(0, 280px)', 4, 1);
 
 export default function ProductsExample() {
 	const [searchQuery, setSearchQuery] = useState('');
-	// '' is "All categories" — a native <select> option can't carry null.
+	// '' is "All categories": a native <select> option can't carry null.
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [sortBy, setSortBy] = useState<SortKey>('name');
 
@@ -213,7 +213,7 @@ export default function ProductsExample() {
 
 	return (
 		<main className="bg-paper relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8">
-			{/* Header: title, count and the two board affordances in one mono line. */}
+			{/* Header: title, count, and the two board affordances in one mono line. */}
 			<header className="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5">
 				<div className="flex min-w-0 items-baseline gap-3">
 					<h1 className="text-ink font-serif text-xl leading-tight sm:text-2xl lg:text-[28px]">
@@ -229,7 +229,7 @@ export default function ProductsExample() {
 				</Button>
 			</header>
 
-			{/* Toolbar: one row — search, category, sort, and the status key it explains. */}
+			{/* Toolbar: one row, search, category, sort, and the status key it explains. */}
 			<div className="flex shrink-0 flex-wrap items-center gap-2">
 				<div className="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
 					<Search className="text-faint absolute left-3 top-1/2 size-4 -translate-y-1/2" />

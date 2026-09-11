@@ -4,8 +4,8 @@ import { parseStyleString, useFromCore } from '../adapter.js';
 
 /**
  * @internal Rendered by RenderedFlexiWidget while a transition is in flight.
- * Temporarily occupies the widget's destination space so the widget can be
- * absolutely positioned and interpolate to its final destination.
+ * Occupies the widget's destination space so the widget can be absolutely
+ * positioned and interpolate there.
  */
 export function WidgetTransitionPlaceholder() {
 	const interpolator = useFlexiWidgetInterpolator();
@@ -14,12 +14,12 @@ export function WidgetTransitionPlaceholder() {
 
 	useEffect(() => {
 		if (!ref.current) return;
-		// Returns the unmount handler: the interpolator must forget this element
+		// Returns the unmount handler. The interpolator must forget this element
 		// once it leaves the grid, or the next flight targets a detached node.
 		return interpolator.onPlaceholderMount(ref.current);
 	}, [interpolator]);
 
-	// The read must *call* the signal — tracking happens at read time.
+	// The read must call the signal, since tracking happens at read time.
 	const placeholderStyle = useFromCore(
 		useCallback(() => interpolator.placeholderStyle$(), [interpolator])
 	);

@@ -7,11 +7,10 @@ import type { InternalFlexiTargetController } from '../target/controller.js';
 import type { InternalFlexiWidgetController } from '../widget/controller.js';
 import type { WidgetDraggability } from '../types.js';
 
-// TODO - for some reason the test suite can't figure out that the FlexiGrid class is available, so this is a hack to fix it
+// TODO: the test suite can't resolve the FlexiGrid class otherwise, so mock it directly.
 vi.mock('./base.js', () => ({
 	FlexiGrid: class FlexiGrid {
 		constructor() {}
-		// Mock any methods used in the test
 	}
 }));
 
@@ -153,12 +152,11 @@ describe('FreeFormFlexiGrid', () => {
 				// --aa
 
 				expect(result).toBe(true);
-				// To resolve collision - should have been pushed 1 unit to the right
+				// Pushed 1 unit right to resolve the collision.
 				expect(widget1.setBounds).toHaveBeenCalledWith(2, 1, widget1.width, widget1.height);
 			});
 
 			it('should fail when colliding with a non-draggable widget', () => {
-				// Create a non-draggable widget at (1,1)
 				const widget1 = createMockWidget({
 					x: 0,
 					y: 0,
@@ -173,7 +171,6 @@ describe('FreeFormFlexiGrid', () => {
 				// -AA
 				// -AA
 
-				// Try to place another widget at the same position
 				const widget2 = createMockWidget();
 				const result = grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
 
@@ -186,7 +183,6 @@ describe('FreeFormFlexiGrid', () => {
 			});
 
 			it('should handle moving widgets by different amounts', () => {
-				// Create a grid with widgets that form a specific pattern
 				const widget1 = createMockWidget();
 				const widget2 = createMockWidget();
 				const widget3 = createMockWidget();
@@ -228,10 +224,9 @@ describe('FreeFormFlexiGrid', () => {
 			});
 
 			it('should not expand beyond MAX_COLUMNS', () => {
-				// Create a widget that would exceed MAX_COLUMNS (32)
 				const widget = createMockWidget();
 
-				// Using a very wide widget to attempt to exceed MAX_COLUMNS
+				// 33-wide exceeds MAX_COLUMNS (32).
 				const result = grid.tryPlaceWidget(widget, 1, 1, 33, 1);
 
 				expect(result).toBe(false);
@@ -257,7 +252,6 @@ describe('FreeFormFlexiGrid', () => {
 				// ---
 				// ---
 
-				// Now we should be able to place another widget in the same location
 				const widget2 = createMockWidget();
 				const placeResult = grid.tryPlaceWidget(widget2, 1, 1, 2, 2);
 
@@ -272,7 +266,6 @@ describe('FreeFormFlexiGrid', () => {
 
 		describe('Snapshot and restoration', () => {
 			it('should take a snapshot and restore from it', () => {
-				// Place a few widgets
 				const widget1 = createMockWidget();
 				const widget2 = createMockWidget();
 
@@ -287,13 +280,10 @@ describe('FreeFormFlexiGrid', () => {
 				// aa-
 				// --b
 
-				// Take a snapshot
 				const snapshot = grid.takeSnapshot();
 
-				// Clear the grid
 				grid.clear();
 
-				// Place a new widget.
 				const widget3 = createMockWidget();
 				grid.tryPlaceWidget(widget3, 1, 1, 1, 1);
 
@@ -302,7 +292,6 @@ describe('FreeFormFlexiGrid', () => {
 				// -c-
 				// ---
 
-				// Restore from snapshot
 				grid.restoreFromSnapshot(snapshot);
 
 				// Expected state:
@@ -310,7 +299,6 @@ describe('FreeFormFlexiGrid', () => {
 				// aa-
 				// --b
 
-				// Verify widgets were restored with correct position
 				expect(widget1.setBounds).toHaveBeenCalledWith(x1, y1, w1, h1);
 				expect(widget2.setBounds).toHaveBeenCalledWith(x2, y2, w2, h2);
 			});
@@ -349,11 +337,10 @@ describe('FreeFormFlexiGrid', () => {
 
 		describe('Collision handling in constrained space', () => {
 			it('should resolve collisions by moving widgets in Y direction when X fails', () => {
-				// First place a widget at (0,1) with width 2, height 2
 				const widget1 = createMockWidget();
 				grid.tryPlaceWidget(widget1, 0, 0, 2, 2);
 
-				// Place another widget at (2,1) to block X-movement for widget1
+				// Blocks X-movement for widget1.
 				const widget2 = createMockWidget();
 				grid.tryPlaceWidget(widget2, 2, 0, 1, 1);
 
@@ -362,7 +349,7 @@ describe('FreeFormFlexiGrid', () => {
 				// aa-
 				// ---
 
-				// Now try to place a widget at (0,1) which should force widget1 down
+				// Forces widget1 down since it can't shift right.
 				const widget3 = createMockWidget();
 				const result = grid.tryPlaceWidget(widget3, 0, 0, 2, 1);
 
@@ -452,7 +439,7 @@ describe('FreeFormFlexiGrid', () => {
 				const widget4 = createMockWidget();
 				const widget5 = createMockWidget();
 
-				// Place these along the first row to fill it
+				// Fill the first row.
 				grid.tryPlaceWidget(widget1, 0, 1, 1, 1);
 				grid.tryPlaceWidget(widget2, 1, 1, 1, 1);
 				grid.tryPlaceWidget(widget3, 2, 1, 1, 1);
@@ -462,7 +449,7 @@ describe('FreeFormFlexiGrid', () => {
 				// ---
 				// ---
 
-				// Now taking widget2's place should move widget2 down
+				// Taking widget2's place should move widget2 down.
 				grid.tryPlaceWidget(widget4, 1, 1, 1, 1);
 
 				// Expected state:
@@ -470,7 +457,7 @@ describe('FreeFormFlexiGrid', () => {
 				// -b-
 				// ---
 
-				// Finally, placing widget5 where widget3 is should move widget3 down
+				// Placing widget5 where widget3 is should move widget3 down.
 				grid.tryPlaceWidget(widget5, 2, 1, 1, 1);
 
 				// Expected state:
@@ -478,9 +465,8 @@ describe('FreeFormFlexiGrid', () => {
 				// -bc
 				// ---
 
-				// Check that widget2 was moved down
 				expect(widget2.setBounds).toHaveBeenCalledWith(1, 2, 1, 1);
-				// and that widget3 was moved down (one bug we found was the grid "forgot" widget3 was here, so didn't register a collision)
+				// widget3 also moves down; a past bug had the grid "forget" it was there and miss the collision.
 				expect(widget3.setBounds).toHaveBeenCalledWith(2, 2, 1, 1);
 			});
 		});
@@ -576,7 +562,7 @@ describe('FreeFormFlexiGrid', () => {
 		});
 
 		it('should maintain state during an unsuccessful placement', () => {
-			// a is not draggable
+			// a is not draggable.
 			const a = createMockWidget({ draggability: 'none' });
 			const b = createMockWidget();
 			const c = createMockWidget();
@@ -594,7 +580,7 @@ describe('FreeFormFlexiGrid', () => {
 			grid.tryPlaceWidget(d, 0, 1, 3, 1);
 			grid.tryPlaceWidget(e, 0, 2, 1, 1);
 
-			// Now try to move e to (0, 0)
+			// Try to move e to (0, 0).
 			const result = grid.tryPlaceWidget(e, 0, 0, 1, 1);
 
 			// Expected state:
@@ -618,7 +604,7 @@ describe('FreeFormFlexiGrid', () => {
 					type: 'free',
 					minColumns: 2,
 					minRows: 2,
-					maxRows: 2, // Fixed at 2 rows
+					maxRows: 2, // Fixed at 2 rows.
 					collapsibility: 'any'
 				},
 				rowSizing: 'auto',
@@ -696,7 +682,7 @@ describe('FreeFormFlexiGrid', () => {
 		it('should respect a widget max width', () => {
 			const widget = createMockWidget({ maxWidth: 2 });
 
-			// Try to place widget with width 3, should be constrained to maxWidth of 2
+			// Width 3 should be constrained to maxWidth of 2.
 			grid.tryPlaceWidget(widget, 0, 0, 3, 1);
 
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
@@ -705,7 +691,7 @@ describe('FreeFormFlexiGrid', () => {
 		it('should respect a widget min width', () => {
 			const widget = createMockWidget({ minWidth: 2 });
 
-			// Try to place widget with width 1, should be expanded to minWidth of 2
+			// Width 1 should be expanded to minWidth of 2.
 			const result = grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 
 			expect(result).toBe(true);
@@ -715,7 +701,7 @@ describe('FreeFormFlexiGrid', () => {
 		it('should respect a widget max height', () => {
 			const widget = createMockWidget({ maxHeight: 2 });
 
-			// Try to place widget with height 3, should be constrained to maxHeight of 2
+			// Height 3 should be constrained to maxHeight of 2.
 			grid.tryPlaceWidget(widget, 0, 0, 1, 3);
 
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
@@ -733,7 +719,7 @@ describe('FreeFormFlexiGrid', () => {
 		it('should respect both min and max width constraints', () => {
 			const widget = createMockWidget({ minWidth: 2, maxWidth: 2 });
 
-			// Try to place with width 1 (should be 2) and then with width 3 (should be 2)
+			// Width 1 and width 3 should both land on 2.
 			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 2, 1);
 
@@ -744,7 +730,7 @@ describe('FreeFormFlexiGrid', () => {
 		it('should respect both min and max height constraints', () => {
 			const widget = createMockWidget({ minHeight: 2, maxHeight: 2 });
 
-			// Try to place with height 1 (should be 2) and then with height 3 (should be 2)
+			// Height 1 and height 3 should both land on 2.
 			grid.tryPlaceWidget(widget, 0, 0, 1, 1);
 			expect(widget.setBounds).toHaveBeenCalledWith(0, 0, 1, 2);
 
@@ -754,7 +740,7 @@ describe('FreeFormFlexiGrid', () => {
 	});
 
 	describe('Packing', () => {
-		// Helper function to create grids with different packing strategies
+		// Creates grids with different packing strategies.
 		const createPackingGrid = (
 			packing: 'none' | 'horizontal' | 'vertical',
 			options: {

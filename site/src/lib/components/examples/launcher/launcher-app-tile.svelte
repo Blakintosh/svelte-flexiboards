@@ -2,7 +2,7 @@
 	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
 	import { APPS } from './apps.js';
 
-	// The widget's identity travels in its metadata, so it survives export / import.
+	// Widget identity travels in its metadata, so it survives export / import.
 	const widget = getFlexiwidgetCtx();
 	const key = $derived((widget.metadata?.app as string | undefined) ?? 'mail');
 	const app = $derived(APPS[key] ?? APPS.mail);

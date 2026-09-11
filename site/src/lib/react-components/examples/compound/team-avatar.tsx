@@ -12,7 +12,7 @@ export type TeamAvatarProps = {
 };
 
 export default function TeamAvatar({ member }: TeamAvatarProps) {
-	// The widget's own position in the flow target is the roster order — read live,
+	// The widget's own position in the flow target is the roster order, read live,
 	// so it renumbers the moment a drop lands.
 	const widget = useFlexiWidget();
 	const position = widget.x + 1;

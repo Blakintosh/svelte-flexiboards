@@ -15,7 +15,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiTargetController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "header",
@@ -57,7 +57,7 @@
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiTargetController) => void) | undefined",
-			"description": "A callback that fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created."
 		},
 		{
 			"name": "header",
@@ -157,12 +157,12 @@
 			{
 				"name": "rowSizing",
 				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-rows` CSS property for the target."
+				"description": "The value inside the target's `grid-template-rows` `repeat()` function."
 			},
 			{
 				"name": "columnSizing",
 				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "Allows the specifying of the value inside the `repeat()` function of the `grid-template-columns` CSS property for the target."
+				"description": "The value inside the target's `grid-template-columns` `repeat()` function."
 			},
 			{
 				"name": "layout",

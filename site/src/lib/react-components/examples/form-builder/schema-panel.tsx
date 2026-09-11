@@ -68,7 +68,7 @@ function copyFallback(text: string): boolean {
 
 /**
  * The payoff panel sits on the dark field ground: it is a terminal, so it
- * should read as one — a rounded card like every other, just inverted.
+ * should read as one, a rounded card like every other, just inverted.
  */
 export default function SchemaPanel({ fields, selectedUid }: SchemaPanelProps) {
 	const schema = useMemo(() => fields.map((field) => toSchemaEntry(field.meta)), [fields]);

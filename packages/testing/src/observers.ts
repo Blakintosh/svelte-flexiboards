@@ -1,7 +1,7 @@
 /**
  * A DOM without layout never fires ResizeObserver callbacks, so core never
  * learns the grid's size and every pointer position resolves to nothing. This
- * stand-in records observers so a test can fire them after stubbing geometry.
+ * stand-in records observers so a test can fire them once geometry is stubbed.
  */
 export class MockResizeObserver {
 	static instances = new Set<MockResizeObserver>();

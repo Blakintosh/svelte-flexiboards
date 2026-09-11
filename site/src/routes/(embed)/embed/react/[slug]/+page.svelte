@@ -3,16 +3,15 @@
 
 	let host: HTMLDivElement;
 
-	// An effect keyed on the slug, not onMount: SvelteKit reuses this page
-	// component when only the slug changes, so a client-side navigation
-	// between two React examples must swap the React root too.
+	// Keyed on the slug, not onMount: SvelteKit reuses this page component when
+	// only the slug changes, so navigating between two React examples must also
+	// swap the React root.
 	$effect(() => {
 		const slug = data.slug;
 		let root: import('react-dom/client').Root | undefined;
 		let cancelled = false;
 
-		// Dynamic imports keep react/react-dom in a lazy chunk only React
-		// embeds download.
+		// Dynamic imports keep react/react-dom in a lazy chunk only React embeds download.
 		Promise.all([
 			import('react'),
 			import('react-dom/client'),
@@ -21,8 +20,8 @@
 			if (cancelled) return;
 
 			root = createRoot(host);
-			// createElement, not Example(): the component must be invoked by
-			// React's renderer, or its hooks run outside a render context.
+			// createElement, not Example(): React's renderer must invoke the component,
+			// or its hooks run outside a render context.
 			root.render(createElement(StrictMode, null, createElement(Example)));
 		});
 
@@ -38,7 +37,7 @@
 </svelte:head>
 
 <div class="flex h-full w-full items-stretch">
-	<!-- contents: the React root's host must not participate in layout, so the
-	     example's root element is a direct flex item, matching the Svelte embed. -->
+	<!-- contents: the React root's host must not affect layout, so the example's
+	     root element is a direct flex item, matching the Svelte embed. -->
 	<div bind:this={host} class="contents"></div>
 </div>

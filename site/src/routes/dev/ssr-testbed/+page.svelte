@@ -1,8 +1,8 @@
 <script lang="ts">
 	/*
 	  SSR testbed. Renders two boards (flow + free, the free one with a declared
-	  collision so placement resolution runs during SSR) and then diagnoses the
-	  server/client agreement three ways:
+	  collision so placement resolution runs during SSR), then checks server/client
+	  agreement three ways:
 
 	  1. Captures console warnings/errors during hydration (Svelte logs any
 	     hydration mismatch there in dev).
@@ -21,12 +21,12 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 
-	// The "server-stored" layout picked by +page.server.ts — same data on the
+	// The "server-stored" layout picked by +page.server.ts: same data on the
 	// server render and the hydration pass, as it would be from a database.
 	let { data } = $props();
 
-	// --- 1. Hydration warning capture. This module initialises before the
-	// boards below hydrate, so wrapping console here catches their warnings.
+	// 1. Hydration warning capture. This module initializes before the boards
+	// below hydrate, so wrapping console here catches their warnings.
 	let hydrationLogs: string[] = $state([]);
 	if (browser) {
 		for (const level of ['warn', 'error'] as const) {
@@ -192,7 +192,7 @@
 					<FlexiWidget class={tileClass('e')} x={0} y={0} width={2} height={1}>
 						{#snippet children()}E at 0,0{/snippet}
 					</FlexiWidget>
-					<!-- Deliberate collision: also declared at 0,0 — placement must push it. -->
+					<!-- Deliberate collision: also declared at 0,0, so placement must push it. -->
 					<FlexiWidget class={tileClass('f')} x={0} y={0} width={1} height={1}>
 						{#snippet children()}F collides{/snippet}
 					</FlexiWidget>

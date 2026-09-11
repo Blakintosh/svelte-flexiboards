@@ -1,11 +1,10 @@
 <script lang="ts">
 	/*
-	  One row, hard-divided, no radius. The selection is an ink slab that
-	  *slides*: a duplicate row of labels in paper sits in an absolutely
-	  positioned overlay whose clip-path tracks the selected tab, so the fill
-	  glides from one tab to the other instead of jumping. Tabs are sans (they
-	  are controls, not annotations); unbuilt frameworks appear as faint mono
-	  text, not as clickable tabs.
+	  One row, hard-divided, no radius. The selection is an ink slab that slides:
+	  a duplicate row of labels in paper sits in an absolutely positioned overlay
+	  whose clip-path tracks the selected tab, so the fill glides between tabs
+	  instead of jumping. Tabs are sans since they're controls, not annotations.
+	  Unbuilt frameworks show as faint mono text, not clickable tabs.
 	*/
 	import { framework, frameworks, plannedFrameworks, type Framework } from './framework.svelte';
 	import { SiSvelte, SiReact } from '@icons-pack/svelte-simple-icons';
@@ -74,7 +73,7 @@
 	</div>
 
 	{#if clip}
-		<!-- The sliding ink fill: a clipped duplicate of the tab row in paper. -->
+		<!-- Sliding ink fill: a clipped duplicate of the tab row in paper. -->
 		<div
 			class="bg-ink pointer-events-none absolute inset-0 flex transition-[clip-path] duration-[420ms] ease-[cubic-bezier(0.25,0.8,0.25,1)] motion-reduce:transition-none"
 			style="clip-path: {clip}"

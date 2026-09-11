@@ -3,7 +3,7 @@
 	  Blueprint code listing: ink ground, mono, 1px border. Component names take
 	  fx-accent, props pale blue, strings sage, punctuation muted.
 
-	  The highlighter is deliberately tiny — these listings are hand-authored
+	  The highlighter is deliberately tiny. These listings are hand-authored
 	  marketing snippets, not arbitrary input. Docs code goes through Shiki.
 	*/
 	const escape = (s: string) =>

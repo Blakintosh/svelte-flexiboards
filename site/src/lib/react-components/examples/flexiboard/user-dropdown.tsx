@@ -2,7 +2,7 @@ import { ChevronsUpDown } from 'lucide-react';
 
 /**
  * Twin of `examples/flexiboard/user-dropdown.svelte`: a native <details> is the
- * whole dropdown — no library, no roving keyboard handling.
+ * whole dropdown, no library, no roving keyboard handling.
  */
 export default function UserDropdown() {
 	const item =

@@ -29,8 +29,8 @@ import {
 } from '../flexspressive/editor-context';
 import Tile from '../flexspressive/tile';
 
-// Snap, don't float: the CSS defaults, with the resize snap pulled to 160ms
-// so a tile widening under the nub lands as fast as the fill it sits beside.
+// Snap, don't float. CSS defaults, with the resize snap pulled to 160ms so a
+// tile widening under the nub lands as fast as the fill it sits beside.
 const boardConfig: FlexiBoardConfiguration = {
 	widgetDefaults: {
 		draggability: 'none',
@@ -55,9 +55,9 @@ const targetConfig: FlexiTargetPartialConfiguration = {
 };
 
 /*
-	The handset is a lifted card resting on the recessed stage, flanked by margin
-	annotations that explain the two states it can be in. The flanks are dropped
-	below lg, where there is no room for them beside a 308px handset.
+	The handset is a lifted card on the recessed stage, flanked by margin
+	annotations explaining its two states. Flanks are dropped below lg,
+	where there's no room for them beside a 308px handset.
 */
 function FlexspressiveHandset() {
 	const { editMode, setEditMode } = useFlexspressiveEditor();
@@ -82,7 +82,7 @@ function FlexspressiveHandset() {
 				</div>
 			</div>
 
-			{/* A lifted card standing in for the handset: soft bezel, no ink rule. */}
+			{/* Stands in for the handset: a lifted card, soft bezel, no ink rule. */}
 			<div className="border-rule-soft bg-panel shadow-card-lg flex h-full max-h-[616px] w-full max-w-[308px] shrink-0 flex-col gap-2 rounded-[32px] border px-[18px] pb-3 pt-5 text-sm">
 				{!editMode ? (
 					<>
@@ -115,7 +115,7 @@ function FlexspressiveHandset() {
 					</>
 				)}
 
-				{/* Uniform 46px rhythm: rows are fixed, so a tile is the same height wherever it lands. */}
+				{/* Rows are fixed at 46px, so a tile is the same height wherever it lands. */}
 				<FlexiBoard config={boardConfig}>
 					<FlexiTarget config={targetConfig} className="gap-[7px]">
 						<Tile

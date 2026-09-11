@@ -14,9 +14,8 @@
 	}: { oncard: (w: FlexiWidgetController) => void; oninner: (b: FlexiBoardController) => void } =
 		$props();
 
-	// The nested board appears after the outer board has mounted (content that
-	// arrives later, as on the Notes page), so it subscribes to the bus after
-	// the outer board's portal has.
+	// The nested board appears after the outer board has mounted, as on the
+	// Notes page, so it subscribes to the bus after the outer board's portal.
 	let ready = $state(false);
 	onMount(() => {
 		ready = true;

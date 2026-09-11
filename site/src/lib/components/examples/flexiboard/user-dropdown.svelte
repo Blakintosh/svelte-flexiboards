@@ -2,7 +2,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 
 	// A native <details> is the whole dropdown: no library, no roving keyboard
-	// handling — the account menu is set dressing around the board demo.
+	// handling. The account menu is set dressing around the board demo.
 </script>
 
 <details class="relative">

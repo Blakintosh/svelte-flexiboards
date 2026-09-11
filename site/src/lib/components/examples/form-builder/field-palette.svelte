@@ -26,7 +26,7 @@
 
 	let { onAdd }: FieldPaletteProps = $props();
 
-	// Icons live here, not in field-types.ts, so the data model stays portable.
+	// Icons live here, not in field-types.ts, to keep the data model portable.
 	const ICONS: Record<FieldKind, typeof Type> = {
 		text: Type,
 		email: AtSign,
@@ -59,9 +59,9 @@
 	</div>
 
 	<!--
-		The warning arrives before the release, which is the only confirmation this
-		action gets. `deleter.isHovered` rather than CSS :hover, so the keyboard
-		pointer lights it up too.
+		The warning shows before release, which is the only confirmation this
+		action gets. Uses `deleter.isHovered` rather than CSS :hover, so keyboard
+		drags light it up too.
 	-->
 	<FlexiDelete
 		class={(deleter: FlexiDeleteController) =>

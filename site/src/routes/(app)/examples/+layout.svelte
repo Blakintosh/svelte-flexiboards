@@ -108,7 +108,7 @@
 	/*
 	  "Features used" rail. Each feature links to the doc that explains it, so
 	  the rail doubles as the path from "that looks useful" to "how do I do it".
-	  Grouped so the rail reads as layout → interaction → state → motion.
+	  Grouped so the rail reads as layout, interaction, state, motion.
 	*/
 	type Feature = {
 		label: string;
@@ -243,9 +243,9 @@
 
 	/*
 	  The header's framework choice picks which embed runs. Examples without a
-	  React port stay in the index but greyed out, and landing on one (deep link,
-	  or switching frameworks while viewing it) sends you to the first ported
-	  example in sidebar order instead.
+	  React port stay in the index but greyed out. Landing on one, by deep link
+	  or by switching frameworks while viewing it, sends you to the first
+	  ported example in sidebar order instead.
 	*/
 	const fw = $derived(framework.current);
 	const ported = (slug: string, framework: Framework = fw) =>
@@ -260,7 +260,7 @@
 		if (first) goto(pages[first].href, { replaceState: true });
 	});
 	// The icon marks the framework actually on stage, so a Svelte fallback shows Svelte.
-	// Brand colours (same as the header's framework menu), not the site accent —
+	// Brand colours (same as the header's framework menu), not the site accent,
 	// so a Svelte fallback in React mode still reads as Svelte orange.
 	const BRAND: Record<Framework, { icon: typeof SiSvelte; color: string }> = {
 		svelte: { icon: SiSvelte, color: '#ff3e00' },
@@ -277,8 +277,8 @@
 
 	let viewport: Viewport = $state('desktop');
 
-	// Pressing a feature chip flags every example in the sidebar that uses it —
-	// the useful half of a comparison matrix, without building one.
+	// Pressing a feature chip flags every example in the sidebar that uses it.
+	// The useful half of a comparison matrix, without building one.
 	let highlight: FeatureId | null = $state(null);
 	const usesHighlight = (slug: string) =>
 		highlight !== null &&
@@ -380,7 +380,7 @@
 		{/if}
 	</aside>
 
-	<!-- Viewer: one rounded card — toolbar on top, recessed stage below. -->
+	<!-- Viewer: one rounded card, toolbar on top, recessed stage below. -->
 	<div class="flex min-w-0 flex-1 flex-col">
 		<div
 			class="border-rule-soft bg-panel shadow-card-lg flex flex-1 flex-col overflow-hidden rounded-[16px] border"

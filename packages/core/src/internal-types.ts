@@ -88,7 +88,7 @@ export type InternalWidgetDroppedEvent = {
 	board: InternalFlexiBoardController;
 	oldTarget?: InternalFlexiTargetController;
 	newTarget?: InternalFlexiTargetController;
-	/** What the user was doing when they let go. */
+	/** What the user was doing when they released the widget. */
 	action: 'grab' | 'resize';
 };
 

@@ -2,7 +2,7 @@
  * The form builder's data model.
  *
  * Everything the example knows about a field lives in the widget's `metadata`.
- * The board only ever decides the *order* of those objects — this file is the
+ * The board only ever decides the *order* of those objects. This file is the
  * single source of truth for what they contain, shared by the palette, the
  * registry, the adder, the inspector and the schema listing.
  *
@@ -221,7 +221,7 @@ const SEED_FIELDS: FieldLayoutEntry[] = [
 	}
 ];
 
-/** A fresh copy of the seed layout — core adopts metadata objects by reference. */
+/** A fresh copy of the seed layout. Core adopts metadata objects by reference. */
 export function defaultFields(): FieldLayoutEntry[] {
 	return SEED_FIELDS.map((entry) => ({ ...entry, metadata: cloneMeta(entry.metadata) }));
 }

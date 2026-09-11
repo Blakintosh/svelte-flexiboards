@@ -126,8 +126,8 @@
 </div>
 
 <style>
-	/* The popover condenses in from the button and retreats the same way. Under
-	   reduced motion it simply appears — no animation at all. */
+	/* The popover condenses in from the button and retreats the same way.
+	   Under reduced motion it just appears, no animation. */
 	@media (prefers-reduced-motion: no-preference) {
 		.menu-surface {
 			animation: menu-in 180ms var(--ease-snap) both;

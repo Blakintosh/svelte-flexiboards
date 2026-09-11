@@ -11,8 +11,8 @@ export default function FlowExample() {
 		}
 	};
 
-	// The drop preview reads as a dashed accent outline; the widget in hand
-	// lifts off the sheet instead of taking an accent border.
+	// The drop preview is a dashed accent outline. The grabbed widget lifts
+	// off the sheet instead of getting an accent border.
 	const className = (widget: FlexiWidgetController) =>
 		clsx([
 			widget.isShadow &&

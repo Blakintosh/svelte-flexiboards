@@ -32,7 +32,7 @@
 
 	let addInput: HTMLInputElement | undefined = $state();
 
-	// Auto focus the add input when it's being added
+	// Focus the add input when it appears
 	$effect(() => {
 		if (addInput && adding) {
 			addInput.focus();

@@ -9,7 +9,7 @@
 
 	onMount(() => interpolator.onPlaceholderMount(ref));
 
-	// The read must *call* the signal — tracking happens at read time.
+	// The read must call the signal, since tracking happens at read time.
 	let placeholderStyle = $derived.by(fromCore(() => interpolator.placeholderStyle$()));
 </script>
 

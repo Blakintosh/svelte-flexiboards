@@ -15,8 +15,8 @@ type FlexiAnnouncerProps = {
  * drag-and-drop actions.
  */
 export function FlexiAnnouncer({ provider }: FlexiAnnouncerProps) {
-	// flexiannouncer attaches the controller to the board; no destroy exists,
-	// so lazy useState (not useSingleRef) holds it for the component lifetime.
+	// flexiannouncer attaches the controller to the board and has no destroy, so
+	// lazy useState rather than useSingleRef holds it for the component's life.
 	const [controller] = useState(() => flexiannouncer(provider));
 
 	const politeness = useFromCore(useCallback(() => controller.politeness, [controller]));

@@ -38,7 +38,7 @@ export function FlexiDelete({ children, className, onfirstcreate }: FlexiDeleteP
 	const assistiveTextId = useId();
 	const publicDeleter = useReactive(deleter);
 
-	// useFromCore: the user's class function may read signal-backed adder state.
+	// useFromCore, because the class function may read signal-backed deleter state.
 	const derivedClassName = useFromCore(
 		useCallback(() => {
 			if (typeof className === 'function') {

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 
-	// Workspace switcher as a native <details>: a summary styled like the old
-	// menu button, and a plain panel of buttons under it. No library needed.
+	// Workspace switcher built on native <details>: summary styled as the old
+	// menu button, panel of buttons underneath. No library needed.
 </script>
 
 <details class="relative">

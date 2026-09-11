@@ -21,7 +21,7 @@
 	let liked = $state<Record<string, boolean>>({ 'weather-systems': true, 'slow-tide': true });
 	let playing = $state(true);
 
-	/** One controller per track, in TRACKS order — used only to see what is in hand. */
+	/** One controller per track, in TRACKS order, used only to see what is in hand. */
 	let rows = $state<(FlexiWidgetController | undefined)[]>([]);
 	let listEl: HTMLDivElement | undefined = $state();
 
@@ -61,7 +61,7 @@
 				],
 				transition: cssTransitionConfig(),
 				// The handle is the only grab surface, so a press should start the drag at
-				// once — no long press on touch.
+				// once, no long press on touch.
 				grabTrigger: { default: immediateTriggerConfig() }
 			}
 		}

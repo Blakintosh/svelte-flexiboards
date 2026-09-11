@@ -31,8 +31,7 @@ export class PointerService {
 			updatePosition(event.clientX, event.clientY);
 		};
 
-		// As this is singleton, we'll reuse it for the duration of the browser session
-		// (ie no disposal)
+		// Singleton: kept for the browser session, never disposed.
 		window.addEventListener('pointermove', onPointerMove);
 
 		this.#unsubscribers.push(
@@ -74,8 +73,8 @@ export class PointerService {
 
 		const { x, y } = this.#position$();
 
-		// Use scrollWidth/scrollHeight to account for content that overflows the element
-		// (e.g. grid columns that extend beyond a scrollable parent with overflow: hidden).
+		// scrollWidth/scrollHeight catch content overflowing the element, e.g. grid
+		// columns extending past a scrollable parent with overflow: hidden.
 		const width = Math.max(rect.width, element.scrollWidth);
 		const height = Math.max(rect.height, element.scrollHeight);
 
@@ -98,7 +97,6 @@ export class PointerService {
 	 * Cleanup method to be called when the pointer service is destroyed
 	 */
 	destroy() {
-		// Clean up event subscriptions
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 	}
@@ -107,7 +105,7 @@ export class PointerService {
 let pointerService: PointerService | undefined = undefined;
 
 export function getPointerService() {
-	// Define pointer service at time of calling, so that effect context is assured.
+	// Create lazily so the effect context is available when it's called.
 	if (!pointerService) {
 		pointerService = new PointerService();
 	}
@@ -121,8 +119,8 @@ export function getPointerService() {
  * then its parent, then grandparent, etc.
  */
 export class AutoScrollService {
-	// Shared with the owning board controller: signals are stable references,
-	// so we track the board's ref signal directly rather than copying it.
+	// Shared with the owning board controller. Signals are stable references,
+	// so this tracks the board's ref signal directly rather than copying it.
 	#ref$: Signal<HTMLElement | undefined>;
 	#pointerService: PointerService = getPointerService();
 	#scrollableContainers$: Signal<HTMLElement[]> = signal([]);
@@ -143,7 +141,6 @@ export class AutoScrollService {
 		this.#ref$ = ref;
 		this.#enabled = enabled;
 
-		// Update scrollable containers when ref changes
 		this.#stopEffects.push(
 			effect(() => {
 				if (this.ref) {
@@ -175,13 +172,12 @@ export class AutoScrollService {
 	}
 
 	#updateScrollableContainers() {
-		// No need to manually trigger reactivity as they're direct assignments.
 		if (!this.ref) {
 			this.#scrollableContainers$([]);
 			return;
 		}
 
-		// Start with the target element itself, then add ancestors
+		// Start with the target element itself, then add ancestors.
 		const containers = [this.ref];
 		containers.push(...this.#getScrollableAncestors(this.ref));
 		this.#scrollableContainers$(containers);
@@ -208,7 +204,7 @@ export class AutoScrollService {
 
 	#isElementScrollable(element: HTMLElement): boolean {
 		if (this.#isPageLevel(element)) {
-			// Page-level elements can be scrollable without explicit overflow styles
+			// Page-level elements can be scrollable without explicit overflow styles.
 			return (
 				element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
 			);
@@ -234,11 +230,10 @@ export class AutoScrollService {
 			return;
 		}
 
-		// NEXT: Provide a configuration option for the scroll threshold and speed.
-		// Not done in v0.2 as it's likely this system is going to be rewritten in v0.3.
+		// NEXT: make the scroll threshold and speed configurable. Skipped in v0.2
+		// since this system will likely be rewritten in v0.3.
 		const scrollThreshold = 48;
 
-		// Check if we should be scrolling any container
 		let shouldScroll = false;
 		for (const container of scrollableContainers) {
 			if (this.#shouldScrollContainer(container, clientX, clientY, scrollThreshold)) {
@@ -293,7 +288,7 @@ export class AutoScrollService {
 		const scrollThreshold = 48;
 		const scrollSpeed = 4;
 
-		// Try scrolling containers in hierarchical order (target first, then ancestors)
+		// Try containers in hierarchical order: target first, then ancestors.
 		for (const container of scrollableContainers) {
 			const scrollResult = this.#tryScrollContainer(
 				container,
@@ -303,7 +298,7 @@ export class AutoScrollService {
 				scrollSpeed
 			);
 
-			// If we successfully scrolled this container, stop here to maintain hierarchy
+			// Stop at the first container that scrolled, to preserve hierarchy.
 			if (scrollResult.didScroll) {
 				break;
 			}
@@ -319,7 +314,6 @@ export class AutoScrollService {
 		const rect = container.getBoundingClientRect();
 		const effectiveRect = this.#getEffectiveRect(container, rect);
 
-		// Check if pointer is within this container's effective bounds
 		const isWithinBounds =
 			clientX >= effectiveRect.left &&
 			clientX <= effectiveRect.right &&
@@ -332,7 +326,7 @@ export class AutoScrollService {
 
 		const scrollInfo = this.#getScrollInfo(container);
 
-		// Check if we're in a scroll zone and can actually scroll
+		// In a scroll zone and actually able to scroll that way.
 		const inVerticalScrollZone =
 			(clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) ||
 			(clientY < effectiveRect.top + scrollThreshold && scrollInfo.canScrollUp);
@@ -357,13 +351,11 @@ export class AutoScrollService {
 		const rect = container.getBoundingClientRect();
 		let didScroll = false;
 
-		// For HTML/BODY elements, clamp the boundaries to the viewport
 		const effectiveRect = this.#getEffectiveRect(container, rect);
 
-		// TODO: tweak so the pointer can be outside bounds, but within an abs threshold
-		// of the edge of the container.
+		// TODO: allow the pointer outside bounds, within an absolute threshold of
+		// the container's edge.
 
-		// Check if pointer is within this container's effective bounds
 		const isWithinBounds =
 			clientX >= effectiveRect.left &&
 			clientX <= effectiveRect.right &&
@@ -376,7 +368,6 @@ export class AutoScrollService {
 
 		const scrollInfo = this.#getScrollInfo(container);
 
-		// Check vertical scrolling conditions
 		if (container.scrollHeight > container.clientHeight) {
 			if (clientY > effectiveRect.bottom - scrollThreshold && scrollInfo.canScrollDown) {
 				this.#scrollElement(container, 0, scrollSpeed);
@@ -387,7 +378,6 @@ export class AutoScrollService {
 			}
 		}
 
-		// Check horizontal scrolling conditions
 		if (container.scrollWidth > container.clientWidth) {
 			if (clientX > effectiveRect.right - scrollThreshold && scrollInfo.canScrollRight) {
 				this.#scrollElement(container, scrollSpeed, 0);
@@ -403,7 +393,7 @@ export class AutoScrollService {
 
 	#getEffectiveRect(container: HTMLElement, rect: DOMRect) {
 		if (this.#isPageLevel(container)) {
-			// Clamp page-level boundaries to viewport
+			// Clamp page-level boundaries to the viewport.
 			return {
 				left: Math.max(0, rect.left),
 				right: Math.min(window.innerWidth, rect.right),
@@ -412,13 +402,13 @@ export class AutoScrollService {
 			};
 		}
 
-		// Use actual boundaries for regular containers
+		// Regular containers use their actual boundaries.
 		return rect;
 	}
 
 	#getScrollInfo(element: HTMLElement) {
 		if (this.#isPageLevel(element)) {
-			// Use window/document properties for page-level scrolling
+			// Page-level scrolling reads window/document properties.
 			const scrollTop = window.scrollY;
 			const scrollLeft = window.scrollX;
 			const scrollHeight = document.documentElement.scrollHeight;
@@ -434,7 +424,7 @@ export class AutoScrollService {
 			};
 		}
 
-		// Use element properties for regular containers
+		// Regular containers use their own element properties.
 		const { scrollTop, scrollLeft, scrollHeight, scrollWidth, clientHeight, clientWidth } = element;
 
 		return {
@@ -612,8 +602,7 @@ export class GridDimensionTracker {
 	 * (the adapter's responsibility) and invoke the returned cleanup at unmount.
 	 */
 	watchGrid(): () => void {
-		// Whenever a change occurs to the grid's dimensions or the underlying widgets, update the sizes.
-		// Unlike Svelte's deep $state tracking, dependencies are explicit here: we
+		// Unlike Svelte's deep $state tracking, dependencies here are explicit:
 		// track the grid reference and its row/column counts, then update untracked.
 		const stopEffect = effect(() => {
 			const grid = this.#grid$();
@@ -626,14 +615,13 @@ export class GridDimensionTracker {
 			grid.rows;
 			grid.columns;
 
-			// There's a weird edge case where adjusting dimensions causes an infinite effect when the grid is destroyed - but even without
-			// knowing the exact cause, it's sensible to untrack this regardless.
+			// Untracked to avoid an infinite effect seen when the grid is destroyed
+			// mid-adjustment, even without a clear root cause.
 			untracked(() => {
 				this.updateGridDimensions();
 			});
 		});
 
-		// Whenever the grid is resized, update the sizes.
 		this.setupScrollListeners();
 
 		const grid = this.#grid$();
@@ -670,13 +658,13 @@ export class GridDimensionTracker {
 		const rect = gridElement.getBoundingClientRect();
 		const style = window.getComputedStyle(gridElement);
 
-		// Computed style gives us pixel values for each column and row of the grid.
+		// Computed style gives pixel values for each column and row of the grid.
 		const templateColumns = style.getPropertyValue('grid-template-columns');
 		const templateRows = style.getPropertyValue('grid-template-rows');
 		const gapX = style.getPropertyValue('grid-column-gap');
 		const gapY = style.getPropertyValue('grid-row-gap');
 
-		// If the dimensions are unchanged, we don't need to update them.
+		// Skip the update if nothing changed.
 		const dimensions = this.#dimensions$();
 
 		if (
@@ -699,7 +687,7 @@ export class GridDimensionTracker {
 			.split(' ')
 			.map((row) => parseFloat(row.match(/(\d+\.?\d*)px/)?.[1] ?? '0'));
 
-		// Update in-place, manually trigger the reactive response.
+		// Update in place, then manually trigger reactivity.
 		dimensions.left = rect.left;
 		dimensions.width = rect.width;
 		dimensions.columns = columns;
@@ -730,7 +718,7 @@ export class GridDimensionTracker {
 		}
 		const rect = grid.ref.getBoundingClientRect();
 
-		// Update in-place, then re-trigger reactivity.
+		// Update in place, then re-trigger reactivity.
 		const dimensions = this.#dimensions$();
 		dimensions.left = rect.left;
 		dimensions.top = rect.top;
@@ -756,13 +744,13 @@ export class GridDimensionTracker {
 			return;
 		}
 
-		this.#cleanupScrollListeners(); // Clean up any existing listeners first
+		this.#cleanupScrollListeners();
 
 		this.#currentScrollableAncestors = this.#getScrollableAncestors(gridElement);
 		const listenersToAttach = [window, ...this.#currentScrollableAncestors];
 		this.#activeScrollListeners = this.#attachScrollListeners(listenersToAttach);
 
-		this.#updatePositionOnScroll(); // Initial update
+		this.#updatePositionOnScroll();
 	}
 
 	refreshScrollListeners() {
@@ -782,7 +770,7 @@ export class GridDimensionTracker {
 			this.#currentScrollableAncestors = newAncestors;
 			const listenersToAttach = [window, ...this.#currentScrollableAncestors];
 			this.#activeScrollListeners = this.#attachScrollListeners(listenersToAttach);
-			this.#updatePositionOnScroll(); // Update dimensions after listeners are set
+			this.#updatePositionOnScroll();
 		}
 	}
 
@@ -792,7 +780,6 @@ export class GridDimensionTracker {
 			return ancestors;
 		}
 
-		// Get all ancestors of the element that are scrollable.
 		let parent = element.parentElement;
 		while (parent) {
 			const style = window.getComputedStyle(parent);
@@ -821,9 +808,10 @@ export class GridDimensionTracker {
 		this.#pointerPosition.x = clientX;
 		this.#pointerPosition.y = clientY;
 
-		// Reordering widgets of unequal size swaps row/column track sizes without changing the
-		// grid's own size or track count, so neither the ResizeObserver nor the rows/columns effect
-		// fires. Remeasure here (a no-op when nothing changed) so the mapping never uses stale tracks.
+		// Reordering unequal-size widgets swaps row/column track sizes without
+		// changing the grid's own size or track count, so neither the ResizeObserver
+		// nor the rows/columns effect fires. Remeasure here (a no-op if unchanged)
+		// so the mapping never uses stale tracks.
 		this.updateGridDimensions();
 
 		const dimensions = this.#dimensions$();
@@ -863,7 +851,7 @@ export function findCell(
 	gap: number,
 	axisCoordinates: number[]
 ) {
-	// If outside the axis, then return the ends.
+	// Outside the axis: return the ends.
 	if (pointerLocation < start) {
 		return 0;
 	}
@@ -889,7 +877,7 @@ export function generateUniqueId(prefix: string = 'flexi-') {
 	return prefix + uniqueIdIndex++;
 }
 
-/* Adapted from TailwindCSS sr-only */
+/* Adapted from TailwindCSS's sr-only. */
 export const assistiveTextStyle = `
 	position: absolute;
 	width: 1px;
@@ -902,7 +890,7 @@ export const assistiveTextStyle = `
 	border-width: 0;
 `;
 
-/* Adapted from TailwindCSS sr-only - JS object equivalent. */
+/* Adapted from TailwindCSS's sr-only, as a JS object. */
 export const assistiveTextStyleObject = {
 	position: 'absolute',
 	width: '1px',
@@ -922,13 +910,13 @@ export const assistiveTextStyleObject = {
  * `getBoundingClientRect()` includes transforms, so a decorative grab tilt or
  * scale on a widget would otherwise corrupt offset and size calculations. When
  * any such property is present, the transforms are neutralised inline, the rect
- * read, and the inline styles restored — all synchronously before the next
- * paint, so nothing flashes on screen. Costs one forced reflow, and only when a
+ * read, and the inline styles restored, all synchronously before the next
+ * paint so nothing flashes on screen. Costs one forced reflow, only when a
  * transform exists; untransformed elements take the fast path.
  */
 export function getLayoutRect(element: HTMLElement): DOMRect {
 	// Resolve getComputedStyle from the element's own realm (the widget may live
-	// inside an iframe); fall back to gBCR where no window exists (tests).
+	// inside an iframe). Fall back to gBCR where no window exists (tests).
 	const view = element.ownerDocument?.defaultView;
 	if (!view?.getComputedStyle) {
 		return element.getBoundingClientRect();
@@ -948,7 +936,7 @@ export function getLayoutRect(element: HTMLElement): DOMRect {
 	// `!important` inline declarations outrank running CSS animations (plain
 	// inline styles do not), so a mid-animation scale/rotate can't leak into the
 	// measurement. `transition: none` is forced too, so neither the override nor
-	// its restore can start a transition. The animation's clock keeps running —
+	// its restore can start a transition. The animation's clock keeps running;
 	// nothing paints between these writes and the restore.
 	const inline = element.style;
 	const properties = ['transition', 'transform', 'rotate', 'scale', 'translate'] as const;
@@ -988,6 +976,6 @@ export function isGrabPointerEvent(event: PointerEvent) {
 		return true;
 	}
 
-	// 0 = left click
+	// 0 = left click.
 	return event.button === 0;
 }

@@ -5,8 +5,8 @@ import type { FlexiRegistryEntry } from '../board/types.js';
 /**
  * Tests for import/export functionality.
  *
- * Since the actual InternalFlexiTargetController has many dependencies (Svelte context, etc.),
- * we test the logic by creating minimal mock implementations that mirror the behavior.
+ * InternalFlexiTargetController has many dependencies (Svelte context, etc.), so these
+ * tests use minimal mock implementations that mirror its behavior instead.
  */
 
 type MockWidget = {
@@ -23,7 +23,7 @@ type MockWidget = {
 type MockRegistry = Record<string, FlexiRegistryEntry>;
 
 /**
- * Simulates the importLayout logic from InternalFlexiTargetController
+ * Mirrors InternalFlexiTargetController's importLayout logic.
  */
 function importLayout(
 	layout: FlexiWidgetLayoutEntry[],
@@ -51,7 +51,6 @@ function importLayout(
 			continue;
 		}
 
-		// Simulate createWidget
 		const widget: MockWidget = {
 			id: entry.id ?? `widget-${Math.random().toString(36).substring(2, 9)}`,
 			type: entry.type,
@@ -68,7 +67,7 @@ function importLayout(
 }
 
 /**
- * Simulates the exportLayout logic from InternalFlexiTargetController
+ * Mirrors InternalFlexiTargetController's exportLayout logic.
  */
 function exportLayout(
 	widgets: Map<string, MockWidget>,
@@ -91,7 +90,6 @@ function exportLayout(
 			metadata: widget.metadata
 		};
 
-		// Only include id if user provided one
 		if (widget.userProvidedId) {
 			entry.id = widget.userProvidedId;
 		}
@@ -246,7 +244,6 @@ describe('Import/Export Layout', () => {
 				'new-widget': { snippet: {} as any }
 			};
 
-			// Pre-populate with existing widgets
 			widgets.set('existing-1', {
 				id: 'existing-1',
 				type: 'old',
@@ -367,7 +364,6 @@ describe('Import/Export Layout', () => {
 			widgets.set('auto-generated-123', {
 				id: 'auto-generated-123',
 				type: 'test-widget',
-				// No userProvidedId
 				x: 0,
 				y: 0,
 				width: 1,
@@ -431,7 +427,6 @@ describe('Import/Export Layout', () => {
 				'widget-b': { snippet: {} as any }
 			};
 
-			// Set up initial widgets
 			widgets.set('w1', {
 				id: 'user-id-1',
 				type: 'widget-a',
@@ -452,17 +447,13 @@ describe('Import/Export Layout', () => {
 				metadata: { config: { value: 42 } }
 			});
 
-			// Export
 			const exported = exportLayout(widgets, warnSpy);
 
-			// Clear and import back
 			widgets.clear();
 			importLayout(exported, registry, widgets, warnSpy);
 
-			// Verify
 			expect(widgets.size).toBe(2);
 
-			// Find widget by user-provided ID
 			const widgetA = widgets.get('user-id-1');
 			expect(widgetA).toBeDefined();
 			expect(widgetA?.type).toBe('widget-a');
@@ -472,7 +463,7 @@ describe('Import/Export Layout', () => {
 			expect(widgetA?.height).toBe(1);
 			expect(widgetA?.metadata).toEqual({ title: 'Widget A' });
 
-			// Find widget-b (auto-generated ID won't match)
+			// Auto-generated id won't match, so find widget-b by type.
 			const allWidgets = Array.from(widgets.values());
 			const widgetB = allWidgets.find((w) => w.type === 'widget-b');
 			expect(widgetB).toBeDefined();
@@ -500,21 +491,17 @@ describe('Import/Export Layout', () => {
 				}
 			];
 
-			// First import
 			importLayout(originalLayout, registry, widgets, warnSpy);
 			let exported = exportLayout(widgets, warnSpy);
 
-			// Second cycle
 			widgets.clear();
 			importLayout(exported, registry, widgets, warnSpy);
 			exported = exportLayout(widgets, warnSpy);
 
-			// Third cycle
 			widgets.clear();
 			importLayout(exported, registry, widgets, warnSpy);
 			const finalExport = exportLayout(widgets, warnSpy);
 
-			// Verify final state matches original
 			expect(finalExport).toHaveLength(1);
 			expect(finalExport[0]).toEqual({
 				id: 'stable-id',

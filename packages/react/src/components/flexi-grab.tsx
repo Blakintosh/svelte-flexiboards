@@ -11,19 +11,19 @@ export type FlexiGrabProps = FlexiWidgetSubProps;
 export function FlexiGrab({ className, children }: FlexiGrabProps) {
 	const widget = useInternalFlexiWidget();
 
-	// A grabber registration is a paired add/remove, which is exactly the
-	// create/destroy contract useSingleRef manages.
+	// A grabber registration is a paired add and remove, the same create and
+	// destroy contract useSingleRef manages.
 	useSingleRef(() => {
 		widget.addGrabber();
 		return { destroy: () => widget.removeGrabber() };
 	});
 
-	// Event watchers are stateful — create once per component instance.
+	// Event watchers are stateful, so create them once per component instance.
 	const [events] = useState(() => widgetGrabberEvents(widget));
 
 	const enabled = useFromCore(useCallback(() => widget.isGrabbable && widget.mounted, [widget]));
 	const publicWidget = useReactive(widget as FlexiWidgetController);
-	// useFromCore: the class function may read signal-backed widget state.
+	// useFromCore, because the class function may read signal-backed widget state.
 	const derivedClassName = useFromCore(
 		useCallback(
 			() => (typeof className === 'function' ? className(widget) : className),

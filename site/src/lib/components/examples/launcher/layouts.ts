@@ -2,8 +2,8 @@ import type { FlexiWidgetLayoutEntry, ResponsiveFlexiLayout } from '@flexiboards
 
 /**
  * The example's own view mode. `auto` lets the viewport decide (the site's
- * desktop / tablet / mobile buttons then swap the board's layout by themselves);
- * the other three pin a breakpoint so the swap is visible without resizing.
+ * desktop / tablet / mobile buttons then swap the board's layout on their own).
+ * The other three pin a breakpoint so the swap is visible without resizing.
  */
 export type Pin = 'auto' | 'lg' | 'md' | 'sm';
 
@@ -15,7 +15,7 @@ export type BreakpointSpec = {
 	rows: number;
 	/** Row height in px. Columns are `1fr`, so cells are square when there is room. */
 	cell: number;
-	/** Grid gap in px — mirrored by `gapClass` so Tailwind emits the utility. */
+	/** Grid gap in px, mirrored by `gapClass` so Tailwind emits the utility. */
 	gapPx: number;
 	gapClass: string;
 	/** Plate padding in px, mirrored by `padClass`. */
@@ -75,10 +75,10 @@ export function isBreakpointKey(value: string): value is BreakpointKey {
 }
 
 /**
- * `ResponsiveFlexiBoard` derives its active breakpoint purely from `window.matchMedia`
- * — there is no API to force one. So the switcher remaps the thresholds themselves,
+ * `ResponsiveFlexiBoard` derives its active breakpoint purely from `window.matchMedia`;
+ * there's no API to force one. So the switcher remaps the thresholds themselves,
  * which is ordinary public config: the pinned key drops to a min-width every viewport
- * satisfies, the others go out of reach. Values are kept distinct so the controller's
+ * satisfies, and the others go out of reach. Values are kept distinct so the controller's
  * descending sort never has to break a tie.
  */
 const AUTO_BREAKPOINTS: Record<string, number> = { lg: 1024, md: 768, sm: 0 };
@@ -99,7 +99,7 @@ export function breakpointsFor(pin: Pin): Record<string, number> {
 
 /**
  * Every entry carries its own layout id in `metadata.tile`. The widget controller
- * doesn't expose the id it was imported with, so this is how the live-JSON bar
+ * doesn't expose the id it was imported with, so this is how the live JSON bar
  * knows which line belongs to the tile currently in hand.
  */
 const app = (id: string, x: number, y: number): FlexiWidgetLayoutEntry => ({
@@ -114,11 +114,11 @@ const app = (id: string, x: number, y: number): FlexiWidgetLayoutEntry => ({
 
 /**
  * One widget set, three arrangements. Nothing appears or disappears between
- * breakpoints — only where it sits. Each grid deliberately keeps four to six free
+ * breakpoints, only where it sits. Each grid deliberately keeps four to six free
  * cells so the first drag a visitor tries has somewhere to land.
  */
 export const DEFAULT_LAYOUTS: ResponsiveFlexiLayout = {
-	// 6 × 3 — 14 of 18 cells used.
+	// 6 × 3, 14 of 18 cells used.
 	lg: {
 		apps: [
 			{ id: 'clock', type: 'clock', x: 0, y: 0, width: 2, height: 1, metadata: { tile: 'clock' } },
@@ -148,7 +148,7 @@ export const DEFAULT_LAYOUTS: ResponsiveFlexiLayout = {
 			app('settings', 1, 2)
 		]
 	},
-	// 4 × 5 — 14 of 20 cells used.
+	// 4 × 5, 14 of 20 cells used.
 	md: {
 		apps: [
 			{ id: 'clock', type: 'clock', x: 0, y: 0, width: 2, height: 1, metadata: { tile: 'clock' } },
@@ -178,7 +178,7 @@ export const DEFAULT_LAYOUTS: ResponsiveFlexiLayout = {
 			app('settings', 1, 3)
 		]
 	},
-	// 3 × 6 — 14 of 18 cells used.
+	// 3 × 6, 14 of 18 cells used.
 	sm: {
 		apps: [
 			{ id: 'clock', type: 'clock', x: 0, y: 0, width: 2, height: 1, metadata: { tile: 'clock' } },
@@ -218,8 +218,8 @@ function formatEntry(entry: FlexiWidgetLayoutEntry): string {
 	parts.push(`"type": ${JSON.stringify(entry.type)}`);
 	parts.push(`"x": ${entry.x}`, `"y": ${entry.y}`);
 	parts.push(`"width": ${entry.width}`, `"height": ${entry.height}`);
-	// `tile` is plumbing for the live-JSON highlight, not part of the example's
-	// data — keep it out of the listing a visitor is invited to copy.
+	// `tile` is plumbing for the live JSON highlight, not part of the example's
+	// data. Keep it out of the listing a visitor is invited to copy.
 	if (entry.metadata) {
 		const { tile: _tile, ...metadata } = entry.metadata as Record<string, unknown>;
 		if (Object.keys(metadata).length) {
@@ -236,8 +236,8 @@ function orderedKeys(layouts: ResponsiveFlexiLayout): string[] {
 }
 
 /**
- * `JSON.stringify(layouts, null, 2)` runs to ~250 lines for three breakpoints;
- * one widget per line keeps it to ~40, and makes `x` / `y` visibly tick over as
+ * `JSON.stringify(layouts, null, 2)` runs to ~250 lines for three breakpoints.
+ * One widget per line keeps it to ~40, and makes `x` / `y` visibly tick over as
  * a tile is dragged.
  */
 export function formatLayouts(layouts: ResponsiveFlexiLayout): string {

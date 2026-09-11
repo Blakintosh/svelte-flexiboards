@@ -1,8 +1,8 @@
 <script lang="ts">
 	/*
 	  Minimal repro for the nested-board SSR duplication seen on the Notes
-	  example. Board A's widget snippet contains board B; B has two targets —
-	  one with bind:controller (as the kanban lists use) and one without — to
+	  example. Board A's widget snippet contains board B. B has two targets,
+	  one with bind:controller (as the kanban lists use) and one without, to
 	  isolate whether the binding is what doubles the render.
 	*/
 	import {

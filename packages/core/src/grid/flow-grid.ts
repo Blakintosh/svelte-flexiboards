@@ -138,40 +138,38 @@ export class FlowFlexiGrid extends FlexiGrid {
 	): boolean {
 		const isRowFlow = this.isRowFlow;
 
-		// If the coordinate for the cross axis is greater than the axis's length, then this operation fails.
+		// Fails if the cross-axis coordinate exceeds the axis length.
 		if (!this.#coordinateSystem.coordinateFitsWithinCrossAxis(cellX, cellY)) {
 			return false;
 		}
 
-		// Finalise where we're going to place the widget.
 		const cellPosition = this.#getPlacementPosition(cellX, cellY);
 
-		// If the width/height of the widget is greater than the flow axis' length, then constrain it to the flow axis' length.
+		// Constrain to the flow axis' length.
 		if (isRowFlow && width > this.columns) {
 			width = this.columns;
 		} else if (!isRowFlow && height > this.rows) {
 			height = this.rows;
 		}
 
-		// Additionally, constrain the width/height of the widget to the min/max values.
+		// Constrain to the widget's min/max.
 		width = Math.max(widget.minWidth, Math.min(widget.maxWidth, width));
 		height = Math.max(widget.minHeight, Math.min(widget.maxHeight, height));
 
-		// Find the nearest widget to the proposed position, and determine the precise location based on it.
 		const [index, nearestWidget] = this.#coordinateSystem.findNearestWidget(
 			cellPosition,
 			0,
 			this.#widgets.length - 1
 		);
 
-		// If there's no widgets in the grid, just trivially add ours to the start.
+		// No widgets yet, so place at the start.
 		if (!nearestWidget) {
 			return this.#placeWidgetAt(widget, 0, 0, width, height);
 		}
 
 		const nearestWidgetPosition = this.#coordinateSystem.to1D(nearestWidget.x, nearestWidget.y);
 
-		// If the found widget's position is before our desired one, then our widget will be placed adjacent to it along the flow axis.
+		// Nearest widget sits before the target position, so place adjacent to it along the flow axis.
 		if (nearestWidgetPosition < cellPosition) {
 			return this.#placeWidgetAt(
 				widget,
@@ -182,8 +180,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 			);
 		}
 
-		// Otherwise, it'll look at the predecessor of the nearest widget and place it after it.
-		// This prevents gaps from being persisted if widgets can fit adjacent to the predecessor.
+		// Try the predecessor's next slot to fill any gap before the nearest widget.
 		if (index > 0) {
 			const predecessor = this.#widgets[index - 1];
 			return this.#placeWidgetAt(
@@ -218,7 +215,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 		this.#widgets.splice(index, 0, widget);
 		if (!this.#shiftWidget(index, position, operations, width, height)) {
-			// Undo the insertion.
+			// Undo insertion.
 			this.#widgets.splice(index, 1);
 			trigger(() => this.#state$());
 
@@ -239,22 +236,20 @@ export class FlowFlexiGrid extends FlexiGrid {
 		const widget = this.#widgets[index];
 		const isRowFlow = this.isRowFlow;
 
-		// Determine the dimensions to use for this widget.
-		// For flow grids, the cross-axis dimension is always 1.
-		// For the primary widget (first in chain), use provided flow-axis dimension if given.
-		// For displaced widgets, use their current flow-axis dimension.
+		// Cross-axis dimension is always 1. Flow-axis dimension uses the given
+		// override for the primary widget, or the widget's current size for
+		// displaced widgets.
 		let effectiveWidth: number;
 		let effectiveHeight: number;
 
 		if (isRowFlow) {
 			effectiveWidth = width ?? widget.width;
-			effectiveHeight = 1; // Cross-axis is always 1 for row flow
+			effectiveHeight = 1;
 		} else {
-			effectiveWidth = 1; // Cross-axis is always 1 for column flow
+			effectiveWidth = 1;
 			effectiveHeight = height ?? widget.height;
 		}
 
-		// The "length" along the flow axis for positioning calculations.
 		const effectiveLength = isRowFlow ? effectiveWidth : effectiveHeight;
 
 		const finalPosition = this.#coordinateSystem.findPositionToFitWidget(
@@ -263,7 +258,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 			effectiveLength
 		);
 
-		// Expand the grid if the widget is being added past the current flow axis end.
+		// Expand the grid if this pushes past the current flow axis end.
 		if (!this.#coordinateSystem.expandIfNeededToFit(finalPosition)) {
 			return false;
 		}
@@ -279,8 +274,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 			return true;
 		}
 
-		// Prepare to shift the remaining widgets along relative to this one.
-		// Displaced widgets use their current dimensions (no width/height override).
+		// Shift the remaining widgets along, keeping their current dimensions.
 		return this.#shiftWidget(index + 1, finalPosition + effectiveLength, operations);
 	}
 
@@ -294,7 +288,6 @@ export class FlowFlexiGrid extends FlexiGrid {
 				return 0;
 			}
 			case 'append': {
-				// Find the last widget and place it after it.
 				const lastWidget = this.#widgets[this.#widgets.length - 1];
 
 				return (
@@ -306,24 +299,22 @@ export class FlowFlexiGrid extends FlexiGrid {
 	}
 
 	#getPlacementPosition(cellX?: number, cellY?: number): number {
-		// If insertion is not possible (or coordinates not provided), then automatically decide the position based on the placement strategy.
+		// No coordinates, or insertion disallowed: fall back to the placement strategy.
 		if (cellX === undefined || cellY === undefined || this.#layoutConfig.disallowInsert) {
 			return this.#resolveNextPlacementPosition();
 		}
 
-		// Otherwise, just ensure that the coordinates are within the grid's bounds.
+		// Clamp the coordinates to the grid's bounds.
 		return this.#coordinateSystem.to1D(Math.min(cellX, this.columns), Math.min(cellY, this.rows));
 	}
 
 	removeWidget(widget: FlexiWidgetController): boolean {
-		// Find the widget in the grid.
 		const [index, foundWidget] = this.#coordinateSystem.findNearestWidgetFrom2D(widget.x, widget.y);
 
 		if (foundWidget !== widget) {
 			return false;
 		}
 
-		// Remove the widget from the grid.
 		if (!this.#removeWidgetAt(index)) {
 			return false;
 		}
@@ -331,7 +322,7 @@ export class FlowFlexiGrid extends FlexiGrid {
 		const minRows = this.#layoutConfig.rows;
 		const minColumns = this.#layoutConfig.columns;
 
-		// Shrink the grid if necessary.
+		// Shrink the grid if there's now slack past the last remaining widget.
 		const [_, lastWidget] = this.#coordinateSystem.findNearestWidgetFrom2D(Infinity, Infinity);
 
 		if (lastWidget) {
@@ -358,21 +349,13 @@ export class FlowFlexiGrid extends FlexiGrid {
 
 		const operations: FlowMoveOperation[] = [];
 
-		// When removing a widget, we need to re-compact all remaining widgets
-		// starting from the beginning. This is because there may be gaps before
-		// the removed widget that widgets after it can now fill.
-		//
-		// Example: In a 3-column grid with [A(2-wide), B(2-wide), C(1-wide)]:
-		// - A occupies positions 0-1
-		// - B can't fit at position 2 (only 1 cell), so it goes to position 3
-		// - C goes to position 5
-		// State: AA- / BBC
-		//
-		// When B is removed, C should move to position 2 (the gap after A),
-		// NOT to position 3 (where B was).
+		// Re-compact all remaining widgets from position 0. A gap left before the
+		// removed widget could now be filled by widgets after it.
+		// Example: 3-column grid [A(2-wide), B(2-wide), C(1-wide)] lays out as
+		// AA- / BBC (B can't fit at position 2, so it wraps). Removing B should
+		// move C into the gap after A (position 2), not to B's old slot (3).
 
 		if (this.#widgets.length > 0) {
-			// Start compaction from position 0
 			if (!this.#shiftWidget(0, 0, operations)) {
 				return false;
 			}
@@ -382,13 +365,12 @@ export class FlowFlexiGrid extends FlexiGrid {
 	}
 
 	clear() {
-		// Clear the grid without replacing it outright so reactivity proxies are preserved.
+		// Truncate in place rather than replacing, to preserve reactivity proxies.
 		this.#widgets.length = 0;
 		trigger(() => this.#state$());
 	}
 
 	takeSnapshot(): FlowGridSnapshot {
-		// Copy the widget positions and sizes.
 		const widgets = this.#widgets.map((widget) => {
 			return {
 				widget,
@@ -456,8 +438,8 @@ export class FlowFlexiGrid extends FlexiGrid {
 		const hovered1D = coords.to1D(hovered[0], hovered[1]);
 		const [index, candidate] = coords.findNearestWidgetFrom2D(hovered[0], hovered[1]);
 
-		// findNearestWidget may land on the widget just after the cell; the covering widget, if any, is
-		// the last one that starts at or before the hovered cell.
+		// findNearestWidget may land on the widget just after the cell. The covering widget, if any,
+		// is the last one that starts at or before the hovered cell.
 		let covering: FlexiWidgetController | null = null;
 		for (const i of [index, index - 1]) {
 			const widget = i >= 0 ? this.#widgets[i] : undefined;
@@ -487,10 +469,10 @@ export class FlowFlexiGrid extends FlexiGrid {
 		const snapshotStart = coords.to1D(snapshotEntry.x, snapshotEntry.y);
 		const snapshotLength = this.isRowFlow ? snapshotEntry.width : snapshotEntry.height;
 
-		// Direction of travel is relative to where the dragged widget currently sits (its shadow in the
-		// live grid), like a sortable list: hovering a widget past the shadow drops after it, one before
-		// the shadow drops before it. This keeps the original slot reachable. Before the shadow has been
-		// placed, fall back to the origin; widgets that shifted into the origin's slot were after it.
+		// Direction is relative to the shadow's current slot, like a sortable list: hovering past the
+		// shadow drops after it, hovering before it drops before it. Keeps the original slot reachable.
+		// Before the shadow is placed, fall back to the origin; widgets shifted into the origin's slot
+		// were after it.
 		const shadow = this.#widgets.find((w) => (w as InternalFlexiWidgetController).isShadow);
 		const dropAfter = shadow
 			? coords.to1D(covering.x, covering.y) > coords.to1D(shadow.x, shadow.y)
@@ -656,12 +638,10 @@ class FlowGridCoordinateSystem {
 		searchStart: number,
 		searchEnd: number
 	): [number, FlexiWidgetController | null] {
-		// Empty
 		if (this.#widgets.length === 0) {
 			return [0, null];
 		}
 
-		// Search was exhausted, return the exhausted widget.
 		if (searchStart === searchEnd) {
 			return [searchStart, this.#widgets[searchStart]];
 		}
@@ -672,20 +652,16 @@ class FlowGridCoordinateSystem {
 		const widgetValue = this.to1D(widget.x, widget.y);
 
 		if (widgetValue === position) {
-			// Direct match.
 			return [median, widget];
 		} else if (widgetValue < position) {
-			// Median widget is less than the search value, move search rightwards.
 			return this.findNearestWidget(position, median + 1, searchEnd);
 		} else {
-			// Median widget is greater than the search value, move search leftwards.
 			return this.findNearestWidget(position, searchStart, median);
 		}
 	}
 
 	coordinateFitsWithinCrossAxis(x?: number, y?: number): boolean {
-		// If the coordinate for the cross axis is greater than the axis's length, then it can't fit.
-		// We don't worry about the width/height, because it'll just wrap to the next row/column.
+		// Width/height isn't checked here since it just wraps to the next row/column.
 		if (this.#isRowFlow && x !== undefined && x > this.#columns) {
 			return false;
 		}
@@ -707,7 +683,7 @@ class FlowGridCoordinateSystem {
 			return basePosition;
 		}
 
-		// If it doesn't fit on the current row/column, then move to the next one.
+		// Doesn't fit on the current row/column, so move to the next one.
 		const flowIndex = this.getFlowAxisCoordinate(basePosition);
 		return (flowIndex + 1) * crossAxisLength;
 	}
@@ -716,7 +692,7 @@ class FlowGridCoordinateSystem {
 		const length = this.getFlowAxisLength();
 		const flowAxisPosition = Math.floor(position / this.getCrossAxisLength());
 
-		// Goes beyond the flow axis' current length, so expand if possible.
+		// Past the flow axis' current length, so expand if possible.
 		if (flowAxisPosition >= length) {
 			return this.setFlowAxisLengthIfPossible(flowAxisPosition + 1);
 		}
@@ -725,7 +701,6 @@ class FlowGridCoordinateSystem {
 	}
 
 	setFlowAxisLengthIfPossible(length: number): boolean {
-		// Oversized
 		if (length > this.#grid.maxFlowAxis) {
 			return false;
 		}

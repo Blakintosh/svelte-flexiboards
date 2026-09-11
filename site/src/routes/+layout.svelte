@@ -8,14 +8,14 @@
 
 	let { data, children } = $props();
 
-	// Seed the framework choice from the cookie the server read, at init, so
-	// the server-rendered markup and the first client render agree.
+	// Seed the framework choice from the cookie the server read, at init, so the
+	// server-rendered markup and the first client render agree.
 	framework.hydrate(data.framework);
 	packageManager.hydrate(data.packageManager);
 
-	// Scroll reveals play on first arrival only: going back (or forward) through
-	// history lands on content the user has already seen, so it mounts settled.
-	// Set before the destination page mounts; a normal link/goto re-enables.
+	// Scroll reveals play only on first arrival. Back/forward navigation lands on
+	// content already seen, so it should mount settled. Set before the destination
+	// page mounts; a normal link or goto re-enables.
 	beforeNavigate((navigation) => {
 		setRevealsSuppressed(navigation.type === 'popstate');
 	});

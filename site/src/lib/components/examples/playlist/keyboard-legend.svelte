@@ -25,9 +25,9 @@
 {/snippet}
 
 <!--
-	The key bindings are on the sheet before anyone presses anything, and the strip
-	swaps to the in-flight bindings while a row is held. FlexiBoard already owns the
-	aria-live channel (FlexiAnnouncer), so this stays a visual affordance only.
+	Bindings show before anyone presses anything, and swap to the in-flight
+	bindings while a row is held. FlexiBoard already owns the aria-live channel
+	(FlexiAnnouncer), so this strip is a visual affordance only.
 -->
 <div
 	class="border-rule-soft flex shrink-0 flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center sm:justify-between"

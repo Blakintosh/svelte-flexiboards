@@ -7,7 +7,7 @@ export type FlowTileProps = {
 
 export function FlowTile({ content }: FlowTileProps) {
 	// The library's own transform positions the widget during drag, so the
-	// grabbed tilt lives on this inner content instead of the widget itself.
+	// grabbed tilt lives on this inner content, not the widget itself.
 	const widget = useFlexiWidget();
 
 	// A placed widget is board furniture: soft tint fill, rounded corners, blue text.

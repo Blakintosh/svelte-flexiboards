@@ -14,8 +14,8 @@ import Sheet from '../common/sheet';
 import CompoundTile, { type TileKind } from '../compound/compound-tile';
 import DropLog, { type DropCounts, type DropScope } from '../compound/drop-log';
 
-// The drop preview reads as a dashed placeholder; the tile in hand lifts
-// off the stage instead of taking an accent outline.
+// The drop preview is a dashed placeholder. The grabbed tile lifts off
+// the stage instead of getting an accent outline.
 const tileClass = (widget: FlexiWidgetController) =>
 	cn(
 		'min-w-0 motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
@@ -50,9 +50,9 @@ const outerTargetConfig = {
 const EMPTY_DROPS: DropCounts = { compound: 0, team: 0, tasks: 0 };
 
 /**
- * Three boards are live on this page: the outer free grid of tiles, and the
- * two inner flow boards that live inside two of those tiles. Each one reports
- * its own drops, so the log below can name which board took the pointer.
+ * Three boards are live here: the outer free grid of tiles, and two inner
+ * flow boards nested inside two of those tiles. Each reports its own drops
+ * so the log below can name which board took the pointer.
  */
 export default function CompoundExample() {
 	const [drops, setDrops] = useState<DropCounts>(EMPTY_DROPS);
@@ -60,8 +60,8 @@ export default function CompoundExample() {
 	const flashTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	const [resetToken, setResetToken] = useState(0);
 
-	// Stable across renders so the inner boards' configs (which close over it)
-	// never change identity and push a pointless update into core.
+	// Stable across renders so the inner boards' configs, which close over it,
+	// keep their identity and don't push a pointless update into core.
 	const commit = useCallback((scope: DropScope) => {
 		setDrops((current) => ({ ...current, [scope]: current[scope] + 1 }));
 		setFlashed(scope);
@@ -76,7 +76,7 @@ export default function CompoundExample() {
 		setDrops(EMPTY_DROPS);
 		setFlashed(null);
 		// Remounting the subtree re-flushes the declarative widget registrations,
-		// restoring all three boards to their initial arrangement.
+		// which restores all three boards to their initial arrangement.
 		setResetToken((token) => token + 1);
 	}
 
@@ -86,10 +86,10 @@ export default function CompoundExample() {
 				draggability: 'full',
 				resizability: 'none',
 				transition: cssTransitionConfig(),
-				// Trigger maps replace wholesale, so all four keys are given. Outer tiles
-				// are grabbable only through the header handle, so an immediate touch grab
-				// cannot fight page scrolling — unlike the inner boards, which keep the
-				// library's long-press default for touch.
+				// Trigger maps replace wholesale, so all four keys are given here. Outer
+				// tiles are grabbable only through the header handle, so an immediate
+				// touch grab can't fight page scrolling, unlike the inner boards, which
+				// keep the library's long-press default for touch.
 				grabTrigger: {
 					default: immediateTriggerConfig(),
 					mouse: immediateTriggerConfig(),
@@ -105,14 +105,14 @@ export default function CompoundExample() {
 		[commit]
 	);
 
-	// componentProps is a prop seam into core: a fresh object each render would
-	// rewrite every tile's config on every drop, so it is built once.
+	// componentProps is a prop seam into core. A fresh object each render would
+	// rewrite every tile's config on every drop, so it's built once.
 	const tileWidgets = useMemo(
 		() => tiles.map((tile) => ({ ...tile, componentProps: { kind: tile.kind, onCommit: commit } })),
 		[commit]
 	);
 
-	// Soft sheet: the nesting claim is annotation, so it belongs in the fig band.
+	// The nesting claim is annotation, so it belongs in the fig band.
 	return (
 		<main className="bg-paper flex h-full min-h-0 w-full flex-col p-3 lg:p-5">
 			<Sheet

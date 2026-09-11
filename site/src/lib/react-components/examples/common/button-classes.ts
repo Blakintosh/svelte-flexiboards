@@ -13,7 +13,7 @@ export const buttonVariants = {
 	outline: 'border border-ink bg-transparent hover:bg-tint hover:text-ink',
 	secondary: 'bg-tint text-ink hover:bg-rule',
 	ghost: 'text-body hover:bg-tint hover:text-ink',
-	// A link is a rule under a label — it doesn't squash like a box.
+	// A link is a rule under a label, not a box, so it doesn't squash.
 	link: 'h-auto border-b border-ink px-0 py-0.5 text-[13px] hover:border-fx-accent hover:text-fx-accent active:scale-100'
 } as const;
 
@@ -35,7 +35,7 @@ export function buttonClass(variant: ButtonVariant = 'default', size: ButtonSize
 /**
  * Native form controls, styled on the site tokens. Examples use real
  * <input>/<select>/<textarea> elements with these classes instead of shadcn's
- * wrappers — accessible by default, and identical markup in both frameworks.
+ * wrappers. Accessible by default, and identical markup in both frameworks.
  */
 export const fieldClass =
 	'border-rule-soft bg-panel text-ink placeholder:text-faint focus-visible:border-ink focus-visible:ring-ring/50 h-9 w-full min-w-0 rounded-[9px] border px-3 text-[13px] outline-none transition-[border-color,box-shadow] duration-[120ms] focus-visible:ring-[3px] disabled:opacity-50';

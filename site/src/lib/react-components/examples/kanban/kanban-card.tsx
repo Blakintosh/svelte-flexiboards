@@ -34,7 +34,7 @@ export default function KanbanCard() {
 				{card.title ?? 'Untitled card'}
 			</h3>
 
-			{/* Meta: a tag pill on the left, who and when — genuinely tabular data — in mono on the right. */}
+			{/* Meta: a tag pill on the left, who and when (tabular data) in mono on the right. */}
 			<div className="flex min-w-0 items-center gap-2 text-[10px]">
 				<span className="bg-tint text-body shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">
 					{card.tag ?? 'Task'}

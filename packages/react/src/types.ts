@@ -1,7 +1,7 @@
-// React instantiations of core's class-generic types: class values are plain
-// strings here (compose with clsx/cn on the consumer side). These explicit
-// aliases shadow the bare (unknown-instantiated) star re-exports above, so
-// consumers annotating with these names never see the generic.
+// React instantiations of core's class-generic types. Class values are plain
+// strings here; compose them with clsx or cn on the consumer side. These
+// aliases shadow the unknown-instantiated star re-exports, so consumers
+// annotating with these names never see the generic.
 import type {
 	AdderWidgetConfiguration as CoreAdderWidgetConfiguration,
 	FlexiAddClasses as CoreFlexiAddClasses,
@@ -18,9 +18,9 @@ import type {
 	FlexiWidgetDefaults as CoreFlexiWidgetDefaults
 } from '@flexiboards/core';
 
-// Core stores a widget's render types opaquely (`unknown`); here they are a
-// React component and a children render function, so configs written for
-// createWidget()/registries/widgetDefaults are type-checked.
+// Core stores a widget's render types as `unknown`. Here they are a React
+// component and a children render function, so configs for createWidget,
+// registries and widgetDefaults are type-checked.
 import type { ComponentType } from 'react';
 import type { FlexiWidgetChildren } from './adapters/widget.js';
 type ReactRender = {

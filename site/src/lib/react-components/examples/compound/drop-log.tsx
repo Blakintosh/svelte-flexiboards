@@ -2,7 +2,7 @@ import { cn } from '$lib/utils.js';
 
 /**
  * The three boards on this page. Every drop the library reports belongs to
- * exactly one of them — which is the claim the log exists to make falsifiable.
+ * exactly one of them. The log exists to make that claim falsifiable.
  */
 export type DropScope = 'compound' | 'team' | 'tasks';
 export type DropCounts = Record<DropScope, number>;

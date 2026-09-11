@@ -5,11 +5,11 @@ import { layoutGrid, rect, setRect } from '@flexiboards/testing';
 import NestedBoard from './fixtures/nested-board.svelte';
 
 /*
-  Regression (the Notes example's nested kanban board): a drop inside a board
+  Regression, the Notes example's nested kanban board: a drop inside a board
   nested in another board's widget flew in from the wrong place, because the
-  nested board's release handler ran after the shared portal had already
-  returned the element to the grid. Twin of the React suite's test; Svelte
-  happened to subscribe the nested board first, so this guards the ordering.
+  nested board's release handler ran after the shared portal had returned the
+  element to the grid. Twin of the React test. Svelte happened to subscribe the
+  nested board first, so this guards the ordering.
 */
 
 let component: Record<string, any> | undefined;
@@ -54,13 +54,13 @@ describe('drop inside a nested board', () => {
 		flushSync();
 		const portal = document.getElementById('flexi-portal')!;
 		expect(portal.contains(el)).toBe(true);
-		// Only the inner widget is in hand; the outer block is not grabbed by the same key press.
+		// Only the inner widget is in hand. The outer block is not grabbed by the same key press.
 		expect(innerBoard!.currentWidgetAction?.action).toBe('grab');
 		expect(outer!.currentWidgetAction).toBeNull();
 		expect(portal.children.length).toBe(1);
 
 		// In hand over the inner grid's far cell. Back in the grid, the same
-		// in-hand absolute style would read somewhere else entirely.
+		// in-hand absolute style would read somewhere else.
 		el.getBoundingClientRect = () =>
 			portal.contains(el) ? rect({ left: 500, top: 500 }) : rect({ left: 800, top: 800 });
 		window.dispatchEvent(new PointerEvent('pointermove', { clientX: 550, clientY: 550 }));

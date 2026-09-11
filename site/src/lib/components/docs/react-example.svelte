@@ -39,6 +39,6 @@
 	});
 </script>
 
-<!-- contents: the React root's host must not participate in layout, so the
-     example's root element sits in the preview exactly like a Svelte one. -->
+<!-- contents: the React root's host must not participate in layout, so its
+     root element sits in the preview exactly like a Svelte one. -->
 <div bind:this={host} class="contents"></div>

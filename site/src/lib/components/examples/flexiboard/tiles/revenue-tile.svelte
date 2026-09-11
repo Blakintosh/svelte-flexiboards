@@ -1,6 +1,6 @@
 <script lang="ts">
-	// Six monthly readings, drawn as rounded bars: the drafting-blue ramp climbs
-	// toward the latest reading, which takes the accent as the one live value.
+	// Six monthly readings as rounded bars: the drafting-blue ramp climbs toward
+	// the latest reading, which takes the accent as the one live value.
 	const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 	const points = [135, 98, 118, 104, 52, 38];
 	const heights = points.map((y) => ((170 - y) / 170) * 100);

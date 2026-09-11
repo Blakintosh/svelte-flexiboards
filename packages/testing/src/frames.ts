@@ -1,7 +1,7 @@
 /**
  * Drop flights and springs run on `requestAnimationFrame`, which a test DOM
- * never advances. This queues frame callbacks so a test can run them one
- * frame at a time and inspect the element between frames.
+ * never advances. This queues frame callbacks so a test can run them one frame
+ * at a time and inspect the element in between.
  */
 export function mockFrames() {
 	let frames: FrameRequestCallback[] = [];

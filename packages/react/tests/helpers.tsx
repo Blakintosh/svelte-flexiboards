@@ -10,8 +10,8 @@ export type Mounted = {
 
 /**
  * Mounts a tree into document.body inside act(). `strict` wraps it in
- * StrictMode so effects mount/unmount/mount and renders double-invoke, which
- * is what the adapter's lifecycle helpers are designed to survive.
+ * StrictMode, so effects mount, unmount and mount again and renders
+ * double-invoke. The adapter's lifecycle helpers are built to survive that.
  */
 export function mount(node: ReactNode, { strict = false } = {}): Mounted {
 	const host = document.createElement('div');
@@ -32,8 +32,8 @@ export function mount(node: ReactNode, { strict = false } = {}): Mounted {
 	};
 }
 
-// Everything that drives the board lives in @flexiboards/testing; setup.ts
-// routes its dispatches through act(). Re-exported so the tests read as before.
+// Everything that drives the board lives in @flexiboards/testing, and setup.ts
+// routes its dispatches through act(). Re-exported for the tests.
 export {
 	flushTimers,
 	MockResizeObserver,

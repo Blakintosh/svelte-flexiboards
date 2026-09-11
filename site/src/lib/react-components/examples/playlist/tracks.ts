@@ -5,7 +5,7 @@ export type Track = {
 	seconds: number;
 };
 
-/** A fixed queue — the example never adds or removes, only reorders. */
+/** A fixed queue: the example only reorders tracks, never adds or removes. */
 export const TRACKS: Track[] = [
 	{ id: 'weather-systems', title: 'Weather Systems', artist: 'Aurora Field', seconds: 252 },
 	{ id: 'low-ceilings', title: 'Low Ceilings', artist: 'Marta Vane', seconds: 218 },
