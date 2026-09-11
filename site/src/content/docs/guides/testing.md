@@ -6,6 +6,7 @@ published: true
 ---
 
 <script lang="ts">
+ import FrameworkText from '$lib/components/docs/framework-text.svelte';
 	import InstallCommand from '$lib/components/docs/install-command.svelte';
 	import Only from '$lib/components/docs/only.svelte';
 	import Callout from '$lib/components/docs/callout.svelte';
@@ -119,19 +120,19 @@ it('moves a widget to the cell under the pointer', () => {
 
 ## Helpers
 
-| Helper                                                                          | What it does                                                                         |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `configure({ flush })`                                                          | Wraps every dispatch. Svelte: run then `flushSync()`. React: `act`.                  |
-| `installResizeObserver()`                                                       | Replaces the global with a mock that `layoutGrid` fires. Returns a restore function. |
-| `layoutGrid(cellPx?, { grid, left, top })`                                      | Geometry for one grid, from its aria attributes. Returns a restore function.         |
-| `setRect(el, { left, top, width, height })`                                     | A box for any element, such as the board around a nested grid.                       |
-| `cells()`, `realCells()`, `cellAt(x, y)`                                        | Widget cells in the document. `realCells` drops the drop preview shown mid-grab.     |
-| `portal()`                                                                      | The element a grabbed widget moves into for the duration of the grab.                |
-| `grabByKeyboard(el)`, `arrow(...keys)`, `dropByKeyboard()`, `cancelGrab()`      | The keyboard gesture, in pieces.                                                     |
-| `pointerDown(el, x, y)`, `pointerMove(x, y)`, `pointerUp()`, `dragTo(el, x, y)` | The pointer gesture, in pieces or in one call.                                       |
-| `keydown(el, key)`                                                              | Any other key.                                                                       |
-| `mockFrames()`                                                                  | Queues `requestAnimationFrame` so a drop flight can be stepped with `flush()`.       |
-| `flushTimers()`                                                                 | Awaits one macrotask, so React's controller grace period runs after an unmount.      |
+| Helper                                                                          | What it does                                                                                                     |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `configure({ flush })`                                                          | Wraps every dispatch. <FrameworkText svelte="Run dispatch, then flushSync()." react="Wrap dispatch in act()." /> |
+| `installResizeObserver()`                                                       | Replaces the global with a mock that `layoutGrid` fires. Returns a restore function.                             |
+| `layoutGrid(cellPx?, { grid, left, top })`                                      | Geometry for one grid, from its aria attributes. Returns a restore function.                                     |
+| `setRect(el, { left, top, width, height })`                                     | A box for any element, such as the board around a nested grid.                                                   |
+| `cells()`, `realCells()`, `cellAt(x, y)`                                        | Widget cells in the document. `realCells` drops the drop preview shown mid-grab.                                 |
+| `portal()`                                                                      | The element a grabbed widget moves into for the duration of the grab.                                            |
+| `grabByKeyboard(el)`, `arrow(...keys)`, `dropByKeyboard()`, `cancelGrab()`      | The keyboard gesture, in pieces.                                                                                 |
+| `pointerDown(el, x, y)`, `pointerMove(x, y)`, `pointerUp()`, `dragTo(el, x, y)` | The pointer gesture, in pieces or in one call.                                                                   |
+| `keydown(el, key)`                                                              | Any other key.                                                                                                   |
+| `mockFrames()`                                                                  | Queues `requestAnimationFrame` so a drop flight can be stepped with `flush()`.                                   |
+| `flushTimers()`                                                                 | Awaits one macrotask, so React's controller grace period runs after an unmount.                                  |
 
 ## What to assert
 

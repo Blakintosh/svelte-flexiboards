@@ -1,14 +1,21 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { InternalFlexiBoardController } from '../board/controller.js';
 import { getFlexiEventBus } from '../shared/event-bus.js';
 
-beforeAll(() => {
-	// The board locks the viewport on grab; core is otherwise DOM-free here.
-	(globalThis as any).document ??= { documentElement: { style: {} } };
+const boards: InternalFlexiBoardController[] = [];
+beforeEach(() => {
+	vi.spyOn(console, 'error');
+});
+afterEach(() => {
+	boards.splice(0).forEach((board) => board.destroy());
+	expect(console.error).not.toHaveBeenCalled();
+	vi.restoreAllMocks();
 });
 
 const setup = () => {
 	const board = new InternalFlexiBoardController({ config: {} } as any, null);
+	boards.push(board);
 	const target = board.createTarget(
 		{ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 } } as any,
 		'left'

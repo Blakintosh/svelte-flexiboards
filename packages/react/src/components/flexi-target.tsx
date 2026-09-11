@@ -2,7 +2,7 @@ import { type FlexiTargetController } from '@flexiboards/core';
 import type { FlexiTargetPartialConfiguration } from '../types.js';
 import { useCallback, useEffect, type ReactNode } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
-import { FlexiTargetContext } from '../adapters/target.js';
+import { FlexiTargetContext, useInternalFlexiTarget } from '../adapters/target.js';
 import {
 	renderChildren,
 	useOnceCommitted,
@@ -73,13 +73,35 @@ export function FlexiTarget({
 
 	useOnceCommitted(() => onfirstcreate?.(target as FlexiTargetController));
 
-	// Prop seam, see FlexiBoard. Runs every render, inert unless `config`
-	// differs by value.
+	// Runs every render; updateConfig ignores unchanged values.
 	useEffect(() => {
 		target.updateConfig(config);
 	});
 
-	// Consumer-facing handle for the header/footer render functions.
+	return (
+		<FlexiTargetContext.Provider value={target}>
+			{/* React visits siblings in order: register declarations, prepare
+				    their controllers, then read grid/widget state for this render.
+				    No client-only rerender is needed to produce the server HTML. */}
+			{children && <div style={{ display: 'none' }}>{children}</div>}
+			<FlexiTargetLoader />
+			<FlexiTargetContent
+				containerClassName={containerClassName}
+				className={className}
+				header={header}
+				footer={footer}
+			/>
+		</FlexiTargetContext.Provider>
+	);
+}
+
+function FlexiTargetContent({
+	containerClassName,
+	className,
+	header,
+	footer
+}: Pick<FlexiTargetProps, 'containerClassName' | 'className' | 'header' | 'footer'>) {
+	const target = useInternalFlexiTarget();
 	const publicTarget = useReactive(target as FlexiTargetController);
 
 	// Bridge core-signal reads into React's reactivity.
@@ -91,42 +113,24 @@ export function FlexiTarget({
 	);
 
 	return (
-		<FlexiTargetContext.Provider value={target}>
-			<div className={containerClassName}>
-				{renderChildren(header, { target: publicTarget })}
+		<div className={containerClassName}>
+			{renderChildren(header, { target: publicTarget })}
 
-				<FlexiGrid className={className}>
-					{children && (
-						// The FlexiWidget declarations here register their configs and
-						// render no markup. display:none rather than visibility, so
-						// the wrapper never occupies a grid cell.
-						<div style={{ display: 'none' }}>{children}</div>
-					)}
+			<FlexiGrid className={className}>
+				{prepared && (
+					<>
+						{orderedWidgets.map((widget) => (
+							<RenderedFlexiWidget key={widget.id} widget={widget} />
+						))}
 
-					{prepared && (
-						<>
-							{orderedWidgets.map((widget) => (
-								<RenderedFlexiWidget key={widget.id} widget={widget} />
-							))}
+						{dropzoneWidget && shouldRenderDropzoneWidget && (
+							<RenderedFlexiWidget widget={dropzoneWidget} />
+						)}
+					</>
+				)}
+			</FlexiGrid>
 
-							{dropzoneWidget && shouldRenderDropzoneWidget && (
-								<RenderedFlexiWidget widget={dropzoneWidget} />
-							)}
-						</>
-					)}
-				</FlexiGrid>
-
-				{renderChildren(footer, { target: publicTarget })}
-			</div>
-
-			{/* Creates the registered widgets in this same render pass: after the
-		    children, whose registrations happen in the grid's subtree, and
-		    before the board's own loader, a later sibling of every target. That
-		    ordering matches Svelte's, so stored layouts replace the declared
-		    widgets instead of stacking on them. The grid read orderedWidgets
-		    before this ran, but useSyncExternalStore re-checks its snapshot on
-		    subscribe and re-renders with the created widgets. */}
-			<FlexiTargetLoader />
-		</FlexiTargetContext.Provider>
+			{renderChildren(footer, { target: publicTarget })}
+		</div>
 	);
 }

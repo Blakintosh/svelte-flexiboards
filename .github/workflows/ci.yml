@@ -30,6 +30,7 @@ jobs:
       - run: pnpm -C packages/testing build
       - run: pnpm -C packages/svelte build
       - run: pnpm -C packages/react build
+      - run: pnpm check:artifacts
 
       - name: Unit and component tests
         run: pnpm -r test
@@ -44,6 +45,35 @@ jobs:
         run: pnpm -C site extract-api && pnpm -C site check
       - name: Lint
         run: pnpm lint
+
+  react-compatibility:
+    name: Published React package (${{ matrix.react }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        react: ['18.0.0', '19.2.8']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - name: Install and hydrate the packed packages as a consumer
+        env:
+          REACT_VERSION: ${{ matrix.react }}
+        run: |
+          consumer_dir=$(mktemp -d)
+          pnpm -C packages/core pack --pack-destination "$consumer_dir"
+          pnpm -C packages/react pack --pack-destination "$consumer_dir"
+          pnpm -C packages/testing pack --pack-destination "$consumer_dir"
+          npm install --prefix "$consumer_dir" --ignore-scripts --no-audit --no-fund "$consumer_dir"/*.tgz "react@$REACT_VERSION" "react-dom@$REACT_VERSION" happy-dom@20.11.2
+          node scripts/test-react-package.mjs "$consumer_dir"
 
   e2e:
     name: Browser tests

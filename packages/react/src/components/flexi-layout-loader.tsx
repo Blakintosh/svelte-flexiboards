@@ -1,16 +1,15 @@
 import { useInternalFlexiBoard } from '../adapters/board.js';
-import { useOnce } from '../adapters/utils.js';
+import { useEffect } from 'react';
 
 /**
  * @internal Rendered by FlexiBoard, after its children. Triggers the initial
- * layout load at render time, via useOnce, so it runs after the earlier sibling
- * targets and widgets have registered but before any mount effects. That
- * matches the Svelte init ordering.
+ * client layout load after hydration. The first client render must retain
+ * the server's declared/initialLayout content, even when storage differs.
  */
 export function FlexiLayoutLoader() {
 	const board = useInternalFlexiBoard();
 
-	useOnce(() => board.oninitialloadcomplete());
+	useEffect(() => board.oninitialloadcomplete(), [board]);
 
 	return null;
 }

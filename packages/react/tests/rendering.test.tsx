@@ -84,8 +84,9 @@ describe('widget rendering', () => {
 		const others = Array.from(grid.children).filter(
 			(c) => (c as HTMLElement).style.display !== 'contents'
 		);
-		expect(others.length).toBe(1);
-		expect((others[0] as HTMLElement).style.display).toBe('none');
+		// Declarations now precede the grid so its server render can read the
+		// completed layout. They still occupy no grid tracks or visible space.
+		expect(others.length).toBe(0);
 		expect(cells(grid).length).toBe(1);
 		expect(grid.className).toBe('grid');
 	});

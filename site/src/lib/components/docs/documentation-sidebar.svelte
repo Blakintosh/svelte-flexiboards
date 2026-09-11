@@ -7,8 +7,7 @@
 
 	let { class: className = '' } = $props();
 
-	// The contents follow the framework choice: pages that don't apply (e.g.
-	// SSR under React) drop out, and the numbering closes up around them.
+	// The contents follow the framework choice; numbering closes up around omitted pages.
 	const directory = $derived(directoryFor(framework.current));
 	const pageCount = $derived(directory.reduce((n, s) => n + s.pages.length, 0));
 </script>
@@ -17,7 +16,7 @@
   Drafting-table contents: numbered section labels, items ruled off by a left
   border, and the active page flagged with a fx-accent square in the margin.
 -->
-<nav class={cn('flex min-h-0 flex-col', className)}>
+<nav aria-label="Documentation" class={cn('flex min-h-0 flex-col', className)}>
 	<!-- Framework first: it decides which pages exist below. -->
 	<FrameworkMenu align="left" class="mb-5 w-full justify-between" />
 

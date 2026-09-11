@@ -6,8 +6,8 @@ import { ORIGIN } from './site-origin.mjs';
   shadcn-style registries, one per framework, built from real component files
   under src/lib/registry (so svelte-check keeps them honest) into
   static/r/<framework>/*.json with the file contents inline: the shape
-  `shadcn-svelte add <url>` and `shadcn add <url>` read. Preview: two items
-  each, no versioning yet.
+  `shadcn-svelte add <url>` and `shadcn add <url>` read. Component families,
+  not application blocks: consumers own their content and composition.
 */
 
 const OUT = 'static/r';
@@ -32,6 +32,14 @@ const frameworks = {
 
 // Item shapes shared by both frameworks; only the file extension differs.
 const items = (fw) => [
+	...['grabber', 'resizer'].map((handle) => ({
+		name: `flexi-${handle}`,
+		type: 'registry:component',
+		title: handle === 'grabber' ? 'Grabber' : 'Resizer',
+		description: `A themed, keyboard-accessible ${handle} for any FlexiWidget.`,
+		registryDependencies: ['utils'],
+		files: [`flexi-handles/${handle}.${fw.ext}`]
+	})),
 	{
 		name: 'flexi-handles',
 		type: 'registry:component',
@@ -42,12 +50,36 @@ const items = (fw) => [
 	},
 	{
 		name: 'flexi-sortable-list',
-		type: 'registry:block',
+		type: 'registry:component',
 		title: 'Sortable list',
 		description:
-			'A reorderable list of rows with grab handles, reporting the new order on every drop.',
+			'Composable SortableList.Root, Item and handles, with custom content and order callbacks.',
 		registryDependencies: ['utils', 'flexi-handles'],
-		files: [`flexi-sortable-list/sortable-list.${fw.ext}`]
+		files: ['index.ts', `root.${fw.ext}`, `item.${fw.ext}`, `sortable-list.${fw.ext}`].map(
+			(file) => `flexi-sortable-list/${file}`
+		)
+	},
+	{
+		name: 'flexi-dashboard',
+		type: 'registry:component',
+		title: 'Dashboard',
+		description: 'Composable dashboard tiles with themed surfaces, grab handles and resizing.',
+		registryDependencies: ['utils', 'flexi-handles'],
+		files: [
+			'index.ts',
+			...['root', 'item', 'header', 'content'].map((part) => `${part}.${fw.ext}`)
+		].map((file) => `flexi-dashboard/${file}`)
+	},
+	{
+		name: 'flexi-board',
+		type: 'registry:component',
+		title: 'Board',
+		description:
+			'Themed board, target and item primitives for custom layouts and multiple targets.',
+		registryDependencies: ['utils', 'flexi-handles'],
+		files: ['index.ts', ...['root', 'target', 'item'].map((part) => `${part}.${fw.ext}`)].map(
+			(file) => `flexi-board/${file}`
+		)
 	}
 ];
 
@@ -63,7 +95,14 @@ for (const [id, fw] of Object.entries(frameworks)) {
 		const files = item.files.map((src) => {
 			const full = path.join(fw.src, src);
 			if (!existsSync(full)) throw new Error(`registry: missing ${full}`);
-			return { path: `${fw.root}/${src}`, type: item.type, content: readFileSync(full, 'utf8') };
+			return {
+				path: `${fw.root}/${src}`,
+				type: item.type,
+				// Svelte's built-item schema requires a target relative to the
+				// consumer's components alias. Keep each namespace in its folder.
+				...(id === 'svelte' && { target: src }),
+				content: readFileSync(full, 'utf8')
+			};
 		});
 		const json = {
 			$schema: `${fw.schema}/registry-item.json`,

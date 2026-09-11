@@ -25,6 +25,7 @@
 </script>
 
 <button
+	type="button"
 	style={'user-select: none; touch-action: none;' +
 		(resizability != 'none' && mounted ? 'cursor: nwse-resize' : 'cursor: not-allowed')}
 	class={className}

@@ -1,12 +1,27 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { InternalFlexiBoardController } from './controller.js';
 import { getFlexiEventBus } from '../shared/event-bus.js';
 import { getPointerService } from '../shared/utils.js';
 
-beforeAll(() => {
-	// The board locks the viewport on grab; core is otherwise DOM-free here.
-	(globalThis as any).document ??= { documentElement: { style: {} } };
+const boards: InternalFlexiBoardController[] = [];
+beforeEach(() => {
+	vi.spyOn(console, 'error');
 });
+afterEach(() => {
+	boards.splice(0).forEach((board) => board.destroy());
+	expect(console.error).not.toHaveBeenCalled();
+	vi.restoreAllMocks();
+	document.body.innerHTML = '';
+});
+
+function gridElement(width: number, columns: string) {
+	const element = document.createElement('div');
+	element.style.cssText = `display: grid; grid-template-columns: ${columns}; grid-template-rows: 100px 100px 100px;`;
+	element.getBoundingClientRect = () => new DOMRect(0, 0, width, 300);
+	document.body.appendChild(element);
+	return element;
+}
 
 describe('grabbing with the pointer outside the target', () => {
 	it('lets the target the grab point lands in receive the widget', () => {
@@ -15,16 +30,13 @@ describe('grabbing with the pointer outside the target', () => {
 		// never got widget:entertarget, no drop preview, and the release was
 		// refused. A keyboard grab always jumps the pointer like this.
 		const board = new InternalFlexiBoardController({ config: {} } as any, null);
+		boards.push(board);
 		const target = board.createTarget(
 			{ layout: { type: 'free', minColumns: 3, maxColumns: 3, minRows: 3, maxRows: 3 } } as any,
 			'left'
 		);
 		const grid = target.createGrid();
-		grid.ref = {
-			getBoundingClientRect: () => ({ left: 0, top: 0, width: 300, height: 300 }),
-			scrollWidth: 0,
-			scrollHeight: 0
-		} as any;
+		grid.ref = gridElement(300, '100px 100px 100px');
 		const widget = target.createWidget({ x: 0, y: 0, width: 1, height: 1 } as any)!;
 
 		getPointerService().updatePosition(-50, -50);
@@ -53,16 +65,13 @@ describe('grabbing with the pointer outside the target', () => {
 		// widget. Leaving the target restored that snapshot: a phantom row that
 		// stayed empty for the rest of the session, the "leftover gap".
 		const board = new InternalFlexiBoardController({ config: {} } as any, null);
+		boards.push(board);
 		const target = board.createTarget(
 			{ layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append' } } as any,
 			'list'
 		);
 		const grid = target.createGrid();
-		grid.ref = {
-			getBoundingClientRect: () => ({ left: 0, top: 0, width: 200, height: 300 }),
-			scrollWidth: 0,
-			scrollHeight: 0
-		} as any;
+		grid.ref = gridElement(200, '200px');
 		const first = target.createWidget({ width: 1, height: 1 } as any)!;
 		const second = target.createWidget({ width: 1, height: 1 } as any)!;
 		const third = target.createWidget({ width: 1, height: 1 } as any)!;

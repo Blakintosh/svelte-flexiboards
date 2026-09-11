@@ -1,3 +1,5 @@
+'use client';
+
 // Components
 export { FlexiBoard, type FlexiBoardProps } from './components/flexi-board.js';
 export type { FlexiBoardSuspenseReason } from './components/flexi-suspense-boundary.js';

@@ -2,11 +2,9 @@ import { useInternalFlexiTarget } from '../adapters/target.js';
 import { useOnce } from '../adapters/utils.js';
 
 /**
- * @internal Rendered by FlexiTarget, after its grid. Creates the target's
- * declared widgets at render time, via useOnce, so it runs after the children's
- * registrations and before the board's layout loader. That matches the Svelte
- * init ordering. Core consumes the registration queue, so a repeated call
- * cannot create duplicates.
+ * @internal Creates widgets after declarations register and before the grid
+ * reads them, so they appear in SSR output. Core consumes the registration
+ * queue, so repeated calls cannot create duplicates.
  */
 export function FlexiTargetLoader() {
 	const target = useInternalFlexiTarget();

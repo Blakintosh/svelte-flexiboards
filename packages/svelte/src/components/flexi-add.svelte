@@ -66,6 +66,7 @@
 </script>
 
 <button
+	type="button"
 	class={derivedClassName}
 	bind:this={adder.ref}
 	aria-describedby={assistiveTextId}

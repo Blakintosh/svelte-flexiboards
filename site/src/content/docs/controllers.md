@@ -167,6 +167,8 @@ export function MyWidgetContent() {
 
 The controllers returned by these hooks are **reactive proxies**. Any signal-backed getter you read while rendering is tracked, including `widget.isGrabbed`, `widget.draggability`, `widget.x` and `target.dropRejected`, and your component re-renders when it changes. There is no extra hook, selector or subscription to write. Just read the property.
 
+Controller collections are tracked too: reading `target.widgets.size`, iterating `target.widgets`, or reading a reactive map subscribes to changes in that collection. Tracking is otherwise shallow; replace metadata objects through the controller setter when updating them.
+
 Reads outside of render (in an event handler, effect or callback) are not tracked, which is exactly what you want when you're calling an imperative method:
 
 ```tsx
@@ -252,7 +254,7 @@ export function Board() {
 }
 ```
 
-Keep `config` at module scope or in `useMemo`; a fresh object each render pushes an update into the board every time.
+Stable configs avoid unnecessary comparisons. Inline objects work too: the adapter compares their values before updating the board. Replace nested configuration objects when changing them rather than mutating them in place.
 
 </Only>
 

@@ -1,5 +1,19 @@
-import { effect } from '@flexiboards/core';
-import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
+import { effect, ReactiveMap, ReactiveSet } from '@flexiboards/core';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useClientLayoutEffect } from './utils.js';
+
+// Collection objects keep their identity across mutations. Reading their
+// contents here both tracks their signal and snapshots membership/order.
+function snapshot(value: unknown): unknown[] {
+	if (value instanceof ReactiveMap) return [value, ...Array.from(value).flat()];
+	if (value instanceof ReactiveSet) return [value, ...value];
+	if (Array.isArray(value)) return [...value];
+	return [value];
+}
+
+function equal(a: unknown[] | undefined, b: unknown[]): boolean {
+	return !!a && a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
+}
 
 /**
  * Wraps a core controller so any signal-backed getter read during render
@@ -10,7 +24,8 @@ import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
  * while rendering, and one core `effect` re-reads them and re-renders on
  * change. Reads outside render pass through and subscribe nothing.
  *
- * Tracking is top-level, so `widget.metadata.type` subscribes to `metadata`.
+ * Tracking is top-level: `widget.metadata.type` subscribes to `metadata`.
+ * ReactiveSet/ReactiveMap values also subscribe to collection mutations.
  * Keys stay subscribed across conditional branches to avoid missed updates.
  */
 export function useReactive<T extends object>(controller: T): T;
@@ -20,13 +35,14 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 	const tracked = useRef(new Set<PropertyKey>());
 	const rendering = useRef(false);
 	const bound = useRef(new Map<PropertyKey, unknown>());
+	const rendered = useRef(new Map<PropertyKey, unknown[]>());
 
 	// The proxy must know whether a read happens during render (record it) or
 	// later (pass it through), hence the render-time ref writes below. They
 	// reset in a layout effect and never affect rendered output.
 	/* eslint-disable react-hooks/refs */
 	rendering.current = true;
-	useLayoutEffect(() => {
+	useClientLayoutEffect(() => {
 		rendering.current = false;
 	});
 
@@ -39,11 +55,16 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 		subscribed.current?.dispose();
 		let first = true;
 		const dispose = effect(() => {
-			for (const key of tracked.current) void Reflect.get(controller, key, controller);
-			// The first run only establishes tracking. Later runs mean
-			// something changed.
-			if (first) first = false;
-			else rerender();
+			let missedUpdate = false;
+			for (const key of tracked.current) {
+				const current = snapshot(Reflect.get(controller, key, controller));
+				if (!equal(rendered.current.get(key), current)) missedUpdate = true;
+			}
+			// Layout effects (including onfirstcreate) may have changed core
+			// after render but before this subscription existed. Reconcile that
+			// window instead of unconditionally ignoring the initial notification.
+			if (!first || missedUpdate) rerender();
+			first = false;
 		});
 		subscribed.current = { size, dispose };
 	});
@@ -58,8 +79,8 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 	return useMemo(() => {
 		tracked.current.clear();
 		bound.current.clear();
-		// A missing controller is allowed so a parent can hold one it receives
-		// later via onfirstcreate and read it reactively once it arrives.
+		rendered.current.clear();
+		// Allow controllers supplied later via onfirstcreate.
 		if (!controller) return undefined;
 		return new Proxy(controller, {
 			get(target, key) {
@@ -72,7 +93,10 @@ export function useReactive<T extends object>(controller: T | null | undefined):
 					}
 					return fn;
 				}
-				if (rendering.current) tracked.current.add(key);
+				if (rendering.current) {
+					tracked.current.add(key);
+					rendered.current.set(key, snapshot(value));
+				}
 				return value;
 			},
 			// Writes go to the controller's own setters, which are core's

@@ -99,6 +99,12 @@
 		"name": "FlexiTargetController",
 		"properties": [
 			{
+				"name": "key",
+				"type": "string",
+				"description": "The stable target identifier used in exported layouts and drop callbacks.",
+				"readonly": true
+			},
+			{
 				"name": "config",
 				"type": "FlexiTargetConfiguration",
 				"description": "The reactive configuration of the target."

@@ -1,5 +1,5 @@
 import type { InternalFlexiBoardController } from '@flexiboards/core';
-import { useId, type ReactNode } from 'react';
+import { useId, version, type ReactNode } from 'react';
 
 /**
  * Why a board's suspense fallback is being rendered.
@@ -70,8 +70,13 @@ export function FlexiSuspenseBoundary({
 			</div>
 			{suspended && reason && (
 				<>
-					{/* `inert` as a plain attribute so React 18, which has no typed prop, emits it too. */}
-					<div data-flexi-fallback={id} aria-hidden="true" {...({ inert: true } as object)}>
+					{/* React 18 treats inert as an unknown string attribute; React 19
+					    implements it as a boolean. Both must emit it during SSR. */}
+					<div
+						data-flexi-fallback={id}
+						aria-hidden="true"
+						{...({ inert: version.startsWith('18.') ? '' : true } as object)}
+					>
 						{fallback(reason)}
 					</div>
 					{mediaCondition && (

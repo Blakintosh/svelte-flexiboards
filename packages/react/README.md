@@ -14,6 +14,12 @@ npm i @flexiboards/react
 
 Requires React 18 or 19.
 
+## Server rendering
+
+Declared widgets and `config.initialLayout` render on the server and hydrate on the client. Storage callbacks (`loadLayout` and `loadLayouts`) run only after the client commits. Responsive boards hydrate the `ssrBreakpoint` guess before switching to the real viewport. Use the `suspense` prop to cover provisional layouts.
+
+With Next.js App Router, compose boards in a `'use client'` component; this still allows server rendering. Keep registry components and render functions inside that boundary, and pass serializable layout data from the server. `onfirstcreate` is a client callback, so use `initialLayout` for server-provided data. See the [SSR guide](https://flexiboards.dev/docs/guides/server-side-rendering).
+
 ## Usage
 
 ```tsx

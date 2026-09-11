@@ -70,6 +70,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Whether initial layout loading has completed.
 	 */
 	#ready: boolean = false;
+	#clientInitialized$: Signal<boolean> = signal(true);
 
 	/**
 	 * Debounce timer for layout change callbacks.
@@ -121,9 +122,8 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Falls back to 'default' if no breakpoint matches.
 	 */
 	#currentBreakpoint$: ReadonlySignal<string> = computed(() => {
-		// No media query can match on the server, so use the configured stand-in
-		// so the server-rendered layout matches the most likely viewport.
-		if (isSsrEnvironment()) {
+		// Retain the server's assumed breakpoint until the adapter confirms the viewport.
+		if (isSsrEnvironment() || !this.#clientInitialized$()) {
 			return this.config$()?.ssrBreakpoint ?? DEFAULT_BREAKPOINT;
 		}
 
@@ -146,9 +146,12 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 */
 	#previousBreakpoint: string = DEFAULT_BREAKPOINT;
 
-	constructor(props: ResponsiveFlexiBoardProps) {
-		// Normalised through the seam so identity never matches the caller's
-		// object. See InternalFlexiBoardController's constructor.
+	constructor(props: ResponsiveFlexiBoardProps, deferClientInitialization = false) {
+		// React hydrates the server's assumed breakpoint before consulting the
+		// viewport. Other adapters retain their existing immediate initialization.
+		this.#clientInitialized$(!deferClientInitialization);
+		// Copy props so their identity differs from the caller's object.
+		// See InternalFlexiBoardController's constructor.
 		this.updateProps(props);
 		this.#eventBus = getFlexiEventBus();
 
@@ -212,6 +215,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	 * Creates MediaQuery instances for each configured breakpoint.
 	 */
 	#initializeMediaQueries() {
+		if (!this.#clientInitialized$()) return;
 		const breakpoints = this.config$()?.breakpoints ?? {};
 
 		this.#mediaQueries.forEach((query) => query.destroy());
@@ -367,6 +371,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		if (isSsrEnvironment()) {
 			return;
 		}
+		this.#clientInitialized$(true);
 
 		const loadLayoutsFn = this.config$()?.loadLayouts;
 		if (loadLayoutsFn) {
@@ -393,17 +398,13 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	}
 
 	/**
-	 * The breakpoint this render is assuming without confirmation, or null once
-	 * it's real. Non-null only while server-rendering: the server can't match a
-	 * media query, so whatever breakpoint it renders (ssrBreakpoint, else
-	 * 'default') is a guess. Adapters emit it into the markup
-	 * (data-flexi-pending), which lets a stylesheet make the guess honest,
-	 * e.g. veil the board except under a media query matching the guessed
-	 * breakpoint's own range. On the client matchMedia answers immediately,
-	 * so this is null from the first client render.
+	 * The assumed breakpoint during SSR or deferred hydration, otherwise null.
+	 * Adapters expose it as data-flexi-pending so CSS can hide the provisional
+	 * board outside the assumed breakpoint's range. React retains the assumption
+	 * through hydration and confirms the viewport after commit.
 	 */
 	get breakpointPending(): string | null {
-		if (!isSsrEnvironment()) {
+		if (!isSsrEnvironment() && this.#clientInitialized$()) {
 			return null;
 		}
 		return this.ssrAssumedBreakpoint;

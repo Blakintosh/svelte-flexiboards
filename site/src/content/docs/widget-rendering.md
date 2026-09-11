@@ -6,6 +6,7 @@ published: true
 ---
 
 <script lang="ts">
+ import FrameworkText from '$lib/components/docs/framework-text.svelte';
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
@@ -231,7 +232,7 @@ Any React component rendered inside of the FlexiWidget, whether via `children` o
 
 ## Styling by state
 
-Whichever approach you use, the widget's own element is styled with its class prop (`class` in Svelte, `className` in React), or with `widgetDefaults.className` further up the cascade. It accepts either a class value or a function that receives the widget's controller. The function is the neatest way to make a widget's provisional states visible:
+Whichever approach you use, the widget's own element is styled with its class prop (<FrameworkText svelte="class" react="className" code />), or with `widgetDefaults.className` further up the cascade. It accepts either a class value or a function that receives the widget's controller. The function is the neatest way to make a widget's provisional states visible:
 
 - `isGrabbed` while the widget is being dragged, and `isResizing` while it is being resized.
 - `isShadow` on the preview left in the grid while the widget is held.

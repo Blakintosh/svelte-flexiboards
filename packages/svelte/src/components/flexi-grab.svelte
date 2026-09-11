@@ -25,6 +25,7 @@
 </script>
 
 <button
+	type="button"
 	style={'user-select: none; touch-action: none;' +
 		(isGrabbable && mounted ? 'cursor: grab;' : 'cursor: not-allowed;')}
 	disabled={!isGrabbable || !mounted}

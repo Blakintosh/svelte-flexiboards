@@ -1,14 +1,13 @@
-import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { InternalFlexiBoardController } from '../board/controller.js';
 import { InternalFlexiAddController, dragInOnceMounted } from './adder.js';
 import { getFlexiEventBus } from '../shared/event-bus.js';
 
-beforeAll(() => {
-	// The board locks the viewport on grab; core is otherwise DOM-free here.
-	(globalThis as any).document ??= { documentElement: { style: {} } };
-});
+const cleanups: (() => void)[] = [];
 
 afterEach(() => {
+	cleanups.splice(0).forEach((cleanup) => cleanup());
 	vi.restoreAllMocks();
 });
 
@@ -23,6 +22,10 @@ const setup = () => {
 	const adder = new InternalFlexiAddController(board, () => ({
 		widget: { width: 1, height: 1 } as any
 	}));
+	cleanups.push(() => {
+		adder.destroy();
+		board.destroy();
+	});
 	adder.ref = {
 		getBoundingClientRect: () => ({ left: 0, top: 0, width: 10, height: 10 })
 	} as any;

@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 import { describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, StrictMode, useLayoutEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { signal } from '@flexiboards/core';
+import { signal, ReactiveMap, ReactiveSet } from '@flexiboards/core';
 import { useReactive } from './reactive.js';
 
 // A stand-in for a core controller: signal-backed getters plus a method.
@@ -40,6 +40,46 @@ function mount(node: React.ReactNode) {
 }
 
 describe('useReactive', () => {
+	it('catches signal changes between render and subscription, including StrictMode', () => {
+		const controller = makeController();
+		function View() {
+			const c = useReactive(controller);
+			useLayoutEffect(() => controller.relabel('committed'), []);
+			return <span>{c.label}</span>;
+		}
+		const { host, unmount } = mount(
+			<StrictMode>
+				<View />
+			</StrictMode>
+		);
+		expect(host.textContent).toBe('committed');
+		unmount();
+	});
+
+	it('tracks membership, order and values of controller collections', () => {
+		const controller = {
+			widgets: new ReactiveSet<string>(),
+			labels: new ReactiveMap<string, string>()
+		};
+		function View() {
+			const c = useReactive(controller);
+			return (
+				<span>
+					{c.widgets.size}:{[...c.widgets].join(',')}:{c.labels.get('a')}
+				</span>
+			);
+		}
+		const { host, unmount } = mount(<View />);
+		act(() => controller.widgets.add('a'));
+		expect(host.textContent).toBe('1:a:');
+		act(() => controller.labels.set('a', 'first'));
+		expect(host.textContent).toBe('1:a:first');
+		act(() => controller.labels.set('a', 'second'));
+		expect(host.textContent).toBe('1:a:second');
+		act(() => controller.widgets.clear());
+		expect(host.textContent).toBe('0::second');
+		unmount();
+	});
 	it('re-renders when a getter read during render changes, with bare property access', () => {
 		const controller = makeController();
 		let renders = 0;

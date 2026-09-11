@@ -181,18 +181,21 @@ function readAttrs(tag) {
  * Component handling:
  *   <script>            dropped (its `api` import is remembered)
  *   <!-- … -->          dropped
- *   <Only svelte|react> a bold "Svelte" / "React" lead line; both variants kept
- *   <ApiProps>          Svelte and React prop tables
+ *   <Only svelte|react> framework-selected blocks; labeled variants in all mode
+ *   <FrameworkText>    framework-selected inline text or code
+ *   <ApiProps>          framework-selected prop tables, resolved by import name
  *   <ApiReference>      one table from the generated API JSON
  *   <Callout>/<HeadsUp> a blockquote led by a bold title
  *   anything else       dropped
  *   ```lang example …   plain ```lang fence, title on the line above
  */
-function transform(body, { slug }) {
+export function transform(body, { slug, framework = 'all' }) {
 	const lines = body.split(/\r?\n/);
 	const out = [];
 	const unhandled = new Set();
-	let apiJson = null;
+	const apis = new Map();
+	const gates = [];
+	const visible = () => gates.every(Boolean);
 
 	let fence = null; // closing fence marker while inside a code block
 	let inScript = false;
@@ -200,6 +203,7 @@ function transform(body, { slug }) {
 	let callout = null; // open blockquote wrapper
 
 	const push = (line) => {
+		if (!visible()) return;
 		// A callout body is authored indented; left as-is it would read as a
 		// code block once it sits behind a blockquote marker.
 		const text = callout && !fence ? line.replace(/^\s+/, '') : line;
@@ -233,13 +237,13 @@ function transform(body, { slug }) {
 
 		if (inScript) {
 			const api = /from\s+'\$lib\/generated\/api\/([^']+)'/.exec(line);
-			if (api) apiJson = loadApi(api[1]);
+			if (api) apis.set(/import\s+(\w+)/.exec(line)?.[1], loadApi(api[1]));
 			if (/<\/script>/.test(line)) inScript = false;
 			continue;
 		}
 		if (/^<script\b/.test(trimmed)) {
 			const api = /from\s+'\$lib\/generated\/api\/([^']+)'/.exec(line);
-			if (api) apiJson = loadApi(api[1]);
+			if (api) apis.set(/import\s+(\w+)/.exec(line)?.[1], loadApi(api[1]));
 			if (!/<\/script>/.test(line)) inScript = true;
 			continue;
 		}
@@ -258,13 +262,19 @@ function transform(body, { slug }) {
 		if (only) {
 			const svelte = /\bsvelte\b/.test(only[1]);
 			const react = /\breact\b/.test(only[1]);
-			if (svelte !== react) {
+			gates.push(framework === 'all' ? svelte || react : framework === 'svelte' ? svelte : react);
+			if (framework === 'all' && svelte !== react) {
 				push(`**${svelte ? 'Svelte' : 'React'}**`);
 				push('');
 			}
 			continue;
 		}
-		if (trimmed === '</Only>') continue;
+		if (trimmed === '</Only>') {
+			if (!gates.length) throw new Error(`Unmatched </Only> in ${slug}`);
+			gates.pop();
+			continue;
+		}
+		if (!visible()) continue;
 
 		// Install commands: the npm form, as a shell listing.
 		const install = /^<InstallCommand\b([^>]*)\/>\s*$/.exec(trimmed);
@@ -310,6 +320,10 @@ function transform(body, { slug }) {
 		const apiProps = /^<ApiProps\b([^>]*)\/>$/.exec(trimmed);
 		if (apiProps) {
 			const attrs = readAttrs(apiProps[1]);
+			const apiJson = apis.get(
+				/api\s*=\s*\{(\w+)\}/.exec(apiProps[1])?.[1] ??
+					(/\{api\}/.test(apiProps[1]) ? 'api' : undefined)
+			);
 			const title = attrs.title || 'Props';
 			if (!apiJson) {
 				unhandled.add('ApiProps without a resolvable api import');
@@ -317,7 +331,9 @@ function transform(body, { slug }) {
 			}
 			const svelteRows = apiJson.props ?? [];
 			const reactRows = apiJson.propsReact ?? null;
-			if (reactRows) {
+			if (framework !== 'all') {
+				push(apiTable(framework === 'react' ? (reactRows ?? svelteRows) : svelteRows, title));
+			} else if (reactRows) {
 				push(apiTable(svelteRows, `${title} — Svelte`));
 				push(apiTable(reactRows, `${title} — React`));
 			} else {
@@ -330,6 +346,7 @@ function transform(body, { slug }) {
 		if (apiRef) {
 			const attrs = readAttrs(apiRef[1]);
 			const dotted = /api\s*=\s*\{([^}]+)\}/.exec(apiRef[1])?.[1]?.trim();
+			const apiJson = apis.get(dotted?.split('.')[0]);
 			const rows = apiJson && dotted ? resolvePath(apiJson, dotted) : null;
 			if (rows) push(apiTable(rows, attrs.title || 'Reference'));
 			else unhandled.add(`ApiReference api={${dotted}} in ${slug}`);
@@ -338,7 +355,7 @@ function transform(body, { slug }) {
 
 		// Any other component tag: nothing sensible to render, so drop it.
 		const other = /^<\/?([A-Z][A-Za-z0-9]*)\b[^>]*\/?>$/.exec(trimmed);
-		if (other) {
+		if (other && other[1] !== 'FrameworkText') {
 			// A component may carry an `alt` attribute: prose that stands in for it here.
 			const alt = /\balt="([^"]*)"/.exec(trimmed);
 			if (alt) {
@@ -350,8 +367,18 @@ function transform(body, { slug }) {
 		}
 
 		// Site-relative links only make sense with an origin in front of them.
-		push(inlineHtml(line).replace(/\]\((\/[^)\s]*)\)/g, (_, href) => `](${ORIGIN}${href})`));
+		const inline = line.replace(/<FrameworkText\b([^>]*?)\/>/g, (_, attributes) => {
+			const values = readAttrs(attributes);
+			if (values.svelte === undefined || values.react === undefined)
+				throw new Error(`Missing FrameworkText alternative in ${slug}`);
+			const format = (value) => (/\bcode(?:\s|$)/.test(attributes) ? `\`${value}\`` : value);
+			return framework === 'all'
+				? `${format(values.svelte)} (Svelte) / ${format(values.react)} (React)`
+				: format(values[framework]);
+		});
+		push(inlineHtml(inline).replace(/\]\((\/[^)\s]*)\)/g, (_, href) => `](${ORIGIN}${href})`));
 	}
+	if (gates.length) throw new Error(`Unclosed <Only> in ${slug}`);
 
 	// Collapse runs of blank lines left behind by dropped blocks.
 	const text = out
@@ -363,139 +390,187 @@ function transform(body, { slug }) {
 
 /* ------------------------------------------------------------------- main */
 
-const directory = readDirectory();
-const slugs = walk(docsRoot);
-const bySlug = new Map();
-const allUnhandled = [];
+export function buildDocs() {
+	const directory = readDirectory();
+	const slugs = walk(docsRoot);
+	const bySlug = new Map();
+	const allUnhandled = [];
 
-fs.rmSync(outRoot, { recursive: true, force: true });
-fs.mkdirSync(pagesOut, { recursive: true });
+	fs.rmSync(outRoot, { recursive: true, force: true });
+	fs.mkdirSync(pagesOut, { recursive: true });
+	for (const framework of ['svelte', 'react'])
+		fs.mkdirSync(path.join(pagesOut, framework), { recursive: true });
 
-for (const slug of slugs) {
-	const source = fs.readFileSync(path.join(docsRoot, `${slug}.md`), 'utf8');
-	const { meta, body } = readFrontmatter(source);
-	if (meta.published === false) continue;
-	const { text, unhandled } = transform(body, { slug });
-	allUnhandled.push(...unhandled);
+	for (const slug of slugs) {
+		const source = fs.readFileSync(path.join(docsRoot, `${slug}.md`), 'utf8');
+		const { meta, body } = readFrontmatter(source);
+		if (meta.published === false) continue;
+		const { text, unhandled } = transform(body, { slug });
+		allUnhandled.push(...unhandled);
 
-	const url = `${ORIGIN}/docs/${slug}`;
-	const header = [
-		`# ${meta.title ?? slug}`,
-		'',
-		meta.description ? `> ${meta.description}` : null,
-		meta.description ? '' : null,
-		`Source: ${url}`,
-		''
-	]
-		.filter((l) => l !== null)
-		.join('\n');
+		const url = `${ORIGIN}/docs/${slug}`;
+		const header = [
+			`# ${meta.title ?? slug}`,
+			'',
+			meta.description ? `> ${meta.description}` : null,
+			meta.description ? '' : null,
+			`Source: ${url}`,
+			''
+		]
+			.filter((l) => l !== null)
+			.join('\n');
 
-	const markdown = `${header}\n${text}\n`;
-	const file = path.join(pagesOut, `${slug.replace(/\//g, '__')}.md`);
-	fs.writeFileSync(file, markdown);
-	bySlug.set(slug, {
-		slug,
-		url,
-		title: meta.title ?? slug,
-		description: meta.description ?? '',
-		category: meta.category ?? '',
-		markdown
-	});
-}
-
-// llms.txt: curated, in the order the site's sidebar uses.
-const generated = new Date().toISOString().slice(0, 10);
-const listed = new Set();
-const sections = [];
-
-for (const section of directory) {
-	const items = [];
-	for (const page of section.pages) {
-		const slug = page.href.replace(/^\/docs\//, '');
-		const entry = bySlug.get(slug);
-		if (!entry) continue;
-		listed.add(slug);
-		const note = DESCRIPTIONS[slug] ?? entry.description;
-		const only = page.frameworks
-			? ` (${page.frameworks.map((f) => (f === 'svelte' ? 'Svelte' : 'React')).join(' and ')} only)`
-			: '';
-		items.push(`- [${page.title}](${entry.url}.md): ${note}${only}`);
+		const markdown = `${header}\n${text}\n`;
+		const markdowns = { all: markdown };
+		for (const framework of ['svelte', 'react']) {
+			const variant = transform(body, { slug, framework });
+			allUnhandled.push(...variant.unhandled);
+			markdowns[framework] =
+				`${header}\nFramework: ${framework === 'svelte' ? 'Svelte' : 'React'}\n\n${variant.text}\n`;
+			fs.writeFileSync(
+				path.join(pagesOut, framework, `${slug.replace(/\//g, '__')}.md`),
+				markdowns[framework]
+			);
+		}
+		const file = path.join(pagesOut, `${slug.replace(/\//g, '__')}.md`);
+		fs.writeFileSync(file, markdown);
+		bySlug.set(slug, {
+			slug,
+			url,
+			title: meta.title ?? slug,
+			description: meta.description ?? '',
+			category: meta.category ?? '',
+			frameworks: meta.framework
+				? [meta.framework]
+				: (directory
+						.flatMap((section) => section.pages)
+						.find((page) => page.href === `/docs/${slug}`)?.frameworks ?? null),
+			markdown,
+			markdowns
+		});
 	}
-	if (items.length) sections.push({ title: section.section, items });
-}
 
-const extras = [...bySlug.keys()].filter((s) => !listed.has(s));
-if (extras.length) {
-	sections.push({
-		title: 'Older migration notes',
-		items: extras.map((slug) => {
+	// llms.txt — curated, in the order the site's sidebar uses.
+	const generated = new Date().toISOString().slice(0, 10);
+	const listed = new Set();
+	const sections = [];
+
+	for (const section of directory) {
+		const items = [];
+		for (const page of section.pages) {
+			const slug = page.href.replace(/^\/docs\//, '');
 			const entry = bySlug.get(slug);
-			return `- [${entry.title}](${entry.url}.md): ${DESCRIPTIONS[slug] ?? entry.description}`;
-		})
+			if (!entry) continue;
+			listed.add(slug);
+			const note = DESCRIPTIONS[slug] ?? entry.description;
+			const only = page.frameworks
+				? ` (${page.frameworks.map((f) => (f === 'svelte' ? 'Svelte' : 'React')).join(' and ')} only)`
+				: '';
+			items.push(`- [${page.title}](${entry.url}.md): ${note}${only}`);
+		}
+		if (items.length) sections.push({ title: section.section, items });
+	}
+
+	const extras = [...bySlug.keys()].filter((s) => !listed.has(s));
+	if (extras.length) {
+		sections.push({
+			title: 'Older migration notes',
+			items: extras.map((slug) => {
+				const entry = bySlug.get(slug);
+				return `- [${entry.title}](${entry.url}.md): ${DESCRIPTIONS[slug] ?? entry.description}`;
+			})
+		});
+	}
+
+	sections.push({
+		title: 'Examples and packages',
+		items: [
+			`- [Examples](${ORIGIN}/examples): Browse working boards, including a dashboard, a Kanban board, a form builder, and a gallery.`,
+			'- [@flexiboards/svelte](https://www.npmjs.com/package/@flexiboards/svelte): The Svelte 5 adapter, published on npm.',
+			'- [@flexiboards/react](https://www.npmjs.com/package/@flexiboards/react): The React 18 and 19 adapter, published on npm.',
+			'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.\n- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): A Claude skill that carries the API, the adapter differences, and the rules that bite; install it to build boards with an assistant.'
+		]
 	});
+
+	const llms = [
+		`# ${SITE_NAME}`,
+		'',
+		`> ${SUMMARY}`,
+		'',
+		'Every page below is linked as Markdown. Append `?framework=svelte` or `?framework=react` to a page or /llms-full.txt for focused docs. Without a query (or with `?framework=all`), both variants are included. Drop the `.md` to read a page on the site.',
+		'',
+		`Last generated: ${generated}`,
+		'',
+		...sections.flatMap((s) => [`## ${s.title}`, '', ...s.items, '']),
+		`Full text of every page: ${ORIGIN}/llms-full.txt`,
+		''
+	].join('\n');
+
+	const full = [
+		`# ${SITE_NAME} documentation`,
+		'',
+		`> ${SUMMARY}`,
+		'',
+		`Last generated: ${generated}`,
+		'',
+		'This file holds the full text of every documentation page, in sidebar order.',
+		'',
+		...[...directory.flatMap((s) => s.pages.map((p) => p.href.replace(/^\/docs\//, ''))), ...extras]
+			.filter((slug) => bySlug.has(slug))
+			.map((slug) => `---\n\n${bySlug.get(slug).markdown}`),
+		''
+	].join('\n');
+
+	fs.writeFileSync(path.join(outRoot, 'llms.txt'), llms);
+	fs.writeFileSync(path.join(outRoot, 'llms-full.txt'), full);
+	for (const framework of ['svelte', 'react']) {
+		const selected = [
+			...directory.flatMap((section) =>
+				section.pages.map((page) => page.href.replace(/^\/docs\//, ''))
+			),
+			...extras
+		]
+			.map((slug) => bySlug.get(slug))
+			.filter((entry) => entry && (!entry.frameworks || entry.frameworks.includes(framework)));
+		fs.writeFileSync(
+			path.join(outRoot, `llms-full-${framework}.txt`),
+			[
+				`# ${SITE_NAME} ${framework === 'svelte' ? 'Svelte' : 'React'} documentation`,
+				'',
+				`Last generated: ${generated}`,
+				'',
+				...selected.map((entry) => `---\n\n${entry.markdowns[framework]}`),
+				''
+			].join('\n')
+		);
+	}
+	fs.writeFileSync(
+		path.join(outRoot, 'index.json'),
+		JSON.stringify(
+			{
+				generated,
+				origin: ORIGIN,
+				pages: [...bySlug.values()].map(
+					({ slug, url, title, description, category, frameworks }) => ({
+						slug,
+						url,
+						title,
+						description,
+						category,
+						frameworks,
+						file: `${slug.replace(/\//g, '__')}.md`
+					})
+				)
+			},
+			null,
+			'\t'
+		) + '\n'
+	);
+
+	console.log(`llms docs: ${bySlug.size} pages -> src/lib/generated/llms/`);
+	if (allUnhandled.length)
+		console.log(`  dropped/unhandled: ${[...new Set(allUnhandled)].join('; ')}`);
 }
 
-sections.push({
-	title: 'Examples and packages',
-	items: [
-		`- [Examples](${ORIGIN}/examples): Browse working boards, including a dashboard, a Kanban board, a form builder, and a gallery.`,
-		'- [@flexiboards/svelte](https://www.npmjs.com/package/@flexiboards/svelte): The Svelte 5 adapter, published on npm.',
-		'- [@flexiboards/react](https://www.npmjs.com/package/@flexiboards/react): The React 18 and 19 adapter, published on npm.',
-		'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.\n- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): A Claude skill that carries the API, the adapter differences, and the rules that bite; install it to build boards with an assistant.'
-	]
-});
-
-const llms = [
-	`# ${SITE_NAME}`,
-	'',
-	`> ${SUMMARY}`,
-	'',
-	'Every page below is linked as Markdown. Drop the `.md` to read the same page on the site. Code samples come in a Svelte and a React variant, each under its own heading.',
-	'',
-	`Last generated: ${generated}`,
-	'',
-	...sections.flatMap((s) => [`## ${s.title}`, '', ...s.items, '']),
-	`Full text of every page: ${ORIGIN}/llms-full.txt`,
-	''
-].join('\n');
-
-const full = [
-	`# ${SITE_NAME} documentation`,
-	'',
-	`> ${SUMMARY}`,
-	'',
-	`Last generated: ${generated}`,
-	'',
-	'This file holds the full text of every documentation page, in sidebar order.',
-	'',
-	...[...directory.flatMap((s) => s.pages.map((p) => p.href.replace(/^\/docs\//, ''))), ...extras]
-		.filter((slug) => bySlug.has(slug))
-		.map((slug) => `---\n\n${bySlug.get(slug).markdown}`),
-	''
-].join('\n');
-
-fs.writeFileSync(path.join(outRoot, 'llms.txt'), llms);
-fs.writeFileSync(path.join(outRoot, 'llms-full.txt'), full);
-fs.writeFileSync(
-	path.join(outRoot, 'index.json'),
-	JSON.stringify(
-		{
-			generated,
-			origin: ORIGIN,
-			pages: [...bySlug.values()].map(({ slug, url, title, description, category }) => ({
-				slug,
-				url,
-				title,
-				description,
-				category,
-				file: `${slug.replace(/\//g, '__')}.md`
-			}))
-		},
-		null,
-		'\t'
-	) + '\n'
-);
-
-console.log(`llms docs: ${bySlug.size} pages -> src/lib/generated/llms/`);
-if (allUnhandled.length)
-	console.log(`  dropped/unhandled: ${[...new Set(allUnhandled)].join('; ')}`);
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+	buildDocs();

@@ -3,6 +3,7 @@ title: Migrating to v1.0
 description: What changed in Flexiboards 1.0, and how to move a v0.4 project across.
 category: Introduction
 published: true
+framework: svelte
 ---
 
 <script lang="ts">
