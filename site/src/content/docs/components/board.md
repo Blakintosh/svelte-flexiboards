@@ -137,7 +137,7 @@ The default configuration for targets.
 
 ### Interaction callbacks
 
-`onWidgetGrab`, `onWidgetDrop`, `onWidgetCancel` and `onWidgetDelete` receive these events. `canDrop` receives a `FlexiDropCheck` and returns whether the placement is allowed; see [Reacting to interactions](/docs/controllers#reacting-to-interactions) for when each fires.
+`onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget` and `onWidgetLeaveTarget` receive these events. `canDrop` receives a `FlexiDropCheck` and returns whether the placement is allowed; see [Reacting to interactions](/docs/controllers#reacting-to-interactions) for when each fires.
 
 #### FlexiWidgetEvent
 

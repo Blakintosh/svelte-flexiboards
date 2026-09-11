@@ -108,7 +108,7 @@ Drag the first widget: its label changes while grabbed, its shadow in the grid i
 
 Using [snippets](https://svelte.dev/docs/svelte/snippet) (specifically, `children`) is the most intuitive approach to rendering a widget. Any elements or components you write become the content markup of your widget, like any other container component.
 
-Flexiboards pass parameters into the `children` snippet which you can access if you desire, but you do not have to. This looks as follows:
+Flexiboards passes parameters into the `children` snippet, which you can read or ignore:
 
 ```svelte
 <!-- Without using the parameters (i.e. implicit children snippet) -->
@@ -132,12 +132,12 @@ Passing `children` is the most intuitive approach to rendering a widget. Any ele
 
 ```tsx
 {
-	/* Without the parameters — plain JSX children */
+	/* Without the parameters: plain JSX children */
 }
 <FlexiWidget>I'm a FlexiWidget!</FlexiWidget>;
 
 {
-	/* With the parameters (e.g. get widget reactive data) — we discuss component and componentProps later */
+	/* With the parameters, e.g. the widget's reactive state */
 }
 <FlexiWidget>
 	{({ widget }) => (
@@ -150,9 +150,9 @@ Passing `children` is the most intuitive approach to rendering a widget. Any ele
 
 </Only>
 
-With the first example, we do not need any data from the `widget` controller, so there's no point in being explicit. Whereas, in the second example we're getting the reactive `x` and `y` properties on the controller and showing these (for illustration - see [FlexiWidget](/docs/components/widget) API for other properties like these).
+The first example needs no data from the `widget` controller, so it takes no parameters. The second reads the reactive `x` and `y` properties on the controller and shows them; the [FlexiWidget](/docs/components/widget) API lists the other properties you can read this way.
 
-This approach is short and works well. Some cases suit the `component` prop better, which we discuss next.
+This approach is short and works well. Some cases suit the `component` prop better.
 
 ## Component-based
 
@@ -160,7 +160,7 @@ This approach is short and works well. Some cases suit the `component` prop bett
 
 Alternatively, you can use the `component` prop to specify any Svelte component of your choosing to render inside of the FlexiWidget.
 
-Fundamentally, this is not dissimilar to the snippets approach; the main difference is that instead of needing some Svelte snippet in scope (or passed via a prop, for example), you just import the Svelte component. This might look as follows:
+This is much like the snippets approach; the difference is that instead of needing a Svelte snippet in scope (or passed via a prop, for example), you import the Svelte component:
 
 ```svelte
 <script>
@@ -172,7 +172,7 @@ Fundamentally, this is not dissimilar to the snippets approach; the main differe
 
 You can also pass props through to it with `componentProps`, and combine `component` with `children` if you want a consistent wrapper around a per-widget component.
 
-In this scenario you cannot reach the `widget` controller as easily as with the snippet approach, and it is not passed as a prop on the component. Instead, use the `getFlexiwidgetCtx` helper function to get the context of the widget:
+In this scenario the `widget` controller is not passed as a prop on the component. Instead, use the `getFlexiwidgetCtx` helper function to get the context of the widget:
 
 ```svelte
 <!-- my-component.svelte -->
@@ -185,7 +185,7 @@ In this scenario you cannot reach the `widget` controller as easily as with the 
 
 This uses the [Svelte Context API](https://svelte.dev/docs/svelte/context) under the hood, so call it from the top level of the component, or from a function that the top level calls.
 
-Additionally, any Svelte component rendered inside of the FlexiWidget, whether via a snippet or a descendant component, will have access to the `widget` controller through the same mechanism.
+Any Svelte component rendered inside of the FlexiWidget, whether via a snippet or a descendant component, has access to the `widget` controller through the same mechanism.
 
 </Only>
 
@@ -193,7 +193,7 @@ Additionally, any Svelte component rendered inside of the FlexiWidget, whether v
 
 Alternatively, you can use the `component` prop to specify any React component of your choosing to render inside of the FlexiWidget.
 
-Fundamentally, this is not dissimilar to the children approach; the main difference is that instead of writing the content inline, you just import the component. This might look as follows:
+This is much like the children approach; the difference is that instead of writing the content inline, you import the component:
 
 ```tsx
 import { FlexiWidget } from '@flexiboards/react';
@@ -223,9 +223,9 @@ export default function MyComponent() {
 }
 ```
 
-The controller returned is a reactive proxy. Read any of its signal-backed getters during render, such as `isGrabbed`, `isShadow`, `dropRejected`, `draggability`, `x` or `y`, and your component re-renders when they change. No subscription or extra hook is needed.
+The controller returned is a reactive proxy. Read any of its signal-backed getters during render, such as `isGrabbed`, `isShadow`, `dropRejected`, `draggability`, `x` or `y`, and your component re-renders when they change. You need no subscription or extra hook.
 
-Additionally, any React component rendered inside of the FlexiWidget, whether via `children` or as a descendant of the widget's component, has access to the `widget` controller through the same hook.
+Any React component rendered inside of the FlexiWidget, whether via `children` or as a descendant of the widget's component, has access to the `widget` controller through the same hook.
 
 </Only>
 

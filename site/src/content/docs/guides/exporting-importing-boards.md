@@ -1,6 +1,6 @@
 ---
 title: Exporting & Importing Layouts
-description: Learn how to save and restore widget layouts for persistence.
+description: Save a board's widget layout as JSON and restore it later.
 category: Guides
 published: true
 ---
@@ -151,7 +151,7 @@ Save, move the widgets around, then Restore. Each widget's content comes from it
 
 ## The registry
 
-Before you can use import/export, you need to set up a **registry**. The registry maps widget types to their rendering configuration (component, styling, behavior, etc.).
+Before you can import or export, set up a registry. The registry maps widget types to their rendering configuration: component, styling, behaviour, and so on.
 
 When exporting, Flexiboards saves only the widget's `type` (a string key) rather than the full component reference. When importing, it uses the registry to look up how to render each widget.
 
@@ -233,7 +233,7 @@ To make a widget exportable, assign it a `type` that matches a key in your regis
 <FlexiWidget type="table" x={2} y={0} width={1} height={1} />
 ```
 
-When exporting, widgets without a `type` will be skipped (with a console warning).
+A widget without a `type` is exported but skipped on import, with a console warning.
 
 ## Exporting layouts
 
@@ -468,7 +468,7 @@ export function Dashboard() {
 
 </Only>
 
-The `loadLayout` function is called once after the board is ready, and supports returning either:
+Flexiboards calls `loadLayout` once after the board is ready. It can return either:
 
 - A full `FlexiLayout` object (for multi-target boards)
 - An array of `FlexiWidgetLayoutEntry[]` (shorthand for single-target boards)
@@ -633,7 +633,7 @@ Your stored layout stays in sync without a manual save button.
 
 ## Widget IDs
 
-For more advanced scenarios, you can assign stable IDs to widgets:
+You can assign stable IDs to widgets:
 
 ```jsx
 <FlexiWidget id="main-chart" type="chart" x={0} y={0} />
@@ -649,7 +649,7 @@ IDs are optional. When not provided, widgets are identified only by their positi
 
 ## Working with metadata
 
-Widget metadata is preserved through export/import, so it is a good place for widget-specific configuration:
+Metadata survives export and import, so it is a good place for widget-specific configuration:
 
 ```jsx
 <FlexiWidget

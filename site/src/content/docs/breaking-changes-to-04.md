@@ -1,6 +1,6 @@
 ---
 title: Breaking Changes in v0.4
-description: Information on the breaking changes that occurred in the v0.4 update.
+description: The breaking changes in the v0.4 update.
 category: Introduction
 published: true
 ---
@@ -9,7 +9,7 @@ _Applies to `svelte-flexiboards` v0.4.0, released 7 February 2026. This page is 
 
 ## 1. Draggability
 
-In place of the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) that gives you finer control over widget movability.
+In place of the `draggable` boolean property, we've introduced a `draggability` enum (values `none`, `movable`, `full`) for finer control over widget movability.
 
 - `none` is equivalent to `draggable = false`. The widget is completely fixed in place.
 - `full` is equivalent to `draggable = true`. The widget can be grabbed by the user and moved by other widget actions.

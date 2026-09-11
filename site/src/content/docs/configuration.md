@@ -120,7 +120,7 @@ Every widget picks up `draggability` from the board's `widgetDefaults`, so flipp
 
 On components that support children, the `config` prop carries a defaults property. Use it to set a default configuration for those children.
 
-For example, if you want to specify a default layout for all of your targets, you can do so like this:
+To give all of your targets the same default layout:
 
 <Only svelte>
 
@@ -154,9 +154,9 @@ For example, if you want to specify a default layout for all of your targets, yo
 
 </Only>
 
-Now, if you don't specify a layout for a target, it will use the default layout specified in the `targetDefaults` property.
+A target that doesn't specify a layout now uses the one in `targetDefaults`.
 
-This system works in a **cascading** manner, where (following the hierarchy of FlexiBoard -> FlexiTarget -> FlexiWidget) the configuration applied is the nearest specified configuration.
+The configuration cascades: following the hierarchy of FlexiBoard -> FlexiTarget -> FlexiWidget, the configuration applied is the nearest one that was specified.
 
 For example, say the board's configuration has `widgetDefaults.className = 'a'` and the target's has `widgetDefaults.className = 'b'`.
 
@@ -164,7 +164,7 @@ For example, say the board's configuration has `widgetDefaults.className = 'a'` 
 - If we don't specify a class on the widget, then the widget will have class `b`.
 - If we don't specify a class on the widget, and we didn't specify `widgetDefaults.className = 'b'` on our widget's parent target, then the widget will have class `a`.
 
-This system prioritises the widget's configuration first, but chooses defaults where properties are not specified.
+The widget's own configuration wins, and defaults fill in the properties it doesn't specify.
 
 <Only react>
 
@@ -246,14 +246,14 @@ Individual `FlexiWidget` props are reactive in the same way. They're read on eve
 
 </Only>
 
-Not all properties are reactive like this. Generally, these are the properties that would be unnatural to change on the fly.
+Not all properties are reactive like this. The exceptions are the ones that would be unnatural to change on the fly.
 
-We document each component's configuration on their respective API pages. This includes which configuration properties are reactive and which are not.
+Each component's API page documents its configuration, including which properties are reactive.
 
-## Deprecated properties
+## Deprecated and removed
 
 - `simpleTransitionConfig()` is an alias of `cssTransitionConfig()`. See [Transitions](/docs/transitions).
 
 Removed in v1.0: the `draggable` boolean (use `draggability`) and `width`/`height` in `widgetDefaults`. See [Migrating to v1.0](/docs/breaking-changes-to-10).
 
-Deprecated members are also flagged in the generated tables on each component's API page.
+The generated tables on each component's API page also flag deprecated members.

@@ -200,7 +200,3 @@ export abstract class FlexiGrid {
 		this.#unsubscribers = [];
 	}
 }
-
-// TODO(adapter): removed flexigrid — created the grid via the FlexiTarget context, registered it
-// in a new flexigrid context, and $effect-ed grid.watchGridElementDimensions() at mount time.
-// TODO(adapter): removed getFlexigridCtx — retrieved the FlexiGrid instance from the flexigrid context.

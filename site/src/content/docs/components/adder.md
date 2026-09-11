@@ -1,6 +1,6 @@
 ---
 title: FlexiAdd
-description: A component that allows you to drag in new widgets into a board.
+description: A button that creates a new widget and hands it to the user to drop into a board.
 category: Components
 published: true
 ---

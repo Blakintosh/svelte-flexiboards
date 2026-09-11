@@ -20,11 +20,11 @@ published: true
 
 ## Introduction
 
-By default, a Flexiboard fully supports server-side rendering with SvelteKit. Default layouts, or layouts loaded during the server's load, therefore appear exactly as they should before hydration.
+By default, a Flexiboard supports server-side rendering with SvelteKit. Default layouts, or layouts loaded during the server's load, therefore appear exactly as they should before hydration.
 
 This works because placement is pure logic. Widget positions are computed from your declared configuration, not measured from the DOM, and idle widgets are styled with CSS grid line placement (`grid-column` / `grid-row`) rather than pixel values. The pixel-measuring parts of the library, such as dragging, resizing and pointer tracking, only activate on interaction, which doesn't happen on a server.
 
-Although this covers a large number of use-cases, there are two scenarios where server-side board rendering gets tricky, because hydration will differ:
+This covers most cases, but two scenarios make server-side board rendering tricky, because hydration will differ:
 
 - **Stored layouts.** A `loadLayout` / `loadLayouts` callback that relies on the client (such as client storage) can't run on the server.
 - **Responsive boards.** The server can't know the viewport, so the rendered breakpoint has to be guessed.
@@ -168,7 +168,7 @@ The first strategy for this is to tell the server which breakpoint to assume, wi
 </ResponsiveFlexiBoard>
 ```
 
-This should be set to the breakpoint most of your visitors will land on (e.g. if primarily desktop, then their screens would be large on average). This reduces how often the rendered breakpoint mismatches your users'.
+Set this to the breakpoint most of your visitors land on. That reduces how often the rendered breakpoint mismatches theirs.
 
 ### Handling mismatches
 
@@ -207,7 +207,7 @@ The second strategy decides what a visitor sees when the breakpoint mismatches, 
 
 Flexiboards derives the assumed breakpoint's viewport range from your `breakpoints` config and generates the media query itself, so all three outcomes are handled with nothing hardcoded:
 
-- **The guess matches the viewport.** The server board is correct: it shows untouched from first paint, fallback hidden. This is SSR at full value.
+- **The guess matches the viewport.** The server board is correct: it shows untouched from first paint, fallback hidden.
 - **The guess doesn't match.** The fallback shows instead of the wrong-shaped board until hydration swaps in the right one. Since the fallback is your markup, responsive utility classes inside it shape it for the actual viewport.
 - **After hydration.** The fallback unmounts and the real board is confirmed.
 
@@ -215,7 +215,7 @@ Flexiboards derives the assumed breakpoint's viewport range from your `breakpoin
 
 ### Styling mismatches yourself with CSS
 
-Prefer full control? The pending attribute carries the guess too: `data-flexi-pending="lg"` until the client confirms, with `"layout"` winning when both apply. Your breakpoint thresholds are known constants, so CSS can handle the same three outcomes by hand. With `ssrBreakpoint: 'lg'` at a 1024px threshold, that's:
+The pending attribute carries the guess too: `data-flexi-pending="lg"` until the client confirms, with `"layout"` winning when both apply. Your breakpoint thresholds are known constants, so CSS can handle the same three outcomes by hand. With `ssrBreakpoint: 'lg'` at a 1024px threshold, that's:
 
 ```css
 /* Viewport matches the guess: lift the veil entirely. */

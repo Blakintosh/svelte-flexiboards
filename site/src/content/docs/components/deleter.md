@@ -1,6 +1,6 @@
 ---
 title: FlexiDelete
-description: A component that allows you to delete widgets from a board when they are dropped over it.
+description: A dropzone that deletes any widget dropped on it.
 category: Components
 published: true
 ---

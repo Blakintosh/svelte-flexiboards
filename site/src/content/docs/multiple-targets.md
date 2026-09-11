@@ -11,7 +11,7 @@ published: true
 
 ## Introduction
 
-In many cases, your dashboard or Kanban board needs to support dropping widgets across different categories, or zones, on the board.
+A dashboard or Kanban board often needs to accept widgets across different categories, or zones, on the board.
 
 Suppose we have a Kanban board. In its simplest form, we have one list of widgets for the Backlog, another list for the Work-in-Progress, and one more for the Done tasks.
 
@@ -21,7 +21,7 @@ Here, one FlexiTarget for our Kanban board wouldn't be enough, as we have three 
 
 ## Using multiple targets
 
-To add a second target, create another `FlexiTarget` component inside of your `FlexiBoard`. Each `FlexiTarget` has its own configuration, so you can adjust how the layouts behave of one another if you desire.
+To add a second target, create another `FlexiTarget` component inside of your `FlexiBoard`. Each `FlexiTarget` has its own configuration, so each target's layout can behave differently from the others.
 
 You can also use the `targetDefaults` property on the `FlexiBoard` configuration object if you want all targets to have consistent behaviour.
 
@@ -172,9 +172,7 @@ With the extra `FlexiTarget` components in place, we can drag and drop widgets w
 
 ## Advanced: mixing grids
 
-We've seen how we can drag and drop widgets between multiple target dropzones of the same grid type, where each in our example was a [Flow Grid](/docs/flow-grids). But what if we wanted to drag and drop widgets between a Flow Grid and a [Free-Form Grid](/docs/free-form-grids)?
-
-Flexiboards applies the same drag-and-drop logic whatever grid type the target dropzone uses. Dropping widgets between two different grid types works the same way.
+So far, every target we've dragged between has been a [Flow Grid](/docs/flow-grids). Dragging between a Flow Grid and a [Free-Form Grid](/docs/free-form-grids) works the same way: Flexiboards applies the same drag-and-drop logic whatever grid type the target dropzone uses.
 
 <Only svelte>
 
@@ -317,7 +315,7 @@ export function MixedGridsBoard() {
 
 </Only>
 
-Notice that when the widget switches between the two grids, its background colour changes automatically to reflect the `widgetDefaults` of the grid it is in. That's [Cascading Configuration](/docs/configuration#cascading-configuration) at work. The widget resolves each unspecified property from its nearest ancestor, and its nearest ancestor has changed.
+Notice that when the widget switches between the two grids, its background colour changes to reflect the `widgetDefaults` of the grid it is in. That's [Cascading Configuration](/docs/configuration#cascading-configuration): the widget resolves each unspecified property from its nearest ancestor, and its nearest ancestor has changed.
 
 ## Examples
 

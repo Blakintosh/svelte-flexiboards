@@ -1,6 +1,6 @@
 ---
 title: Responsive Layouts
-description: Learn how to create responsive dashboards that adapt to different screen sizes.
+description: Create responsive dashboards that adapt to different screen sizes.
 category: Guides
 published: true
 ---
@@ -164,7 +164,7 @@ export function Dashboard() {
 
 ## Independent boards per breakpoint
 
-For more control, give each breakpoint its own snippet. This lets you use entirely different board structures. `boardConfig` below is a board configuration with a [registry](/docs/guides/exporting-importing-boards#the-registry) for the `chart` and `stats` types:
+For more control, give each breakpoint its own snippet, so each one can use a different board structure. `boardConfig` below is a board configuration with a [registry](/docs/guides/exporting-importing-boards#the-registry) for the `chart` and `stats` types:
 
 <Only svelte>
 

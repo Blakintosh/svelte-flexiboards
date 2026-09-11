@@ -11,7 +11,7 @@ published: true
 
 ## Introduction
 
-At the heart of the `FlexiBoard`, `FlexiTarget`, and `FlexiWidget` components are their controllers. These controllers contain the logic for the components and manage the state of the board.
+Behind the `FlexiBoard`, `FlexiTarget`, and `FlexiWidget` components sit their controllers. A controller holds the logic for its component and manages the state of the board.
 
 By default, the controllers are hidden, as they are created inside of the components. To set up your own actions, though, Flexiboards gives you several ways to reach them.
 
@@ -96,7 +96,7 @@ For anything rendered _inside_ the board, the hooks below are simpler.
 
 ## Method 2: `bind:controller` prop
 
-If you don't need the controller until after the component has mounted, binding to it is the most familiar option, and is intuitive if you've already familiarised yourself with `bind:this` from Svelte (see [Svelte's documentation](https://svelte.dev/tutorial/svelte/bind-this) for more information).
+If you don't need the controller until after the component has mounted, binding to it is the most familiar option, and is intuitive if you've already used [`bind:this`](https://svelte.dev/tutorial/svelte/bind-this) in Svelte.
 
 Here's an example of using it to access the controller of a `FlexiBoard`:
 

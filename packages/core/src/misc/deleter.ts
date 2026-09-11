@@ -70,7 +70,3 @@ export class FlexiDeleteController {
 		this.#unsubscribers = [];
 	}
 }
-
-// TODO(adapter): removed flexidelete() — composition root that read the board context and constructed
-// FlexiDeleteController(provider). Adapters must construct the controller with their board controller and
-// call deleter.destroy() at unmount.

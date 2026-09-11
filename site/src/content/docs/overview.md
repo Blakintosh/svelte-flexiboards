@@ -22,7 +22,7 @@ Flexiboards is on npm. Pick your package manager once and every install command 
 
 <InstallCommand package="@flexiboards/svelte" />
 
-Flexiboards was built from the ground up to be a Svelte 5 library, so it is incompatible with Svelte 4 or earlier.
+Flexiboards is a Svelte 5 library, so it is incompatible with Svelte 4 or earlier.
 
 </Only>
 
@@ -38,10 +38,10 @@ The React adapter supports React 18 and 19. Its API mirrors the Svelte adapter, 
 
 A Flexiboard is built from three components: `FlexiBoard`, `FlexiTarget`, and `FlexiWidget`. Together they cover a wide range of drag-and-drop grids.
 
-Below is a diagram showing the anatomy of a Flexiboard that would be used for a todos board.
+The diagram below shows the anatomy of a Flexiboard for a todos board.
 <FlexiBoardAnatomy alt="Figure 1, component anatomy: a FlexiBoard frames two FlexiTarget grids side by side. The first target holds one FlexiWidget; the second holds two, stacked. Each widget renders either a snippet or a component." />
 
-Here's how you would create a board like this using Flexiboards:
+Here's how you would create that board:
 
 <Only svelte>
 
@@ -159,4 +159,4 @@ In a Flexiboard, each of these components serves a specific purpose:
 
 - `FlexiBoard` is the main container for the board, creating the drag-and-drop environment. It isolates the targets and widgets; you can have multiple boards on a single page, but widgets cannot be dragged between different FlexiBoards.
 - `FlexiTarget` is a dropzone and container for widgets. You can store widgets within it in a customisable layout, and you can move widgets between different FlexiTargets of the same board.
-- `FlexiWidget` is the widget itself. You can move it, resize it, and customise it in a number of ways. There are two ways to render its content: pass `children`, or use the `component` prop to render a custom component of your choosing. You can also combine the two, which helps when you want a series of consistent looking widgets that still render their own component.
+- `FlexiWidget` is the widget itself. You can move it, resize it, and customise it. There are two ways to render its content: pass `children`, or use the `component` prop to render a custom component of your choosing. You can also combine the two, which helps when you want a series of consistent looking widgets that still render their own component.

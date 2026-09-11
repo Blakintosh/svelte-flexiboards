@@ -1,10 +1,10 @@
-# Flexiboards for React
+# @flexiboards/react
 
-Headless, reactive drag-and-drop components for React. [https://svelte-flexiboards.vercel.app](https://svelte-flexiboards.vercel.app/)
+Headless drag-and-drop boards for React 18 and 19. Docs: [flexiboards.dev](https://flexiboards.dev/)
 
 `@flexiboards/react` is the React adapter over the framework-agnostic `@flexiboards/core`: the same boards, targets, widgets, adders and deleters as the Svelte package, with hooks (`useFlexiBoard()`, `useFlexiTarget()`, `useFlexiWidget()`, ...) in place of context getters and `onfirstcreate` callbacks in place of `bind:controller`.
 
-If you encounter any issues, please report them on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
+Issues go on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
 
 ## Installation
 
@@ -43,8 +43,8 @@ export function Board() {
 }
 ```
 
-See the documentation site for guides and the full API reference. The React pages differ from the Svelte ones only in naming: `class` is `className`, a target's `key` is `keyName`, and snippets are children (plain JSX or a render function).
+The docs site has the guides and the full API reference. The React pages differ from the Svelte ones only in naming: `class` is `className`, a target's `key` is `keyName`, and snippets are children (plain JSX or a render function).
 
 ## Licence
 
-Flexiboards is open-source software licenced under the MIT licence. Please see [LICENSE.md](https://github.com/Blakintosh/svelte-flexiboards/blob/main/LICENSE.md) for more information.
+MIT. See [LICENSE.md](https://github.com/Blakintosh/svelte-flexiboards/blob/main/LICENSE.md).

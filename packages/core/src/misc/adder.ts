@@ -174,13 +174,6 @@ export class InternalFlexiAddController implements FlexiAddController {
 	}
 }
 
-// TODO(adapter): removed hasInternalFlexiaddCtx() — context presence check for an enclosing FlexiAdd.
-// TODO(adapter): removed getInternalFlexiaddCtx() — context getter returning the internal adder controller.
-// TODO(adapter): removed getFlexiaddCtx() — context getter narrowing to the public FlexiAddController.
-// TODO(adapter): removed flexiadd(addWidgetFn) — composition root that read the board context, constructed
-// InternalFlexiAddController(provider, addWidgetFn), set the adder context, and returned the adder alongside
-// its bound onpointerdown/onkeydown handlers for the adapter's element to wire up.
-
 /**
  * Dispatches the adder's widget-ready event once the newly created widget has mounted,
  * triggering the drag-in. Call at mount time (the adapter's responsibility) for widgets

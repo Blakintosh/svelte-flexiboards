@@ -1,6 +1,6 @@
 ---
 title: FlexiTarget
-description: A 'target' for widgets, or a dropzone. Stores a series of widget instances in a managed grid layout.
+description: A target, or dropzone, for widgets. It holds widget instances in a managed grid layout.
 category: Components
 published: true
 ---
@@ -66,7 +66,7 @@ export function Main() {
 
 ## FlexiTargetController
 
-`FlexiTargetController` uses a [controller](/docs/controllers) to manage its state and behaviour.
+`FlexiTarget` uses a [controller](/docs/controllers) to manage its state and behaviour.
 
 <Only svelte>
 

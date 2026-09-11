@@ -1,6 +1,6 @@
 ---
 title: FlexiWidget
-description: A widget is a component (such as a tile) that is stored within a target (dropzone). Widgets can be moved around within a target or between targets.
+description: A component, such as a tile, that lives inside a target. You can move a widget within its target or to another target.
 category: Components
 published: true
 ---
@@ -76,7 +76,7 @@ export function Tile() {
 
 ## FlexiWidgetController
 
-`FlexiWidgetController` uses a [controller](/docs/controllers) to manage its state and behaviour.
+`FlexiWidget` uses a [controller](/docs/controllers) to manage its state and behaviour.
 
 <Only svelte>
 
