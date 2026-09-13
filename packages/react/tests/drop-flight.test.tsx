@@ -63,10 +63,12 @@ const isPlaceholder = (el: HTMLElement) =>
 	el.style.visibility === 'hidden' && !el.hasAttribute('role');
 
 describe('drop flight', () => {
-	it('flies to the placeholder box measured after the grid has settled', () => {
+	it('reports the committed layout before flying to the settled placeholder box', async () => {
+		const onLayoutChange = vi.fn();
 		mounted = mount(
 			<FlexiBoard
 				config={{
+					onLayoutChange,
 					widgetDefaults: {
 						draggability: 'full',
 						transition: { drop: { duration: 150, easing: 'ease-out' } }
@@ -108,6 +110,12 @@ describe('drop flight', () => {
 		);
 		expect(flying).not.toBeNull();
 		expect(document.querySelectorAll('[role="grid"] > div').length).toBeGreaterThan(1);
+		await act(async () => {
+			await Promise.resolve();
+		});
+		expect(onLayoutChange).toHaveBeenCalledOnce();
+		expect(onLayoutChange.mock.calls[0][0].left).toEqual([expect.objectContaining({ x: 2, y: 2 })]);
+		expect(flying!.style.position).toBe('absolute');
 
 		settled = true;
 		// Frames run outside React's act(), so wrap them to flush the re-render.

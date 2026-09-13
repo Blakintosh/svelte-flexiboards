@@ -58,6 +58,7 @@ export type ResponsiveFlexiBoardConfiguration = {
 	/**
 	 * Callback fired when any layout changes (widget moved, resized, added, or removed).
 	 * Receives all breakpoint layouts, including the updated current one.
+	 * Synchronous changes are batched into a microtask, before animations settle.
 	 */
 	onLayoutsChange?: ResponsiveFlexiLayoutChangeFn;
 

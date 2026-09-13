@@ -166,7 +166,7 @@
 			{
 				"name": "onLayoutChange",
 				"type": "(layout: FlexiLayout) => void",
-				"description": "Callback fired when the board's layout changes (widget moved, resized, added, or removed), whether by the user or through the controller API. Debounced; receives the exported layout."
+				"description": "Callback fired when the board's layout changes (widget moved, resized, added, or removed), whether by the user or through the controller API. Receives the committed layout in a microtask, before drop animations settle. Synchronous changes are batched into one notification."
 			},
 			{
 				"name": "onWidgetGrab",

@@ -75,8 +75,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 	#eventBus: FlexiEventBus;
 	#unsubscribers: (() => void)[] = [];
 
-	#layoutChangeTimeout: ReturnType<typeof setTimeout> | null = null;
-	#layoutChangeDebounceMs = 150;
+	#layoutChangePending = false;
 
 	readonly breakpoint?: string;
 
@@ -177,12 +176,12 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			return;
 		}
 
-		if (this.#layoutChangeTimeout) {
-			clearTimeout(this.#layoutChangeTimeout);
-		}
-
-		this.#layoutChangeTimeout = setTimeout(() => {
-			this.#layoutChangeTimeout = null;
+		if (this.#layoutChangePending) return;
+		this.#layoutChangePending = true;
+		// Let source and destination handlers finish, then report the committed layout before paint.
+		queueMicrotask(() => {
+			if (!this.#layoutChangePending) return;
+			this.#layoutChangePending = false;
 
 			const layout = this.#exportLayoutInternal();
 
@@ -194,7 +193,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 			});
 
 			this.config$()?.onLayoutChange?.(layout);
-		}, this.#layoutChangeDebounceMs);
+		});
 	}
 
 	#onResponsiveLayoutImport(event: InternalResponsiveLayoutImportEvent) {
@@ -896,9 +895,6 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 
-		if (this.#layoutChangeTimeout) {
-			clearTimeout(this.#layoutChangeTimeout);
-			this.#layoutChangeTimeout = null;
-		}
+		this.#layoutChangePending = false;
 	}
 }

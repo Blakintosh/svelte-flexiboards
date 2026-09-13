@@ -258,16 +258,16 @@ Stable configs avoid unnecessary comparisons. Inline objects work too: the adapt
 
 </Only>
 
-| Callback                                     | Fires when                                                                                                                                       |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `onWidgetGrab`                               | The user picks a widget up, by pointer or keyboard.                                                                                              |
-| `onWidgetDrop`                               | A moved or resized widget lands. `sourceTarget` is where it came from; it is `undefined` for a widget that arrived through a `FlexiAdd`.         |
-| `onWidgetCancel`                             | The user presses Escape, or lets go where nothing accepts the widget. The widget is back where it started.                                       |
-| `onWidgetDelete`                             | A widget is dropped on a `FlexiDelete`, or `widget.delete()` is called.                                                                          |
-| `onWidgetResize`                             | A resize the user was making commits.                                                                                                            |
-| `onWidgetEnterTarget`, `onWidgetLeaveTarget` | A widget being moved is carried over a target, or leaves it. Useful for styling a column while it is the candidate.                              |
-| `canDrop`                                    | While the user hovers and again on release. Return `false` to refuse; the drop preview shows the rejection and the widget returns to its origin. |
-| `onLayoutChange`                             | Any of the above changes the layout, and any call from the table in the previous section. Debounced, with the exported layout.                   |
+| Callback                                     | Fires when                                                                                                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onWidgetGrab`                               | The user picks a widget up, by pointer or keyboard.                                                                                                                            |
+| `onWidgetDrop`                               | A move commits, before its animation settles. `sourceTarget` is where it came from; it is `undefined` for a widget that arrived through a `FlexiAdd`.                          |
+| `onWidgetCancel`                             | The user presses Escape, or lets go where nothing accepts the widget. The widget is back where it started.                                                                     |
+| `onWidgetDelete`                             | A widget is dropped on a `FlexiDelete`, or `widget.delete()` is called.                                                                                                        |
+| `onWidgetResize`                             | A resize the user was making commits.                                                                                                                                          |
+| `onWidgetEnterTarget`, `onWidgetLeaveTarget` | A widget being moved is carried over a target, or leaves it. Useful for styling a column while it is the candidate.                                                            |
+| `canDrop`                                    | While the user hovers and again on release. Return `false` to refuse; the drop preview shows the rejection and the widget returns to its origin.                               |
+| `onLayoutChange`                             | Any of the above changes the layout, and any call from the table in the previous section. Batched within the current turn, with the committed layout before animations settle. |
 
 `canDrop` runs alongside the grid's own rules (bounds, collisions, size limits), which apply whether or not you provide it. A target's own configuration can carry a `canDrop` too, for rules that belong to one list rather than the board; both must agree.
 

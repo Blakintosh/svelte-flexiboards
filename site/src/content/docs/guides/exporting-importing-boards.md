@@ -623,7 +623,7 @@ Because React boards only ever mount in the browser, neither callback needs an e
 
 </Only>
 
-The `onLayoutChange` callback fires (debounced) whenever:
+The `onLayoutChange` callback receives the committed layout before animations settle. Synchronous changes are batched into one notification. It fires whenever:
 
 - A widget is moved to a new position
 - A widget is resized

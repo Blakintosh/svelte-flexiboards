@@ -35,7 +35,7 @@ Then replace the import specifier:
 
 Every export from v0.4 is still exported from `@flexiboards/svelte` under the same name.
 
-## Renamed helpers
+## Changed helpers
 
 | v0.4                       | v1.0                    | Notes                                                               |
 | -------------------------- | ----------------------- | ------------------------------------------------------------------- |
@@ -58,9 +58,34 @@ Every export from v0.4 is still exported from `@flexiboards/svelte` under the sa
 
 ### Controller actions and interaction callbacks
 
-Widgets gained `delete()` and `moveTo()`, targets and boards gained `clear()`, and `onLayoutChange` now also fires for changes made through these calls and `createWidget()`. The board configuration takes `onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget`, `onWidgetLeaveTarget` and `canDrop`; a target configuration takes its own `canDrop`. Exported entries always carry an `id`, and `exportLayoutEnvelope()` adds a format version for storage. In React, `FlexiBoard` forwards `ref` to its root element, and a `FlexiWidget` declared after its target has loaded now logs a warning instead of being ignored silently. See [Controllers](/docs/controllers#changing-the-board-from-code). Exported layouts now include widgets that have no `type` (previously they were skipped with a warning), so `FlexiWidgetLayoutEntry.type` is optional; code that reads it should handle `undefined`.
+You can change a board from its controllers:
 
-Nothing here requires a change, but these are the additions a v0.4 project is most likely to want:
+- Call `delete()` or `moveTo()` on a widget.
+- Call `clear()` on a target or board.
+
+`onLayoutChange` now also reports changes made through these methods and `createWidget()`. It runs in a microtask before animations settle, batching changes made in the same turn. Debounce your save handler if you need to limit writes to storage.
+
+The board configuration adds callbacks for each interaction:
+
+- `onWidgetGrab`, `onWidgetDrop`, and `onWidgetCancel` track a drag.
+- `onWidgetResize` reports a committed resize; `onWidgetDelete` reports a deletion.
+- `onWidgetEnterTarget` and `onWidgetLeaveTarget` track movement between targets.
+
+Use `canDrop` on the board or an individual target to reject a placement. See [Controllers](/docs/controllers#changing-the-board-from-code).
+
+### Layout exports
+
+- Every exported widget has an `id`.
+- `exportLayoutEnvelope()` includes a format version alongside the layout for storage.
+- Widgets without a `type` are now included in exports. `FlexiWidgetLayoutEntry.type` is optional, so code that reads it must handle `undefined`.
+
+### Component behavior
+
+In React, `FlexiBoard` forwards `ref` to its root element.
+
+In both frameworks, declaring a `FlexiWidget` after its target has loaded logs a warning. Late declarations are still ignored; use `createWidget()` to add widgets after loading.
+
+### Other additions
 
 - `springTransitionConfig()`, and the `spring()` and `cssTransition()` animation adapters. See [Transitions](/docs/transitions).
 - `initialLayout` and the `suspense` snippet for server-rendered boards. See [Server-Side Rendering](/docs/guides/server-side-rendering).

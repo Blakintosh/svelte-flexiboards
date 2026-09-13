@@ -19,6 +19,7 @@ Added
 - Presets `FlexiSortable` and `FlexiDashboard`.
 - CSS motion uses sine in-out reordering and circ-out drops. The deprecated `simpleTransitionConfig()` keeps its original 150ms timing. Registry component families enable transitions by default and respect reduced motion.
 - Animation adapters: `cssTransition()` and `spring()`, with `cssTransitionConfig()` and `springTransitionConfig()`.
+- Layout callbacks run after a drop is committed, before animations settle. Destination placeholders use the final card size, including when text wraps differently between columns.
 - The spring preset responds faster with less bounce. Core springs follow the same path across frame rates, including at 30fps.
 - Sortable-style insert resolution for flow grids, and `portalDropFlights` for boards that need a drop to fly in across their edge.
 - `dropRejected` state on targets and widgets; `initialLayout` for server-provided layouts; layouts loaded on the client can show a `suspense` fallback.

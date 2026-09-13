@@ -2,10 +2,13 @@
 	import FlexiBoard from '../../src/components/flexi-board.svelte';
 	import FlexiTarget from '../../src/components/flexi-target.svelte';
 	import FlexiWidget from '../../src/components/flexi-widget.svelte';
+	import type { FlexiLayoutChangeFn } from '@flexiboards/core';
+	let { onLayoutChange }: { onLayoutChange?: FlexiLayoutChangeFn } = $props();
 </script>
 
 <FlexiBoard
 	config={{
+		onLayoutChange,
 		widgetDefaults: {
 			draggability: 'full',
 			transition: { drop: { duration: 150, easing: 'ease-out' } }

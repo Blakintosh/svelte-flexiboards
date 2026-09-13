@@ -5,6 +5,7 @@ import type { FlexiWidgetController } from './base.js';
 import type { FlexiWidgetTransitionConfiguration } from './types.js';
 import { getPlaceholderMinDimensionLocks, type InterpolationSize } from './interpolation-utils.js';
 import { computed, signal } from '../reactivity.js';
+import { getLayoutRect } from '../shared/utils.js';
 import {
 	resolveAnimationAdapter,
 	type AnimationBox,
@@ -47,6 +48,7 @@ export class WidgetMoveInterpolator {
 
 	/** The box the running animation was last pointed at, to skip no-op retargets. */
 	#lastTarget: AnimationBox | undefined;
+	#destinationMeasured = false;
 
 	/**
 	 * Hosts the flight in the viewport portal to avoid the board's overflow
@@ -141,7 +143,6 @@ export class WidgetMoveInterpolator {
 		);
 
 		const isInterruption = this.active$();
-		const interpolatedPosition = this.#interpolatedWidgetPosition$();
 
 		// A drop or resize ends an interaction, during which the widget was rendered elsewhere
 		// (portal clone / resize preview): the running animation's position is stale, so it is
@@ -152,14 +153,11 @@ export class WidgetMoveInterpolator {
 			// INTERRUPTION PATH - keep the running handle; the placeholder's style change will
 			// retarget it via onPlaceholderMove.
 			this.#placeholderPosition$({
+				...this.#placeholderPosition$(),
 				x: newDimensions.x,
 				y: newDimensions.y,
 				width: newDimensions.width,
-				height: newDimensions.height,
-				heightPx: interpolatedPosition.height,
-				widthPx: interpolatedPosition.width,
-				lockMinWidth: minDimensionLocks.lockMinWidth,
-				lockMinHeight: minDimensionLocks.lockMinHeight
+				height: newDimensions.height
 			});
 			return;
 		}
@@ -185,6 +183,7 @@ export class WidgetMoveInterpolator {
 			this.#notifyStart();
 		}
 		this.#animation$(animation);
+		this.#destinationMeasured = false;
 
 		this.#placeholderPosition$({
 			x: newDimensions.x,
@@ -257,6 +256,39 @@ export class WidgetMoveInterpolator {
 		handle.setTarget(to);
 	}
 
+	/** Reserve the widget's destination size without mounting its content a second time. */
+	#measureDestination() {
+		if (this.#destinationMeasured || !this.ref) return;
+		const widget = this.#widget$() as InternalFlexiWidgetController;
+		if (widget.isShadow) return;
+		const element = widget.ref;
+		if (!element || !widget.internalTarget?.grid?.ref?.contains(element)) return;
+
+		const placeholder = this.ref;
+		const elementStyle = element.style.cssText;
+		const placeholderStyle = placeholder.style.cssText;
+		const position = this.#placeholderPosition$();
+		let rect: DOMRect;
+		try {
+			placeholder.style.display = 'none';
+			element.style.cssText = `grid-column: ${position.x + 1} / span ${position.width}; grid-row: ${position.y + 1} / span ${position.height}; transition: none !important;`;
+			rect = getLayoutRect(element);
+		} finally {
+			element.style.cssText = elementStyle;
+			placeholder.style.cssText = placeholderStyle;
+			// Restore the flight's starting box before its CSS transition gets a target.
+			element.getBoundingClientRect();
+		}
+		this.#destinationMeasured = true;
+		this.#placeholderPosition$({
+			...position,
+			widthPx: rect.width,
+			heightPx: rect.height,
+			lockMinWidth: true,
+			lockMinHeight: true
+		});
+	}
+
 	/**
 	 * Remeasures the placeholder each frame and retargets the flight when it moves.
 	 * Grid reflows from disappearing previews or sibling placeholders can move
@@ -271,6 +303,7 @@ export class WidgetMoveInterpolator {
 				return;
 			}
 			if (this.ref) {
+				this.#measureDestination();
 				const to = this.#toBox(this.ref.getBoundingClientRect());
 				if (to) {
 					this.#retarget(handle, to);
@@ -387,6 +420,7 @@ export class WidgetMoveInterpolator {
 
 	onPlaceholderMount(ref: HTMLElement) {
 		this.ref = ref;
+		this.#measureDestination();
 
 		// Now that we're mounted, start moving our widget.
 		this.onPlaceholderMove();

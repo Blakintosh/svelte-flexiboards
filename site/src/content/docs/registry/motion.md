@@ -111,6 +111,8 @@ export function MotionDemo() {
 
 Registry boards, dashboards, and sortable lists use `cssTransitionConfig()` by default: 150ms for moves and resizing, and 200ms for drops. The headless components still leave transitions unset.
 
+The layout and reorder callback update as soon as a drop is accepted, while the card animates into place.
+
 The CSS preset uses sine in-out reordering and a circ-out drop. Choose **Spring** for bounce, or **None** to disable movement. Both presets respect your system's reduced-motion setting.
 
 ## Installation
@@ -133,7 +135,7 @@ Component families install `flexi-motion` as a dependency. You can also install 
 
 Pass a preset or your own transition through `config.widgetDefaults.transition`. Set it to `{}` to disable movement. Other widget defaults and layout callbacks are preserved.
 
-`cssTransitionConfig()`, exported from either framework adapter, returns these settings:
+`cssTransitionConfig()` returns these settings:
 
 | Movement | Duration | Easing      | CSS override          |
 | -------- | -------- | ----------- | --------------------- |
@@ -149,7 +151,13 @@ The easing values include fallbacks, so no stylesheet is required. To change a c
 }
 ```
 
-Change durations in the transition configuration, in milliseconds. Keep the configuration stable between React renders, as the demo does above.
+Change durations in the transition configuration, in milliseconds.
+
+<Only react>
+
+Keep the configuration stable between renders, as the demo does above.
+
+</Only>
 
 The spring preset uses shorter response times and a small bounce on drop:
 
@@ -165,6 +173,16 @@ Spring response times are in seconds and control how quickly the spring reacts. 
 
 Registry roots disable their transition defaults when `prefers-reduced-motion: reduce` matches, including custom presets supplied through `config.widgetDefaults.transition`. The preference is observed while the page is open. Colour and opacity feedback remains available.
 
-If you configure motion directly on an individual widget or target, apply the same preference there: use `reducedMotion.current` in Svelte or `useReducedMotion()` in React. These utilities assume reduced motion during SSR.
+<Only svelte>
+
+If you configure motion directly on an individual widget or target, apply `reducedMotion.current` there too. It assumes reduced motion during SSR.
+
+</Only>
+
+<Only react>
+
+If you configure motion directly on an individual widget or target, apply `useReducedMotion()` there too. It assumes reduced motion during SSR.
+
+</Only>
 
 Focus a grabber and press Enter to grab, use the arrow keys to move, then Enter to drop or Escape to cancel. Handles keep their accessible labels and widgets keep their grid semantics with either preset.

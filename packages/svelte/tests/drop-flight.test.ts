@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
 import {
 	cells,
@@ -42,8 +42,9 @@ afterEach(() => {
 });
 
 describe('drop flight', () => {
-	it('flies to the placeholder box measured after the grid has settled', () => {
-		component = mount(DropFlightBoard, { target: document.body });
+	it('reports the committed layout before flying to the settled placeholder box', async () => {
+		const onLayoutChange = vi.fn();
+		component = mount(DropFlightBoard, { target: document.body, props: { onLayoutChange } });
 		flushSync();
 		restoreStyle = layoutGrid();
 
@@ -66,6 +67,11 @@ describe('drop flight', () => {
 			'[role="cell"][style*="position: absolute"]'
 		);
 		expect(flying).not.toBeNull();
+		await Promise.resolve();
+		flushSync();
+		expect(onLayoutChange).toHaveBeenCalledOnce();
+		expect(onLayoutChange.mock.calls[0][0].left).toEqual([expect.objectContaining({ x: 2, y: 2 })]);
+		expect(flying!.style.position).toBe('absolute');
 
 		settled = true;
 		frames.flush();

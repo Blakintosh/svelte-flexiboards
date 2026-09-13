@@ -72,11 +72,7 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 	#ready: boolean = false;
 	#clientInitialized$: Signal<boolean> = signal(true);
 
-	/**
-	 * Debounce timer for layout change callbacks.
-	 */
-	#layoutChangeTimeout: ReturnType<typeof setTimeout> | null = null;
-	#layoutChangeDebounceMs = 150;
+	#layoutChangePending = false;
 
 	/**
 	 * Whether initial layouts have been imported via importLayout().
@@ -260,18 +256,14 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		this.#notifyLayoutChange();
 	}
 
-	/**
-	 * Debounced notification of layout changes.
-	 */
 	#notifyLayoutChange(): void {
-		if (this.#layoutChangeTimeout) {
-			clearTimeout(this.#layoutChangeTimeout);
-		}
-
-		this.#layoutChangeTimeout = setTimeout(() => {
-			this.#layoutChangeTimeout = null;
+		if (this.#layoutChangePending) return;
+		this.#layoutChangePending = true;
+		queueMicrotask(() => {
+			if (!this.#layoutChangePending) return;
+			this.#layoutChangePending = false;
 			this.config$()?.onLayoutsChange?.(this.exportLayout());
-		}, this.#layoutChangeDebounceMs);
+		});
 	}
 
 	// =========================================================================
@@ -478,9 +470,6 @@ export class InternalResponsiveFlexiBoardController implements ResponsiveFlexiBo
 		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
 		this.#unsubscribers = [];
 
-		if (this.#layoutChangeTimeout) {
-			clearTimeout(this.#layoutChangeTimeout);
-			this.#layoutChangeTimeout = null;
-		}
+		this.#layoutChangePending = false;
 	}
 }

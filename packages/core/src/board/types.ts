@@ -86,7 +86,8 @@ export type FlexiBoardConfiguration<TClass = unknown> = {
 	/**
 	 * Callback fired when the board's layout changes (widget moved, resized,
 	 * added, or removed), whether by the user or through the controller API.
-	 * Debounced; receives the exported layout.
+	 * Receives the committed layout in a microtask, before drop animations settle.
+	 * Synchronous changes are batched into one notification.
 	 */
 	onLayoutChange?: FlexiLayoutChangeFn;
 

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { InternalFlexiBoardController } from './controller.js';
+import { InternalResponsiveFlexiBoardController } from '../responsive/controller.js';
 import { getFlexiEventBus } from '../shared/event-bus.js';
 import { getPointerService } from '../shared/utils.js';
 import {
@@ -99,23 +100,22 @@ describe('controller API', () => {
 		expect(b.widgets.size).toBe(0);
 	});
 
-	it('fires onLayoutChange for programmatic changes, but not for the initial load or an import', () => {
-		vi.useFakeTimers();
+	it('fires onLayoutChange for programmatic changes, but not for the initial load or an import', async () => {
 		const onLayoutChange = vi.fn();
 		const { board, a } = setup({ onLayoutChange });
-		vi.runAllTimers();
+		await Promise.resolve();
 		expect(onLayoutChange).not.toHaveBeenCalled();
 
 		board.importLayout({ a: [{ type: 't', x: 0, y: 0, width: 1, height: 1 }] });
-		vi.runAllTimers();
+		await Promise.resolve();
 		expect(onLayoutChange).not.toHaveBeenCalled();
 
 		const w = a.createWidget({ type: 't', x: 1, y: 0, width: 1, height: 1 } as any)!;
-		vi.runAllTimers();
+		await Promise.resolve();
 		expect(onLayoutChange).toHaveBeenCalledTimes(1);
 
 		w.moveTo({ x: 2, y: 2 });
-		vi.runAllTimers();
+		await Promise.resolve();
 		expect(onLayoutChange).toHaveBeenCalledTimes(2);
 		expect(onLayoutChange).toHaveBeenLastCalledWith({
 			a: [expect.objectContaining({ x: 0, y: 0 }), expect.objectContaining({ x: 2, y: 2 })],
@@ -123,7 +123,7 @@ describe('controller API', () => {
 		});
 
 		w.delete();
-		vi.runAllTimers();
+		await Promise.resolve();
 		expect(onLayoutChange).toHaveBeenCalledTimes(3);
 	});
 
@@ -134,6 +134,80 @@ describe('controller API', () => {
 			expect.objectContaining({ x: 0, y: 0, width: 1, height: 1, metadata: { note: 'kept' } })
 		]);
 		expect('type' in board.exportLayout().a[0]).toBe(false);
+	});
+
+	it('batches synchronous changes and cancels a queued notification on destroy', async () => {
+		const onLayoutChange = vi.fn();
+		const { board, a } = setup({ onLayoutChange });
+		const first = a.createWidget({ x: 0, y: 0 })!;
+		a.createWidget({ x: 1, y: 0 });
+		await Promise.resolve();
+		expect(onLayoutChange).toHaveBeenCalledOnce();
+		expect(onLayoutChange.mock.calls[0][0].a).toHaveLength(2);
+		first.moveTo({ x: 2, y: 2 });
+		board.destroy();
+		await Promise.resolve();
+		expect(onLayoutChange).toHaveBeenCalledOnce();
+	});
+
+	it('reports a cross-target drop before animation frames or timers run', async () => {
+		const onLayoutChange = vi.fn();
+		const { board, a, b, bus, pointer } = setup({
+			onLayoutChange,
+			widgetDefaults: { transition: { drop: { duration: 1000, easing: 'linear' } } }
+		});
+		const widget = a.createWidget({ x: 0, y: 0 })!;
+		widget.ref = document.createElement('div');
+		widget.ref.getBoundingClientRect = () => rect(50, 50, 100, 100);
+		await Promise.resolve();
+		onLayoutChange.mockClear();
+		pointer.updatePosition(50, 50);
+		bus.dispatch('widget:grabbed', {
+			board,
+			target: a,
+			widget,
+			clientX: 50,
+			clientY: 50,
+			xOffset: 0,
+			yOffset: 0,
+			capturedWidthPx: 100,
+			capturedHeightPx: 100
+		});
+		pointer.updatePosition(450, 50);
+		bus.dispatch('widget:release', { board, target: b, widget });
+		await Promise.resolve();
+
+		expect(widget.isInterpolating).toBe(true);
+		expect(onLayoutChange).toHaveBeenCalledOnce();
+		expect(onLayoutChange.mock.calls[0][0]).toEqual({
+			a: [],
+			b: [expect.objectContaining({ id: widget.id, x: 1, y: 1 })]
+		});
+		widget.interpolator.stop();
+		board.destroy();
+	});
+
+	it('updates responsive layouts without adding a debounce after the child board commits', async () => {
+		const onLayoutsChange = vi.fn();
+		const responsive = new InternalResponsiveFlexiBoardController({ config: { onLayoutsChange } });
+		const board = new InternalFlexiBoardController({ config: {} }, responsive);
+		const target = board.createTarget({}, 'cards');
+		target.createGrid();
+		target.oninitialloadcomplete();
+		board.oninitialloadcomplete();
+		const widget = target.createWidget({ x: 0, y: 0 })!;
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(onLayoutsChange).toHaveBeenCalledOnce();
+		expect(onLayoutsChange.mock.calls[0][0]).toEqual({
+			default: { cards: [expect.objectContaining({ id: widget.id })] }
+		});
+		target.clear();
+		await Promise.resolve();
+		responsive.destroy();
+		await Promise.resolve();
+		expect(onLayoutsChange).toHaveBeenCalledOnce();
+		board.destroy();
 	});
 
 	it('reports grabs, drops and cancels of user interactions', () => {
@@ -172,10 +246,13 @@ describe('controller API', () => {
 
 	it('lets canDrop reject a placement, shown on the preview and enforced on release', async () => {
 		let forbidden: unknown;
+		const onLayoutChange = vi.fn();
 		const canDrop = vi.fn((check: FlexiDropCheck) => check.target !== forbidden);
-		const { board, a, b, bus, pointer } = setup({ canDrop });
+		const { board, a, b, bus, pointer } = setup({ canDrop, onLayoutChange });
 		forbidden = b;
 		const w = a.createWidget({ type: 't', x: 0, y: 0, width: 1, height: 1 } as any)!;
+		await Promise.resolve();
+		onLayoutChange.mockClear();
 
 		pointer.updatePosition(50, 50);
 		bus.dispatch('widget:grabbed', {
@@ -207,6 +284,35 @@ describe('controller API', () => {
 		expect(b.widgets.has(w)).toBe(false);
 		expect(a.widgets.has(w)).toBe(true);
 		expect([w.x, w.y]).toEqual([0, 0]);
+		expect(onLayoutChange).not.toHaveBeenCalled();
+		board.destroy();
+	});
+
+	it('does not report a layout change when a drag is canceled', async () => {
+		const onLayoutChange = vi.fn();
+		const { board, a, b, bus, pointer } = setup({ onLayoutChange });
+		const widget = a.createWidget({ x: 0, y: 0 })!;
+		await Promise.resolve();
+		onLayoutChange.mockClear();
+		const before = board.exportLayout();
+		pointer.updatePosition(50, 50);
+		bus.dispatch('widget:grabbed', {
+			board,
+			target: a,
+			widget,
+			clientX: 50,
+			clientY: 50,
+			xOffset: 0,
+			yOffset: 0,
+			capturedWidthPx: 100,
+			capturedHeightPx: 100
+		});
+		pointer.updatePosition(450, 50);
+		bus.dispatch('widget:cancel', { board, target: b, widget });
+		await Promise.resolve();
+		expect(board.exportLayout()).toEqual(before);
+		expect(onLayoutChange).not.toHaveBeenCalled();
+		board.destroy();
 	});
 
 	it('exports an id for every widget and round-trips it', () => {

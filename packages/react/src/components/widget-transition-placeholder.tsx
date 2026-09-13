@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import { useFlexiWidgetInterpolator } from '../adapters/widget.js';
 import { parseStyleString, useFromCore } from '../adapter.js';
 
@@ -12,7 +12,7 @@ export function WidgetTransitionPlaceholder() {
 
 	const ref = useRef<HTMLDivElement | null>(null);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!ref.current) return;
 		// Returns the unmount handler. The interpolator must forget this element
 		// once it leaves the grid, or the next flight targets a detached node.

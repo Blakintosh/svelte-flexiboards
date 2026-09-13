@@ -121,7 +121,7 @@ const config = {
 	onWidgetEnterTarget: ({ widget, target }) => {}, // hover styling for the candidate column
 	onWidgetLeaveTarget: ({ widget, target }) => {},
 	canDrop: ({ widget, target, x, y, width, height }) => true, // false shows a rejected preview and refuses the release
-	onLayoutChange: (layout) => save(layout) // debounced
+	onLayoutChange: (layout) => save(layout) // synchronous changes are batched
 };
 ```
 
