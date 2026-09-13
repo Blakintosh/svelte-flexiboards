@@ -83,7 +83,7 @@ Use `canDrop` on the board or an individual target to reject a placement. See [C
 
 In React, `FlexiBoard` forwards `ref` to its root element.
 
-In both frameworks, declaring a `FlexiWidget` after its target has loaded logs a warning. Late declarations are still ignored; use `createWidget()` to add widgets after loading.
+In both frameworks, you can mount new `FlexiWidget` declarations after the target has loaded. Each one is added through the existing placement rules. A placement that cannot fit is rejected with a warning. See [Adding widgets later](/docs/components/widget#adding-widgets-later).
 
 ### Other additions
 

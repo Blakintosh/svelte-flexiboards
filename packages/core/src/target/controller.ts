@@ -345,13 +345,9 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 		onCreated?: (widget: FlexiWidgetController) => void
 	) {
 		if (this.prepared) {
-			// The declared widgets were already turned into controllers; a declaration
-			// arriving now (a FlexiWidget rendered conditionally, later) would sit in
-			// the queue forever. Say so rather than fail silently.
-			console.warn(
-				`FlexiWidget declared after target "${this.key}" loaded: it will not be created. ` +
-					'Declare widgets before the first render, or add them with target.createWidget().'
-			);
+			const widget = this.createWidget(config);
+			if (widget) onCreated?.(widget);
+			return;
 		}
 		this.#initialWidgetRegistrations.push({ config, onCreated });
 	}
@@ -733,6 +729,8 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	}
 
 	oninitialloadcomplete() {
+		if (this.prepared) return;
+
 		// Initial creation can run before the grid component has rendered (the
 		// SSR/first-pass ordering); placement needs the grid controller now.
 		this.ensureGrid();

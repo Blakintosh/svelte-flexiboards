@@ -74,6 +74,70 @@ export function Tile() {
 
 </Only>
 
+## Adding widgets later
+
+You can mount new `FlexiWidget` declarations after the target has loaded. Each declaration uses the same placement rules as `target.createWidget()`: flow grids follow their placement strategy, and free-form grids check coordinates, dimensions, and collisions.
+
+<Only svelte>
+
+```svelte example
+<script lang="ts">
+	import { FlexiSortable, FlexiWidget } from '@flexiboards/svelte';
+	let notes = $state([1]);
+</script>
+
+<div class="w-full space-y-3">
+	<button
+		type="button"
+		class="rounded border px-3 py-2"
+		onclick={() => (notes = [...notes, notes.length + 1])}>Add note</button
+	>
+	<FlexiSortable class="gap-2">
+		{#each notes as note (note)}
+			<FlexiWidget id={`note-${note}`} class="rounded border p-3">Note {note}</FlexiWidget>
+		{/each}
+	</FlexiSortable>
+</div>
+```
+
+</Only>
+
+<Only react>
+
+```tsx example
+'use client';
+import { useState } from 'react';
+import { FlexiSortable, FlexiWidget } from '@flexiboards/react';
+
+export function AddNotes() {
+	const [notes, setNotes] = useState([1]);
+	return (
+		<div className="w-full space-y-3">
+			<button
+				type="button"
+				className="rounded border px-3 py-2"
+				onClick={() => setNotes((current) => [...current, current.length + 1])}
+			>
+				Add note
+			</button>
+			<FlexiSortable className="gap-2">
+				{notes.map((note) => (
+					<FlexiWidget key={note} id={`note-${note}`} className="rounded border p-3">
+						Note {note}
+					</FlexiWidget>
+				))}
+			</FlexiSortable>
+		</div>
+	);
+}
+```
+
+</Only>
+
+Keep list keys stable. A declaration registers once per mount; rerendering it updates its props without adding another widget. The board owns the created widget, so removing its declaration does not delete it. Use `widget.delete()` or `target.clear()` to remove widgets.
+
+An accepted addition fires `onfirstcreate` and reports the new layout through `onLayoutChange`. If placement fails, the widget is not created and a warning explains the failure. Freeing space later does not automatically retry a rejected declaration.
+
 ## FlexiWidgetController
 
 `FlexiWidget` uses a [controller](/docs/controllers) to manage its state and behaviour.

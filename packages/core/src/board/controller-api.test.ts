@@ -432,12 +432,4 @@ describe('controller API', () => {
 		expect(onWidgetResize).toHaveBeenCalledWith({ widget: w, target: a });
 		expect(onWidgetDrop).not.toHaveBeenCalled();
 	});
-
-	it('warns when a widget is declared after its target has loaded', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-		const { a } = setup();
-		a.registerWidget({ width: 1, height: 1 } as any);
-		expect(warn).toHaveBeenCalledWith(expect.stringContaining('declared after target "a" loaded'));
-		warn.mockRestore();
-	});
 });

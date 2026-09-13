@@ -17,6 +17,7 @@ Added
 - Controller actions: `widget.delete()`, `widget.moveTo()`, `target.clear()`, `board.clear()`, `exportLayoutEnvelope()`. `onLayoutChange` fires for changes made through them.
 - Board callbacks `onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget`, `onWidgetLeaveTarget`, and `canDrop` on the board and on each target.
 - Presets `FlexiSortable` and `FlexiDashboard`.
+- `FlexiWidget` declarations can mount after their target has loaded, using the same placement rules as `createWidget()`.
 - CSS motion uses sine in-out reordering and circ-out drops. The deprecated `simpleTransitionConfig()` keeps its original 150ms timing. Registry component families enable transitions by default and respect reduced motion.
 - Animation adapters: `cssTransition()` and `spring()`, with `cssTransitionConfig()` and `springTransitionConfig()`.
 - Layout callbacks run after a drop is committed, before animations settle. Destination placeholders use the final card size, including when text wraps differently between columns.

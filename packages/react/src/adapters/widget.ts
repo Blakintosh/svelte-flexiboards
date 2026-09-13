@@ -3,9 +3,9 @@ import {
 	type FlexiWidgetConfiguration,
 	type FlexiWidgetController
 } from '@flexiboards/core';
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type ReactNode } from 'react';
 import { useInternalFlexiTarget } from './target.js';
-import { useOnce, type FlexiChildren } from './utils.js';
+import { useClientLayoutEffect, useOnce, type FlexiChildren } from './utils.js';
 import { useReactive } from './reactive.js';
 
 /** @internal Provided by the RenderedFlexiWidget component; consumed via the hooks below. */
@@ -13,16 +13,28 @@ export const FlexiWidgetContext = createContext<InternalFlexiWidgetController | 
 
 /**
  * Registers a widget configuration with the surrounding FlexiTarget.
- * Registration is an irreversible declaration consumed when the target builds
- * its initial widgets, so it runs exactly once per component instance.
+ * Initial declarations run during render for SSR. Later mounts register after
+ * commit so they cannot update the live grid from another component's render.
  */
 export function useFlexiWidgetInit(
 	config: FlexiWidgetConfiguration<string>,
 	onWidgetCreated?: (widget: FlexiWidgetController) => void
 ) {
 	const target = useInternalFlexiTarget();
+	const registered = useRef(false);
 
-	useOnce(() => target.registerWidget(config, onWidgetCreated));
+	useOnce(() => {
+		if (!target.prepared) {
+			registered.current = true;
+			target.registerWidget(config, onWidgetCreated);
+		}
+	});
+
+	useClientLayoutEffect(() => {
+		if (registered.current) return;
+		registered.current = true;
+		target.registerWidget(config, onWidgetCreated);
+	});
 }
 
 export type FlexiWidgetChildren = (params: {
