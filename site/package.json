@@ -77,7 +77,6 @@
 		"@icons-pack/svelte-simple-icons": "^7.2.0",
 		"@melt-ui/svelte": "^0.86.6",
 		"d3-shape": "^3.2.0",
-		"formsnap": "^2.0.1",
 		"lucide-react": "^1.33.0",
 		"mdsvexamples": "^0.5.0",
 		"melt": "^0.28.2",
