@@ -1,7 +1,7 @@
 ---
 title: Sortable List
 description: Reorder custom rows with handles, keyboard controls, and order callbacks.
-category: Registry components
+category: Registry
 published: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Registry
 description: Composable Flexiboards components, copied into your project and styled by your shadcn theme.
-category: Guides
+category: Registry
 published: true
 ---
 
@@ -10,7 +10,9 @@ published: true
  import FrameworkText from '$lib/components/docs/framework-text.svelte';
 </script>
 
-The registry is a source library for <FrameworkText svelte="Svelte" react="React" />. Install a component family, compose its parts, and own the code. It adds a small amount of opinionated styling on top of the headless primitives—not a separate theme or an application shell.
+The registry provides styled <FrameworkText svelte="Svelte" react="React" /> components built on the Flexiboards primitives. The CLI copies them into your app, where you can edit the source. They use your existing shadcn theme.
+
+The registry is in preview. Start here for installation details, then choose a component below.
 
 ## Components
 

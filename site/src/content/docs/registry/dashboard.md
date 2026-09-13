@@ -1,7 +1,7 @@
 ---
 title: Dashboard
 description: Composable, draggable and resizable tiles with your shadcn theme.
-category: Registry components
+category: Registry
 published: true
 ---
 

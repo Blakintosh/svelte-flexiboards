@@ -1,7 +1,7 @@
 ---
 title: Resizer
 description: Resize widgets with a small, theme-aware handle.
-category: Registry components
+category: Registry
 published: true
 ---
 
@@ -11,7 +11,7 @@ published: true
  import InstallCommand from '$lib/components/docs/install-command.svelte';
 </script>
 
-A styled [FlexiResize](/docs/components/resize) button, usable inside any FlexiWidget—not just registry items. It adds an icon, an accessible label, and hover, keyboard-focus, and disabled states.
+A styled [FlexiResize](/docs/components/resize) button for use inside a `FlexiWidget`. Install it from the registry, then import the copied source from your app.
 
 ## Preview
 
@@ -20,7 +20,7 @@ A styled [FlexiResize](/docs/components/resize) button, usable inside any FlexiW
 ```svelte example
 <script lang="ts">
 	import { FlexiDashboard, FlexiWidget } from '@flexiboards/svelte';
-	import Resizer from '$lib/registry/svelte/flexi-handles/resizer.svelte';
+	import Resizer from '$lib/components/flexi-handles/resizer.svelte';
 </script>
 
 <FlexiDashboard
@@ -94,13 +94,23 @@ Start with a Tailwind project configured for shadcn and its theme variables. Thi
 
 <Only svelte>
 
-Import from `$lib/components/flexi-handles/resizer.svelte`. The preview imports the same file from this site's registry source.
+The default install location is `src/lib/components/flexi-handles/resizer.svelte`. Import it in your app:
+
+```svelte
+<script lang="ts">
+	import Resizer from '$lib/components/flexi-handles/resizer.svelte';
+</script>
+```
 
 </Only>
 
 <Only react>
 
-Import from `@/components/flexi-handles/resizer`.
+The CLI copies `resizer.tsx` into `flexi-handles` under your configured components directory. Import it through your app's alias:
+
+```tsx
+import { Resizer } from '@/components/flexi-handles/resizer';
+```
 
 </Only>
 

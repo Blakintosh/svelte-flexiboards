@@ -46,13 +46,13 @@ export const directory: DocSection[] = [
 			{ title: 'Exporting & Importing', href: '/docs/guides/exporting-importing-boards' },
 			{ title: 'Responsive Layouts', href: '/docs/guides/responsive-layouts' },
 			{ title: 'Server-Side Rendering', href: '/docs/guides/server-side-rendering' },
-			{ title: 'Testing', href: '/docs/guides/testing' },
-			{ title: 'Registry', href: '/docs/guides/registry' }
+			{ title: 'Testing', href: '/docs/guides/testing' }
 		]
 	},
 	{
-		section: 'Registry components',
+		section: 'Registry',
 		pages: [
+			{ title: 'Overview', href: '/docs/guides/registry' },
 			{ title: 'Dashboard', href: '/docs/registry/dashboard' },
 			{ title: 'Sortable List', href: '/docs/registry/sortable-list' },
 			{ title: 'Board', href: '/docs/registry/board' },

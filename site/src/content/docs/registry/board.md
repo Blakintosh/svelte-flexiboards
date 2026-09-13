@@ -1,7 +1,7 @@
 ---
 title: Board
 description: Themed primitives for custom grids and multiple drop targets.
-category: Registry components
+category: Registry
 published: true
 ---
 

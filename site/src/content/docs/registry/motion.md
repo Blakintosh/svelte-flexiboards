@@ -1,7 +1,7 @@
 ---
 title: Motion
 description: Compare registry transitions and customise their easing.
-category: Registry components
+category: Registry
 published: true
 ---
 

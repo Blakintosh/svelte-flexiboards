@@ -24,17 +24,16 @@
 		document.title = 'Flexiboards — headless drag & drop grids';
 	});
 
-	// The Svelte adapter names the target key `key`; the React one `flexiKey`.
-	const targetKeyProp = $derived(framework.current === 'svelte' ? 'key' : 'flexiKey');
+	const targetKeyProp = $derived(framework.current === 'svelte' ? 'key' : 'keyName');
 
 	const kanbanListing =
 		$derived(`<FlexiBoard config={{ targetDefaults: { layout: { type: 'flow', flowAxis: 'column' } } }}>
   <FlexiTarget ${targetKeyProp}="todo">
-    <FlexiWidget draggable>Study for exam</FlexiWidget>
-    <FlexiWidget draggable>Research project</FlexiWidget>
+    <FlexiWidget draggability="full">Study for exam</FlexiWidget>
+    <FlexiWidget draggability="full">Research project</FlexiWidget>
   </FlexiTarget>
   <FlexiTarget ${targetKeyProp}="done">
-    <FlexiWidget draggable>Feed the cat</FlexiWidget>
+    <FlexiWidget draggability="full">Feed the cat</FlexiWidget>
   </FlexiTarget>
 </FlexiBoard>`);
 
@@ -110,8 +109,8 @@
 		{
 			kind: 'Adapter',
 			name: '@flexiboards/react',
-			body: 'Flexiboards for React, currently in public preview.',
-			status: { label: 'preview', variant: 'accent' as const }
+			body: 'Flexiboards for React 18 and 19, using the same grid engine.',
+			status: { label: 'new', variant: 'accent' as const }
 		}
 	];
 
@@ -284,6 +283,7 @@
 			<span>Powered by signals</span>
 			<span>Zero styling shipped</span>
 			<span>Accessibility-ready</span>
+			<a href="/docs/llms" class="hover:text-fx-accent underline underline-offset-4">AI ready</a>
 		</div>
 	</div>
 
@@ -405,7 +405,7 @@
 		<div use:reveal>
 			<CodeListing
 				caption="Listing 1 · a kanban board"
-				lang={framework.meta.label + (framework.meta.status === 'preview' ? ' (preview)' : '')}
+				lang={framework.meta.label}
 				source={kanbanListing}
 				class="h-full px-6 py-11 lg:px-10"
 			>
@@ -413,16 +413,15 @@
 					<p
 						class="border-fx-accent text-on-ink mt-4.5 m-0 border-l-2 bg-white/5 px-3 py-2 text-xs"
 					>
-						Preview API — component names and props match the Svelte adapter; details may still move
-						before 1.0 of <span class="text-white">@flexiboards/react</span>.
+						New in v1.0. <span class="text-white">@flexiboards/react</span> supports React 18 and 19,
+						including server rendering and hydration.
 					</p>
 				{:else}
 					<p
 						class="border-fx-accent text-on-ink mt-4.5 m-0 border-l-2 bg-white/5 px-3 py-2 text-xs"
 					>
-						Stable API — built on Svelte 5 signals; <span class="text-white"
-							>@flexiboards/svelte</span
-						> is what the examples below ship with.
+						<span class="text-white">@flexiboards/svelte</span> supports Svelte 5 runes, including server
+						rendering and hydration.
 					</p>
 				{/if}
 			</CodeListing>
@@ -558,7 +557,37 @@
 	</div>
 </section>
 
-<!-- ===== §06 EXAMPLES ===== -->
+<section class="page-gutter border-rule border-t py-16">
+	<div class="grid gap-10 md:grid-cols-2 md:gap-16">
+		<div>
+			<SectionHeading class="mb-3">Docs for your coding agent</SectionHeading>
+			<p class="text-body m-0 mb-5 max-w-[520px] text-base leading-relaxed">
+				Give your agent framework-specific Markdown docs and the Flexiboards skill. The llms.txt
+				index points it to the relevant API and examples.
+			</p>
+			<div class="flex flex-wrap gap-x-6 gap-y-3">
+				<Button href="/docs/llms" variant="link">Read the setup guide</Button>
+				<Button href={`/llms.txt?framework=${framework.current}`} variant="link"
+					>Open llms.txt</Button
+				>
+			</div>
+		</div>
+		<div>
+			<div class="mb-3 flex flex-wrap items-center gap-3">
+				<SectionHeading>Start with registry components</SectionHeading>
+				<Badge variant="outline">preview</Badge>
+			</div>
+			<p class="text-body m-0 mb-5 max-w-[520px] text-base leading-relaxed">
+				Install boards, dashboards, and sortable lists through {framework.current === 'svelte'
+					? 'shadcn-svelte'
+					: 'shadcn'}. The components use your theme, and their source lives in your app.
+			</p>
+			<Button href="/docs/guides/registry" variant="link">Browse components</Button>
+		</div>
+	</div>
+</section>
+
+<!-- ===== EXAMPLES ===== -->
 <section class="page-gutter border-rule bg-panel border-t py-16">
 	<div class="mb-6 flex flex-wrap items-baseline justify-between gap-4" use:reveal>
 		<div class="flex flex-wrap items-baseline gap-4">
