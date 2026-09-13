@@ -151,6 +151,16 @@ The easing values include fallbacks, so no stylesheet is required. To change a c
 
 Change durations in the transition configuration, in milliseconds. Keep the configuration stable between React renders, as the demo does above.
 
+The spring preset uses shorter response times and a small bounce on drop:
+
+| Movement | Response | Bounce |
+| -------- | -------- | ------ |
+| Reorder  | 0.20s    | 0.05   |
+| Drop     | 0.24s    | 0.18   |
+| Resize   | 0.18s    | 0      |
+
+Spring response times are in seconds and control how quickly the spring reacts. They are not fixed animation durations; the spring stops when it comes to rest.
+
 ## Accessibility
 
 Registry roots disable their transition defaults when `prefers-reduced-motion: reduce` matches, including custom presets supplied through `config.widgetDefaults.transition`. The preference is observed while the page is open. Colour and opacity feedback remains available.

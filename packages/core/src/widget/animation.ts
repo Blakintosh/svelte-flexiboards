@@ -137,6 +137,8 @@ export function spring(options: SpringOptions): AnimationAdapter<AnimationBox> {
 	const { duration, bounce = 0, precision = 0.05 } = options;
 	const omega = (2 * Math.PI) / duration; // rad/s
 	const zeta = 1 - Math.min(Math.max(bounce, 0), 1);
+	const damping = zeta * omega;
+	const frequency = omega * Math.sqrt(1 - zeta * zeta);
 	const keys: (keyof AnimationBox)[] = ['left', 'top', 'width', 'height'];
 
 	return {
@@ -155,19 +157,27 @@ export function spring(options: SpringOptions): AnimationAdapter<AnimationBox> {
 					return;
 				}
 
-				// Clamp so a backgrounded tab doesn't explode the integrator on resume.
+				// Limit the jump when a backgrounded tab resumes.
 				const dt = Math.min((now - (lastTime ?? now)) / 1000, 1 / 30);
 				lastTime = now;
 
+				// Solve the damped oscillator exactly; Euler steps destabilise short springs at 30fps.
+				const decay = Math.exp(-damping * dt);
+				const cosine = Math.cos(frequency * dt);
+				const sine = frequency ? Math.sin(frequency * dt) / frequency : dt;
 				let settled = true;
 				for (const key of keys) {
-					const delta = target[key] - current[key];
-					// Semi-implicit Euler on x'' = ω²·Δ − 2ζω·x'
-					const acceleration = omega * omega * delta - 2 * zeta * omega * velocity[key];
-					velocity[key] += acceleration * dt;
-					current[key] += velocity[key] * dt;
+					const offset = current[key] - target[key];
+					const speed = velocity[key];
+					current[key] =
+						target[key] + decay * (offset * cosine + (speed + damping * offset) * sine);
+					velocity[key] =
+						decay * (speed * cosine - (damping * speed + omega * omega * offset) * sine);
 
-					if (Math.abs(delta) > precision || Math.abs(velocity[key]) > precision) {
+					if (
+						Math.abs(current[key] - target[key]) > precision ||
+						Math.abs(velocity[key]) > precision
+					) {
 						settled = false;
 					}
 				}

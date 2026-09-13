@@ -39,16 +39,12 @@ function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	};
 }
 
-/**
- * A spring-based counterpart to cssTransitionConfig(): a quick, barely-overshooting move, a
- * bouncier drop, and a critically damped resize.
- * @returns The configuration object.
- */
+/** Quick reordering, a small bounce on drop, and resizing without overshoot. */
 function springTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	return {
-		move: spring({ duration: 0.3, bounce: 0.1 }),
-		drop: spring({ duration: 0.4, bounce: 0.3 }),
-		resize: spring({ duration: 0.25, bounce: 0 })
+		move: spring({ duration: 0.2, bounce: 0.05, precision: 0.5 }),
+		drop: spring({ duration: 0.24, bounce: 0.18, precision: 0.5 }),
+		resize: spring({ duration: 0.18, bounce: 0, precision: 0.5 })
 	};
 }
 

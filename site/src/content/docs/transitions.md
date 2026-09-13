@@ -148,7 +148,7 @@ Toggle the switch and drag a widget: with transitions on, the other widget glide
 Two presets ship with the library. Each returns a complete `transition` configuration:
 
 - `cssTransitionConfig()` uses sine in-out for 150ms moves, circ-out for 200ms drops, and ease-out for 150ms resizing.
-- `springTransitionConfig()` uses a physics spring with a little bounce on drop.
+- `springTransitionConfig()` uses response times of 0.20s for moves, 0.24s for drops, and 0.18s for resizing, with a small bounce on drop. These control the spring's response, rather than a fixed end time.
 
 `simpleTransitionConfig()` is deprecated. It retains the original 150ms preset, with `ease-in-out` for moves and `ease-out` for drops and resizing.
 

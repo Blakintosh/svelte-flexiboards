@@ -1,8 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cssTransition, resolveAnimationAdapter, spring, type AnimationBox } from './animation.js';
 import { cssTransitionConfig, simpleTransitionConfig, springTransitionConfig } from './index.js';
 
 const box = (n: number): AnimationBox => ({ left: n, top: n, width: n, height: n });
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('CSS presets', () => {
 	it('retains the original timing and easing in the deprecated simple preset', () => {
@@ -113,32 +115,31 @@ describe('resolveAnimationAdapter', () => {
 	});
 });
 
-describe('spring', () => {
-	/** Drives rAF deterministically at 60fps. */
-	function fakeRaf() {
-		let now = 0;
-		let queue: FrameRequestCallback[] = [];
-		vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
-			queue.push(cb);
-			return queue.length;
-		});
-		vi.stubGlobal('cancelAnimationFrame', () => {
-			queue = [];
-		});
-		return {
-			step(frames = 1) {
-				for (let i = 0; i < frames; i++) {
-					now += 1000 / 60;
-					const cbs = queue;
-					queue = [];
-					for (const cb of cbs) {
-						cb(now);
-					}
+function fakeRaf(fps = 60) {
+	let now = 0;
+	let queue: FrameRequestCallback[] = [];
+	vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+		queue.push(cb);
+		return queue.length;
+	});
+	vi.stubGlobal('cancelAnimationFrame', () => {
+		queue = [];
+	});
+	return {
+		step(frames = 1) {
+			for (let i = 0; i < frames; i++) {
+				now += 1000 / fps;
+				const cbs = queue;
+				queue = [];
+				for (const cb of cbs) {
+					cb(now);
 				}
 			}
-		};
-	}
+		}
+	};
+}
 
+describe('spring', () => {
 	it('overshoots with bounce and settles on the target exactly', () => {
 		const raf = fakeRaf();
 		const emits: number[] = [];
@@ -154,7 +155,6 @@ describe('spring', () => {
 		expect(onSettle).toHaveBeenCalledOnce();
 		expect(Math.max(...emits)).toBeGreaterThan(100);
 		expect(emits.at(-1)).toBe(100);
-		vi.unstubAllGlobals();
 	});
 
 	it('does not overshoot when critically damped', () => {
@@ -168,7 +168,6 @@ describe('spring', () => {
 		handle.setTarget(box(100));
 		raf.step(120);
 		expect(Math.max(...emits)).toBeLessThanOrEqual(100 + 1e-6);
-		vi.unstubAllGlobals();
 	});
 
 	it('retargets mid-flight and stops cleanly', () => {
@@ -193,7 +192,6 @@ describe('spring', () => {
 		raf.step(30);
 		expect(emits.length).toBe(n);
 		expect(onSettle).toHaveBeenCalledOnce();
-		vi.unstubAllGlobals();
 	});
 });
 
@@ -204,4 +202,45 @@ describe('springTransitionConfig', () => {
 			expect(resolveAnimationAdapter(config[kind])).toBe(config[kind]);
 		}
 	});
+
+	for (const kind of ['move', 'drop', 'resize'] as const) {
+		it.each([30, 60, 120, 144])(
+			`${kind} settles promptly with bounded overshoot at %ifps`,
+			(fps) => {
+				const raf = fakeRaf(fps);
+				const values: number[] = [];
+				const onSettle = vi.fn();
+				const handle = resolveAnimationAdapter(springTransitionConfig()[kind])!.start(box(0), {
+					kind,
+					emit: (value) => values.push(value.left),
+					onSettle
+				});
+				handle.setTarget(box(300));
+				raf.step(Math.floor(fps * 0.55));
+
+				expect(onSettle).toHaveBeenCalledOnce();
+				expect(values.at(-1)).toBe(300);
+				expect(Math.min(...values)).toBeGreaterThanOrEqual(0);
+				expect(Math.max(...values)).toBeLessThanOrEqual(kind === 'resize' ? 300 : 306);
+			}
+		);
+
+		it(`${kind} follows the same path across frame rates`, () => {
+			const positions = [30, 60, 120].map((fps) => {
+				const raf = fakeRaf(fps);
+				let position = 0;
+				const handle = resolveAnimationAdapter(springTransitionConfig()[kind])!.start(box(0), {
+					kind,
+					emit: (value) => (position = value.left),
+					onSettle: () => {}
+				});
+				handle.setTarget(box(300));
+				raf.step(1 + fps * 0.2);
+				handle.stop();
+				return position;
+			});
+			expect(positions[0]).toBeCloseTo(positions[1], 6);
+			expect(positions[1]).toBeCloseTo(positions[2], 6);
+		});
+	}
 });
