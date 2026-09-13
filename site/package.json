@@ -15,12 +15,12 @@
 		"check": "node scripts/build-llms-docs.mjs && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
-		"e2e": "playwright test",
-		"e2e:ui": "playwright test --ui",
+		"e2e": "node scripts/build-llms-docs.mjs && playwright test",
+		"e2e:ui": "node scripts/build-llms-docs.mjs && playwright test --ui",
 		"build-registry": "node scripts/build-registry.mjs",
 		"test:docs": "node --test scripts/build-llms-docs.test.mjs",
-		"check:e2e": "tsc -p tsconfig.e2e.json",
-		"e2e:launch": "playwright test --config playwright.launch.config.ts",
+		"check:e2e": "node scripts/build-llms-docs.mjs && tsc -p tsconfig.e2e.json",
+		"e2e:launch": "node scripts/build-llms-docs.mjs && playwright test --config playwright.launch.config.ts",
 		"start": "node build"
 	},
 	"files": [
