@@ -147,10 +147,12 @@ Toggle the switch and drag a widget: with transitions on, the other widget glide
 
 Two presets ship with the library. Each returns a complete `transition` configuration:
 
-- `cssTransitionConfig()` uses CSS-style easing, `ease-in-out` for moves and `ease-out` for drops.
+- `cssTransitionConfig()` uses sine in-out for 150ms moves, circ-out for 200ms drops, and ease-out for 150ms resizing.
 - `springTransitionConfig()` uses a physics spring with a little bounce on drop.
 
-`simpleTransitionConfig()` is a deprecated alias of `cssTransitionConfig()`.
+`simpleTransitionConfig()` is deprecated. It retains the original 150ms preset, with `ease-in-out` for moves and `ease-out` for drops and resizing.
+
+The CSS preset accepts global easing overrides through `--ease-flexi-move`, `--ease-flexi-drop`, and `--ease-flexi-resize`. [Compare CSS and spring motion in the registry demo](/docs/registry/motion).
 
 ## Customising transitions
 

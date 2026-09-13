@@ -6,6 +6,7 @@ import {
 	type FlexiBoardConfiguration
 } from '@flexiboards/react';
 import { cn } from '@/lib/utils';
+import { useReducedMotion, withMotion } from '../flexi-motion';
 export type RootProps = FlexiSortableProps & { onReorder?: (ids: string[]) => void };
 export function Root({
 	className,
@@ -15,9 +16,10 @@ export function Root({
 	onReorder,
 	...props
 }: RootProps) {
+	const reducedMotion = useReducedMotion();
 	const boardConfig = useMemo<FlexiBoardConfiguration>(
 		() => ({
-			...config,
+			...withMotion(config, reducedMotion),
 			onLayoutChange: (layout) => {
 				config?.onLayoutChange?.(layout);
 				onReorder?.(
@@ -29,7 +31,7 @@ export function Root({
 				);
 			}
 		}),
-		[config, keyName, direction, onReorder]
+		[config, keyName, direction, onReorder, reducedMotion]
 	);
 	return (
 		<FlexiSortable

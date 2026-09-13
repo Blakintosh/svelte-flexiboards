@@ -252,7 +252,7 @@ Each component's API page documents its configuration, including which propertie
 
 ## Deprecated and removed
 
-- `simpleTransitionConfig()` is an alias of `cssTransitionConfig()`. See [Transitions](/docs/transitions).
+- `simpleTransitionConfig()` is deprecated and retains its original 150ms easing. Use `cssTransitionConfig()` for the current CSS preset. See [Transitions](/docs/transitions).
 
 Removed in v1.0: the `draggable` boolean (use `draggability`) and `width`/`height` in `widgetDefaults`. See [Migrating to v1.0](/docs/breaking-changes-to-10).
 

@@ -37,13 +37,13 @@ Every export from v0.4 is still exported from `@flexiboards/svelte` under the sa
 
 ## Renamed helpers
 
-| v0.4                       | v1.0                    | Notes                                           |
-| -------------------------- | ----------------------- | ----------------------------------------------- |
-| `simpleTransitionConfig()` | `cssTransitionConfig()` | The old name still works as a deprecated alias. |
+| v0.4                       | v1.0                    | Notes                                                               |
+| -------------------------- | ----------------------- | ------------------------------------------------------------------- |
+| `simpleTransitionConfig()` | `cssTransitionConfig()` | The old helper is deprecated and retains its original 150ms easing. |
 
 ## Deprecations still honoured
 
-- `simpleTransitionConfig()` remains as an alias of `cssTransitionConfig()`.
+- `simpleTransitionConfig()` retains the original 150ms preset. `cssTransitionConfig()` now uses sine in-out moves and circ-out drops.
 
 ## Removed
 

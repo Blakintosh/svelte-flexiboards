@@ -1,8 +1,47 @@
 import { describe, expect, it, vi } from 'vitest';
 import { cssTransition, resolveAnimationAdapter, spring, type AnimationBox } from './animation.js';
-import { springTransitionConfig } from './index.js';
+import { cssTransitionConfig, simpleTransitionConfig, springTransitionConfig } from './index.js';
 
 const box = (n: number): AnimationBox => ({ left: n, top: n, width: n, height: n });
+
+describe('CSS presets', () => {
+	it('retains the original timing and easing in the deprecated simple preset', () => {
+		expect(simpleTransitionConfig()).toEqual({
+			move: { duration: 150, easing: 'ease-in-out' },
+			drop: { duration: 150, easing: 'ease-out' },
+			resize: { duration: 150, easing: 'ease-out' }
+		});
+	});
+
+	it('keeps a CSS drop active for its full 200ms and emits the overridable circ curve', () => {
+		vi.useFakeTimers();
+		try {
+			const onSettle = vi.fn();
+			const handle = resolveAnimationAdapter(cssTransitionConfig().drop)!.start(box(0), {
+				kind: 'drop',
+				emit: () => {},
+				onSettle
+			});
+			handle.setTarget(box(100));
+			expect(handle.extraStyle?.()).toBe(
+				'transition: all 200ms var(--ease-flexi-drop, cubic-bezier(0, 0.55, 0.45, 1));'
+			);
+			vi.advanceTimersByTime(199);
+			expect(onSettle).not.toHaveBeenCalled();
+			vi.advanceTimersByTime(1);
+			expect(onSettle).toHaveBeenCalledOnce();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('keeps caller customisation local to each preset instance', () => {
+		const config = cssTransitionConfig();
+		config.move = undefined;
+		expect(cssTransitionConfig().move).toBeDefined();
+		expect(simpleTransitionConfig().move).toEqual({ duration: 150, easing: 'ease-in-out' });
+	});
+});
 
 describe('cssTransition', () => {
 	it('emits the start box without a transition, then the target with one, then settles', () => {

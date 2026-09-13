@@ -139,3 +139,7 @@ In Next.js, compose these components inside a client component.
 </Only>
 
 The underlying [SSR and hydration support](/docs/guides/server-side-rendering) is unchanged.
+
+## Motion
+
+Movement uses short CSS transitions by default and respects reduced motion. [Compare presets or disable transitions](/docs/registry/motion).

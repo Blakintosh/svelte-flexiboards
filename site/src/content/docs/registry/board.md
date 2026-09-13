@@ -126,3 +126,7 @@ Resizing is opt-in here: set `resizability="both"` on an item (or through widget
 ## Components, not blocks
 
 This is deliberately not a Kanban application or a full dashboard shell. Compose these components into your own product; larger copyable blocks can build on the same parts later.
+
+## Motion
+
+Movement uses short CSS transitions by default and respects reduced motion. [Compare presets or disable transitions](/docs/registry/motion).

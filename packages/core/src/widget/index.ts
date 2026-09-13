@@ -9,31 +9,35 @@ import type {
 import type { FlexiWidgetController } from './base.js';
 import { spring } from './animation.js';
 
-/**
- * CSS-transition configuration: ease-in-out for move, ease-out for drop and resize, 150ms each.
- * @returns The configuration object.
- */
+/** Sine in-out reordering, circ-out drops, and ease-out resizing. Durations are in milliseconds. */
 function cssTransitionConfig(): FlexiWidgetTransitionConfiguration {
 	return {
 		move: {
 			duration: 150,
-			easing: 'ease-in-out'
+			easing: 'var(--ease-flexi-move, cubic-bezier(0.37, 0, 0.63, 1))'
 		},
 		drop: {
-			duration: 150,
-			easing: 'ease-out'
+			duration: 200,
+			easing: 'var(--ease-flexi-drop, cubic-bezier(0, 0.55, 0.45, 1))'
 		},
 		resize: {
 			duration: 150,
-			easing: 'ease-out'
+			easing: 'var(--ease-flexi-resize, ease-out)'
 		}
 	};
 }
 
 /**
- * @deprecated Renamed to {@link cssTransitionConfig}; kept as an alias for backwards compatibility.
+ * Original 150ms preset: ease-in-out moves and ease-out drops and resizing.
+ * @deprecated Use {@link cssTransitionConfig} for new boards. This retains the original easing and timing.
  */
-const simpleTransitionConfig = cssTransitionConfig;
+function simpleTransitionConfig(): FlexiWidgetTransitionConfiguration {
+	return {
+		move: { duration: 150, easing: 'ease-in-out' },
+		drop: { duration: 150, easing: 'ease-out' },
+		resize: { duration: 150, easing: 'ease-out' }
+	};
+}
 
 /**
  * A spring-based counterpart to cssTransitionConfig(): a quick, barely-overshooting move, a

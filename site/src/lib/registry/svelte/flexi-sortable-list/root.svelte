@@ -3,6 +3,7 @@
 	import { FlexiSortable } from '@flexiboards/svelte';
 	import type { FlexiBoardConfiguration } from '@flexiboards/svelte';
 	import { cn } from '$lib/utils.js';
+	import { reducedMotion, withMotion } from '../flexi-motion/index.js';
 	let {
 		class: className,
 		config,
@@ -13,7 +14,7 @@
 		...props
 	}: ComponentProps<typeof FlexiSortable> & { onreorder?: (ids: string[]) => void } = $props();
 	const boardConfig = $derived<FlexiBoardConfiguration>({
-		...config,
+		...withMotion(config, reducedMotion.current),
 		onLayoutChange: (layout) => {
 			config?.onLayoutChange?.(layout);
 			onreorder?.(

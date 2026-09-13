@@ -32,6 +32,14 @@ const frameworks = {
 
 // Item shapes shared by both frameworks; only the file extension differs.
 const items = (fw) => [
+	{
+		name: 'flexi-motion',
+		type: 'registry:component',
+		title: 'Motion',
+		description: 'CSS transition presets and reactive reduced-motion support.',
+		registryDependencies: [],
+		files: ['flexi-motion/index.ts']
+	},
 	...['grabber', 'resizer'].map((handle) => ({
 		name: `flexi-${handle}`,
 		type: 'registry:component',
@@ -54,7 +62,7 @@ const items = (fw) => [
 		title: 'Sortable list',
 		description:
 			'Composable SortableList.Root, Item and handles, with custom content and order callbacks.',
-		registryDependencies: ['utils', 'flexi-handles'],
+		registryDependencies: ['utils', 'flexi-handles', 'flexi-motion'],
 		files: ['index.ts', `root.${fw.ext}`, `item.${fw.ext}`, `sortable-list.${fw.ext}`].map(
 			(file) => `flexi-sortable-list/${file}`
 		)
@@ -64,7 +72,7 @@ const items = (fw) => [
 		type: 'registry:component',
 		title: 'Dashboard',
 		description: 'Composable dashboard tiles with themed surfaces, grab handles and resizing.',
-		registryDependencies: ['utils', 'flexi-handles'],
+		registryDependencies: ['utils', 'flexi-handles', 'flexi-motion'],
 		files: [
 			'index.ts',
 			...['root', 'item', 'header', 'content'].map((part) => `${part}.${fw.ext}`)
@@ -76,7 +84,7 @@ const items = (fw) => [
 		title: 'Board',
 		description:
 			'Themed board, target and item primitives for custom layouts and multiple targets.',
-		registryDependencies: ['utils', 'flexi-handles'],
+		registryDependencies: ['utils', 'flexi-handles', 'flexi-motion'],
 		files: ['index.ts', ...['root', 'target', 'item'].map((part) => `${part}.${fw.ext}`)].map(
 			(file) => `flexi-board/${file}`
 		)

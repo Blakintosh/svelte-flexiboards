@@ -137,3 +137,7 @@ The original `SortableList` export from `sortable-list.tsx` is retained.
 </Only>
 
 It still accepts `items: { id, label }[]` and the reorder callback; new compositions should use the namespace API above.
+
+## Motion
+
+Movement uses short CSS transitions by default and respects reduced motion. [Compare presets or disable transitions](/docs/registry/motion).

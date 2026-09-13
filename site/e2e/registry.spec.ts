@@ -116,6 +116,7 @@ test('registry payloads include complete component families and Svelte install t
 	for (const framework of frameworks) {
 		const index = await (await request.get(`/r/${framework}/registry.json`)).json();
 		expect(index.items.map((item: { name: string }) => item.name)).toEqual([
+			'flexi-motion',
 			'flexi-grabber',
 			'flexi-resizer',
 			'flexi-handles',
@@ -127,6 +128,9 @@ test('registry payloads include complete component families and Svelte install t
 			const item = await (await request.get(`/r/${framework}/${entry.name}.json`)).json();
 			expect(item.type).toBe('registry:component');
 			if (['flexi-dashboard', 'flexi-sortable-list', 'flexi-board'].includes(item.name)) {
+				expect(item.registryDependencies).toContain(
+					`https://flexiboards.dev/r/${framework}/flexi-motion.json`
+				);
 				expect(
 					item.files.some((file: { path: string }) => file.path.endsWith(`${item.name}/index.ts`))
 				).toBeTruthy();

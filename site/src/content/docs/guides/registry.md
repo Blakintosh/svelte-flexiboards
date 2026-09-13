@@ -24,6 +24,10 @@ The registry is a source library for <FrameworkText svelte="Svelte" react="React
 
 Each page has a working preview, source example, installation command, and API notes. The docs framework menu selects the API and examples throughout.
 
+## Motion
+
+Boards, dashboards, and sortable lists animate movement by default and respect reduced motion. [Compare CSS and spring presets](/docs/registry/motion), or disable transitions through the existing configuration.
+
 ## Composition
 
 Families use namespace imports: `Dashboard.Root`, `Dashboard.Item`, `Dashboard.Header`, and so on. You control the content and decide where handles belong. The wrappers preserve the underlying configuration and controller APIs.

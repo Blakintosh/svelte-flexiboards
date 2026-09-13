@@ -17,6 +17,7 @@ Added
 - Controller actions: `widget.delete()`, `widget.moveTo()`, `target.clear()`, `board.clear()`, `exportLayoutEnvelope()`. `onLayoutChange` fires for changes made through them.
 - Board callbacks `onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget`, `onWidgetLeaveTarget`, and `canDrop` on the board and on each target.
 - Presets `FlexiSortable` and `FlexiDashboard`.
+- CSS motion uses sine in-out reordering and circ-out drops. The deprecated `simpleTransitionConfig()` keeps its original 150ms timing. Registry component families enable transitions by default and respect reduced motion.
 - Animation adapters: `cssTransition()` and `spring()`, with `cssTransitionConfig()` and `springTransitionConfig()`.
 - Sortable-style insert resolution for flow grids, and `portalDropFlights` for boards that need a drop to fly in across their edge.
 - `dropRejected` state on targets and widgets; `initialLayout` for server-provided layouts; layouts loaded on the client can show a `suspense` fallback.

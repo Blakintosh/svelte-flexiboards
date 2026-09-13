@@ -57,7 +57,8 @@ export const directory: DocSection[] = [
 			{ title: 'Sortable List', href: '/docs/registry/sortable-list' },
 			{ title: 'Board', href: '/docs/registry/board' },
 			{ title: 'Grabber', href: '/docs/registry/grabber' },
-			{ title: 'Resizer', href: '/docs/registry/resizer' }
+			{ title: 'Resizer', href: '/docs/registry/resizer' },
+			{ title: 'Motion', href: '/docs/registry/motion' }
 		]
 	},
 	{
