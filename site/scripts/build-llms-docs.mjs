@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { registryPreviewNotice } from '../src/lib/registry/preview-notice.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(here, '..');
@@ -106,7 +107,7 @@ function readDirectory() {
 			const frameworks = [...p[3].matchAll(/'(svelte|react)'/g)].map((f) => f[1]);
 			pages.push({ title: p[1], href: p[2], frameworks: frameworks.length ? frameworks : null });
 		}
-		sections.push({ section: m[1], pages });
+		sections.push({ section: m[1], preview: /\bpreview:\s*true/.test(m[2]), pages });
 	}
 	return sections;
 }
@@ -409,11 +410,18 @@ export function buildDocs() {
 		allUnhandled.push(...unhandled);
 
 		const url = `${ORIGIN}/docs/${slug}`;
+		const inPreview = directory.some(
+			(section) => section.preview && section.pages.some((page) => page.href === `/docs/${slug}`)
+		);
 		const header = [
 			`# ${meta.title ?? slug}`,
 			'',
 			meta.description ? `> ${meta.description}` : null,
 			meta.description ? '' : null,
+			inPreview
+				? `> **${registryPreviewNotice.title}.** ${registryPreviewNotice.message} [${registryPreviewNotice.linkLabel}](${registryPreviewNotice.href}).`
+				: null,
+			inPreview ? '' : null,
 			`Source: ${url}`,
 			''
 		]

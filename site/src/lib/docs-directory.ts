@@ -3,12 +3,14 @@ import type { Framework } from '$lib/components/brand/framework.svelte';
 export type DocPage = {
 	title: string;
 	href: string;
+	separatorBefore?: boolean;
 	/** Frameworks this page applies to. Omitted = all. */
 	frameworks?: Framework[];
 };
 
 export type DocSection = {
 	section: string;
+	preview?: boolean;
 	pages: DocPage[];
 };
 
@@ -51,9 +53,10 @@ export const directory: DocSection[] = [
 	},
 	{
 		section: 'Registry',
+		preview: true,
 		pages: [
-			{ title: 'Overview', href: '/docs/guides/registry' },
-			{ title: 'Dashboard', href: '/docs/registry/dashboard' },
+			{ title: 'Introduction', href: '/docs/guides/registry' },
+			{ title: 'Dashboard', href: '/docs/registry/dashboard', separatorBefore: true },
 			{ title: 'Sortable List', href: '/docs/registry/sortable-list' },
 			{ title: 'Board', href: '/docs/registry/board' },
 			{ title: 'Grabber', href: '/docs/registry/grabber' },

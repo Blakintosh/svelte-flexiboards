@@ -6,6 +6,7 @@
 	import { framework, frameworks } from '$lib/components/brand/framework.svelte';
 	import Callout from '$lib/components/docs/callout.svelte';
 	import { copyText } from '$lib/copy-text';
+	import { registryPreviewNotice } from '$lib/registry/preview-notice.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -88,6 +89,22 @@
 				<p class="text-body max-w-[60ch] text-[17px] leading-relaxed">
 					{data.doc.meta.description}
 				</p>
+				{#if location?.section.preview}
+					<aside
+						aria-label={registryPreviewNotice.title}
+						class="border-rule bg-tint text-body mt-5 border px-4 py-3 text-sm leading-relaxed"
+					>
+						<p class="text-ink m-0 font-medium">{registryPreviewNotice.title}</p>
+						<p class="m-0 mt-1">{registryPreviewNotice.message}</p>
+						<a
+							href={registryPreviewNotice.href}
+							target="_blank"
+							rel="noreferrer"
+							class="hover:text-ink mt-2 inline-block underline underline-offset-4"
+							>{registryPreviewNotice.linkLabel} ↗</a
+						>
+					</aside>
+				{/if}
 				<!-- Page actions: edit the source, or take the page as Markdown to an assistant. -->
 				<div
 					class="text-body mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[10.5px]"

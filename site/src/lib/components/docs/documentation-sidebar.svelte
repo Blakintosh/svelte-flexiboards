@@ -28,13 +28,19 @@
 
 	{#each directory as section, i}
 		<div class={cn('flex flex-col', i > 0 && 'mt-6')}>
-			<h2 class="label mb-2 flex gap-2.5 text-[10px]">
+			<h2 class="label mb-2 flex items-center gap-2.5 text-[10px]">
 				<span class="text-faint">{String(i + 1).padStart(2, '0')}</span>
 				<span class="text-ink-hover">{section.section}</span>
+				{#if section.preview}
+					<span class="border-rule text-body border px-1.5 py-0.5 text-[9px] tracking-[0.04em]"
+						>Preview</span
+					>
+				{/if}
 			</h2>
 			<div class="border-rule ml-0.5 flex flex-col border-l pl-3">
 				{#each section.pages as docPage}
 					{@const isActive = docPage.href === page.url.pathname}
+					{#if docPage.separatorBefore}<hr class="border-rule my-2 border-t" />{/if}
 					<a
 						href={docPage.href}
 						aria-current={isActive ? 'page' : undefined}

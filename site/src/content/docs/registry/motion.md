@@ -113,7 +113,7 @@ Registry boards, dashboards, and sortable lists use `cssTransitionConfig()` by d
 
 The layout and reorder callback update as soon as a drop is accepted, while the card animates into place.
 
-The CSS preset uses sine in-out reordering and a circ-out drop. Choose **Spring** for bounce, or **None** to disable movement. Both presets respect your system's reduced-motion setting.
+The CSS preset uses sine in-out easing for a gentle start and finish when reordering, and circ-out easing for a quick drop that slows as it lands. Choose **Spring** for bounce, or **None** to disable movement. Both presets respect your system's reduced-motion setting.
 
 ## Installation
 
