@@ -10,82 +10,147 @@
 			"name": "controller",
 			"type": "ResponsiveFlexiBoardController | undefined",
 			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"optional": true,
 			"bindable": true
 		},
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
-			"description": "Fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created.",
+			"optional": true
 		},
 		{
 			"name": "config",
 			"type": "ResponsiveFlexiBoardConfiguration",
-			"description": "The configuration object for the responsive board."
+			"description": "The configuration object for the responsive board.",
+			"optional": true
 		},
 		{
 			"name": "lg",
 			"type": "Snippet",
-			"description": "Content rendered at the large breakpoint."
+			"description": "Content rendered at the large breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "md",
 			"type": "Snippet",
-			"description": "Content rendered at the medium breakpoint."
+			"description": "Content rendered at the medium breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "sm",
 			"type": "Snippet",
-			"description": "Content rendered at the small breakpoint."
+			"description": "Content rendered at the small breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "xs",
 			"type": "Snippet",
-			"description": "Content rendered at the extra-small breakpoint."
+			"description": "Content rendered at the extra-small breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "children",
 			"type": "Snippet<[BreakpointSnippetParams]>",
-			"description": "Fallback content used when no breakpoint-specific snippet matches. Receives `{ currentBreakpoint: string }`."
+			"description": "Fallback content used when no breakpoint-specific snippet matches. Receives `{ currentBreakpoint: string }`.",
+			"optional": true
 		}
 	],
 	"propsReact": [
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: ResponsiveFlexiBoardController) => void) | undefined",
-			"description": "Fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created.",
+			"optional": true
 		},
 		{
 			"name": "config",
 			"type": "ResponsiveFlexiBoardConfiguration",
-			"description": ""
+			"description": "",
+			"optional": true
 		},
 		{
 			"name": "lg",
 			"type": "ReactNode",
-			"description": "Content rendered at the large breakpoint."
+			"description": "Content rendered at the large breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "md",
 			"type": "ReactNode",
-			"description": "Content rendered at the medium breakpoint."
+			"description": "Content rendered at the medium breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "sm",
 			"type": "ReactNode",
-			"description": "Content rendered at the small breakpoint."
+			"description": "Content rendered at the small breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "xs",
 			"type": "ReactNode",
-			"description": "Content rendered at the extra-small breakpoint."
+			"description": "Content rendered at the extra-small breakpoint.",
+			"optional": true
 		},
 		{
 			"name": "children",
 			"type": "ReactNode | ((params: { currentBreakpoint: string }) => ReactNode)",
-			"description": "Fallback content used when no breakpoint-specific content matches. Receives `{ currentBreakpoint: string }`."
+			"description": "Fallback content used when no breakpoint-specific content matches. Receives `{ currentBreakpoint: string }`.",
+			"optional": true
 		}
 	],
 	"controller": {
+		"name": "ResponsiveFlexiBoardController",
+		"properties": [
+			{
+				"name": "currentBreakpoint",
+				"type": "string",
+				"description": "The currently active breakpoint key.",
+				"readonly": true
+			},
+			{
+				"name": "definedBreakpoints",
+				"type": "string[]",
+				"description": "All breakpoint keys that have stored layouts.",
+				"readonly": true
+			},
+			{
+				"name": "configuredBreakpoints",
+				"type": "string[]",
+				"description": "All breakpoint keys from configuration.",
+				"readonly": true
+			}
+		],
+		"methods": [
+			{
+				"name": "importLayout",
+				"type": "(layout: ResponsiveFlexiLayout) => void",
+				"description": "Imports layouts for all breakpoints."
+			},
+			{
+				"name": "exportLayout",
+				"type": "() => ResponsiveFlexiLayout",
+				"description": "Exports layouts for all breakpoints."
+			},
+			{
+				"name": "getLayoutForBreakpoint",
+				"type": "(breakpoint: string) => FlexiLayout | undefined",
+				"description": "Gets the layout for a specific breakpoint."
+			},
+			{
+				"name": "setLayoutForBreakpoint",
+				"type": "(breakpoint: string, layout: FlexiLayout) => void",
+				"description": "Sets the layout for a specific breakpoint."
+			},
+			{
+				"name": "hasLayoutForBreakpoint",
+				"type": "(breakpoint: string) => boolean",
+				"description": "Checks if a layout exists for a specific breakpoint."
+			}
+		]
+	},
+	"controllerReact": {
 		"name": "ResponsiveFlexiBoardController",
 		"properties": [
 			{
@@ -140,32 +205,78 @@
 			{
 				"name": "breakpoints",
 				"type": "Record<string, number>",
-				"description": "Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels). Breakpoints are evaluated in descending order - the largest matching breakpoint wins. Use 'default' as the fallback when no breakpoint matches."
+				"description": "Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels). Breakpoints are evaluated in descending order - the largest matching breakpoint wins. Use 'default' as the fallback when no breakpoint matches.",
+				"optional": true
 			},
 			{
 				"name": "onBreakpointChange",
 				"type": "(newBreakpoint: string, oldBreakpoint: string) => void",
-				"description": "Callback fired when the active breakpoint changes."
+				"description": "Callback fired when the active breakpoint changes.",
+				"optional": true
 			},
 			{
 				"name": "onLayoutsChange",
-				"type": "(layouts: ResponsiveFlexiLayout) => void",
-				"description": "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts, including the updated current one. Synchronous changes are batched into a microtask, before animations settle."
+				"type": "((layouts: ResponsiveFlexiLayout) => void)",
+				"description": "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts, including the updated current one. Synchronous changes are batched into a microtask, before animations settle.",
+				"optional": true
 			},
 			{
 				"name": "initialLayouts",
 				"type": "ResponsiveFlexiLayout",
-				"description": "Layouts to render from instead of the widgets declared in markup, as a plain value keyed by breakpoint. The active breakpoint's layout is applied during the initial render pass on both the server and the client, like FlexiBoardConfiguration.initialLayout. A configured `loadLayouts` still runs on the client and overrides this."
+				"description": "Layouts to render from instead of the widgets declared in markup, as a plain value keyed by breakpoint. The active breakpoint's layout is applied during the initial render pass on both the server and the client, like FlexiBoardConfiguration.initialLayout. A configured `loadLayouts` still runs on the client and overrides this.",
+				"optional": true
 			},
 			{
 				"name": "loadLayouts",
-				"type": "() => ResponsiveFlexiLayout | undefined",
-				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready. Not invoked during server rendering. Use `initialLayouts` for layouts the server has."
+				"type": "(() => ResponsiveFlexiLayout | undefined)",
+				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready. Not invoked during server rendering. Use `initialLayouts` for layouts the server has.",
+				"optional": true
 			},
 			{
 				"name": "ssrBreakpoint",
 				"type": "string",
-				"description": "The breakpoint to assume while server-rendering, where no media query can match. Pick the most common viewport for the page (usually the desktop breakpoint); the client corrects to the real breakpoint at hydration. Without it, a server render falls back to the 'default' breakpoint."
+				"description": "The breakpoint to assume while server-rendering, where no media query can match. Pick the most common viewport for the page (usually the desktop breakpoint); the client corrects to the real breakpoint at hydration. Without it, a server render falls back to the 'default' breakpoint.",
+				"optional": true
+			}
+		]
+	},
+	"typesReact": {
+		"ResponsiveFlexiBoardConfiguration": [
+			{
+				"name": "breakpoints",
+				"type": "Record<string, number>",
+				"description": "Breakpoint definitions mapping breakpoint keys to minimum viewport widths (in pixels). Breakpoints are evaluated in descending order - the largest matching breakpoint wins. Use 'default' as the fallback when no breakpoint matches.",
+				"optional": true
+			},
+			{
+				"name": "onBreakpointChange",
+				"type": "(newBreakpoint: string, oldBreakpoint: string) => void",
+				"description": "Callback fired when the active breakpoint changes.",
+				"optional": true
+			},
+			{
+				"name": "onLayoutsChange",
+				"type": "((layouts: ResponsiveFlexiLayout) => void)",
+				"description": "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts, including the updated current one. Synchronous changes are batched into a microtask, before animations settle.",
+				"optional": true
+			},
+			{
+				"name": "initialLayouts",
+				"type": "ResponsiveFlexiLayout",
+				"description": "Layouts to render from instead of the widgets declared in markup, as a plain value keyed by breakpoint. The active breakpoint's layout is applied during the initial render pass on both the server and the client, like FlexiBoardConfiguration.initialLayout. A configured `loadLayouts` still runs on the client and overrides this.",
+				"optional": true
+			},
+			{
+				"name": "loadLayouts",
+				"type": "(() => ResponsiveFlexiLayout | undefined)",
+				"description": "Function to load initial layouts on mount. Called once when the responsive board is ready. Not invoked during server rendering. Use `initialLayouts` for layouts the server has.",
+				"optional": true
+			},
+			{
+				"name": "ssrBreakpoint",
+				"type": "string",
+				"description": "The breakpoint to assume while server-rendering, where no media query can match. Pick the most common viewport for the page (usually the desktop breakpoint); the client corrects to the real breakpoint at hydration. Without it, a server render falls back to the 'default' breakpoint.",
+				"optional": true
 			}
 		]
 	}

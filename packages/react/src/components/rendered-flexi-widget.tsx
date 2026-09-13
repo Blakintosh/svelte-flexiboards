@@ -12,7 +12,7 @@ import { useReactive } from '../adapters/reactive.js';
 import { WidgetTransitionPlaceholder } from './widget-transition-placeholder.js';
 
 /** @internal Renders a widget controller's content and provides its context. */
-export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
+export function RenderedFlexiWidget({ widget, id }: RenderedFlexiWidgetProps) {
 	const adder = useInternalFlexiAddOrNull();
 
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +70,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 	const publicWidget = useReactive(widget as FlexiWidgetController);
 	const styleString = useFromCore(useCallback(() => widget.style, [widget]));
 	const draggable = useFromCore(useCallback(() => widget.draggable, [widget]));
+	const grabbable = useFromCore(useCallback(() => widget.isGrabbable, [widget]));
 	const resizable = useFromCore(useCallback(() => widget.resizable, [widget]));
 	const isShadow = useFromCore(useCallback(() => widget.isShadow, [widget]));
 	const isGrabbed = useFromCore(useCallback(() => widget.isGrabbed, [widget]));
@@ -111,7 +112,7 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 
 	const ariaLabel = isShadow
 		? 'Widget action preview'
-		: draggable && resizable
+		: grabbable || resizable
 			? 'Interactive widget'
 			: 'Static widget';
 
@@ -131,14 +132,18 @@ export function RenderedFlexiWidget({ widget }: RenderedFlexiWidgetProps) {
 					aria-grabbed={draggable && !isShadow ? isGrabbed : undefined}
 					aria-label={ariaLabel}
 					aria-dropeffect={draggable ? 'move' : undefined}
-					role="cell"
-					aria-colindex={x}
-					aria-rowindex={y}
-					aria-colspan={width}
-					aria-rowspan={height}
-					tabIndex={draggable && !hasGrabbers ? 0 : undefined}
+					data-flexi-widget=""
+					id={id}
+					aria-hidden={isShadow || undefined}
+					role={isShadow ? undefined : isGrabbed ? 'group' : 'gridcell'}
+					aria-colindex={isShadow || isGrabbed ? undefined : x + 1}
+					aria-rowindex={isShadow || isGrabbed ? undefined : y + 1}
+					aria-colspan={isShadow || isGrabbed ? undefined : width}
+					aria-rowspan={isShadow || isGrabbed ? undefined : height}
+					tabIndex={isShadow ? undefined : grabbable && !hasGrabbers ? 0 : -1}
 					ref={(el) => {
 						innerRef.current = el;
+						if (el) el.inert = isShadow;
 						controllerRef(widget)(el);
 					}}
 				>

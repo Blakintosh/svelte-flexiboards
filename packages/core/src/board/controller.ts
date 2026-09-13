@@ -416,7 +416,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 
 		this.#lockViewport();
 
-		this.announce(`You have grabbed the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
+		this.announce(`Grabbed widget at column ${event.widget.x + 1}, row ${event.widget.y + 1}.`);
 	}
 
 	onWidgetResizing(event: InternalWidgetResizingEvent) {
@@ -425,6 +425,9 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		}
 
 		this.#captureScrollbarWidthIfNeeded();
+
+		// Keyboard resizing starts at the handle, independent of the last mouse position.
+		this.#pointerService.updatePosition(event.clientX, event.clientY);
 
 		this.#currentWidgetAction$({
 			action: 'resize',
@@ -440,7 +443,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		});
 
 		this.#lockViewport();
-		this.announce(`You are resizing the widget at x: ${event.widget.x}, y: ${event.widget.y}.`);
+		this.announce(`Resizing widget at column ${event.widget.x + 1}, row ${event.widget.y + 1}.`);
 	}
 
 	#originalOverscrollBehaviorY: string | null = null;
@@ -527,6 +530,7 @@ export class InternalFlexiBoardController implements FlexiBoardController {
 		this.#currentWidgetAction$()?.widget.captureReleaseState();
 
 		this.#releaseCurrentWidgetAction();
+		this.announce('Cancelled. Widget returned to its starting position.');
 
 		// Safety net for a cancel outside all targets: if the source target still has
 		// a pre-grab snapshot after all handlers run, restore it.

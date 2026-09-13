@@ -5,6 +5,7 @@ export const load = (async ({ params }) => {
 	const doc = await getDoc(params.slug);
 
 	return {
-		doc
+		doc,
+		seo: { title: `${doc.meta.title} · Docs · Flexiboards`, description: doc.meta.description }
 	};
 }) satisfies PageLoad;

@@ -129,7 +129,7 @@ test('registry payloads include complete component families and Svelte install t
 			expect(item.type).toBe('registry:component');
 			if (['flexi-dashboard', 'flexi-sortable-list', 'flexi-board'].includes(item.name)) {
 				expect(item.registryDependencies).toContain(
-					`https://flexiboards.dev/r/${framework}/flexi-motion.json`
+					`https://www.flexiboards.dev/r/${framework}/flexi-motion.json`
 				);
 				expect(
 					item.files.some((file: { path: string }) => file.path.endsWith(`${item.name}/index.ts`))

@@ -8,6 +8,7 @@ export type DocsPageMeta = {
 	description: string;
 	category: string;
 	published: boolean;
+	framework?: 'svelte' | 'react';
 };
 
 export type DocsPage = {

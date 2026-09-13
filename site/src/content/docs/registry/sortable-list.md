@@ -1,5 +1,5 @@
 ---
-title: Sortable List
+title: Sortable list
 description: Reorder custom rows with handles, keyboard controls, and order callbacks.
 category: Registry
 published: true
@@ -11,7 +11,7 @@ published: true
  import InstallCommand from '$lib/components/docs/install-command.svelte';
 </script>
 
-Compose `SortableList.Root`, `Item`, and `Grabber`. You own each row’s content: labels, badges, checkboxes, and menus can live alongside the handle.
+Compose `SortableList.Root`, `Item`, and `Grabber`. You own each row's content: labels, badges, checkboxes, and menus can live alongside the handle.
 
 ## Preview
 
@@ -108,7 +108,7 @@ Start with a Tailwind project configured for shadcn and its theme variables. Thi
 | `Item`    | All [FlexiWidget props](/docs/components/widget), plus a required, unique string `id`. It is stored in `metadata.id` for order reporting.                              |
 | `Grabber` | [Grabber props](/docs/registry/grabber), including an accessible `label`.                                                                                              |
 
-Use <FrameworkText svelte="keyed each blocks" react="React keys" /> alongside the item `id`. The item’s `id` wins over a conflicting `metadata.id`.
+Use <FrameworkText svelte="keyed each blocks" react="React keys" /> alongside the item `id`. The item's `id` wins over a conflicting `metadata.id`.
 
 ## Reading the order
 

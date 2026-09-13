@@ -74,13 +74,16 @@ const React = await load('react');
 const { hydrateRoot } = await load('react-dom/client');
 const act = React.act ?? (await load('react-dom/test-utils')).act;
 const F = await load('@flexiboards/react');
+assert.equal(F.LAYOUT_FORMAT_VERSION, 1);
+assert.equal(typeof F.cssTransitionConfig, 'function');
 (await load('@flexiboards/testing')).installResizeObserver();
 
 for (const [mode, markup] of html) {
 	const host = document.createElement('div');
 	document.body.appendChild(host);
 	host.innerHTML = markup;
-	const originalCell = host.querySelector('[role="cell"]');
+	const originalCell = host.querySelector('[data-flexi-widget]');
+	const originalId = originalCell.id;
 	const errors = [];
 	const originalError = console.error;
 	console.error = (...args) => errors.push(args);
@@ -93,10 +96,15 @@ for (const [mode, markup] of html) {
 		});
 		assert.deepEqual(errors, [], 'Hydration must not warn or recover by replacing the tree');
 		assert.equal(
-			host.querySelector('[role="cell"]').textContent,
+			host.querySelector('[data-flexi-widget]').textContent,
 			mode === 'declared' ? 'declared card' : 'stored card'
 		);
-		if (mode === 'declared') assert.equal(host.querySelector('[role="cell"]'), originalCell);
+		if (mode === 'declared') {
+			assert.equal(host.querySelector('[data-flexi-widget]'), originalCell);
+			assert.equal(originalCell.id, originalId);
+			assert.equal(host.querySelector('[role="row"]').getAttribute('aria-owns'), originalId);
+		}
+		assert.equal(host.querySelector('[data-flexi-widget]').getAttribute('aria-colindex'), '1');
 		assert.equal(host.querySelector('[data-flexi-fallback]'), null);
 	} finally {
 		if (root) await act(async () => root.unmount());

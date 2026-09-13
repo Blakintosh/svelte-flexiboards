@@ -17,13 +17,15 @@ describe('presets', () => {
 		const list = document.querySelector<HTMLElement>('[role="grid"].list')!;
 		expect(list.getAttribute('aria-colcount')).toBe('1');
 		expect(
-			Array.from(list.querySelectorAll('[role="cell"]')).map((c) => c.getAttribute('aria-rowindex'))
-		).toEqual(['0', '1']);
+			Array.from(list.querySelectorAll('[data-flexi-widget]')).map((c) =>
+				c.getAttribute('aria-rowindex')
+			)
+		).toEqual(['1', '2']);
 
 		const grid = document.querySelector<HTMLElement>('[role="grid"].grid')!;
 		expect(grid.getAttribute('aria-colcount')).toBe('3');
 		expect(grid.getAttribute('aria-rowcount')).toBe('2');
-		const tile = grid.querySelector('[role="cell"]')!;
+		const tile = grid.querySelector('[data-flexi-widget]')!;
 		expect(tile.getAttribute('aria-colspan')).toBe('2');
 		expect(tile.getAttribute('aria-label')).toBe('Interactive widget');
 	});

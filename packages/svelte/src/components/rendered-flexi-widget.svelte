@@ -8,6 +8,7 @@
 
 	export type RenderedFlexiWidgetProps = {
 		widget: InternalFlexiWidgetController;
+		id?: string;
 	};
 </script>
 
@@ -15,7 +16,7 @@
 	import type { Component, Snippet } from 'svelte';
 	import { fromCore, reactive } from '../adapter.svelte.js';
 
-	let { widget: widgetProp }: RenderedFlexiWidgetProps = $props();
+	let { widget: widgetProp, id }: RenderedFlexiWidgetProps = $props();
 
 	// Snapshot the controller rather than reading it through the prop.
 	//
@@ -40,6 +41,7 @@
 	// Bridge reads of core's signal-backed state into Svelte's reactivity.
 	const style = $derived.by(fromCore(() => widget.style));
 	const draggable = $derived.by(fromCore(() => widget.draggable));
+	const grabbable = $derived.by(fromCore(() => widget.isGrabbable));
 	const resizable = $derived.by(fromCore(() => widget.resizable));
 	const isShadow = $derived.by(fromCore(() => widget.isShadow));
 	const isGrabbed = $derived.by(fromCore(() => widget.isGrabbed));
@@ -75,7 +77,7 @@
 		if (isShadow) {
 			return 'Widget action preview';
 		}
-		if (draggable && resizable) {
+		if (grabbable || resizable) {
 			return 'Interactive widget';
 		}
 
@@ -83,6 +85,8 @@
 	});
 </script>
 
+<!-- The role changes to a group during a grab; the same element must retain keyboard focus. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
 	class={derivedClassName}
 	{style}
@@ -91,12 +95,16 @@
 	aria-grabbed={draggable && !isShadow ? isGrabbed : undefined}
 	aria-label={ariaLabel}
 	aria-dropeffect={draggable ? 'move' : undefined}
-	role="cell"
-	aria-colindex={x}
-	aria-rowindex={y}
-	aria-colspan={width}
-	aria-rowspan={height}
-	tabindex={draggable && !hasGrabbers ? 0 : undefined}
+	data-flexi-widget=""
+	{id}
+	aria-hidden={isShadow || undefined}
+	inert={isShadow || undefined}
+	role={isShadow ? undefined : isGrabbed ? 'group' : 'gridcell'}
+	aria-colindex={isShadow || isGrabbed ? undefined : x + 1}
+	aria-rowindex={isShadow || isGrabbed ? undefined : y + 1}
+	aria-colspan={isShadow || isGrabbed ? undefined : width}
+	aria-rowspan={isShadow || isGrabbed ? undefined : height}
+	tabindex={isShadow ? undefined : grabbable && !hasGrabbers ? 0 : -1}
 	bind:this={widget.ref}
 >
 	{#if snippet}

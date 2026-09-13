@@ -1,5 +1,5 @@
 ---
-title: Widget Rendering
+title: Widget rendering
 description: Learn about approaches to rendering widgets in Flexiboards.
 category: Guides
 published: true
@@ -10,7 +10,7 @@ published: true
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-A `FlexiWidget` is an invisible wrapper: it positions itself in the grid and handles drag and drop, and you render whatever goes inside. This guide covers the two ways to do that, and how to style a widget by its state:
+`FlexiWidget` registers content in a target. Flexiboards handles placement and interaction; your content defines what the widget displays. This demo uses the [docs example styling](/docs/overview#example-styling):
 
 <Only svelte>
 
@@ -105,9 +105,11 @@ Drag the first widget: its label changes while grabbed, its shadow in the grid i
 
 ## Children-based
 
+These declaration excerpts belong inside an existing target. Keep the imports and board setup from the opening example.
+
 <Only svelte>
 
-Using [snippets](https://svelte.dev/docs/svelte/snippet) (specifically, `children`) is the most intuitive approach to rendering a widget. Any elements or components you write become the content markup of your widget, like any other container component.
+Pass a `children` [snippet](https://svelte.dev/docs/svelte/snippet) to render content inline. Any elements or components you write become the content markup of your widget, like any other container component.
 
 Flexiboards passes parameters into the `children` snippet, which you can read or ignore:
 
@@ -127,9 +129,9 @@ Flexiboards passes parameters into the `children` snippet, which you can read or
 
 <Only react>
 
-Passing `children` is the most intuitive approach to rendering a widget. Any elements or components you write become the content of your widget, like any other container component.
+Pass `children` to render content inline. Any elements or components you write become the content of your widget, like any other container component.
 
-`children` may also be a _render function_, which Flexiboards calls with the widget's controller. This is the React counterpart of Svelte's `children` snippet parameters, and lets you read the widget's reactive state without a separate component:
+`children` may also be a _render function_, which Flexiboards calls with the widget's controller. Use the render function to read the widget's reactive state without a separate component:
 
 ```tsx
 {
@@ -153,25 +155,24 @@ Passing `children` is the most intuitive approach to rendering a widget. Any ele
 
 The first example needs no data from the `widget` controller, so it takes no parameters. The second reads the reactive `x` and `y` properties on the controller and shows them; the [FlexiWidget](/docs/components/widget) API lists the other properties you can read this way.
 
-This approach is short and works well. Some cases suit the `component` prop better.
+Use a component when several widgets share a renderer, or when a registry selects content for imported widgets.
 
 ## Component-based
 
 <Only svelte>
 
-Alternatively, you can use the `component` prop to specify any Svelte component of your choosing to render inside of the FlexiWidget.
-
-This is much like the snippets approach; the difference is that instead of needing a Svelte snippet in scope (or passed via a prop, for example), you import the Svelte component:
+Set `component` to an imported Svelte component. This declaration excerpt assumes `my-component.svelte` exists and belongs inside your existing target:
 
 ```svelte
 <script>
+	import { FlexiWidget } from '@flexiboards/svelte';
 	import MyComponent from './my-component.svelte';
 </script>
 
 <FlexiWidget component={MyComponent} />
 ```
 
-You can also pass props through to it with `componentProps`, and combine `component` with `children` if you want a consistent wrapper around a per-widget component.
+Pass props to the component with `componentProps`. A `children` snippet takes precedence over `component`. To wrap the configured component, render `widget.component` with `widget.componentProps` inside that snippet; Flexiboards does not render both automatically.
 
 In this scenario the `widget` controller is not passed as a prop on the component. Instead, use the `getFlexiwidgetCtx` helper function to get the context of the widget:
 
@@ -182,6 +183,8 @@ In this scenario the `widget` controller is not passed as a prop on the componen
 
 	const widget = getFlexiwidgetCtx();
 </script>
+
+<span>Column {widget.x}, row {widget.y}</span>
 ```
 
 This uses the [Svelte Context API](https://svelte.dev/docs/svelte/context) under the hood, so call it from the top level of the component, or from a function that the top level calls.
@@ -192,9 +195,7 @@ Any Svelte component rendered inside of the FlexiWidget, whether via a snippet o
 
 <Only react>
 
-Alternatively, you can use the `component` prop to specify any React component of your choosing to render inside of the FlexiWidget.
-
-This is much like the children approach; the difference is that instead of writing the content inline, you import the component:
+Set `component` to an imported React component. This declaration excerpt assumes `my-component.tsx` exists and belongs inside your existing target:
 
 ```tsx
 import { FlexiWidget } from '@flexiboards/react';
@@ -203,13 +204,15 @@ import MyComponent from './my-component';
 <FlexiWidget component={MyComponent} />;
 ```
 
-You can also pass props through to it with `componentProps`, and combine `component` with `children` if you want a consistent wrapper around a per-widget component:
+Pass props to the component with `componentProps`. The following declaration excerpt assumes `NumberTile` is your imported component with a `number` prop:
 
 ```tsx
 <FlexiWidget component={NumberTile} componentProps={{ number: 7 }} />
 ```
 
-This is especially useful when widgets are created dynamically, from an imported layout or by a `FlexiAdd`, since the component and its props are just values in the widget's configuration.
+`children` takes precedence over `component`. To wrap the configured component, use a children render function, assign `widget.component` to a capitalized local variable, and render it with `widget.componentProps`. Flexiboards does not render both automatically.
+
+Storing `component` and `componentProps` in a registry entry also supplies content for widgets created from an imported layout or by a `FlexiAdd` using that type.
 
 In this scenario the widget controller is not passed as a prop on the component. Instead, use the `useFlexiWidget()` hook:
 
@@ -232,7 +235,9 @@ Any React component rendered inside of the FlexiWidget, whether via `children` o
 
 ## Styling by state
 
-Whichever approach you use, the widget's own element is styled with its class prop (<FrameworkText svelte="class" react="className" code />), or with `widgetDefaults.className` further up the cascade. It accepts either a class value or a function that receives the widget's controller. The function is the neatest way to make a widget's provisional states visible:
+The class-prop excerpts below extend the opening example. Keep its imports and enclosing board and target.
+
+Whichever approach you use, the widget's own element is styled with its class prop (<FrameworkText svelte="class" react="className" code />), or with `widgetDefaults.className` further up the cascade. It accepts either a class value or a function that receives the widget's controller. Use a class function to style a widget while it is grabbed, previewed, or rejected:
 
 - `isGrabbed` while the widget is being dragged, and `isResizing` while it is being resized.
 - `isShadow` on the preview left in the grid while the widget is held.

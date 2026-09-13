@@ -40,14 +40,14 @@ export const directory: DocSection[] = [
 			// uses, then the sparse grid, then composition, content, motion,
 			// persistence, and finally the environment concerns.
 			{ title: 'Presets', href: '/docs/presets' },
-			{ title: 'Flow Grids', href: '/docs/flow-grids' },
-			{ title: 'Free-Form Grids', href: '/docs/free-form-grids' },
-			{ title: 'Multiple Targets', href: '/docs/multiple-targets' },
-			{ title: 'Widget Rendering', href: '/docs/widget-rendering' },
+			{ title: 'Flow grids', href: '/docs/flow-grids' },
+			{ title: 'Free-form grids', href: '/docs/free-form-grids' },
+			{ title: 'Multiple targets', href: '/docs/multiple-targets' },
+			{ title: 'Widget rendering', href: '/docs/widget-rendering' },
 			{ title: 'Transitions', href: '/docs/transitions' },
-			{ title: 'Exporting & Importing', href: '/docs/guides/exporting-importing-boards' },
-			{ title: 'Responsive Layouts', href: '/docs/guides/responsive-layouts' },
-			{ title: 'Server-Side Rendering', href: '/docs/guides/server-side-rendering' },
+			{ title: 'Exporting and importing', href: '/docs/guides/exporting-importing-boards' },
+			{ title: 'Responsive layouts', href: '/docs/guides/responsive-layouts' },
+			{ title: 'Server-side rendering', href: '/docs/guides/server-side-rendering' },
 			{ title: 'Testing', href: '/docs/guides/testing' }
 		]
 	},
@@ -57,7 +57,7 @@ export const directory: DocSection[] = [
 		pages: [
 			{ title: 'Introduction', href: '/docs/guides/registry' },
 			{ title: 'Dashboard', href: '/docs/registry/dashboard', separatorBefore: true },
-			{ title: 'Sortable List', href: '/docs/registry/sortable-list' },
+			{ title: 'Sortable list', href: '/docs/registry/sortable-list' },
 			{ title: 'Board', href: '/docs/registry/board' },
 			{ title: 'Grabber', href: '/docs/registry/grabber' },
 			{ title: 'Resizer', href: '/docs/registry/resizer' },

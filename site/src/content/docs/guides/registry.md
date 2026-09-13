@@ -34,7 +34,7 @@ Boards, dashboards, and sortable lists animate movement by default and respect r
 
 Families use namespace imports: `Dashboard.Root`, `Dashboard.Item`, `Dashboard.Header`, and so on. You control the content and decide where handles belong. The wrappers preserve the underlying configuration and controller APIs.
 
-These are components, not blocks. Full dashboard layouts and other application-level compositions can be added later without replacing these building blocks.
+Compose the components around your application's content, navigation, and actions.
 
 ## Your theme, your source
 
@@ -76,4 +76,4 @@ The registry is currently unversioned. Review source diffs before asking the CLI
 
 ## Two meanings of registry
 
-This source registry is separate from `FlexiBoard.config.registry`. The latter maps widget types to components or snippets when [restoring saved layouts](/docs/guides/exporting-importing-boards). The installed components can be used in those renderers, but installing them does not register persisted widget types for you.
+This source registry is separate from `FlexiBoard.config.registry`. The latter maps widget types to renderers when [restoring saved layouts](/docs/guides/exporting-importing-boards). The installed components can be used in those renderers, but installing them does not register persisted widget types for you.

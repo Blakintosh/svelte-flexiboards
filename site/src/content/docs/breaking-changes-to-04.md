@@ -1,5 +1,5 @@
 ---
-title: Breaking Changes in v0.4
+title: Breaking changes in v0.4
 description: The breaking changes in the v0.4 update.
 category: Introduction
 published: true
@@ -16,10 +16,10 @@ In place of the `draggable` boolean property, we've introduced a `draggability` 
 - `full` is equivalent to `draggable = true`. The widget can be grabbed by the user and moved by other widget actions.
 - `movable` is a new value. You cannot grab a widget and move it yourself, but other widget actions can still move it.
 
-The `draggable` property is deprecated. It still works in v1.0 and will be removed in the next major version.
+In v0.4, `draggable` is deprecated. It was removed in v1.0; use `draggability` when [migrating to v1.0](/docs/breaking-changes-to-10#removed).
 
 ## 2. Widget defaults
 
 We're removing the `width` and `height` properties from `FlexiWidgetDefaults`. These properties have never functioned, and we have not found a use-case worth making them work for.
 
-The `width` and `height` properties on `widgetDefaults` are deprecated. They still exist in v1.0 and will be removed in the next major version.
+In v0.4, `width` and `height` on `widgetDefaults` are deprecated. They were removed in v1.0. Set dimensions on individual widgets.

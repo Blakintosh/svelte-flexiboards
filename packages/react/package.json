@@ -22,7 +22,8 @@
 		"@flexiboards/core": "workspace:^"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"CHANGELOG.md"
 	],
 	"publishConfig": {
 		"access": "public"
@@ -48,6 +49,19 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git"
-	}
+		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git",
+		"directory": "packages/react"
+	},
+	"homepage": "https://www.flexiboards.dev/",
+	"bugs": {
+		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
+	},
+	"author": "Blakintosh",
+	"keywords": [
+		"flexiboards",
+		"drag-and-drop",
+		"grid",
+		"dashboard",
+		"react"
+	]
 }

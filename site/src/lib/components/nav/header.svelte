@@ -86,6 +86,7 @@
 			href="https://github.com/blakintosh/svelte-flexiboards"
 			variant="outline"
 			size="sm"
+			class="h-10"
 			target="_blank"
 		>
 			<svg

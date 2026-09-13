@@ -1,5 +1,5 @@
 ---
-title: Flow Grids
+title: Flow grids
 description: Learn how to use flow grids for Kanban and ordered layouts.
 category: Guides
 published: true

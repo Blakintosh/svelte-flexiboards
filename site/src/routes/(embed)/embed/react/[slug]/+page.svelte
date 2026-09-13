@@ -1,35 +1,7 @@
 <script lang="ts">
+	import ReactExample from '$lib/components/docs/react-example.svelte';
+	import { reportExampleStatus } from '$lib/example-status';
 	let { data } = $props();
-
-	let host: HTMLDivElement;
-
-	// Keyed on the slug, not onMount: SvelteKit reuses this page component when
-	// only the slug changes, so navigating between two React examples must also
-	// swap the React root.
-	$effect(() => {
-		const slug = data.slug;
-		let root: import('react-dom/client').Root | undefined;
-		let cancelled = false;
-
-		// Dynamic imports keep react/react-dom in a lazy chunk only React embeds download.
-		Promise.all([
-			import('react'),
-			import('react-dom/client'),
-			import(`$lib/react-components/examples/pages/${slug}-example.tsx`)
-		]).then(([{ createElement, StrictMode }, { createRoot }, { default: Example }]) => {
-			if (cancelled) return;
-
-			root = createRoot(host);
-			// createElement, not Example(): React's renderer must invoke the component,
-			// or its hooks run outside a render context.
-			root.render(createElement(StrictMode, null, createElement(Example)));
-		});
-
-		return () => {
-			cancelled = true;
-			root?.unmount();
-		};
-	});
 </script>
 
 <svelte:head>
@@ -37,7 +9,10 @@
 </svelte:head>
 
 <div class="flex h-full w-full items-stretch">
-	<!-- contents: the React root's host must not affect layout, so the example's
-	     root element is a direct flex item, matching the Svelte embed. -->
-	<div bind:this={host} class="contents"></div>
+	{#key data.slug}
+		<ReactExample
+			load={() => import(`$lib/react-components/examples/pages/${data.slug}-example.tsx`)}
+			onstatuschange={reportExampleStatus}
+		/>
+	{/key}
 </div>

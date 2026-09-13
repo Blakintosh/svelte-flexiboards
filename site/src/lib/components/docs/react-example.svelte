@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ExampleLoading from '$lib/components/ui/example-loading.svelte';
+	import type { ExampleStatus } from '$lib/example-status';
 
 	type ExampleModule = Record<string, unknown> & { default?: unknown };
 
-	let { load }: { load: () => Promise<ExampleModule> } = $props();
+	let {
+		load,
+		onstatuschange
+	}: {
+		load: () => Promise<ExampleModule>;
+		onstatuschange?: (status: ExampleStatus) => void;
+	} = $props();
 	let host: HTMLDivElement;
-	let status = $state<'loading' | 'ready' | 'error'>('loading');
+	let status = $state<ExampleStatus>('loading');
+	$effect(() => onstatuschange?.(status));
 
 	onMount(() => {
 		let root: import('react-dom/client').Root | undefined;
@@ -56,17 +65,10 @@
 </script>
 
 {#if status === 'loading'}
-	<div role="status" class="flex min-h-40 w-full flex-col justify-center gap-4">
-		<div aria-hidden="true" class="space-y-2">
-			<div class="border-rule bg-panel h-9 rounded-md border"></div>
-			<div class="border-rule bg-panel h-9 w-5/6 rounded-md border"></div>
-			<div class="border-rule bg-panel h-9 w-2/3 rounded-md border"></div>
-		</div>
-		<p class="text-body m-0 font-mono text-xs">Loading React example…</p>
-	</div>
+	<ExampleLoading label="Loading React example…" />
 {:else if status === 'error'}
 	<p role="alert" class="text-body m-0 flex min-h-40 items-center text-sm">
-		Could not load the example. Reload the page to try again, or open Code to read its source.
+		Could not load the example. Reload the page to try again.
 	</p>
 {/if}
 

@@ -33,6 +33,7 @@ export type { FlexiWidgetChildren, FlexiWidgetSubProps } from './adapters/widget
 
 // Core-provided configuration helpers
 export {
+	LAYOUT_FORMAT_VERSION,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	cssTransitionConfig,

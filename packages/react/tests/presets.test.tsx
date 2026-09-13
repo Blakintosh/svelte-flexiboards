@@ -23,7 +23,7 @@ describe('presets', () => {
 		const grid = document.querySelector<HTMLElement>('[role="grid"]')!;
 		expect(grid.className).toBe('list');
 		expect(grid.getAttribute('aria-colcount')).toBe('1');
-		expect(cells().map((c) => c.getAttribute('aria-rowindex'))).toEqual(['0', '1']);
+		expect(cells().map((c) => c.getAttribute('aria-rowindex'))).toEqual(['1', '2']);
 		expect(cells()[0].getAttribute('aria-dropeffect')).toBe('move');
 	});
 
@@ -36,7 +36,7 @@ describe('presets', () => {
 		);
 		const grid = document.querySelector<HTMLElement>('[role="grid"]')!;
 		expect(grid.getAttribute('aria-rowcount')).toBe('1');
-		expect(cells().map((c) => c.getAttribute('aria-colindex'))).toEqual(['0', '1']);
+		expect(cells().map((c) => c.getAttribute('aria-colindex'))).toEqual(['1', '2']);
 	});
 
 	it('FlexiDashboard is a fixed free grid, resizable on request', () => {

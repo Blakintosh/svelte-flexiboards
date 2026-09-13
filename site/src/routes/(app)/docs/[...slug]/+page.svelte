@@ -28,9 +28,12 @@
 
 	const PageComponent = $derived(data.doc.content);
 	const location = $derived(locateDoc(page.url.pathname, framework.current));
-	// A framework-specific page viewed under another framework gets a notice,
-	// not a redirect, so the content stays readable.
-	const excluded = $derived(excludedFrameworks(page.url.pathname));
+	// Keep the URL while offering the applicable framework for this page.
+	const excluded = $derived(
+		data.doc.meta.framework
+			? frameworks.filter((f) => f.id !== data.doc.meta.framework).map((f) => f.id)
+			: excludedFrameworks(page.url.pathname)
+	);
 	const notApplicable = $derived(excluded.includes(framework.current));
 	const appliesTo = $derived(
 		frameworks
@@ -41,15 +44,13 @@
 	const editUrl = $derived(
 		`https://github.com/blakintosh/svelte-flexiboards/edit/main/site/src/content/docs/${page.url.pathname.replace(/^\/docs\//, '')}.md`
 	);
-
-	$effect(() => {
-		document.title = `${data.doc.meta.title} ⋅ Docs ⋅ Flexiboards`;
-	});
 </script>
 
 <!-- The Markdown twin of this page, for agents and anything else that would rather read plain text. -->
 <svelte:head>
-	<link rel="alternate" type="text/markdown" href={markdownHref} />
+	{#if !notApplicable}
+		<link rel="alternate" type="text/markdown" href={markdownHref} />
+	{/if}
 </svelte:head>
 
 <!-- Three columns divided by single 1px rules; the prose measure is capped by `.prose`. -->
@@ -117,33 +118,43 @@
 					>
 						Edit this page ↗
 					</a>
-					<button
-						type="button"
-						class="hover:text-fx-accent transition-colors duration-[120ms]"
-						onclick={copyMarkdown}
-					>
-						{copyState === 'copied'
-							? 'Copied'
-							: copyState === 'failed'
-								? 'Copy blocked, open instead'
-								: 'Copy as Markdown'}
-					</button>
-					<a
-						href={markdownHref}
-						target="_blank"
-						rel="noopener"
-						class="hover:text-fx-accent no-underline transition-colors duration-[120ms]"
-					>
-						Open Markdown ↗
-					</a>
+					{#if !notApplicable}
+						<button
+							type="button"
+							class="hover:text-fx-accent transition-colors duration-[120ms]"
+							onclick={copyMarkdown}
+						>
+							{copyState === 'copied'
+								? 'Copied'
+								: copyState === 'failed'
+									? 'Copy blocked, open instead'
+									: 'Copy as Markdown'}
+						</button>
+						<a
+							href={markdownHref}
+							target="_blank"
+							rel="noopener"
+							class="hover:text-fx-accent no-underline transition-colors duration-[120ms]"
+						>
+							Open Markdown ↗
+						</a>
+					{/if}
 				</div>
 			</div>
 			{#if notApplicable}
 				<Callout variant="warning" title="{appliesTo} only">
-					This guide applies to the {appliesTo} adapter. Select that framework to follow its examples.
+					This guide applies to the {appliesTo} adapter.
+					{#each frameworks.filter((f) => !excluded.includes(f.id)) as option}
+						<button
+							type="button"
+							class="ml-2 underline underline-offset-4"
+							onclick={() => (framework.current = option.id)}>Switch to {option.label}</button
+						>
+					{/each}
 				</Callout>
+			{:else}
+				<PageComponent />
 			{/if}
-			<PageComponent />
 			{#if location && (location.prev || location.next)}
 				<nav class="not-prose border-rule bg-card mt-14 grid grid-cols-2 border">
 					{#if location.prev}

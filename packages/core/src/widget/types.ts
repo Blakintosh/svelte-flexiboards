@@ -52,16 +52,18 @@ export type FlexiWidgetTriggerConfiguration = Record<string, PointerTriggerCondi
 export type FlexiWidgetDefaults<TClass = unknown> = {
 	/**
 	 * The draggability of the widget.
+	 * @default full
 	 */
 	draggability?: WidgetDraggability;
 
 	/**
 	 * The resizability of the widget.
+	 * @default none
 	 */
 	resizability?: WidgetResizability;
 
 	/**
-	 * The snippet that is rendered by this widget.
+	 * The render function used for this widget's content.
 	 */
 	snippet?: FlexiWidgetChildrenSnippet;
 
@@ -121,32 +123,32 @@ export type FlexiWidgetDefaults<TClass = unknown> = {
 export type FlexiWidgetConfiguration<TClass = unknown> = FlexiWidgetDefaults<TClass> & {
 	/**
 	 * A stable identifier for this widget, used for persistence and layout
-	 * import/export.
+	 * import/export. Read when the widget is created.
 	 */
 	id?: string;
 
 	/**
-	 * The registry key used to look up shared configuration for this widget.
+	 * The registry key used when creating this widget. Changing the prop does not recreate it.
 	 */
 	type?: string;
 
 	/**
-	 * The starting column (x-coordinate) of the widget.
+	 * The starting column (x-coordinate) of the widget. After creation, use moveTo() to move it.
 	 */
 	x?: number;
 
 	/**
-	 * The starting row (y-coordinate) of the widget.
+	 * The starting row (y-coordinate) of the widget. After creation, use moveTo() to move it.
 	 */
 	y?: number;
 
 	/**
-	 * The width of the widget in units.
+	 * The initial width of the widget in grid units. Changing the prop does not resize an existing widget.
 	 */
 	width?: number;
 
 	/**
-	 * The height of the widget in units.
+	 * The initial height of the widget in grid units. Changing the prop does not resize an existing widget.
 	 */
 	height?: number;
 
@@ -177,12 +179,15 @@ export type FlexiWidgetDerivedConfiguration<TClass = unknown> = {
 	componentProps?: Record<string, any>;
 
 	/**
-	 * The snippet that is rendered by this widget. This is optional when a component is provided. If used alongside component, then this snippet is passed the component and should render it.
+	 * The render function used for this widget's content. It takes precedence over
+	 * component and receives the widget controller. To wrap the configured
+	 * component, render widget.component with widget.componentProps inside this function.
 	 */
 	snippet?: FlexiWidgetChildrenSnippet;
 
 	/**
 	 * The resizability of the widget.
+	 * @default none
 	 */
 	resizability: WidgetResizability;
 
@@ -193,6 +198,7 @@ export type FlexiWidgetDerivedConfiguration<TClass = unknown> = {
 
 	/**
 	 * The draggability of the widget.
+	 * @default full
 	 */
 	draggability: WidgetDraggability;
 

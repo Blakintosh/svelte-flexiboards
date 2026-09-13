@@ -1,96 +1,10 @@
 <script module lang="ts">
 	import type { Framework } from '$lib/components/brand/framework.svelte';
-
-	type ExamplePage = {
-		title: string;
-		slug: string;
-		description: string;
-		href: string;
-	};
+	import { examplePages as pages } from '$lib/example-pages';
 
 	type ExampleGroup = {
 		heading: string;
 		slugs: string[];
-	};
-
-	const pages: Record<string, ExamplePage> = {
-		dashboard: {
-			title: 'Dashboard',
-			slug: 'dashboard',
-			description:
-				'A drag-and-drop SaaS dashboard with an editable, responsive layout that persists between visits.',
-			href: '/examples/dashboard'
-		},
-		notes: {
-			title: 'Notes',
-			slug: 'notes',
-			description: 'A popular note-taking app.',
-			href: '/examples/notes'
-		},
-		flexspressive: {
-			title: 'Flexspressive',
-			slug: 'flexspressive',
-			description: 'All your quick settings.',
-			href: '/examples/flexspressive'
-		},
-		products: {
-			title: 'Products',
-			slug: 'products',
-			description: 'An e-commerce product grid with 2D flow layout.',
-			href: '/examples/products'
-		},
-		numbers: {
-			title: 'Numbers',
-			slug: 'numbers',
-			description: 'Random numbers on a grid. You can add and remove widgets.',
-			href: '/examples/numbers'
-		},
-		flow: {
-			title: 'Flow',
-			slug: 'flow',
-			description: 'A simple 2D flow layout.',
-			href: '/examples/flow'
-		},
-		kanban: {
-			title: 'Kanban',
-			slug: 'kanban',
-			description:
-				'A sprint board. Cards move between four flow targets; the column headings are a second, independent board.',
-			href: '/examples/kanban'
-		},
-		'form-builder': {
-			title: 'Form Builder',
-			slug: 'form-builder',
-			description:
-				'A drag-and-drop form builder. Fields carry their settings as widget metadata, exported live as JSON.',
-			href: '/examples/form-builder'
-		},
-		compound: {
-			title: 'Compound',
-			slug: 'compound',
-			description:
-				'Nested boards. Tiles that are themselves boards, with every drag scoped to the board that owns it.',
-			href: '/examples/compound'
-		},
-		gallery: {
-			title: 'Gallery',
-			slug: 'gallery',
-			description:
-				'A cyanotype plate mosaic on a free 2D grid. Resize a plate and its neighbours make room; switch between spring and CSS motion.',
-			href: '/examples/gallery'
-		},
-		launcher: {
-			title: 'Launcher',
-			slug: 'launcher',
-			description: 'A bento home screen that keeps a different layout at every breakpoint.',
-			href: '/examples/launcher'
-		},
-		playlist: {
-			title: 'Playlist',
-			slug: 'playlist',
-			description: 'A keyboard-first sortable list: one flow target, one grab handle per row.',
-			href: '/examples/playlist'
-		}
 	};
 
 	// The sidebar groups examples by the layout system they demonstrate.
@@ -238,6 +152,7 @@
 	import { SiSvelte, SiReact } from '@icons-pack/svelte-simple-icons';
 	import { reactSlugs, ssrSlugs } from '../../(embed)/embed/shared';
 	import { goto } from '$app/navigation';
+	import ExampleFrame from '$lib/components/examples/example-frame.svelte';
 
 	let { data, children } = $props();
 
@@ -318,10 +233,6 @@
 		{ id: 'tablet', icon: Tablet, label: 'Tablet view' },
 		{ id: 'mobile', icon: Smartphone, label: 'Mobile view' }
 	];
-
-	$effect(() => {
-		document.title = `${pages[data.slug].title} - Examples - Flexiboards`;
-	});
 </script>
 
 <div class="mx-auto flex w-full max-w-[100rem] flex-1 gap-7 py-8">
@@ -472,12 +383,12 @@
 			</div>
 
 			<div class="bg-stage flex min-h-[560px] flex-1 justify-center">
-				<iframe
+				<ExampleFrame
 					src={`/embed/${embedFramework}/${data.slug}`}
 					title={`${pages[data.slug].title} example`}
-					class="ease-snap bg-paper h-full max-w-full transition-[width] duration-300 {phased}"
-					style:width={viewportWidths[viewport]}
-				></iframe>
+					class={phased}
+					width={viewportWidths[viewport]}
+				/>
 			</div>
 		</div>
 	</div>

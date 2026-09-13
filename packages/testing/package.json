@@ -9,22 +9,30 @@
 	},
 	"files": [
 		"dist",
-		"!dist/**/*.test.*"
+		"!dist/**/*.test.*",
+		"CHANGELOG.md"
 	],
 	"publishConfig": {
 		"access": "public"
 	},
-	"keywords": [],
+	"keywords": [
+		"flexiboards",
+		"drag-and-drop",
+		"grid",
+		"dashboard",
+		"testing"
+	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git"
+		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git",
+		"directory": "packages/testing"
 	},
 	"author": "Blakintosh",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
 	},
-	"homepage": "https://github.com/Blakintosh/svelte-flexiboards#readme",
+	"homepage": "https://www.flexiboards.dev/docs/guides/testing",
 	"devDependencies": {
 		"happy-dom": "^20.11.2",
 		"typescript": "^5.0.0",

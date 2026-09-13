@@ -27,7 +27,7 @@ export function widgetEvents(widget: InternalFlexiWidgetController) {
 		},
 		onkeydown: (event: KeyboardEvent) => {
 			// Grabbing the widget directly only works if the widget does not have grabbers.
-			if (widget.hasGrabbers) {
+			if (widget.hasGrabbers || event.target !== widget.ref) {
 				return;
 			}
 
@@ -62,10 +62,7 @@ export function widgetResizerEvents(widget: InternalFlexiWidgetController) {
 			event.stopPropagation();
 			resizeWatcher.onstartpointerdown(event);
 		},
-		onkeydown: (event: KeyboardEvent) => {
-			event.stopPropagation();
-			dispatchKeyDownResize(eventBus, widget, board, event);
-		}
+		onkeydown: (event: KeyboardEvent) => dispatchKeyDownResize(eventBus, widget, board, event)
 	};
 }
 

@@ -1,9 +1,9 @@
 import {
 	assistiveTextStyleObject,
-	flexiannouncer,
+	FlexiAnnouncerController,
 	type InternalFlexiBoardController
 } from '@flexiboards/core';
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import { useFromCore } from '../adapter.js';
 
 type FlexiAnnouncerProps = {
@@ -15,9 +15,12 @@ type FlexiAnnouncerProps = {
  * drag-and-drop actions.
  */
 export function FlexiAnnouncer({ provider }: FlexiAnnouncerProps) {
-	// flexiannouncer attaches the controller to the board and has no destroy, so
-	// lazy useState rather than useSingleRef holds it for the component's life.
-	const [controller] = useState(() => flexiannouncer(provider));
+	const [controller] = useState(() => new FlexiAnnouncerController(provider));
+	// Attach after commit: StrictMode may discard an initializer's controller.
+	useEffect(() => {
+		provider.attachAnnouncer(controller);
+		return () => controller.destroy();
+	}, [provider, controller]);
 	const id = useId();
 
 	const politeness = useFromCore(useCallback(() => controller.politeness, [controller]));

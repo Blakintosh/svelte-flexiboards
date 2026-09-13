@@ -45,6 +45,7 @@ export type FlexiWidgetChildren = (params: {
 
 export type RenderedFlexiWidgetProps = {
 	widget: InternalFlexiWidgetController;
+	id?: string;
 };
 
 /**

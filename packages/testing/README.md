@@ -22,6 +22,8 @@ pointerMove(250, 150);
 dropByKeyboard();
 ```
 
+`cellAt(x, y)` takes zero-based model coordinates. Placed widgets expose one-based ARIA row and column indices; `layoutGrid()` translates them when calculating geometry. `cells()` includes the decorative drop preview and `realCells()` excludes it. Both helpers also find the held widget while its role changes to `group`.
+
 Setup for each framework and the full helper list: [flexiboards.dev/docs/guides/testing](https://flexiboards.dev/docs/guides/testing)
 
 ## Licence

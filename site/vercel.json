@@ -1,4 +1,0 @@
-{
-	"buildCommand": "pnpm -C .. -r --filter './packages/*' build && pnpm run build",
-	"installCommand": "pnpm install"
-}

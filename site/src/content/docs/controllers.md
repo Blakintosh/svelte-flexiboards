@@ -9,17 +9,20 @@ published: true
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-## Introduction
+A controller exposes a board, target, or widget's state and actions. Choose access based on where your code runs:
 
-Behind the `FlexiBoard`, `FlexiTarget`, and `FlexiWidget` components sit their controllers. A controller holds the logic for its component and manages the state of the board.
+| Task                                                      | Access                                                                                                        |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Keep a controller for a parent component's event handlers | `onfirstcreate`                                                                                               |
+| Render from a surrounding widget's state                  | The framework-specific context helper or hook below                                                           |
+| Set the first layout, including SSR                       | `initialLayout` in [server-rendering configuration](/docs/guides/server-side-rendering#server-stored-layouts) |
+| Replace a layout after initialization                     | `importLayout()` on a stored controller                                                                       |
 
-By default, the controllers are hidden, as they are created inside of the components. To set up your own actions, though, Flexiboards gives you several ways to reach them.
+The examples in the access sections are excerpts. Insert your existing targets and widgets where indicated; they focus on how to obtain the controller.
 
 ## Method 1: `onfirstcreate` callback
 
-Every Flexiboards component accepts an `onfirstcreate` callback, which fires once, as soon as that component's controller has been created. It receives the controller as its only argument.
-
-This is the earliest possible point at which you can act on a controller. Put work here that should happen before the board is first painted, such as importing a saved layout.
+Components with controllers accept `onfirstcreate`. The callback receives the controller once. Use it to keep a reference for later actions. Timing depends on the adapter, as described below.
 
 <Only svelte>
 
@@ -27,19 +30,19 @@ This is the earliest possible point at which you can act on a controller. Put wo
 <script lang="ts">
 	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
 
-	let { layout } = $props();
+	let board = $state<FlexiBoardController>();
 
-	function doSomething(controller: FlexiBoardController) {
-		// do something with the board!
+	function rememberBoard(controller: FlexiBoardController) {
+		board = controller;
 	}
 </script>
 
-<FlexiBoard onfirstcreate={doSomething}>
+<FlexiBoard onfirstcreate={rememberBoard}>
 	<!-- ... -->
 </FlexiBoard>
 ```
 
-Because the callback fires during the component's setup, it also runs on the server. That means a layout imported here will be shown on the board as soon as it mounts, without any client-side code needing to run first.
+The callback runs during component setup, including SSR. Keep browser-only work in client event handlers or effects. Use `initialLayout` for data that must appear in the server-rendered board.
 
 </Only>
 
@@ -96,7 +99,7 @@ For anything rendered _inside_ the board, the hooks below are simpler.
 
 ## Method 2: `bind:controller` prop
 
-If you don't need the controller until after the component has mounted, binding to it is the most familiar option, and is intuitive if you've already used [`bind:this`](https://svelte.dev/tutorial/svelte/bind-this) in Svelte.
+Bind `controller` to a state variable when the parent needs the instance. Guard reads before initialization.
 
 Here's an example of using it to access the controller of a `FlexiBoard`:
 
@@ -104,22 +107,20 @@ Here's an example of using it to access the controller of a `FlexiBoard`:
 <script lang="ts">
 	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
 
-	let { layout } = $props();
+	let boardController = $state<FlexiBoardController>();
 
-	let boardController: FlexiBoardController = $state() as FlexiBoardController;
-
-	$effect(() => {
-		// Do something with the controller.
-		boardController.importLayout(layout);
-	});
+	function clearBoard() {
+		boardController?.clear();
+	}
 </script>
 
+<button onclick={clearBoard}>Clear board</button>
 <FlexiBoard bind:controller={boardController}>
-	<!-- ... -->
+	<!-- Existing targets and widgets. -->
 </FlexiBoard>
 ```
 
-This approach has one drawback: to safely run methods on `boardController`, you have to wait until the component has mounted, so you cannot access the controller on the server. Where that matters, prefer `onfirstcreate`.
+The button handler runs on the client after initialization. For setup-time controller access, use `onfirstcreate`; for server-provided layout data, use `initialLayout`.
 
 By the time the `onfirstcreate` callback fires, any variable bound to `controller` already holds the controller instance. If you prefer, you can read that variable rather than the `controller` parameter passed to the callback.
 
@@ -144,7 +145,7 @@ From any component rendered _inside_ a Flexiboards component, you can reach the 
 
 ## Method 2: context hooks
 
-React has no component-level controller binding. Instead, from any component rendered _inside_ a Flexiboards component, you can reach the surrounding controllers with hooks:
+Call these hooks from a component rendered inside the corresponding Flexiboards component:
 
 - `useFlexiBoard()` returns the enclosing `FlexiBoard` controller
 - `useFlexiTarget()` returns the enclosing `FlexiTarget` controller
@@ -165,11 +166,11 @@ export function MyWidgetContent() {
 }
 ```
 
-The controllers returned by these hooks are **reactive proxies**. Any signal-backed getter you read while rendering is tracked, including `widget.isGrabbed`, `widget.draggability`, `widget.x` and `target.dropRejected`, and your component re-renders when it changes. There is no extra hook, selector or subscription to write. Just read the property.
+The controllers returned by these hooks are **reactive proxies**. Any signal-backed getter you read while rendering is tracked, including `widget.isGrabbed`, `widget.draggability`, `widget.x` and `target.dropRejected`, and your component re-renders when it changes. Read the property during render to subscribe to it.
 
 Controller collections are tracked too: reading `target.widgets.size`, iterating `target.widgets`, or reading a reactive map subscribes to changes in that collection. Tracking is otherwise shallow; replace metadata objects through the controller setter when updating them.
 
-Reads outside of render (in an event handler, effect or callback) are not tracked, which is exactly what you want when you're calling an imperative method:
+Reads in event handlers, effects, and callbacks do not subscribe the component to updates. For example, this button reads the layout only when pressed:
 
 ```tsx
 import { useFlexiBoard } from '@flexiboards/react';
@@ -185,18 +186,20 @@ export function ExportButton() {
 
 ## Changing the board from code
 
-Once you hold a controller you can change the board without a drag. These calls run the same placement rules as a drop, and each one fires `onLayoutChange`, so a board that persists itself stays in step.
+Once you hold a controller you can change the board without a drag. Placement actions run the grid rules. Successful layout mutations notify `onLayoutChange`; import and export have separate behavior shown below.
 
-| Call                           | What it does                                                                                                                                               |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `widget.delete()`              | Removes the widget from its target. Fires `onWidgetDelete`.                                                                                                |
-| `widget.moveTo({ x, y })`      | Moves the widget within its target. Returns `false` and leaves it in place if the grid refuses the spot.                                                   |
-| `widget.moveTo({ target })`    | Moves the widget to another target, wherever that target's grid puts it. Pass `x` and `y` too to choose the cell.                                          |
-| `target.createWidget(config)`  | Adds a widget. Returns `undefined` if it cannot be placed.                                                                                                 |
-| `target.clear()`               | Deletes every widget in the target.                                                                                                                        |
-| `board.clear()`                | Deletes every widget in every target.                                                                                                                      |
-| `board.importLayout(layout)`   | Replaces the whole board from a saved layout, bare or in the `{ version, layout }` envelope. Does not fire `onLayoutChange`; it is the load, not a change. |
-| `board.exportLayoutEnvelope()` | The layout with its format version, the shape to persist. See [Exporting & Importing](/docs/guides/exporting-importing-boards).                            |
+| Call                           | What it does                                                                                                                        |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `widget.delete()`              | Removes the widget from its target. Fires `onWidgetDelete`.                                                                         |
+| `widget.moveTo({ x, y })`      | Moves the widget within its target. Returns `false` and leaves it in place if the grid refuses the spot.                            |
+| `widget.moveTo({ target })`    | Moves the widget to another target, wherever that target's grid puts it. Pass `x` and `y` too to choose the cell.                   |
+| `target.createWidget(config)`  | Adds a widget. Returns `undefined` if it cannot be placed.                                                                          |
+| `target.clear()`               | Deletes every widget in the target.                                                                                                 |
+| `board.clear()`                | Deletes every widget in every target.                                                                                               |
+| `board.importLayout(layout)`   | Replaces widgets in targets named by the saved layout, bare or in a `{ version, layout }` envelope. Does not fire `onLayoutChange`. |
+| `board.exportLayoutEnvelope()` | The layout with its format version, the shape to persist. See [Exporting & Importing](/docs/guides/exporting-importing-boards).     |
+
+This excerpt assumes `done` and `doing` are target controllers from the same board:
 
 ```ts
 // Move the first "done" card back into "doing", at the top.
@@ -204,11 +207,13 @@ const card = done.widgets.values().next().value;
 card?.moveTo({ target: doing, x: 0, y: 0 });
 ```
 
-`moveTo` skips your `canDrop` on purpose. `canDrop` guards what the _user_ may do; code that calls `moveTo` is already the authority.
+`moveTo` bypasses `canDrop`. Validate application permissions before calling it; grid placement rules still apply. A refused move returns `false`. A successful placement notifies even if the coordinates are unchanged. Clears notify only if widgets are removed.
 
 ## Reacting to interactions
 
-The board's configuration takes callbacks for the moments you usually need to persist, validate or announce. They fire after the board has committed the change, so the widget's `x`, `y` and `target` are final when you read them.
+Use `canDrop` for validation, grab and enter/leave callbacks for interaction progress, and drop/resize callbacks for committed changes. `onLayoutChange` reports the committed layout in a batched microtask before animations settle.
+
+These configuration excerpts log accepted moves between targets and deletions. Keep your existing target declarations inside the board:
 
 <Only svelte>
 
@@ -219,16 +224,16 @@ The board's configuration takes callbacks for the moments you usually need to pe
 	const config: FlexiBoardConfiguration = {
 		onWidgetDrop: ({ widget, sourceTarget, target }) => {
 			if (sourceTarget !== target) {
-				api.moveCard(widget.metadata?.id, target.key);
+				console.info('Moved', widget.userProvidedId ?? widget.id, 'to', target.key);
 			}
 		},
-		onWidgetDelete: ({ widget }) => api.deleteCard(widget.metadata?.id),
+		onWidgetDelete: ({ widget }) => console.info('Deleted', widget.userProvidedId ?? widget.id),
 		// Only the "done" column accepts cards that are marked complete.
 		canDrop: ({ widget, target }) => target.key !== 'done' || widget.metadata?.complete === true
 	};
 </script>
 
-<FlexiBoard {config}>...</FlexiBoard>
+<FlexiBoard {config}><!-- Existing targets and widgets. --></FlexiBoard>
 ```
 
 </Only>
@@ -241,16 +246,16 @@ import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/react';
 const config: FlexiBoardConfiguration = {
 	onWidgetDrop: ({ widget, sourceTarget, target }) => {
 		if (sourceTarget !== target) {
-			api.moveCard(widget.metadata?.id, target.key);
+			console.info('Moved', widget.userProvidedId ?? widget.id, 'to', target.key);
 		}
 	},
-	onWidgetDelete: ({ widget }) => api.deleteCard(widget.metadata?.id),
+	onWidgetDelete: ({ widget }) => console.info('Deleted', widget.userProvidedId ?? widget.id),
 	// Only the "done" column accepts cards that are marked complete.
 	canDrop: ({ widget, target }) => target.key !== 'done' || widget.metadata?.complete === true
 };
 
 export function Board() {
-	return <FlexiBoard config={config}>...</FlexiBoard>;
+	return <FlexiBoard config={config}>{/* Existing targets and widgets. */}</FlexiBoard>;
 }
 ```
 
@@ -258,16 +263,16 @@ Stable configs avoid unnecessary comparisons. Inline objects work too: the adapt
 
 </Only>
 
-| Callback                                     | Fires when                                                                                                                                                                     |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `onWidgetGrab`                               | The user picks a widget up, by pointer or keyboard.                                                                                                                            |
-| `onWidgetDrop`                               | A move commits, before its animation settles. `sourceTarget` is where it came from; it is `undefined` for a widget that arrived through a `FlexiAdd`.                          |
-| `onWidgetCancel`                             | The user presses Escape, or lets go where nothing accepts the widget. The widget is back where it started.                                                                     |
-| `onWidgetDelete`                             | A widget is dropped on a `FlexiDelete`, or `widget.delete()` is called.                                                                                                        |
-| `onWidgetResize`                             | A resize the user was making commits.                                                                                                                                          |
-| `onWidgetEnterTarget`, `onWidgetLeaveTarget` | A widget being moved is carried over a target, or leaves it. Useful for styling a column while it is the candidate.                                                            |
-| `canDrop`                                    | While the user hovers and again on release. Return `false` to refuse; the drop preview shows the rejection and the widget returns to its origin.                               |
-| `onLayoutChange`                             | Any of the above changes the layout, and any call from the table in the previous section. Batched within the current turn, with the committed layout before animations settle. |
+| Callback                                     | Fires when                                                                                                                                                                           |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onWidgetGrab`                               | The user picks a widget up, by pointer or keyboard.                                                                                                                                  |
+| `onWidgetDrop`                               | A move commits, before its animation settles. `sourceTarget` is where it came from; it is `undefined` for a widget that arrived through a `FlexiAdd`.                                |
+| `onWidgetCancel`                             | The user presses Escape, or lets go where nothing accepts the widget. The widget is back where it started.                                                                           |
+| `onWidgetDelete`                             | A widget is dropped on a `FlexiDelete`, or `widget.delete()` is called.                                                                                                              |
+| `onWidgetResize`                             | A resize the user was making commits.                                                                                                                                                |
+| `onWidgetEnterTarget`, `onWidgetLeaveTarget` | A widget being moved is carried over a target, or leaves it. Useful for styling a column while it is the candidate.                                                                  |
+| `canDrop`                                    | While the user hovers and again on release. Return `false` to refuse; the drop preview shows the rejection and the widget returns to its origin.                                     |
+| `onLayoutChange`                             | Accepted drops/resizes and programmatic creation, movement, or deletion. Batched in a microtask with committed coordinates. Hover, validation, import, and export do not trigger it. |
 
 `canDrop` runs alongside the grid's own rules (bounds, collisions, size limits), which apply whether or not you provide it. A target's own configuration can carry a `canDrop` too, for rules that belong to one list rather than the board; both must agree.
 

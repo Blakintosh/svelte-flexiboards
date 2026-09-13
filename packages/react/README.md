@@ -49,7 +49,7 @@ export function Board() {
 }
 ```
 
-The docs site has the guides and the full API reference. The React pages differ from the Svelte ones only in naming: `class` is `className`, a target's `key` is `keyName`, and snippets are children (plain JSX or a render function).
+The docs site has the guides and the full API reference. Select React for its prop names, render functions, controller hooks, reactivity, and server-rendering instructions.
 
 ## Licence
 

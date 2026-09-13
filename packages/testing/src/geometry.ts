@@ -49,9 +49,10 @@ export function layoutGrid(cellPx = 100, { grid, left = 0, top = 0 }: LayoutGrid
 	const size = { left, top, width: columns * cellPx, height: rows * cellPx };
 	if (board) setRect(board, size);
 	setRect(target, size);
-	for (const cell of cells(target)) {
-		const x = Number(cell.getAttribute('aria-colindex'));
-		const y = Number(cell.getAttribute('aria-rowindex'));
+	for (const cell of realCells(target)) {
+		if (cell.closest('[role="grid"]') !== target) continue;
+		const x = Number(cell.getAttribute('aria-colindex')) - 1;
+		const y = Number(cell.getAttribute('aria-rowindex')) - 1;
 		const w = Number(cell.getAttribute('aria-colspan')) || 1;
 		const h = Number(cell.getAttribute('aria-rowspan')) || 1;
 		setRect(cell, {
@@ -93,7 +94,7 @@ export function layoutGrid(cellPx = 100, { grid, left = 0, top = 0 }: LayoutGrid
 
 /** Every widget cell under `root`, including the drop preview shown mid-grab. */
 export const cells = (root: ParentNode = document) =>
-	Array.from(root.querySelectorAll<HTMLElement>('[role="cell"]'));
+	Array.from(root.querySelectorAll<HTMLElement>('[data-flexi-widget]'));
 
 /**
  * Cells excluding the drop preview a target renders mid-grab. The grabbed
@@ -103,11 +104,12 @@ export const cells = (root: ParentNode = document) =>
 export const realCells = (root: ParentNode = document) =>
 	cells(root).filter((c) => c.getAttribute('aria-label') !== 'Widget action preview');
 
-/** The cell at a grid position, or null. */
+/** The cell at a zero-based model position, or null. */
 export const cellAt = (x: number, y: number, root: ParentNode = document) =>
 	realCells(root).find(
 		(c) =>
-			Number(c.getAttribute('aria-colindex')) === x && Number(c.getAttribute('aria-rowindex')) === y
+			Number(c.getAttribute('aria-colindex')) === x + 1 &&
+			Number(c.getAttribute('aria-rowindex')) === y + 1
 	) ?? null;
 
 /** The element a grabbed widget is moved into for the duration of the grab. */

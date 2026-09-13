@@ -30,7 +30,7 @@ async function hydrate(tree: ReactNode, html: string, preserveCell = false) {
 	const host = document.createElement('div');
 	document.body.appendChild(host);
 	host.innerHTML = html;
-	const originalCell = host.querySelector('[role="cell"]');
+	const originalCell = host.querySelector('[data-flexi-widget]');
 	const errors = vi.fn();
 	const consoleError = vi.spyOn(console, 'error');
 	await act(async () => {
@@ -38,7 +38,7 @@ async function hydrate(tree: ReactNode, html: string, preserveCell = false) {
 	});
 	expect(errors).not.toHaveBeenCalled();
 	expect(consoleError).not.toHaveBeenCalled();
-	if (preserveCell) expect(host.querySelector('[role="cell"]')).toBe(originalCell);
+	if (preserveCell) expect(host.querySelector('[data-flexi-widget]')).toBe(originalCell);
 	return host;
 }
 
@@ -54,7 +54,7 @@ describe('React hydration', () => {
 		const html = serverRender(tree);
 		expect(html).toContain('declared card');
 		const host = await hydrate(tree, html, true);
-		expect(host.querySelector('[role="cell"]')?.textContent).toBe('declared card');
+		expect(host.querySelector('[data-flexi-widget]')?.textContent).toBe('declared card');
 	});
 
 	it('hydrates the initial layout before importing client storage and dismissing suspense', async () => {
@@ -83,7 +83,7 @@ describe('React hydration', () => {
 		expect(loadLayout).not.toHaveBeenCalled();
 		const host = await hydrate(tree, html);
 		expect(loadLayout).toHaveBeenCalledOnce();
-		expect(host.querySelector('[role="cell"]')?.textContent).toBe('client card');
+		expect(host.querySelector('[data-flexi-widget]')?.textContent).toBe('client card');
 		expect(host.querySelector('[data-flexi-fallback]')).toBeNull();
 	});
 
@@ -123,7 +123,7 @@ describe('React hydration', () => {
 		expect(loadLayouts).not.toHaveBeenCalled();
 		const host = await hydrate(tree, html);
 		expect(loadLayouts).toHaveBeenCalledOnce();
-		expect(host.querySelector('[role="cell"]')?.textContent).toBe('stored mobile');
+		expect(host.querySelector('[data-flexi-widget]')?.textContent).toBe('stored mobile');
 		expect(host.querySelector('[data-flexi-fallback]')).toBeNull();
 	});
 });

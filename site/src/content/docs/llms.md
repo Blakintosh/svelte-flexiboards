@@ -22,7 +22,7 @@ These docs follow the [llms.txt convention](https://llmstxt.org), so an assistan
 
 ## Choose a framework
 
-Markdown accepts a `framework` query parameter. It selects the examples, framework-specific prose, prop names, and API tables—not just code fences. Shared explanations appear once.
+Markdown accepts a `framework` query parameter. It selects the examples, framework-specific prose, prop names, and API tables. Shared explanations appear once.
 
 <Only svelte>
 
@@ -48,7 +48,7 @@ Every docs page has a **Copy as Markdown** action under its title, next to the e
 
 ## Skill
 
-The repository ships a skill that gives an assistant the parts of Flexiboards it would otherwise guess at: which layout to pick, the naming differences between the adapters, the controller actions and callbacks, the rules that bite in React, and how to test a board.
+The repository ships a skill that gives an assistant the parts of Flexiboards it would otherwise guess at: which layout to pick, the naming differences between the adapters, the controller actions and callbacks, React lifecycle and reactivity constraints, and how to test a board.
 
 <InstallCommand action="dlx" package="skills add Blakintosh/svelte-flexiboards" />
 

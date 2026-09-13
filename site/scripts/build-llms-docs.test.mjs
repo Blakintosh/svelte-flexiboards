@@ -1,4 +1,8 @@
 import { test } from 'node:test';
+import fs from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
+import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import { transform } from './build-llms-docs.mjs';
 
@@ -72,4 +76,136 @@ test('API aliases and shorthand select the right component and framework tables'
 test('malformed gates fail generation instead of silently leaking or dropping content', () => {
 	assert.throws(() => render('<Only react>\nMissing close', 'svelte'), /Unclosed/);
 	assert.throws(() => render('</Only>', 'react'), /Unmatched/);
+});
+
+test('unsupported prose directives and inline framework gates fail, while code stays literal', () => {
+	for (const framework of ['svelte', 'react', 'all']) {
+		assert.throws(() => render('<Only react>React-only prose</Only>', framework), /separate lines/);
+		assert.throws(
+			() => render('{#if api.controller.methods.length}\nMethods\n{/if}', framework),
+			/Unsupported Svelte directive/
+		);
+		assert.match(
+			render('```svelte\n{#if ready}<Only react>Literal</Only>{/if}\n```', framework).text,
+			/\{#if ready\}/
+		);
+	}
+});
+
+const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const readDoc = (slug) =>
+	fs.readFileSync(path.join(siteRoot, 'src/content/docs', `${slug}.md`), 'utf8');
+
+test('authored widget reference exports its actual methods without template fallbacks', () => {
+	for (const framework of ['svelte', 'react', 'all']) {
+		const result = render(readDoc('components/widget'), framework);
+		assert.deepEqual(result.unhandled, []);
+		assert.match(result.text, /`delete`/);
+		assert.match(result.text, /`moveTo`/);
+		assert.doesNotMatch(result.text, /does not expose any methods|\{[#:/](?:if|else)/);
+	}
+});
+
+test('configuration and controller references select adapter types, including combined output', () => {
+	const source = readDoc('components/widget');
+	const react = render(source, 'react').text;
+	const svelte = render(source, 'svelte').text;
+	assert.doesNotMatch(react, /Snippet<|ClassValue|<TClass>|\bCoreFlexi/);
+	assert.match(react, /ReactNode/);
+	assert.match(svelte, /Snippet</);
+	assert.match(svelte, /ClassValue/);
+	assert.match(render(source, 'all').text, /Properties \(React\)/);
+	assert.match(render(source, 'all').text, /Properties \(Svelte\)/);
+});
+
+test('generated public types are valid syntax and preserve optionality and envelope loading', () => {
+	const root = path.join(siteRoot, 'src/lib/generated/api');
+	for (const name of fs.readdirSync(root).filter((name) => name.endsWith('.json'))) {
+		const api = JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
+		const rows = [
+			api.props,
+			api.propsReact,
+			...Object.values(api.types),
+			...Object.values(api.typesReact),
+			api.controller?.properties,
+			api.controller?.methods,
+			api.controllerReact?.properties,
+			api.controllerReact?.methods
+		]
+			.filter(Boolean)
+			.flat();
+		for (const row of rows) {
+			const { diagnostics } = ts.transpileModule(`type Entry = ${row.type};`, {
+				reportDiagnostics: true,
+				compilerOptions: { target: ts.ScriptTarget.ESNext }
+			});
+			assert.deepEqual(
+				diagnostics?.map((d) => ts.flattenDiagnosticMessageText(d.messageText, ' ')),
+				[],
+				`${name}: ${row.name}: ${row.type}`
+			);
+		}
+		for (const rows of [
+			api.props,
+			api.propsReact,
+			...Object.values(api.types),
+			...Object.values(api.typesReact)
+		]) {
+			for (const row of rows)
+				assert.equal(typeof row.optional, 'boolean', `${name}: ${row.name} optionality`);
+		}
+	}
+	const board = JSON.parse(fs.readFileSync(path.join(root, 'flexi-board.json'), 'utf8'));
+	assert.match(
+		board.types.FlexiBoardConfiguration.find((row) => row.name === 'loadLayout').type,
+		/FlexiLayoutEnvelope/
+	);
+	const widget = JSON.parse(fs.readFileSync(path.join(root, 'flexi-widget.json'), 'utf8'));
+	assert.equal(
+		widget.props.some((row) => ['className', 'snippet'].includes(row.name)),
+		false
+	);
+});
+
+test('every authored page transforms for both frameworks without unhandled content', () => {
+	const root = path.join(siteRoot, 'src/content/docs');
+	for (const file of fs
+		.readdirSync(root, { recursive: true })
+		.filter((name) => name.endsWith('.md'))) {
+		for (const framework of ['svelte', 'react', 'all']) {
+			const result = transform(fs.readFileSync(path.join(root, file), 'utf8'), {
+				slug: file,
+				framework
+			});
+			assert.deepEqual(result.unhandled, [], `${file}: ${framework}`);
+		}
+	}
+});
+
+test('authored code listings parse in their declared language', async () => {
+	const { compile } = await import('svelte/compiler');
+	const root = path.join(siteRoot, 'src/content/docs');
+	for (const file of fs
+		.readdirSync(root, { recursive: true })
+		.filter((name) => name.endsWith('.md'))) {
+		const source = fs.readFileSync(path.join(root, file), 'utf8');
+		for (const match of source.matchAll(/^```(\w+)[^\n]*\n([\s\S]*?)^```/gm)) {
+			const [, lang, code] = match;
+			const label = `${file}:${source.slice(0, match.index).split('\n').length}`;
+			if (lang === 'svelte') compile(code, { generate: 'server', filename: `${label}.svelte` });
+			else if (lang === 'json') assert.doesNotThrow(() => JSON.parse(code), label);
+			else if (['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx'].includes(lang)) {
+				const { diagnostics } = ts.transpileModule(code, {
+					fileName: `${label}.${lang === 'jsx' || lang === 'tsx' ? 'tsx' : 'ts'}`,
+					reportDiagnostics: true,
+					compilerOptions: { target: ts.ScriptTarget.ESNext, jsx: ts.JsxEmit.ReactJSX }
+				});
+				assert.deepEqual(
+					diagnostics?.map((d) => ts.flattenDiagnosticMessageText(d.messageText, ' ')),
+					[],
+					label
+				);
+			}
+		}
+	}
 });

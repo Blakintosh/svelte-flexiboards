@@ -8,7 +8,7 @@ async function recordMotion(page: Page) {
 		const samples: { duration: string; easing: string }[] = [];
 		document.documentElement.dataset.motionSamples = '[]';
 		const observer = new MutationObserver(() => {
-			for (const node of document.querySelectorAll<HTMLElement>('[role="cell"]')) {
+			for (const node of document.querySelectorAll<HTMLElement>('[data-flexi-widget]')) {
 				if (
 					node.style.position !== 'absolute' ||
 					node.getAttribute('aria-grabbed') === 'true' ||
@@ -42,7 +42,7 @@ async function recordMotion(page: Page) {
 }
 
 async function finishRecording(page: Page): Promise<MotionSample[]> {
-	await expect(page.locator('[role="cell"][style*="position: absolute"]')).toHaveCount(0);
+	await expect(page.locator('[data-flexi-widget][style*="position: absolute"]')).toHaveCount(0);
 	return page.evaluate(() => {
 		document.dispatchEvent(new Event('stop-motion-recording'));
 		return JSON.parse(document.documentElement.dataset.motionSamples ?? '[]');
@@ -70,6 +70,8 @@ for (const framework of frameworks) {
 					await page.goto(`/docs/registry/${family}`);
 					const preview = page.locator('.preview:visible');
 					await expect(cells(page, preview)).not.toHaveCount(0);
+					await expect(preview.getByRole('button').first()).toBeEnabled();
+					await page.evaluate(() => document.fonts.ready.then(() => undefined));
 					await preview.scrollIntoViewIfNeeded();
 					await recordMotion(page);
 					if (family === 'dashboard') {
@@ -125,6 +127,8 @@ for (const framework of frameworks) {
 			const preview = page.locator('.preview:visible');
 			const picker = preview.getByLabel('Transition preset');
 			await expect(preview.getByText('Drag a handle to compare the presets.')).toBeVisible();
+			await expect(cells(page, preview).first().getByRole('button')).toBeEnabled();
+			await page.evaluate(() => document.fonts.ready.then(() => undefined));
 			await preview.scrollIntoViewIfNeeded();
 
 			async function reorder() {
@@ -142,7 +146,7 @@ for (const framework of frameworks) {
 					await cells(page, preview).evaluateAll((nodes) =>
 						nodes.map((node) => node.getAttribute('aria-rowindex'))
 					)
-				).toEqual(['0', '1', '2']);
+				).toEqual(['1', '2', '3']);
 				return samples;
 			}
 

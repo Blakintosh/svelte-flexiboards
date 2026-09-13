@@ -61,7 +61,7 @@
 	function extractCells(root: ParentNode): CellRecord[] {
 		const records: CellRecord[] = [];
 		root.querySelectorAll('[data-testbed-board]').forEach((board, b) => {
-			board.querySelectorAll('[role="cell"]').forEach((cell, i) => {
+			board.querySelectorAll('[data-flexi-widget]').forEach((cell, i) => {
 				const style = cell.getAttribute('style') ?? '';
 				const grid = style
 					.split(';')

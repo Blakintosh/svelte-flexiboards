@@ -65,7 +65,7 @@ export function cancelGrab() {
 	keydown(window, 'Escape');
 }
 
-/** Moves a keyboard-grabbed widget one cell at a time. */
+/** Moves the keyboard pointer by its default 20-pixel step for each key. */
 export function arrow(...keys: ('ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight')[]) {
 	for (const key of keys) keydown(window, key);
 }

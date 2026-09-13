@@ -24,7 +24,7 @@ const board = (cellsHtml: string, columns = 3, rows = 2) => {
 	return document.querySelector<HTMLElement>('[role="grid"]')!;
 };
 const cell = (x: number, y: number, w = 1, h = 1, label = '') =>
-	`<div role="cell" aria-colindex="${x}" aria-rowindex="${y}" aria-colspan="${w}" aria-rowspan="${h}" aria-label="${label}"></div>`;
+	`<div data-flexi-widget role="gridcell" aria-colindex="${x + 1}" aria-rowindex="${y + 1}" aria-colspan="${w}" aria-rowspan="${h}" aria-label="${label}"></div>`;
 
 describe('layoutGrid', () => {
 	it('sizes the grid from its aria counts and each cell from its position', () => {
@@ -46,6 +46,26 @@ describe('layoutGrid', () => {
 		restore();
 		expect(MockResizeObserver.instances.size).toBe(0);
 	});
+});
+
+it('keeps zero-based helper coordinates and leaves nested grid geometry alone', () => {
+	const grid = board(cell(0, 0) + cell(2, 1));
+	const first = cellAt(0, 0)!;
+	const nested = document.createElement('div');
+	nested.setAttribute('role', 'grid');
+	nested.innerHTML = cell(1, 1);
+	first.append(nested);
+	const nestedCell = nested.firstElementChild as HTMLElement;
+	nestedCell.getBoundingClientRect = () => ({ left: 999 }) as DOMRect;
+	const restore = layoutGrid(40, { grid, left: 10, top: 20 });
+	try {
+		expect(first.getBoundingClientRect()).toMatchObject({ left: 10, top: 20 });
+		expect(cellAt(2, 1)!.getBoundingClientRect()).toMatchObject({ left: 90, top: 60 });
+		expect(nestedCell.getBoundingClientRect().left).toBe(999);
+		expect(first.getAttribute('aria-colindex')).toBe('1');
+	} finally {
+		restore();
+	}
 });
 
 describe('events', () => {

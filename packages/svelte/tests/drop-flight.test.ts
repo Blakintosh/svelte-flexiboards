@@ -64,7 +64,7 @@ describe('drop flight', () => {
 		dropByKeyboard();
 
 		const flying = document.querySelector<HTMLElement>(
-			'[role="cell"][style*="position: absolute"]'
+			'[data-flexi-widget][style*="position: absolute"]'
 		);
 		expect(flying).not.toBeNull();
 		await Promise.resolve();

@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-vercel';
+import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex, escapeSvelte } from 'mdsvex';
 import { getSingletonHighlighter } from 'shiki';
@@ -11,7 +11,18 @@ import { blueprintTheme } from './src/lib/shiki-blueprint-theme.js';
 
 const shikiPromise = getSingletonHighlighter({
 	themes: [blueprintTheme],
-	langs: ['javascript', 'typescript', 'svelte', 'html', 'css', 'tsx', 'jsx', 'shell', 'diff']
+	langs: [
+		'javascript',
+		'typescript',
+		'svelte',
+		'html',
+		'css',
+		'tsx',
+		'jsx',
+		'shell',
+		'diff',
+		'json'
+	]
 });
 
 /** @type {import('mdsvex').MdsvexOptions} */
@@ -48,12 +59,7 @@ const config = {
 	preprocess: sequence([vitePreprocess(), mdsvex(mdsvexOptions), preprocessMeltUI()]),
 
 	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter({
-			runtime: 'nodejs22.x'
-		}),
+		adapter: adapter(),
 		// The generated tsconfig only includes .js/.ts/.svelte, so React example
 		// sources would sit outside the project: no $lib alias, no JSX setting for
 		// the editor or svelte-check.

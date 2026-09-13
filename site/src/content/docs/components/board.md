@@ -55,8 +55,6 @@ export function Board() {
 
 ## FlexiBoardController
 
-`FlexiBoard` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
@@ -77,7 +75,7 @@ You can access the controller via binding to the `controller` prop or using the 
 
 <Only react>
 
-React has no two-way binding, so you reach the controller through the `onfirstcreate` callback. From any component rendered inside the board you can also call the `useFlexiBoard()` hook.
+Read the controller through the `onfirstcreate` callback. From any component rendered inside the board you can also call the `useFlexiBoard()` hook.
 
 ```tsx
 import { useRef } from 'react';
@@ -103,15 +101,13 @@ function Toolbar() {
 
 </Only>
 
-Use the `FlexiBoardController` to manage the board directly and carry out actions.
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
-<ApiReference title="Properties" api={api.controller.properties} />
-
-<ApiReference title="Methods" api={api.controller.methods} />
+<ApiReference title="Methods" api={api.controller.methods} reactApi={api.controllerReact.methods} />
 
 ## FlexiBoardConfiguration
 
-The configuration object for the `FlexiBoard` component, which supports reactivity where specified.
+`FlexiBoard` accepts these options through `config`. See [Configuration reactivity](/docs/configuration#reactivity) for update behavior and initialization-only options.
 
 <Only svelte>
 
@@ -127,13 +123,13 @@ In the React adapter, class-valued properties are plain strings, or functions re
 
 </Only>
 
-<ApiReference title="Properties" api={api.types.FlexiBoardConfiguration} />
+<ApiReference title="Properties" api={api.types.FlexiBoardConfiguration} reactApi={api.typesReact.FlexiBoardConfiguration} />
 
 ### FlexiTargetDefaults
 
 The default configuration for targets.
 
-<ApiReference title="Properties" api={api.types.FlexiTargetDefaults} />
+<ApiReference title="Properties" api={api.types.FlexiTargetDefaults} reactApi={api.typesReact.FlexiTargetDefaults} />
 
 ### Interaction callbacks
 
@@ -141,21 +137,21 @@ The default configuration for targets.
 
 #### FlexiWidgetEvent
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetEvent} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetEvent} reactApi={api.typesReact.FlexiWidgetEvent} />
 
 #### FlexiWidgetDropEvent
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetDropEvent} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetDropEvent} reactApi={api.typesReact.FlexiWidgetDropEvent} />
 
 #### FlexiDropCheck
 
-<ApiReference title="Properties" api={api.types.FlexiDropCheck} />
+<ApiReference title="Properties" api={api.types.FlexiDropCheck} reactApi={api.typesReact.FlexiDropCheck} />
 
 ### FlexiWidgetDefaults
 
 The default configuration for widgets.
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetDefaults} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetDefaults} reactApi={api.typesReact.FlexiWidgetDefaults} />
 
 ## FlexiLayout
 
@@ -163,13 +159,13 @@ The value returned by `exportLayout()` and accepted by `importLayout()`, `initia
 
 ### FlexiWidgetLayoutEntry
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetLayoutEntry} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetLayoutEntry} reactApi={api.typesReact.FlexiWidgetLayoutEntry} />
 
 ### FlexiRegistryEntry
 
 An entry in the board's `registry`, keyed by widget `type`. Its properties are widget defaults applied to every widget of that type.
 
-<ApiReference title="Properties" api={api.types.FlexiRegistryEntry} />
+<ApiReference title="Properties" api={api.types.FlexiRegistryEntry} reactApi={api.typesReact.FlexiRegistryEntry} />
 
 ## Accessibility
 

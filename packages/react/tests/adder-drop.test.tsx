@@ -88,10 +88,10 @@ describe.each([{ strict: false }, { strict: true }])(
 			await flushTimers();
 
 			// The widget now belongs to the target and renders as a grid cell.
-			expect(grid.querySelectorAll('[role="cell"]').length).toBe(1);
+			expect(grid.querySelectorAll('[data-flexi-widget]').length).toBe(1);
 			// The orphan sweep must not have removed the re-parented node.
 			expect(portal()!.children.length).toBe(0);
-			expect(document.querySelectorAll('[role="cell"]').length).toBe(1);
+			expect(document.querySelectorAll('[data-flexi-widget]').length).toBe(1);
 		});
 	}
 );

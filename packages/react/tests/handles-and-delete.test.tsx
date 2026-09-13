@@ -56,7 +56,7 @@ function Status() {
 // The shadow renders the same children, so read the status of the real widget,
 // which may have been lifted into the portal.
 const status = () =>
-	document.querySelector('[role="cell"]:not([aria-label="Widget action preview"]) .status')!
+	document.querySelector('[data-flexi-widget]:not([aria-label="Widget action preview"]) .status')!
 		.textContent;
 
 it('never submits a surrounding form from an add, grab, or resize button', () => {
@@ -101,8 +101,8 @@ describe('keyboard grab via FlexiGrab', () => {
 		expect(grab.disabled).toBe(false);
 		expect(grab.style.cursor).toBe('grab');
 		expect(status()).toBe('idle:0,0');
-		// A widget with a grab handle is not itself focusable.
-		expect(cells()[0].hasAttribute('tabindex')).toBe(false);
+		// A widget with a grab handle is outside the sequential tab order.
+		expect(cells()[0].tabIndex).toBe(-1);
 
 		keydown(grab, 'Enter');
 		expect(status()).toBe('grabbed:0,0');
@@ -133,7 +133,7 @@ describe('keyboard grab via FlexiGrab', () => {
 		layoutGrid();
 		const grab = () =>
 			document.querySelector<HTMLButtonElement>(
-				'[role="cell"]:not([aria-label="Widget action preview"]) button'
+				'[data-flexi-widget]:not([aria-label="Widget action preview"]) button'
 			)!;
 		expect(grab().className).toBe('grab');
 		keydown(grab(), 'Enter');
@@ -163,7 +163,7 @@ describe('keyboard grab via FlexiGrab', () => {
 		keydown(window, 'Enter');
 		expect(status()).toBe('idle:1,0');
 		expect(cells().length).toBe(1);
-		expect(cells()[0].getAttribute('aria-colindex')).toBe('1');
+		expect(cells()[0].getAttribute('aria-colindex')).toBe('2');
 	});
 
 	it('leaves the handles inert when the widget is immovable', () => {

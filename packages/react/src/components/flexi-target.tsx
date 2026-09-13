@@ -1,6 +1,6 @@
 import { type FlexiTargetController } from '@flexiboards/core';
 import type { FlexiTargetPartialConfiguration } from '../types.js';
-import { useCallback, useEffect, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, type ReactNode } from 'react';
 import { useInternalFlexiBoard } from '../adapters/board.js';
 import { FlexiTargetContext, useInternalFlexiTarget } from '../adapters/target.js';
 import {
@@ -102,6 +102,7 @@ function FlexiTargetContent({
 	footer
 }: Pick<FlexiTargetProps, 'containerClassName' | 'className' | 'header' | 'footer'>) {
 	const target = useInternalFlexiTarget();
+	const accessibilityId = useId();
 	const publicTarget = useReactive(target as FlexiTargetController);
 
 	// Bridge core-signal reads into React's reactivity.
@@ -116,11 +117,15 @@ function FlexiTargetContent({
 		<div className={containerClassName}>
 			{renderChildren(header, { target: publicTarget })}
 
-			<FlexiGrid className={className}>
+			<FlexiGrid className={className} accessibilityId={accessibilityId}>
 				{prepared && (
 					<>
-						{orderedWidgets.map((widget) => (
-							<RenderedFlexiWidget key={widget.id} widget={widget} />
+						{orderedWidgets.map((widget, index) => (
+							<RenderedFlexiWidget
+								key={widget.id}
+								widget={widget}
+								id={`${accessibilityId}-cell-${index}`}
+							/>
 						))}
 
 						{dropzoneWidget && shouldRenderDropzoneWidget && (

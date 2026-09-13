@@ -106,7 +106,11 @@ export class FlexiPortalController {
 			nextSibling: widget.ref.nextSibling
 		});
 
+		const focused = document.activeElement;
 		this.#containerElement!.appendChild(widget.ref);
+		if (focused instanceof HTMLElement && widget.ref.contains(focused)) {
+			focused.focus({ preventScroll: true });
+		}
 	}
 
 	/**
@@ -115,6 +119,7 @@ export class FlexiPortalController {
 	returnWidgetFromPortal(widget: FlexiWidgetController) {
 		const originalPosition = this.#widgetRefs.get(widget);
 		if (originalPosition) {
+			const focused = document.activeElement;
 			if (originalPosition.originalParent) {
 				originalPosition.originalParent.insertBefore(
 					originalPosition.element,
@@ -125,6 +130,9 @@ export class FlexiPortalController {
 			} else {
 				// Nowhere to return to, discard rather than strand in the portal.
 				originalPosition.element.remove();
+			}
+			if (focused instanceof HTMLElement && originalPosition.element.contains(focused)) {
+				focused.focus({ preventScroll: true });
 			}
 			this.#widgetRefs.delete(widget);
 		}

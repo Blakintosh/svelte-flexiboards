@@ -4,7 +4,18 @@
 
 	const highlighterPromise = getSingletonHighlighter({
 		themes: [blueprintTheme],
-		langs: ['svelte', 'javascript', 'typescript', 'html', 'css', 'shell', 'tsx', 'jsx', 'diff']
+		langs: [
+			'svelte',
+			'javascript',
+			'typescript',
+			'html',
+			'css',
+			'shell',
+			'tsx',
+			'jsx',
+			'diff',
+			'json'
+		]
 	});
 </script>
 
@@ -80,11 +91,17 @@
 			<Tabs.Trigger value="code" class={triggerClass}>Code</Tabs.Trigger>
 			<div
 				aria-hidden="true"
-				class="bg-ink text-paper pointer-events-none absolute inset-0 grid select-none grid-cols-2 transition-[clip-path] duration-[220ms] ease-[cubic-bezier(0.25,0.8,0.25,1)] motion-reduce:transition-none"
+				class="text-ink pointer-events-none absolute inset-0 grid select-none grid-cols-2 transition-[clip-path] duration-[220ms] ease-[cubic-bezier(0.25,0.8,0.25,1)] motion-reduce:transition-none"
 				style:clip-path={view === 'preview' ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)'}
 			>
-				<span class="ui flex h-11 items-center justify-center text-xs font-medium">Preview</span>
-				<span class="ui flex h-11 items-center justify-center text-xs font-medium">Code</span>
+				<span
+					class="ui border-fx-accent flex h-11 items-center justify-center border-b-2 pt-0.5 text-xs font-medium"
+					>Preview</span
+				>
+				<span
+					class="ui border-fx-accent flex h-11 items-center justify-center border-b-2 pt-0.5 text-xs font-medium"
+					>Code</span
+				>
 			</div>
 		</Tabs.List>
 	</div>

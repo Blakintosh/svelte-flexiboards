@@ -45,7 +45,7 @@
 						href={docPage.href}
 						aria-current={isActive ? 'page' : undefined}
 						class={cn(
-							'relative py-1.5 font-mono text-[12.5px] leading-snug no-underline transition-colors duration-[120ms]',
+							'relative py-1.5 font-sans text-sm leading-snug no-underline transition-colors duration-[120ms]',
 							isActive ? 'text-fx-accent' : 'text-body hover:text-ink'
 						)}
 					>

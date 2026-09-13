@@ -14,7 +14,7 @@
 				destructive: 'bg-fx-accent text-white [a&]:hover:bg-fx-accent-hover',
 				secondary: 'bg-tint text-ink [a&]:hover:bg-rule',
 				/* planned */
-				outline: 'border-rule text-faint [a&]:hover:border-ink [a&]:hover:text-ink',
+				outline: 'border-rule text-body [a&]:hover:border-ink [a&]:hover:text-ink',
 				/* deprecated */
 				deprecated: 'border-dashed border-fx-accent text-fx-accent'
 			}

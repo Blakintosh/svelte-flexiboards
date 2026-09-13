@@ -87,8 +87,6 @@ The `children` prop also accepts a function receiving the adder controller, and 
 
 ## FlexiAddController
 
-`FlexiAdd` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller via binding to the `controller` prop, using the `onfirstcreate` callback, or from the `children` snippet parameter.
@@ -101,13 +99,13 @@ You can access the controller from the `onfirstcreate` callback or the `children
 
 </Only>
 
-<ApiReference title="Properties" api={api.controller.properties} />
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
 ## AdderWidgetConfiguration
 
 `AdderWidgetConfiguration` describes the widget that gets created and grabbed, along with the width and height the grabbed widget starts at.
 
-<ApiReference title="Properties" api={api.types.AdderWidgetConfiguration} />
+<ApiReference title="Properties" api={api.types.AdderWidgetConfiguration} reactApi={api.typesReact.AdderWidgetConfiguration} />
 
 ## Accessibility
 

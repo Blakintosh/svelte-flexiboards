@@ -23,7 +23,7 @@ published: true
 
 <Only svelte>
 
-The `lg`, `md`, `sm` and `xs` props are snippets, one per breakpoint; `children` is the fallback snippet used when no breakpoint snippet matches, and receives the current breakpoint.
+This excerpt assumes `DesktopBoard` and `MobileBoard` are your existing board components. The `lg`, `md`, `sm` and `xs` props are snippets, one per breakpoint; `children` is the fallback snippet used when no breakpoint snippet matches, and receives the current breakpoint.
 
 ```svelte
 <script lang="ts">
@@ -48,7 +48,7 @@ The `lg`, `md`, `sm` and `xs` props are snippets, one per breakpoint; `children`
 
 <Only react>
 
-The `lg`, `md`, `sm` and `xs` props take nodes, one per breakpoint; `children` is the fallback used when no breakpoint prop matches, and can be a function receiving the current breakpoint.
+This excerpt assumes `DesktopBoard` and `MobileBoard` are your existing board components. The `lg`, `md`, `sm` and `xs` props take nodes, one per breakpoint; `children` is the fallback used when no breakpoint prop matches, and can be a function receiving the current breakpoint.
 
 ```tsx
 import { ResponsiveFlexiBoard } from '@flexiboards/react';
@@ -69,8 +69,6 @@ export function Board() {
 
 ## ResponsiveFlexiBoardController
 
-`ResponsiveFlexiBoard` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
@@ -83,38 +81,33 @@ You can access the controller from the `onfirstcreate` callback. From any compon
 
 </Only>
 
-<ApiReference title="Properties" api={api.controller.properties} />
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
-<ApiReference title="Methods" api={api.controller.methods} />
+<ApiReference title="Methods" api={api.controller.methods} reactApi={api.controllerReact.methods} />
 
 ## ResponsiveFlexiBoardConfiguration
 
 The configuration object for the `ResponsiveFlexiBoard` component.
 
-<ApiReference title="Properties" api={api.types.ResponsiveFlexiBoardConfiguration} />
+<ApiReference title="Properties" api={api.types.ResponsiveFlexiBoardConfiguration} reactApi={api.typesReact.ResponsiveFlexiBoardConfiguration} />
 
 ## ResponsiveFlexiLayout
 
-A responsive layout is a map of breakpoint keys to `FlexiLayout` objects:
+A `ResponsiveFlexiLayout` maps breakpoint keys to `FlexiLayout` objects. Entries use the same IDs and registry types as [ordinary stored layouts](/docs/guides/exporting-importing-boards).
 
-```typescript
-type ResponsiveFlexiLayout = {
-    [breakpoint: string]: FlexiLayout;
-};
+This illustrative JSON contains stored layouts for two visited breakpoints:
 
-// Example
+```json
 {
-    lg: {
-        "main": [
-            { type: "chart", x: 0, y: 0, width: 2, height: 2 }
-        ]
-    },
-    default: {
-        "main": [
-            { type: "chart", x: 0, y: 0, width: 1, height: 2 }
-        ]
-    }
+	"lg": { "main": [{ "id": "chart", "type": "chart", "x": 0, "y": 0, "width": 2, "height": 2 }] },
+	"default": {
+		"main": [{ "id": "chart", "type": "chart", "x": 0, "y": 0, "width": 1, "height": 2 }]
+	}
 }
 ```
 
 Layouts are initialized lazily, so only breakpoints that have actually been visited have stored layouts.
+
+## Accessibility
+
+Each child board provides the [keyboard interactions and announcements](/docs/accessibility). Switching breakpoint content can unmount the focused element. The responsive wrapper does not transfer focus to a corresponding widget in the new layout. If your application needs that behavior, track the focused widget's stable ID and restore focus after the replacement board mounts. Avoid moving focus when it was outside the board.

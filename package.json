@@ -8,7 +8,7 @@
 		"build:packages": "pnpm -r --filter './packages/*' build",
 		"check": "pnpm build:packages && pnpm -r check",
 		"check:artifacts": "node scripts/check-package-artifacts.mjs",
-		"ci:publish": "pnpm build:packages && pnpm check:artifacts && changeset publish",
+		"ci:publish": "pnpm release:check && changeset publish",
 		"dev": "pnpm -r --parallel dev",
 		"dev:host": "pnpm -r --parallel dev:host",
 		"format": "prettier --write .",
@@ -17,7 +17,9 @@
 		"lint:fix": "eslint --fix .",
 		"test": "pnpm -r --parallel test",
 		"changeset": "changeset",
-		"version": "changeset version"
+		"version": "changeset version",
+		"test:consumers": "node scripts/test-package-consumers.mjs",
+		"release:check": "pnpm check && pnpm check:artifacts && pnpm -r test && pnpm lint && pnpm test:consumers && pnpm -C site check:e2e && pnpm -C site e2e"
 	},
 	"files": [
 		"dist",
@@ -52,5 +54,9 @@
 		"svelte": "^5.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0"
+	},
+	"packageManager": "pnpm@11.26.0",
+	"engines": {
+		"node": ">=22.13.0"
 	}
 }

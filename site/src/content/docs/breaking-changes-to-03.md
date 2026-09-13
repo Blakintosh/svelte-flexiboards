@@ -1,5 +1,5 @@
 ---
-title: Breaking Changes in v0.3
+title: Breaking changes in v0.3
 description: The breaking changes in the v0.3 update.
 category: Introduction
 published: true

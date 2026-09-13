@@ -20,7 +20,7 @@ export const slugs = [
 ];
 
 export const cells = (page: Page, root: Locator | Page = page) =>
-	root.locator('[role="cell"]:not([aria-label="Widget action preview"])');
+	root.locator('[data-flexi-widget]:not([aria-label="Widget action preview"])');
 
 /** Collects uncaught page errors so a test can assert none happened. */
 export function trackErrors(page: Page) {
@@ -31,6 +31,7 @@ export function trackErrors(page: Page) {
 
 /** Drags with real intermediate pointer moves, the way a hand does. */
 export async function drag(page: Page, from: Locator, to: { x: number; y: number }, steps = 12) {
+	await expect(from).toBeEnabled();
 	const box = (await from.boundingBox())!;
 	const start = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 	await page.mouse.move(start.x, start.y);
@@ -55,7 +56,7 @@ export const settle = (page: Page) => page.waitForTimeout(600);
 
 export async function rowIndexes(grid: Locator) {
 	return (await cells(grid.page(), grid).evaluateAll((els) =>
-		els.map((el) => Number(el.getAttribute('aria-rowindex')))
+		els.map((el) => Number(el.getAttribute('aria-rowindex')) - 1)
 	)) as number[];
 }
 

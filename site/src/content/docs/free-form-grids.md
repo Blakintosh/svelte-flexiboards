@@ -1,5 +1,5 @@
 ---
-title: Free-Form Grids
+title: Free-form grids
 description: Learn how to use free-form grids for dashboard layouts.
 category: Guides
 published: true

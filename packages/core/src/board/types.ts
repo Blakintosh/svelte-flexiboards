@@ -68,7 +68,7 @@ export type FlexiBoardConfiguration<TClass = unknown> = {
 	/**
 	 * A layout to render from instead of the widgets declared in markup, as a
 	 * plain value keyed by target. Applied during the initial render pass on
-	 * both the server and the client, so a layout fetched in a server `load`
+	 * both the server and the client, so a layout fetched in a server request handler
 	 * (e.g. from a database) server-renders at its final positions with no
 	 * pending window. Requires a `registry` to resolve each entry's `type`.
 	 * Targets without an entry here fall back to their declared widgets. A

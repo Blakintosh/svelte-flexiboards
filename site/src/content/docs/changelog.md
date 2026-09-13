@@ -7,14 +7,14 @@ published: true
 
 Dates are the npm publish dates. Breaking changes link to their migration page.
 
-## 1.0.0 (unreleased, on the `react` branch)
+## 1.0.0 (unreleased)
 
 The first release of the split packages: `@flexiboards/core` holds the grid engine, `@flexiboards/svelte` and `@flexiboards/react` are adapters over it with mirrored APIs. `svelte-flexiboards` stops at 0.4.2. See [Migrating to v1.0](/docs/breaking-changes-to-10).
 
 Added
 
-- React adapter with the same components, hooks in place of context getters, `onfirstcreate` in place of `bind:controller`, a `suspense` prop, and `renderToString` support.
-- Controller actions: `widget.delete()`, `widget.moveTo()`, `target.clear()`, `board.clear()`, `exportLayoutEnvelope()`. `onLayoutChange` fires for changes made through them.
+- React adapter with the same components, hooks in place of context getters, `onfirstcreate` in place of `bind:controller`, a `suspense` prop, and `renderToString` support. `FlexiBoard` forwards `ref` to its root element.
+- Controller actions: `widget.delete()`, `widget.moveTo()`, `target.clear()`, `board.clear()`, `exportLayoutEnvelope()`. `onLayoutChange` reports layout mutations; exporting an envelope only reads the layout.
 - Board callbacks `onWidgetGrab`, `onWidgetDrop`, `onWidgetResize`, `onWidgetCancel`, `onWidgetDelete`, `onWidgetEnterTarget`, `onWidgetLeaveTarget`, and `canDrop` on the board and on each target.
 - Presets `FlexiSortable` and `FlexiDashboard`.
 - `FlexiWidget` declarations can mount after their target has loaded, using the same placement rules as `createWidget()`.
@@ -30,6 +30,8 @@ Added
 
 Fixed
 
+- Grid cells now belong to rows and expose one-based ARIA indices. Drag previews are hidden and inert, and keyboard focus is preserved across targets.
+- React StrictMode could disconnect the live announcer from the board. Nested button activation no longer grabs the surrounding widget.
 - A drop's flight aimed at where its slot used to be before the grid reflowed, and, in nested boards, started from the wrong place.
 - A flow column kept an empty row after a card was dragged out of it.
 - A keyboard grab that jumped the pointer into another target never got a drop preview there.

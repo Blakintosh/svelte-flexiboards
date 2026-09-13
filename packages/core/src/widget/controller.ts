@@ -311,7 +311,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		// Wait a tick: the widget may need to be portalled before it can be focused.
 		setTimeout(() => {
-			this.ref?.focus();
+			if (typeof document === 'undefined' || !this.ref?.contains(document.activeElement)) {
+				this.ref?.focus();
+			}
 		}, 0);
 
 		this.currentAction$({
@@ -334,7 +336,9 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 
 		// Wait a tick: the widget may need to be portalled before it can be focused.
 		setTimeout(() => {
-			this.ref?.focus();
+			if (typeof document === 'undefined' || !this.ref?.contains(document.activeElement)) {
+				this.ref?.focus();
+			}
 		}, 0);
 
 		this.currentAction$({
@@ -356,6 +360,31 @@ export class InternalFlexiWidgetController extends FlexiWidgetController {
 			return;
 		}
 
+		// A cross-target drop mounts a new copy of the content. Restore the
+		// corresponding control after the adapter commits that copy.
+		const focused = typeof document === 'undefined' ? null : document.activeElement;
+		if (
+			typeof HTMLElement !== 'undefined' &&
+			focused instanceof HTMLElement &&
+			this.ref?.contains(focused)
+		) {
+			const path: number[] = [];
+			let node: Element = focused;
+			while (node !== this.ref && node.parentElement) {
+				path.unshift(Array.from(node.parentElement.children).indexOf(node));
+				node = node.parentElement;
+			}
+			setTimeout(() => {
+				if (!this.ref?.isConnected) return;
+				const active = document.activeElement;
+				if (active !== document.body && active !== focused && !this.ref.contains(active)) return;
+				const next = path.reduce<Element | undefined>(
+					(parent, index) => parent?.children[index],
+					this.ref
+				);
+				(next instanceof HTMLElement ? next : this.ref).focus({ preventScroll: true });
+			}, 0);
+		}
 		this.currentAction$(null);
 	}
 

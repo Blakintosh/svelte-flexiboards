@@ -66,8 +66,6 @@ export function Main() {
 
 ## FlexiTargetController
 
-`FlexiTarget` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
@@ -89,17 +87,15 @@ function WidgetCount() {
 
 </Only>
 
-Use the `FlexiTargetController` to manage the target directly and carry out actions.
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
-<ApiReference title="Properties" api={api.controller.properties} />
+<ApiReference title="Methods" api={api.controller.methods} reactApi={api.controllerReact.methods} />
 
-<ApiReference title="Methods" api={api.controller.methods} />
-
-More methods will be added in a future version.
+Call `createWidget()` to add a widget through the grid's placement rules, or `clear()` to remove the target's widgets.
 
 ## FlexiTargetConfiguration
 
-The configuration object for the `FlexiTarget` component (the `config` prop accepts the partial form shown below), which supports reactivity where specified.
+`FlexiTarget` accepts these options through `config`. Omitted values come from the board's `targetDefaults`. See [Configuration reactivity](/docs/configuration#reactivity) for update behavior.
 
 <Only svelte>
 
@@ -113,25 +109,25 @@ For reactivity, hold the configuration in state and pass a new object when it ch
 
 </Only>
 
-<ApiReference title="Properties" api={api.types.FlexiTargetPartialConfiguration} />
+<ApiReference title="Properties" api={api.types.FlexiTargetPartialConfiguration} reactApi={api.typesReact.FlexiTargetPartialConfiguration} />
 
 ### FlexiWidgetDefaults
 
 The default configuration for widgets.
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetDefaults} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetDefaults} reactApi={api.typesReact.FlexiWidgetDefaults} />
 
 ### FlowTargetLayout
 
 The `layout` object for a [flow grid](/docs/flow-grids). Set `type: 'flow'`.
 
-<ApiReference title="Properties" api={api.types.FlowTargetLayout} />
+<ApiReference title="Properties" api={api.types.FlowTargetLayout} reactApi={api.typesReact.FlowTargetLayout} />
 
 ### FreeFormTargetLayout
 
 The `layout` object for a [free-form grid](/docs/free-form-grids). Set `type: 'free'`.
 
-<ApiReference title="Properties" api={api.types.FreeFormTargetLayout} />
+<ApiReference title="Properties" api={api.types.FreeFormTargetLayout} reactApi={api.typesReact.FreeFormTargetLayout} />
 
 ## Accessibility
 

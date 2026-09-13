@@ -62,7 +62,7 @@ test('framework switch updates prose, table cells and copy/open/alternate Markdo
 		.getByRole('button', { name: /Svelte$/ })
 		.first()
 		.click();
-	await page.getByRole('menuitem', { name: /React/ }).click();
+	await page.getByRole('menuitemradio', { name: /React/ }).click();
 	await expect(table).toContainText('onReorder(ids)');
 	await expect(table).not.toContainText('onreorder(ids)');
 	await expect(article).toContainText('Use React keys');

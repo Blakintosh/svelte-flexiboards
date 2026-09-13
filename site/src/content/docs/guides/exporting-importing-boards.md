@@ -1,16 +1,17 @@
 ---
-title: Exporting & Importing Layouts
+title: Exporting and importing layouts
 description: Save a board's widget layout as JSON and restore it later.
 category: Guides
 published: true
 ---
 
 <script lang="ts">
-	import Callout from '$lib/components/docs/callout.svelte';
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-A board's layout, the position, size, type, and metadata of every widget, can be exported as plain JSON and imported again later. Give each widget a `type`, register that type on the board, and the controller's `exportLayout()` and `importLayout()` do the rest:
+Save a board's widget IDs, positions, sizes, types, and metadata as JSON. To restore rendered widgets, give each one a `type` and register its renderer on the board. The example saves a versioned layout in memory. Drag a widget after saving, then select Restore to return to the saved positions.
+
+The preview uses utility classes from the [docs example styling](/docs/overview#example-styling). Layout persistence itself needs no styling dependency.
 
 <Only svelte>
 
@@ -21,21 +22,22 @@ A board's layout, the position, size, type, and metadata of every widget, can be
 		FlexiTarget,
 		FlexiWidget,
 		type FlexiBoardController,
-		type FlexiLayout
+		type FlexiLayoutEnvelope,
+		type FlexiWidgetController
 	} from '@flexiboards/svelte';
 
 	let board = $state<FlexiBoardController>();
-	let saved = $state<FlexiLayout>();
+	let saved = $state<FlexiLayoutEnvelope>();
 </script>
 
-{#snippet label({ widget })}
+{#snippet label({ widget }: { widget: FlexiWidgetController })}
 	{widget.metadata?.label}
 {/snippet}
 
 <div class="flex w-72 gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
 	<button
 		class="rounded-md border px-3 py-1 text-sm"
-		onclick={() => (saved = board?.exportLayout())}
+		onclick={() => (saved = board?.exportLayoutEnvelope())}
 	>
 		Save
 	</button>
@@ -82,7 +84,7 @@ A board's layout, the position, size, type, and metadata of every widget, can be
 
 ```tsx example title="Save and restore"
 import { FlexiBoard, FlexiTarget, FlexiWidget, useFlexiWidget } from '@flexiboards/react';
-import type { FlexiBoardController, FlexiLayout } from '@flexiboards/react';
+import type { FlexiBoardController, FlexiLayoutEnvelope } from '@flexiboards/react';
 import { useRef, useState } from 'react';
 
 function Label() {
@@ -102,14 +104,14 @@ const boardConfig = {
 
 export function SaveAndRestore() {
 	const board = useRef<FlexiBoardController>(null);
-	const [saved, setSaved] = useState<FlexiLayout>();
+	const [saved, setSaved] = useState<FlexiLayoutEnvelope>();
 
 	return (
 		<>
 			<div className="flex w-72 gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
 				<button
 					className="rounded-md border px-3 py-1 text-sm"
-					onClick={() => setSaved(board.current?.exportLayout())}
+					onClick={() => setSaved(board.current?.exportLayoutEnvelope())}
 				>
 					Save
 				</button>
@@ -147,535 +149,209 @@ export function SaveAndRestore() {
 
 </Only>
 
-Save, move the widgets around, then Restore. Each widget's content comes from its registry entry and its label from `metadata`, both of which survive the round trip. The rest of this guide builds on that: persisting to storage, loading on mount, server-provided layouts, and auto-saving.
+Save and Restore preserve each widget's ID and metadata. The renderer stays in your application; the saved `type` selects it from the registry when loading.
 
 ## The registry
 
-Before you can import or export, set up a registry. The registry maps widget types to their rendering configuration: component, styling, behaviour, and so on.
+A registry maps widget types to rendering configuration. It is required to reconstruct imported widgets. Exporting layout data does not require a registry.
 
-When exporting, Flexiboards saves only the widget's `type` (a string key) rather than the full component reference. When importing, it uses the registry to look up how to render each widget.
+A widget without a `type` is included in exports but skipped during import, with a warning. A typed widget needs a matching registry entry to recover its content. Register every type you intend to restore, and keep target identifiers stable.
 
-A widget declared without a `type` is still exported, with its position and `metadata`, so nothing you have is lost. It is skipped on import, since the registry has nothing to render it with, and a warning says so.
+The opening example registers `tile`. Registry entries can also define `component`, `componentProps`, `className`, interaction settings, and size limits. These options become defaults when creating a widget of that type. See [FlexiRegistryEntry](/docs/components/board#flexiregistryentry).
 
-Every exported entry carries an `id`: the one you gave the widget, or a generated one. It round-trips through import, so you can match stored entries to your own records without inventing an identifier in `metadata`.
+<Only svelte>
+
+Use a Svelte component or a `snippet` to render a registry entry. The opening example's `label` snippet receives the widget controller.
+
+</Only>
+
+<Only react>
+
+Use a React component or the registry entry's `snippet` render function. The `snippet` field receives the widget controller in its argument; it returns React content. The opening example uses the `Label` component and `useFlexiWidget()`.
+
+</Only>
 
 ## Versioning what you store
 
-`exportLayout()` returns the bare layout, which is what most code passes around. For storage, prefer `exportLayoutEnvelope()`, which wraps it as `{ version, layout }` with the current `LAYOUT_FORMAT_VERSION`. `importLayout()` and `loadLayout` accept either shape. Today there is one version, so the envelope costs nothing; when the format changes, the version is what lets a later release migrate what you stored instead of misreading it.
+`exportLayout()` returns a bare `FlexiLayout`. For storage, call `exportLayoutEnvelope()` to get `{ version, layout }`. `importLayout()` and `loadLayout` accept either form. The version identifies the stored format. The current importer unwraps the envelope without migrating it or rejecting unknown versions. Check the version in your storage code before importing data from a different format.
+
+These helpers accept the controller from an existing board. Call `saveLayout` and `restoreLayout` from your application's buttons. They extend the registry and target setup in the opening example.
 
 <Only svelte>
 
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/svelte';
-	import ChartWidget from './chart-widget.svelte';
-	import TableWidget from './table-widget.svelte';
+```ts
+import type { FlexiBoardController } from '@flexiboards/svelte';
 
-	const boardConfig: FlexiBoardConfiguration = {
-		registry: {
-			chart: {
-				component: ChartWidget,
-				resizability: 'both'
-			},
-			table: {
-				component: TableWidget,
-				resizability: 'horizontal'
-			}
-		}
-	};
-</script>
+const storageKey = 'dashboard-layout';
 
-<FlexiBoard config={boardConfig}>
-	<!-- ... -->
-</FlexiBoard>
+export function saveLayout(board: FlexiBoardController) {
+	localStorage.setItem(storageKey, JSON.stringify(board.exportLayoutEnvelope()));
+}
+
+export function restoreLayout(board: FlexiBoardController) {
+	const saved = localStorage.getItem(storageKey);
+	if (saved !== null) board.importLayout(JSON.parse(saved));
+}
 ```
 
 </Only>
 
 <Only react>
 
-```tsx
-import { FlexiBoard } from '@flexiboards/react';
-import type { FlexiBoardConfiguration } from '@flexiboards/react';
-import { ChartWidget } from './chart-widget';
-import { TableWidget } from './table-widget';
+```ts
+import type { FlexiBoardController } from '@flexiboards/react';
 
-// Defined outside the component so the board isn't handed a new config object
-// on every render. If the config depends on state, wrap it in useMemo instead.
-const boardConfig: FlexiBoardConfiguration = {
-	registry: {
-		chart: {
-			component: ChartWidget,
-			resizability: 'both'
-		},
-		table: {
-			component: TableWidget,
-			resizability: 'horizontal'
-		}
-	}
-};
+const storageKey = 'dashboard-layout';
 
-export function Dashboard() {
-	return <FlexiBoard config={boardConfig}>{/* ... */}</FlexiBoard>;
+export function saveLayout(board: FlexiBoardController) {
+	localStorage.setItem(storageKey, JSON.stringify(board.exportLayoutEnvelope()));
+}
+
+export function restoreLayout(board: FlexiBoardController) {
+	const saved = localStorage.getItem(storageKey);
+	if (saved !== null) board.importLayout(JSON.parse(saved));
 }
 ```
 
 </Only>
 
-Each registry entry can include any widget configuration options like `component`, `className`, `resizability`, `draggability`, `minWidth`, `maxWidth`, etc. (plus `snippet` in Svelte, which holds the widget's rendered content). These are applied as defaults when a widget of that type is created.
+Malformed JSON throws during parsing. Decide whether your application should offer a reset or show an error. A TypeScript annotation does not validate stored data; validate data from untrusted sources before using its metadata in application actions.
 
 ## Creating widgets with types
 
-To make a widget exportable, assign it a `type` that matches a key in your registry:
+Inside an existing target, declare a widget with `type="tile"` to select the `tile` registry entry. Add metadata such as `metadata={{ label: 'A' }}` to supply instance-specific content, as in the opening example.
 
-```jsx
-<FlexiWidget type="chart" x={0} y={0} width={2} height={2} />
-<FlexiWidget type="table" x={2} y={0} width={1} height={1} />
-```
-
-A widget without a `type` is exported but skipped on import, with a console warning.
+`type` enables the registry lookup during import. It is not required to read a widget's position through export.
 
 ## Exporting layouts
 
-Use the `exportLayout()` method on the board controller to get the current layout:
+Call `board.exportLayout()` when you need the bare layout for application logic. It maps target identifiers to arrays of widget entries. This illustrative JSON is a bare layout from a target named `main`:
 
-<Only svelte>
-
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardController } from '@flexiboards/svelte';
-
-	let board = $state<FlexiBoardController>();
-
-	function saveLayout() {
-		if (!board) return;
-		const layout = board.exportLayout();
-
-		// Save to localStorage
-		localStorage.setItem('dashboard-layout', JSON.stringify(layout));
-
-		// Or send to your backend
-		// await fetch('/api/layouts', { method: 'POST', body: JSON.stringify(layout) });
-	}
-</script>
-
-<FlexiBoard bind:controller={board} config={boardConfig}>
-	<!-- ... -->
-</FlexiBoard>
-
-<button onclick={saveLayout}>Save Layout</button>
-```
-
-</Only>
-
-<Only react>
-
-There is no two-way binding in React; take the controller from `onfirstcreate` and hold it in a ref:
-
-```tsx
-import { FlexiBoard } from '@flexiboards/react';
-import type { FlexiBoardController } from '@flexiboards/react';
-import { useRef } from 'react';
-
-export function Dashboard() {
-	const board = useRef<FlexiBoardController>(null);
-
-	function saveLayout() {
-		const layout = board.current?.exportLayout();
-
-		// Save to localStorage
-		localStorage.setItem('dashboard-layout', JSON.stringify(layout));
-
-		// Or send to your backend
-		// await fetch('/api/layouts', { method: 'POST', body: JSON.stringify(layout) });
-	}
-
-	return (
-		<>
-			<FlexiBoard onfirstcreate={(controller) => (board.current = controller)} config={boardConfig}>
-				{/* ... */}
-			</FlexiBoard>
-
-			<button onClick={saveLayout}>Save Layout</button>
-		</>
-	);
-}
-```
-
-A component rendered _inside_ the board can skip the ref entirely and call `useFlexiBoard()` to get the same controller.
-
-</Only>
-
-<Callout variant="warning" title="Validate, if necessary">
-Like all client-side data, exported layouts could be tampered with. If the data stored on a layout is critical to function, always validate and sanitise layouts on your server before trusting `metadata` or other fields.
-</Callout>
-
-The exported layout is a `FlexiLayout` object, which maps target keys to arrays of widget entries:
-
-```typescript
-// FlexiLayout structure
+```json
 {
-	"target-0": [
+	"main": [
 		{
-			type: "chart",
-			x: 0,
-			y: 0,
-			width: 2,
-			height: 2,
-			metadata: { dataSource: "sales" }
-		},
-		{
-			type: "table",
-			x: 2,
-			y: 0,
-			width: 1,
-			height: 1
+			"id": "sales-chart",
+			"type": "tile",
+			"x": 0,
+			"y": 0,
+			"width": 1,
+			"height": 1,
+			"metadata": { "label": "Sales" }
 		}
 	]
 }
 ```
 
+Every exported entry has an `id`, supplied by you or generated by Flexiboards. Exporting only reads the layout and does not fire `onLayoutChange`.
+
+For storage, use the [versioned helpers above](/docs/guides/exporting-importing-boards#versioning-what-you-store). For a responsive board, use the [responsive controller](/docs/guides/responsive-layouts#import-and-export), which stores the collection of breakpoint layouts.
+
 ## Importing layouts
 
-Use the `importLayout()` method to restore a saved layout:
+Call `board.importLayout(saved)` with a bare layout or an envelope. Existing widgets in each target represented by the imported layout are cleared and replaced. The imported target identifiers must match your mounted targets. Entries without a type are skipped.
 
-<Only svelte>
-
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardController, type FlexiLayout } from '@flexiboards/svelte';
-
-	let board = $state<FlexiBoardController>();
-
-	function loadLayout() {
-		const saved = localStorage.getItem('dashboard-layout');
-		if (saved) {
-			const layout: FlexiLayout = JSON.parse(saved);
-			board?.importLayout(layout);
-		}
-	}
-</script>
-
-<FlexiBoard bind:controller={board} config={boardConfig}>
-	<FlexiTarget key="main">
-		<!-- Widgets will be created from the imported layout -->
-	</FlexiTarget>
-</FlexiBoard>
-
-<button onclick={loadLayout}>Load Layout</button>
-```
-
-</Only>
-
-<Only react>
-
-```tsx
-import { FlexiBoard, FlexiTarget } from '@flexiboards/react';
-import type { FlexiBoardController, FlexiLayout } from '@flexiboards/react';
-import { useRef } from 'react';
-
-export function Dashboard() {
-	const board = useRef<FlexiBoardController>(null);
-
-	function loadLayout() {
-		const saved = localStorage.getItem('dashboard-layout');
-		if (saved) {
-			const layout: FlexiLayout = JSON.parse(saved);
-			board.current?.importLayout(layout);
-		}
-	}
-
-	return (
-		<>
-			<FlexiBoard onfirstcreate={(controller) => (board.current = controller)} config={boardConfig}>
-				<FlexiTarget keyName="main">
-					{/* Widgets will be created from the imported layout */}
-				</FlexiTarget>
-			</FlexiBoard>
-
-			<button onClick={loadLayout}>Load Layout</button>
-		</>
-	);
-}
-```
-
-</Only>
-
-<Callout variant="info" title="Important">
-When importing, any existing widgets in the target are cleared and replaced with the imported widgets.
-</Callout>
+Import does not fire `onLayoutChange`. Loading a saved state therefore does not automatically save it again. Use the Restore button in the opening example to exercise this behavior.
 
 ## Loading on mount
 
-For the common case of loading a layout when the board first renders, use the `loadLayout` config option:
+Add `loadLayout` to the board configuration to restore client storage during initialization. It runs once when the board is ready on the client. It can return a bare layout, a versioned envelope, an array of widget entries for a single-target board, or `undefined` to keep the initial layout.
 
-<Only svelte>
+The following excerpt extends the opening example. Keep its registry and targets; add this property to the board's `config` object:
 
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration, type FlexiLayout } from '@flexiboards/svelte';
-
-	const boardConfig: FlexiBoardConfiguration = {
-		registry: {
-			// ... your registry
-		},
-		loadLayout: () => {
-			const saved = localStorage.getItem('dashboard-layout');
-			if (saved) {
-				return JSON.parse(saved) as FlexiLayout;
-			}
-			return undefined;
-		}
-	};
-</script>
-
-<FlexiBoard config={boardConfig}>
-	<FlexiTarget key="main">
-		<!-- Widgets loaded automatically -->
-	</FlexiTarget>
-</FlexiBoard>
-```
-
-</Only>
-
-<Only react>
-
-```tsx
-import { FlexiBoard, FlexiTarget } from '@flexiboards/react';
-import type { FlexiBoardConfiguration, FlexiLayout } from '@flexiboards/react';
-
-const boardConfig: FlexiBoardConfiguration = {
-	registry: {
-		// ... your registry
-	},
+```ts
+const persistenceOptions = {
 	loadLayout: () => {
 		const saved = localStorage.getItem('dashboard-layout');
-		if (saved) {
-			return JSON.parse(saved) as FlexiLayout;
-		}
-		return undefined;
+		return saved === null ? undefined : JSON.parse(saved);
 	}
 };
-
-export function Dashboard() {
-	return (
-		<FlexiBoard config={boardConfig}>
-			<FlexiTarget keyName="main">{/* Widgets loaded automatically */}</FlexiTarget>
-		</FlexiBoard>
-	);
-}
 ```
 
-</Only>
-
-Flexiboards calls `loadLayout` once after the board is ready. It can return either:
-
-- A full `FlexiLayout` object (for multi-target boards)
-- An array of `FlexiWidgetLayoutEntry[]` (shorthand for single-target boards)
-
-<Callout variant="info" title="loadLayout is client-only">
-	Because it typically reads client storage, <code>loadLayout</code> is never invoked during server-side rendering. The server renders the declared layout as a stand-in, and the callback runs at hydration. For layouts the server already has, use <code>initialLayout</code> below.
-</Callout>
+Spread `persistenceOptions` into that configuration. `loadLayout` is skipped during SSR, so it can read browser storage. Changing the callback after initialization does not trigger another load; call `importLayout()` for an explicit reload.
 
 ## Initial layouts for server-rendered pages
 
-When you already _have_ the layout at render time, say a saved board fetched on the server and handed to the page, use `initialLayout` instead of `loadLayout`. It takes a plain `FlexiLayout` value rather than a callback, and is applied during the very first render pass.
+Pass server-provided layout data as `initialLayout` on the board configuration. It seeds the first render in both frameworks. Keep the registry and target setup from the opening example and add `initialLayout: layout`, where `layout` is the `FlexiLayout` returned by your application.
+
+Send the same initial layout to the server render and client hydration. The widget types resolve through the registry in both environments. See [Server-stored layouts](/docs/guides/server-side-rendering#server-stored-layouts) for framework-specific examples.
+
+On a responsive board, use `initialLayouts`, keyed by breakpoint. If a client loader is also configured, the initial layout renders first and the loader can replace it on the client. See [Responsive layouts](/docs/guides/responsive-layouts).
+
+## Auto-saving with onLayoutChange
+
+Add both callbacks below to the existing board configuration, alongside its registry. `onLayoutChange` receives a bare layout. Wrap it with `LAYOUT_FORMAT_VERSION` when storing it so the saved value has the same envelope shape as `exportLayoutEnvelope()`.
 
 <Only svelte>
 
 ```ts
-// +page.server.ts
-export async function load({ locals }) {
-	return { layout: await getBoardLayout(locals.user) };
-}
-```
+import { LAYOUT_FORMAT_VERSION } from '@flexiboards/svelte';
+import type { FlexiBoardConfiguration } from '@flexiboards/svelte';
 
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/svelte';
+const storageKey = 'dashboard-layout';
 
-	let { data } = $props();
-
-	const boardConfig: FlexiBoardConfiguration = {
-		registry: {
-			// ... your registry
-		},
-		initialLayout: data.layout
-	};
-</script>
-
-<FlexiBoard config={boardConfig}>
-	<FlexiTarget key="main">
-		<!-- Widgets from the layout render here, server-side included.
-		     Any declared widgets act as a fallback for targets the
-		     layout has no entry for. -->
-	</FlexiTarget>
-</FlexiBoard>
-```
-
-The board server-renders at the layout's final positions, and because SvelteKit hands the same data to the client, hydration matches exactly. There is no loading flash and no layout shift. Entries resolve through the registry via their `type`, the same as `importLayout()`.
-
-On a `ResponsiveFlexiBoard`, use `initialLayouts` (keyed by breakpoint, like `loadLayouts`). If both `initialLayout` and `loadLayout` are configured, the initial layout renders first and `loadLayout` overrides it on the client. That suits a local draft that should beat the server copy. See the [Server-Side Rendering guide](/docs/guides/server-side-rendering) for the full SSR picture.
-
-</Only>
-
-<Only react>
-
-```tsx
-import { FlexiBoard, FlexiTarget } from '@flexiboards/react';
-import type { FlexiBoardConfiguration, FlexiLayout } from '@flexiboards/react';
-import { useMemo } from 'react';
-
-export function Dashboard({ layout }: { layout: FlexiLayout }) {
-	const boardConfig = useMemo<FlexiBoardConfiguration>(
-		() => ({
-			registry: {
-				// ... your registry
-			},
-			initialLayout: layout
-		}),
-		[layout]
-	);
-
-	return (
-		<FlexiBoard config={boardConfig}>
-			<FlexiTarget keyName="main">
-				{/* Widgets from the layout render here. Any declared widgets act
-				    as a fallback for targets the layout has no entry for. */}
-			</FlexiTarget>
-		</FlexiBoard>
-	);
-}
-```
-
-The board's first paint is already at the layout's final positions, so there is no loading flash and no layout shift. Entries resolve through the registry via their `type`, the same as `importLayout()`.
-
-On a `ResponsiveFlexiBoard`, use `initialLayouts` (keyed by breakpoint, like `loadLayouts`). If both `initialLayout` and `loadLayout` are configured, the initial layout is applied first and `loadLayout` overrides it. That suits a local draft that should beat the server copy.
-
-React Flexiboards mount client-side, so `initialLayout` buys you a correct _first_ client render rather than server-rendered markup. The [Server-Side Rendering guide](/docs/guides/server-side-rendering) explains why.
-
-</Only>
-
-## Auto-saving with onLayoutChange
-
-For automatic persistence whenever the layout changes, use the `onLayoutChange` callback:
-
-<Only svelte>
-
-```svelte
-<script lang="ts">
-	import { FlexiBoard, type FlexiBoardConfiguration } from '@flexiboards/svelte';
-	import { browser } from '$app/environment';
-
-	const STORAGE_KEY = 'my-dashboard-layout';
-
-	const boardConfig: FlexiBoardConfiguration = {
-		registry: {
-			// ... your registry
-		},
-		loadLayout: () => {
-			if (!browser) return undefined;
-			const saved = localStorage.getItem(STORAGE_KEY);
-			return saved ? JSON.parse(saved) : undefined;
-		},
-		onLayoutChange: (layout) => {
-			if (browser) {
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
-			}
-		}
-	};
-</script>
-
-<FlexiBoard config={boardConfig}>
-	<!-- ... -->
-</FlexiBoard>
-```
-
-</Only>
-
-<Only react>
-
-```tsx
-import { FlexiBoard } from '@flexiboards/react';
-import type { FlexiBoardConfiguration, FlexiLayout } from '@flexiboards/react';
-
-const STORAGE_KEY = 'my-dashboard-layout';
-
-const boardConfig: FlexiBoardConfiguration = {
-	registry: {
-		// ... your registry
-	},
+const persistenceOptions: Pick<FlexiBoardConfiguration, 'loadLayout' | 'onLayoutChange'> = {
 	loadLayout: () => {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		return saved ? JSON.parse(saved) : undefined;
+		const saved = localStorage.getItem(storageKey);
+		return saved === null ? undefined : JSON.parse(saved);
 	},
-	onLayoutChange: (layout: FlexiLayout) => {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+	onLayoutChange: (layout) => {
+		localStorage.setItem(storageKey, JSON.stringify({ version: LAYOUT_FORMAT_VERSION, layout }));
 	}
 };
-
-export function Dashboard() {
-	return <FlexiBoard config={boardConfig}>{/* ... */}</FlexiBoard>;
-}
 ```
-
-Because React boards only ever mount in the browser, neither callback needs an environment guard.
 
 </Only>
 
-The `onLayoutChange` callback receives the committed layout before animations settle. Synchronous changes are batched into one notification. It fires whenever:
+<Only react>
 
-- A widget is moved to a new position
-- A widget is resized
-- A widget is deleted
+```ts
+import { LAYOUT_FORMAT_VERSION } from '@flexiboards/react';
+import type { FlexiBoardConfiguration } from '@flexiboards/react';
 
-Your stored layout stays in sync without a manual save button.
+const storageKey = 'dashboard-layout';
+
+const persistenceOptions: Pick<FlexiBoardConfiguration, 'loadLayout' | 'onLayoutChange'> = {
+	loadLayout: () => {
+		const saved = localStorage.getItem(storageKey);
+		return saved === null ? undefined : JSON.parse(saved);
+	},
+	onLayoutChange: (layout) => {
+		localStorage.setItem(storageKey, JSON.stringify({ version: LAYOUT_FORMAT_VERSION, layout }));
+	}
+};
+```
+
+</Only>
+
+Spread `persistenceOptions` into the board configuration in the opening example. The loader runs on the client. Layout notifications follow committed interactions and controller actions; synchronous changes are batched into one microtask, before animations settle.
+
+Notifications include accepted drops and resizes, widget creation after initial loading, deletion, and programmatic moves or clears. Hover and validation callbacks are separate. Importing and exporting do not notify. See [Controller actions and callbacks](/docs/controllers#changing-the-board-from-code).
+
+For remote storage, debounce writes if your application needs to limit requests. Keep the most recent layout while a save is pending and surface failed saves to the user.
 
 ## Widget IDs
 
-You can assign stable IDs to widgets:
+Supply an `id` when a widget corresponds to a record in your application, for example `id="sales-chart"`. Flexiboards generates an ID when you omit it. Both supplied and generated IDs appear in exports and survive import.
 
-```jsx
-<FlexiWidget id="main-chart" type="chart" x={0} y={0} />
-```
-
-The `id` is preserved through export/import. Use it to:
-
-- Track specific widget instances across sessions
-- Implement features like "reset widget to default position"
-- Reference widgets in your application logic
-
-IDs are optional. When not provided, widgets are identified only by their position and type.
+Use unique, stable IDs to reconcile saved widgets with application records. The `id` and `type` props identify a widget when it is created; changing them later does not recreate it.
 
 ## Working with metadata
 
-Metadata survives export and import, so it is a good place for widget-specific configuration:
+Metadata is per-widget JSON data carried through export and import. Use it for values such as a label, data-source key, or chart settings. Keep functions and component references in the registry.
 
-```jsx
-<FlexiWidget
-	type="chart"
-	metadata={{
-		dataSource: 'sales',
-		chartType: 'line',
-		dateRange: 'last-30-days'
-	}}
-/>
-```
-
-Access metadata in your widget component:
+The opening example writes `metadata={{ label: 'A' }}`. These widget-content examples read that label:
 
 <Only svelte>
 
 ```svelte
-<!-- chart-widget.svelte -->
+<!-- label.svelte, rendered through a registry component entry -->
 <script lang="ts">
 	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
-
 	const widget = getFlexiwidgetCtx();
-
-	// Access the metadata
-	const dataSource = $derived(widget.metadata?.dataSource);
 </script>
+
+<span>{String(widget.metadata?.label ?? '')}</span>
 ```
 
 </Only>
@@ -683,17 +359,12 @@ Access metadata in your widget component:
 <Only react>
 
 ```tsx
-// chart-widget.tsx
+// label.tsx, rendered through a registry component entry
 import { useFlexiWidget } from '@flexiboards/react';
 
-export function ChartWidget() {
+export function Label() {
 	const widget = useFlexiWidget();
-
-	// Access the metadata. The hook returns a reactive proxy, so reading
-	// metadata here re-renders this component whenever it changes.
-	const dataSource = widget.metadata?.dataSource;
-
-	return <div>{String(dataSource)}</div>;
+	return <span>{String(widget.metadata?.label ?? '')}</span>;
 }
 ```
 

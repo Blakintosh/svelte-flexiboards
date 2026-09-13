@@ -1,48 +1,32 @@
-<script lang="ts">
-	import Figure from '$lib/components/brand/figure.svelte';
-	import WidgetBox from './widget-box.svelte';
-
-	/*
-	  The nesting reads through the box grounds: the board is an ink frame, targets
-	  are pale cells, widgets take the blue-on-tint frame every placed widget uses.
-	*/
-	const targetClass = 'border-rule bg-tint-2';
-	const targetLabelClass = 'bg-blue text-white';
-	const widgetClass = 'border-blue bg-tint';
-	const widgetLabelClass = 'bg-tint text-blue';
-</script>
-
-<Figure caption="Fig 1 · component anatomy" note="board › target › widget">
-	<!-- `mt-3` keeps the board's own tab clear of the figure caption above it, so
-	     the two read as nested tiers rather than one collided label. -->
-	<WidgetBox
-		label="FlexiBoard"
-		class="border-ink bg-paper mt-3 flex flex-col items-stretch gap-10 lg:flex-row"
-		labelClass="bg-ink text-paper"
-	>
-		<WidgetBox label="FlexiTarget" class={targetClass} labelClass={targetLabelClass}>
-			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
-					Snippet | Component
-				</div>
-			</WidgetBox>
-		</WidgetBox>
-
-		<WidgetBox
-			label="FlexiTarget"
-			class="flex flex-col gap-6 {targetClass}"
-			labelClass={targetLabelClass}
+<figure class="not-prose my-8" aria-label="One board containing two targets and three widgets">
+	<figcaption class="text-body mb-3 flex items-center gap-3 text-xs">
+		<span class="font-mono">Fig. 1</span>
+		<span>One board, two targets, three widgets</span>
+	</figcaption>
+	<div class="border-rule bg-panel border">
+		<div
+			class="border-rule flex flex-wrap items-baseline justify-between gap-2 border-b px-4 py-3 sm:px-5"
 		>
-			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
-					Snippet | Component
+			<code class="text-ink font-mono text-sm">FlexiBoard</code>
+			<span class="text-body text-xs">Shared interaction state</span>
+		</div>
+		<div class="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+			{#each [1, 2] as count, index}
+				<div class="border-rule bg-paper min-w-0 border p-3 sm:p-4">
+					<div class="flex flex-wrap items-baseline justify-between gap-2">
+						<code class="text-body font-mono text-xs">FlexiTarget</code>
+						<span class="text-body text-xs">{index === 0 ? 'A' : 'B'}</span>
+					</div>
+					<div class="mt-4 grid gap-3">
+						{#each Array(count) as _}
+							<div class="border-blue/40 bg-tint border-l-2 px-3 py-4">
+								<code class="text-blue font-mono text-xs">FlexiWidget</code>
+								<p class="text-body m-0 mt-1 text-sm">Your content</p>
+							</div>
+						{/each}
+					</div>
 				</div>
-			</WidgetBox>
-			<WidgetBox label="FlexiWidget" class={widgetClass} labelClass={widgetLabelClass}>
-				<div class="border-rule bg-panel text-body border px-4 py-2 font-mono text-[12px]">
-					Snippet | Component
-				</div>
-			</WidgetBox>
-		</WidgetBox>
-	</WidgetBox>
-</Figure>
+			{/each}
+		</div>
+	</div>
+</figure>

@@ -14,6 +14,9 @@
 
 	import { browser } from '$app/environment';
 	import { ssrSlugs } from '../../shared';
+	import { tick } from 'svelte';
+	import { reportExampleStatus } from '$lib/example-status';
+	import ExampleLoading from '$lib/components/ui/example-loading.svelte';
 
 	let { data } = $props();
 	// See ssrSlugs: only opted-in examples render on the server.
@@ -35,6 +38,19 @@
 	} as const;
 
 	let ExampleComponent = $derived(examples[data.slug as keyof typeof examples]);
+	$effect(() => {
+		void data.slug;
+		let cancelled = false;
+		let frame: number;
+		tick().then(() => {
+			if (cancelled) return;
+			frame = requestAnimationFrame(() => reportExampleStatus('ready'));
+		});
+		return () => {
+			cancelled = true;
+			cancelAnimationFrame(frame);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -44,5 +60,7 @@
 <div class="flex h-full w-full items-stretch">
 	{#if render}
 		<ExampleComponent />
+	{:else}
+		<div class="grid w-full place-items-center p-6"><ExampleLoading /></div>
 	{/if}
 </div>

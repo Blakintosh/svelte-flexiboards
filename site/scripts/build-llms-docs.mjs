@@ -8,7 +8,7 @@
  *
  * Output: src/lib/generated/llms/{index.json,llms.txt,llms-full.txt,pages/*.md}
  * Wired into `pnpm build` ahead of `vite build`; run on its own with
- * `pnpm generate-llms`.
+ * `pnpm build-llms-docs`.
  */
 
 import fs from 'node:fs';
@@ -146,10 +146,13 @@ function apiTable(entries, title) {
 		if (item.readonly) flags.push('readonly');
 		const name = `\`${item.name}\`${flags.length ? ` (${flags.join(', ')})` : ''}`;
 		const notes = [];
+		if (item.optional !== undefined) notes.push(item.optional ? 'Optional.' : 'Required.');
 		if (item.description) notes.push(escapeCell(item.description));
 		if (item.default) notes.push(`Default: \`${escapeCell(item.default)}\`.`);
 		if (item.deprecated) notes.push(`Deprecated: ${escapeCell(item.deprecated)}`);
-		lines.push(`| ${name} | \`${escapeCell(item.type)}\` | ${notes.join(' ') || '—'} |`);
+		lines.push(
+			`| ${name} | \`${escapeCell(item.type)}\` | ${notes.join(' ') || 'No additional details.'} |`
+		);
 	}
 	lines.push('');
 	return lines.join('\n');
@@ -275,6 +278,16 @@ export function transform(body, { slug, framework = 'all' }) {
 			gates.pop();
 			continue;
 		}
+		if (/<\/?Only\b/.test(trimmed))
+			throw new Error(`Only tags must be on separate lines in ${slug}:${i + 1}`);
+		if (
+			/\{[#:/@](?:if|else|each|await|then|catch|key|snippet|render|html|const|debug)\b/.test(
+				trimmed
+			)
+		)
+			throw new Error(
+				`Unsupported Svelte directive in ${slug}:${i + 1}; use supported docs components`
+			);
 		if (!visible()) continue;
 
 		// Install commands: the npm form, as a shell listing.
@@ -335,8 +348,8 @@ export function transform(body, { slug, framework = 'all' }) {
 			if (framework !== 'all') {
 				push(apiTable(framework === 'react' ? (reactRows ?? svelteRows) : svelteRows, title));
 			} else if (reactRows) {
-				push(apiTable(svelteRows, `${title} — Svelte`));
-				push(apiTable(reactRows, `${title} — React`));
+				push(apiTable(svelteRows, `${title} (Svelte)`));
+				push(apiTable(reactRows, `${title} (React)`));
 			} else {
 				push(apiTable(svelteRows, title));
 			}
@@ -349,8 +362,21 @@ export function transform(body, { slug, framework = 'all' }) {
 			const dotted = /api\s*=\s*\{([^}]+)\}/.exec(apiRef[1])?.[1]?.trim();
 			const apiJson = apis.get(dotted?.split('.')[0]);
 			const rows = apiJson && dotted ? resolvePath(apiJson, dotted) : null;
-			if (rows) push(apiTable(rows, attrs.title || 'Reference'));
-			else unhandled.add(`ApiReference api={${dotted}} in ${slug}`);
+			const reactDotted = /reactApi\s*=\s*\{([^}]+)\}/.exec(apiRef[1])?.[1]?.trim();
+			const reactJson = apis.get(reactDotted?.split('.')[0]);
+			const reactRows = reactJson && reactDotted ? resolvePath(reactJson, reactDotted) : null;
+			if (!rows || (reactDotted && !reactRows))
+				throw new Error(`Unresolved API reference in ${slug}: ${dotted}, ${reactDotted ?? ''}`);
+			const title = attrs.title || 'Reference';
+			if (framework === 'react') push(apiTable(reactRows ?? rows, title));
+			else if (
+				framework === 'all' &&
+				reactRows &&
+				JSON.stringify(rows) !== JSON.stringify(reactRows)
+			) {
+				push(apiTable(rows, `${title} (Svelte)`));
+				push(apiTable(reactRows, `${title} (React)`));
+			} else push(apiTable(rows, title));
 			continue;
 		}
 
@@ -496,7 +522,7 @@ export function buildDocs() {
 			`- [Examples](${ORIGIN}/examples): Browse working boards, including a dashboard, a Kanban board, a form builder, and a gallery.`,
 			'- [@flexiboards/svelte](https://www.npmjs.com/package/@flexiboards/svelte): The Svelte 5 adapter, published on npm.',
 			'- [@flexiboards/react](https://www.npmjs.com/package/@flexiboards/react): The React 18 and 19 adapter, published on npm.',
-			'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.\n- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): A Claude skill that carries the API, the adapter differences, and the rules that bite; install it to build boards with an assistant.'
+			'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.\n- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): An agent skill covering the API, adapter behavior, controller actions, and testing; install it to build boards with an assistant.'
 		]
 	});
 

@@ -1,5 +1,5 @@
 ---
-title: Multiple Targets
+title: Multiple targets
 description: Learn how to drag and drop widgets between different FlexiTarget dropzones.
 category: Guides
 published: true
@@ -164,7 +164,7 @@ export function KanbanBoard() {
 }
 ```
 
-Note the two naming differences from the Svelte adapter: `FlexiTarget` takes `keyName` rather than `key` (since `key` is reserved by React), and every class prop is `className`. `FlexiTarget` also accepts `containerClassName`, which styles the element wrapping the grid, so the outer `div`s above could be folded into the targets themselves if you prefer.
+Set the target identifier with `keyName` and style the grid with `className`. `FlexiTarget` also accepts `containerClassName`, which styles the element wrapping the grid, so the outer `div`s above could be folded into the targets themselves if you prefer.
 
 </Only>
 

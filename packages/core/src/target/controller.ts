@@ -40,6 +40,28 @@ export class InternalFlexiTargetController implements FlexiTargetController {
 	#widgets: ReactiveSet<InternalFlexiWidgetController> = new ReactiveSet();
 	#orderedWidgets$: Signal<InternalFlexiWidgetController[]> = signal([]);
 
+	// Ownership rows preserve mounted widget content when its grid position changes.
+	#accessibilityRows$ = computed(() => {
+		const rows = new Map<number, { index: number; cells: number[] }>();
+		this.orderedWidgets.forEach((widget, cellIndex) => {
+			if (widget.isShadow || widget.isGrabbed) return;
+			const index = widget.y + 1;
+			const row = rows.get(index) ?? { index, cells: [] };
+			row.cells.push(cellIndex);
+			rows.set(index, row);
+		});
+		return [...rows.values()]
+			.sort((a, b) => a.index - b.index)
+			.map((row) => ({
+				...row,
+				cells: row.cells.sort((a, b) => this.orderedWidgets[a].x - this.orderedWidgets[b].x)
+			}));
+	});
+
+	get accessibilityRows() {
+		return this.#accessibilityRows$();
+	}
+
 	provider$: Signal<InternalFlexiBoardController> = signal(
 		undefined as unknown as InternalFlexiBoardController
 	);

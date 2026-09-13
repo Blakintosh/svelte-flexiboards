@@ -9,25 +9,30 @@
 		{
 			"name": "children",
 			"type": "Snippet<[{ widget: FlexiWidgetController }]>",
-			"description": "The content of the handle. Receives the surrounding widget's controller."
+			"description": "The content of the handle. Receives the surrounding widget's controller.",
+			"optional": true
 		},
 		{
 			"name": "class",
 			"type": "ClassValue",
-			"description": "Classes applied to the rendered button."
+			"description": "Classes applied to the rendered button.",
+			"optional": true
 		}
 	],
 	"propsReact": [
 		{
 			"name": "className",
 			"type": "string | ((widget: FlexiWidgetController) => string)",
-			"description": "Classes applied to the rendered button: a string, or a function deriving one from the widget's state."
+			"description": "Classes applied to the rendered button: a string, or a function deriving one from the widget's state.",
+			"optional": true
 		},
 		{
 			"name": "children",
 			"type": "ReactNode | ((params: { widget: FlexiWidgetController }) => ReactNode)",
-			"description": "The content of the handle. Plain JSX, or a function receiving the surrounding widget's controller."
+			"description": "The content of the handle. Plain JSX, or a function receiving the surrounding widget's controller.",
+			"optional": true
 		}
 	],
-	"types": {}
+	"types": {},
+	"typesReact": {}
 }

@@ -120,20 +120,24 @@ Every widget picks up `draggability` from the board's `widgetDefaults`, so flipp
 
 On components that support children, the `config` prop carries a defaults property. Use it to set a default configuration for those children.
 
-To give all of your targets the same default layout:
+The following excerpts replace the opening `FlexiBoard` element in an existing board. Keep your targets and widgets inside it:
 
 <Only svelte>
 
 ```svelte
-<FlexiBoard config={{
-    targetDefaults: {
-        layout: {
-            type: 'flow',
-            flowAxis: 'row',
-            placementStrategy: 'append'
-        }
-    }
-}}>
+<FlexiBoard
+	config={{
+		targetDefaults: {
+			layout: {
+				type: 'flow',
+				flowAxis: 'row',
+				placementStrategy: 'append'
+			}
+		}
+	}}
+>
+	<!-- Existing targets and widgets. -->
+</FlexiBoard>
 ```
 
 </Only>
@@ -141,15 +145,19 @@ To give all of your targets the same default layout:
 <Only react>
 
 ```tsx
-<FlexiBoard config={{
-    targetDefaults: {
-        layout: {
-            type: 'flow',
-            flowAxis: 'row',
-            placementStrategy: 'append'
-        }
-    }
-}}>
+<FlexiBoard
+	config={{
+		targetDefaults: {
+			layout: {
+				type: 'flow',
+				flowAxis: 'row',
+				placementStrategy: 'append'
+			}
+		}
+	}}
+>
+	{/* Existing targets and widgets. */}
+</FlexiBoard>
 ```
 
 </Only>
@@ -212,7 +220,7 @@ Here, we've set `widgetDefaults.draggability = 'full'` on our board's configurat
 
 <Only react>
 
-In React, hold the state that drives your configuration in `useState`, and derive the configuration object from it with `useMemo`. The component's prop seam compares the `config` object by identity, so it must be a _new_ object whenever something in it changes. It should equally stay stable while nothing has changed, so that unrelated re-renders don't push work into the board:
+In React, hold the state that drives your configuration in `useState`, and derive the configuration object from it with `useMemo`. Replace the config and any nested objects whose values change. The adapter compares configuration values before updating the board. `useMemo` can keep unchanged configuration stable across renders:
 
 ```tsx
 import { FlexiBoard } from '@flexiboards/react';
@@ -246,9 +254,18 @@ Individual `FlexiWidget` props are reactive in the same way. They're read on eve
 
 </Only>
 
-Not all properties are reactive like this. The exceptions are the ones that would be unnatural to change on the fly.
+Use these boundaries when changing an existing board:
 
-Each component's API page documents its configuration, including which properties are reactive.
+| Configuration                                                                                                        | Update behavior                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Widget content, classes, `componentProps`, `metadata`, draggability, resizability, triggers, limits, and transitions | Prop changes update the existing widget. Defaults on the board or target apply where the widget has no explicit value. |
+| Widget `id`, `type`, `x`, `y`, `width`, and `height`                                                                 | Read when the widget is created. Use `moveTo()` for a move; import a layout to replace positions or sizes.             |
+| Target `layout.type`                                                                                                 | Chooses the grid implementation at creation. Recreate the target to switch between free and flow grids.                |
+| Target identifier                                                                                                    | Set when the target is created. Keep it stable so stored layouts still identify the target.                            |
+| `initialLayout` / `initialLayouts`                                                                                   | Seed the initial render. To load another saved layout after mount, call the appropriate controller's `importLayout()`. |
+| `loadLayout` / `loadLayouts`                                                                                         | Called during client initialization. Replacing the callback does not request another load.                             |
+
+Changes to size limits constrain later placements; they do not request an immediate resize. [Controller actions](/docs/controllers#changing-the-board-from-code) run placement rules and report their outcome.
 
 ## Deprecated and removed
 

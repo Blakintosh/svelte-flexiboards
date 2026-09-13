@@ -45,7 +45,7 @@ describe('drop inside a nested board', () => {
 
 		const inner = document.querySelector<HTMLElement>('.inner')!;
 		const grid = inner.querySelector<HTMLElement>('[role="grid"]')!;
-		const el = inner.querySelector<HTMLElement>('[role="cell"]')!;
+		const el = inner.querySelector<HTMLElement>('[data-flexi-widget]')!;
 		setRect(document.querySelector<HTMLElement>('.outer')!, { width: 600, height: 600 });
 		setRect(inner, { left: 300, top: 300, width: 300, height: 300 });
 		restoreStyle = layoutGrid(100, { grid, left: 300, top: 300 });

@@ -6,11 +6,19 @@ import { FRAMEWORK_COOKIE, isFramework } from '$lib/components/brand/framework.s
   any script runs (see `:root[data-framework]` in app.css). The store itself
   is seeded from the same cookie in the root layout.
 */
-export const handle: Handle = ({ event, resolve }) => {
+export const handle: Handle = async ({ event, resolve }) => {
 	const fw = event.cookies.get(FRAMEWORK_COOKIE);
-	if (!isFramework(fw) || fw === 'svelte') return resolve(event);
-	return resolve(event, {
-		transformPageChunk: ({ html }) =>
-			html.replace('<html lang="en"', `<html lang="en" data-framework="${fw}"`)
-	});
+	const response = await resolve(
+		event,
+		isFramework(fw) && fw !== 'svelte'
+			? {
+					transformPageChunk: ({ html }) =>
+						html.replace('<html lang="en"', `<html lang="en" data-framework="${fw}"`)
+				}
+			: undefined
+	);
+	if (/^\/(dev|embed|tests)(\/|$)/.test(event.url.pathname) || response.status >= 400) {
+		response.headers.set('x-robots-tag', 'noindex');
+	}
+	return response;
 };

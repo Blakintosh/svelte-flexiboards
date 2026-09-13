@@ -120,4 +120,4 @@ export function ResizeHandle() {
 
 - A `FlexiResize` must be rendered inside a `FlexiWidget`. Outside one, it throws.
 - Give the widget's element `position: relative` (or similar) so an absolutely positioned handle stays inside it.
-- In a flow grid the flow-axis dimension is fixed at 1, so only the cross-axis resizes. See [Flow Grids](/docs/flow-grids#considerations).
+- In a flow grid the flow-axis dimension is fixed at 1, so only the cross-axis resizes. See [Flow Grids](/docs/flow-grids#gotchas).

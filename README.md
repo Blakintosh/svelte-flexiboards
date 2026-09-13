@@ -27,6 +27,8 @@ The pre-1.0 package `svelte-flexiboards` stays on npm at 0.4.2. The [migration g
 
 `packages/` holds the libraries, `site/` the SvelteKit docs site, and `skills/flexiboards` a skill for coding agents. Install with `pnpm install`, build the packages with `pnpm -r --filter './packages/*' build`, then `pnpm -C site dev`. The site loads the packages from their `dist` folders, so rebuild after changing a package.
 
+Release preparation and launch order are documented in [RELEASING.md](RELEASING.md).
+
 Found a problem? Open an issue on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
 
 ## Licence

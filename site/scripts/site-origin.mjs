@@ -4,4 +4,4 @@
   dependency links point back here). Override with SITE_ORIGIN when building
   for another host.
 */
-export const ORIGIN = (process.env.SITE_ORIGIN ?? 'https://flexiboards.dev').replace(/\/$/, '');
+export const ORIGIN = (process.env.SITE_ORIGIN ?? 'https://www.flexiboards.dev').replace(/\/$/, '');

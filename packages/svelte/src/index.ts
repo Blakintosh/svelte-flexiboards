@@ -21,6 +21,7 @@ import { getFlexiwidgetCtx } from './adapters/widget.js';
 
 // Core-provided configuration helpers
 import {
+	LAYOUT_FORMAT_VERSION,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	cssTransitionConfig,
@@ -90,6 +91,7 @@ export {
 	ResponsiveFlexiBoard,
 	type ResponsiveFlexiBoardProps,
 	type BreakpointSnippetParams,
+	LAYOUT_FORMAT_VERSION,
 	immediateTriggerConfig,
 	longPressTriggerConfig,
 	cssTransitionConfig,

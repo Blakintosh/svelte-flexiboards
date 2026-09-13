@@ -1,0 +1,24 @@
+[Unit]
+Description=Flexiboards documentation and examples
+After=network.target
+
+[Service]
+Type=simple
+User=flexiboards
+Group=flexiboards
+WorkingDirectory=/opt/apps/flexiboards/current
+ExecStart=/usr/bin/node build
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3003
+Environment=ORIGIN=https://www.flexiboards.dev
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

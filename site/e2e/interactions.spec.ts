@@ -22,8 +22,8 @@ for (const fw of frameworks) {
 			// Free 3×3 grid: drop into the top-right cell.
 			await drag(page, one, { x: box.x + box.width * (5 / 6), y: box.y + box.height / 6 });
 			await settle(page);
-			await expect(one).toHaveAttribute('aria-colindex', '2');
-			await expect(one).toHaveAttribute('aria-rowindex', '0');
+			await expect(one).toHaveAttribute('aria-colindex', '3');
+			await expect(one).toHaveAttribute('aria-rowindex', '1');
 			expect(errors).toEqual([]);
 		});
 

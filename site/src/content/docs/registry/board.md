@@ -21,6 +21,7 @@ Use `Board.Root`, `Target`, and `Item` when a single dashboard or list preset is
 <script lang="ts">
 	import * as Board from '$lib/components/flexi-board';
 	const targetConfig = {
+		rowSizing: '96px',
 		layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append', columns: 1 }
 	} as const;
 </script>
@@ -51,6 +52,7 @@ Use `Board.Root`, `Target`, and `Item` when a single dashboard or list preset is
 'use client';
 import * as Board from '@/components/flexi-board';
 const targetConfig = {
+	rowSizing: '96px',
 	layout: { type: 'flow', flowAxis: 'row', placementStrategy: 'append', columns: 1 }
 } as const;
 
@@ -119,13 +121,15 @@ Style the outer target with <FrameworkText svelte="containerClass" react="contai
 
 ## Behavior
 
-The source wrappers add styling, not another state model. Use the existing `canDrop`, widget defaults, layout callbacks, and controller APIs for application rules. Explicit configuration overrides the wrappers’ defaults.
+The source wrappers style the underlying Flexiboards components. Use the existing `canDrop`, widget defaults, layout callbacks, and controller APIs for application rules. Explicit configuration overrides the wrappers' defaults.
 
 Resizing is opt-in here: set `resizability="both"` on an item (or through widget defaults) and add a Resizer. Dashboard enables it for you.
 
-## Components, not blocks
+<span id="components-not-blocks"></span>
 
-This is deliberately not a Kanban application or a full dashboard shell. Compose these components into your own product; larger copyable blocks can build on the same parts later.
+## Application layout
+
+Compose targets into your application's board layout. Add your own headings, navigation, and actions around them.
 
 ## Motion
 

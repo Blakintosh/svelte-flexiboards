@@ -76,8 +76,6 @@ The `children` prop also accepts a function receiving the deleter controller, if
 
 ## FlexiDeleteController
 
-`FlexiDelete` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller via binding to the `controller` prop, using the `onfirstcreate` callback, or from the `children` snippet parameter.
@@ -92,7 +90,7 @@ You can access the controller using the `onfirstcreate` callback, or from the `c
 
 Use the `FlexiDeleteController` to read the deleter's state.
 
-<ApiReference title="Properties" api={api.controller.properties} />
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
 ## Accessibility
 

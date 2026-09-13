@@ -1,5 +1,5 @@
 ---
-title: Server-Side Rendering
+title: Server-side rendering
 description: How Flexiboards renders boards on the server, and how to handle responsive boards and stored layouts.
 category: Guides
 published: true
@@ -14,7 +14,7 @@ published: true
 <Only react>
 
 <Callout variant="note" title="Server rendering and hydration">
-	Declared widgets and <code>initialLayout</code> render with <code>renderToString</code> and hydrate with <code>hydrateRoot</code>. This site's interactive examples mount client-side, but the package does not require client-only rendering.
+	Declared widgets and <code>initialLayout</code> render with <code>renderToString</code> and hydrate with <code>hydrateRoot</code>. Use these APIs to render the board on the server and attach its interactions during hydration.
 </Callout>
 
 </Only>
@@ -33,12 +33,12 @@ In Next.js App Router, compose the board inside a `'use client'` component. Clie
 
 This works because placement is pure logic. Widget positions are computed from your declared configuration, not measured from the DOM, and idle widgets are styled with CSS grid line placement (`grid-column` / `grid-row`) rather than pixel values. The pixel-measuring parts of the library, such as dragging, resizing and pointer tracking, only activate on interaction, which doesn't happen on a server.
 
-This covers most cases, but two scenarios make server-side board rendering tricky, because hydration will differ:
+Two scenarios need a provisional layout until client initialization:
 
 - **Stored layouts.** A `loadLayout` / `loadLayouts` callback that relies on the client (such as client storage) can't run on the server.
 - **Responsive boards.** The server can't know the viewport, so the rendered breakpoint has to be guessed.
 
-The rest of this guide covers how to handle these two scenarios.
+The examples below are integration excerpts for an existing board. Keep its target declarations and registry. `boardConfig` refers to that configuration; `DashboardSkeleton` and `BoardSkeleton` are fallback components supplied by your application.
 
 ## Server-stored layouts
 
@@ -46,17 +46,25 @@ A layout the _server_ already has, such as a user's saved board fetched from you
 
 <Only svelte>
 
-Fetch the layout in a server `load` function and pass it through page data:
+In this SvelteKit excerpt, `getBoardLayout` is your application's database function, exported from `$lib/server/boards`. It returns a `FlexiLayout`. Fetch it in a server `load` function and pass it through page data:
 
 ```ts
 // +page.server.ts
-export async function load({ locals }) {
+import type { PageServerLoad } from './$types';
+import { getBoardLayout } from '$lib/server/boards';
+
+export const load: PageServerLoad = async ({ locals }) => {
 	return { layout: await getBoardLayout(locals.user) };
-}
+};
 ```
+
+The page excerpt assumes your application defines `ChartWidget` and `TableWidget` in the files imported below:
 
 ```svelte
 <script lang="ts">
+	import { FlexiBoard } from '@flexiboards/svelte';
+	import ChartWidget from './chart-widget.svelte';
+	import TableWidget from './table-widget.svelte';
 	let { data } = $props();
 </script>
 
@@ -75,10 +83,13 @@ export async function load({ locals }) {
 
 <Only react>
 
-Pass the server-fetched layout as a prop to your board component. Use the same value during hydration:
+This excerpt imports your existing `widgetRegistry` from `widget-registry.ts`. Pass the server-fetched layout as a prop and use the same value during hydration:
 
 ```tsx
-function SavedBoard({ layout }) {
+import { FlexiBoard, FlexiTarget, type FlexiLayout } from '@flexiboards/react';
+import { widgetRegistry } from './widget-registry';
+
+export function SavedBoard({ layout }: { layout: FlexiLayout }) {
 	return (
 		<FlexiBoard config={{ registry: widgetRegistry, initialLayout: layout }}>
 			<FlexiTarget keyName="main" />
@@ -98,7 +109,7 @@ If a client-side `loadLayout` is also configured (say, local drafts beating the 
 A board configured with `loadLayout` (or a responsive board with `loadLayouts`) usually reads from `localStorage` or a per-user store, which does not live on the server. Flexiboards therefore **skips the callback during SSR** and renders the layout declared in your markup as a stand-in (which can be empty). On the client, the callback runs during hydration and the stored layout replaces the stand-in.
 
 <Callout variant="info" title="Your callback never runs on the server">
-	Because of the way <code>loadLayout</code> works, you do not need to use a <code>browser</code> guard around it. Guards are still sensible if the callback is called from elsewhere in your own code.
+	Flexiboards invokes <code>loadLayout</code> only on the client. If your application calls the same function elsewhere, that caller must also run in the browser.
 </Callout>
 
 Until that import resolves, the board's rendered layout may be wrong, since a returning user's saved arrangement can differ arbitrarily from the declared one. Give `FlexiBoard` a `suspense` <FrameworkText svelte="snippet" react="render function" /> to show a fallback:
@@ -144,13 +155,13 @@ The attribute is present in the server HTML and during hydration, and is removed
 [data-flexi-pending] {
 	pointer-events: none;
 }
-[data-flexi-pending] [role='cell'] {
+[data-flexi-pending] [role='gridcell'] {
 	position: relative;
 }
-[data-flexi-pending] [role='cell'] > * {
+[data-flexi-pending] [role='gridcell'] > * {
 	visibility: hidden;
 }
-[data-flexi-pending] [role='cell']::after {
+[data-flexi-pending] [role='gridcell']::after {
 	content: '';
 	position: absolute;
 	inset: 0;
@@ -166,8 +177,8 @@ The veil keeps the stand-in's geometry as gray blocks, a real skeleton, and the 
 If everything on a board arrives through `loadLayout` (no `FlexiWidget` declarations at all), the server renders empty grids and the cell veil has nothing to cover. Pseudo-elements participate in grid layout as items, so you can paint ghost placeholder rows into empty pending grids:
 
 ```css
-[data-flexi-pending] [role='grid']:not(:has([role='cell']))::before,
-[data-flexi-pending] [role='grid']:not(:has([role='cell']))::after {
+[data-flexi-pending] [role='grid']:not(:has([role='gridcell']))::before,
+[data-flexi-pending] [role='grid']:not(:has([role='gridcell']))::after {
 	content: '';
 	grid-column: 1 / -1;
 	min-height: 2.75rem;
@@ -268,10 +279,10 @@ The pending attribute carries the guess too: `data-flexi-pending="lg"` until the
 	[data-flexi-pending='lg'] {
 		pointer-events: auto;
 	}
-	[data-flexi-pending='lg'] [role='cell'] > * {
+	[data-flexi-pending='lg'] [role='gridcell'] > * {
 		visibility: visible;
 	}
-	[data-flexi-pending='lg'] [role='cell']::after,
+	[data-flexi-pending='lg'] [role='gridcell']::after,
 	[data-flexi-pending='lg'] [role='grid']::before,
 	[data-flexi-pending='lg'] [role='grid']::after {
 		content: none;
@@ -280,7 +291,7 @@ The pending attribute carries the guess too: `data-flexi-pending="lg"` until the
 
 /* Viewport doesn't match: hide the wrong-shaped cells, show stacked bars. */
 @media (width < 1024px) {
-	[data-flexi-pending='lg'] [role='cell'] {
+	[data-flexi-pending='lg'] [role='gridcell'] {
 		display: none;
 	}
 	[data-flexi-pending='lg'] [role='grid']::before,
@@ -297,7 +308,7 @@ The pending attribute carries the guess too: `data-flexi-pending="lg"` until the
 The media query ranges are hardcoded to your own breakpoint thresholds. That is a small duplication, but it keeps the whole treatment in CSS, with zero layout shift for correctly-guessed visitors.
 
 <Callout variant="tip" title="Guessing per request">
-	You can do better than a static guess by choosing <code>ssrBreakpoint</code> per request in a server <code>load</code> function: Chromium browsers send a <code>Sec-CH-UA-Mobile</code> header on every request (<code>?1</code> mobile, <code>?0</code> desktop), and a User-Agent check covers the rest. That shrinks the mismatch case to a small minority of visits; the CSS above still handles them.
+	Choose <code>ssrBreakpoint</code> from request information if your application has it. A mobile-device hint cannot tell you the viewport width, and headers may be absent. Keep a default guess and the mismatch treatment above. Measure your own traffic before relying on request hints to improve the initial layout.
 </Callout>
 
 The guess is also exposed on the controller as `board.breakpointPending` (`string | null`).
@@ -314,5 +325,3 @@ The guess is also exposed on the controller as `board.breakpointPending` (`strin
 | `initialLayout` / `initialLayouts` (server data) | The final board                             | Nothing                             | Already final                  |
 | `loadLayout` / `loadLayouts` configured          | Declared or initial stand-in                | `data-flexi-pending="layout"`       | Client import at hydration     |
 | Responsive board                                 | The `ssrBreakpoint` (else `default`) layout | `data-flexi-pending="<breakpoint>"` | Real `matchMedia` at hydration |
-
-Everything else about SSR is automatic: no configuration, no wrappers, and no hydration warnings for boards whose layout is fully declared.

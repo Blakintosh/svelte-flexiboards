@@ -10,53 +10,41 @@
 		"extract-api": "node scripts/extract-api.mjs",
 		"build-llms-docs": "node scripts/build-llms-docs.mjs",
 		"generate": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs",
-		"build": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs && vite build && pnpm run package",
+		"build": "node scripts/extract-api.mjs && node scripts/build-llms-docs.mjs && node scripts/build-registry.mjs && vite build",
 		"preview": "vite preview",
-		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "pnpm run package",
 		"check": "node scripts/build-llms-docs.mjs && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
 		"e2e": "playwright test",
 		"e2e:ui": "playwright test --ui",
 		"build-registry": "node scripts/build-registry.mjs",
-		"test:docs": "node --test scripts/build-llms-docs.test.mjs"
+		"test:docs": "node --test scripts/build-llms-docs.test.mjs",
+		"check:e2e": "tsc -p tsconfig.e2e.json",
+		"e2e:launch": "playwright test --config playwright.launch.config.ts",
+		"start": "node build"
 	},
 	"files": [
-		"dist",
-		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
+		"build"
 	],
-	"sideEffects": [
-		"**/*.css"
-	],
-	"svelte": "./dist/index.js",
-	"types": "./dist/index.d.ts",
 	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js"
-		}
-	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.17.2",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.13.0",
 		"@eslint/js": "^9.20.0",
 		"@internationalized/date": "^3.8.1",
 		"@lucide/svelte": "^0.482.0",
 		"@melt-ui/pp": "^0.3.2",
 		"@playwright/test": "^1.63.0",
-		"@sveltejs/adapter-auto": "^3.3.1",
-		"@sveltejs/adapter-vercel": "^5.6.2",
-		"@sveltejs/package": "^2.3.10",
+		"@sveltejs/adapter-node": "^5.5.7",
 		"@sveltejs/vite-plugin-svelte": "^4.0.4",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.7",
 		"@types/d3-shape": "^3.1.8",
 		"@types/eslint": "^9.6.1",
+		"@types/node": "^22.13.5",
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.4",
 		"bits-ui": "2.9.4",
@@ -71,7 +59,6 @@
 		"prettier": "^3.5.1",
 		"prettier-plugin-svelte": "^3.3.3",
 		"prettier-plugin-tailwindcss": "^0.6.11",
-		"publint": "^0.2.12",
 		"svelte": "^5.38.6",
 		"svelte-check": "^4.1.4",
 		"tailwind-merge": "^3.3.0",

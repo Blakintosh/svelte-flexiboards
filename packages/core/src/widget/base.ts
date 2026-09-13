@@ -397,7 +397,7 @@ export class FlexiWidgetController {
 	}
 
 	/**
-	 * The snippet that is rendered by this widget.
+	 * The render function used for this widget's content.
 	 */
 	get snippet(): FlexiWidgetChildrenSnippet | undefined {
 		return this.#config$().snippet;

@@ -9,63 +9,55 @@ published: true
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-Flexiboards is headless, so widgets jump between cells by default. Set `transition` on a widget, or on `widgetDefaults`, to animate the movement instead. `cssTransitionConfig()` gives you a sensible default:
+Flexiboards is headless, so widgets jump between cells by default. Set `transition` on a widget, or on `widgetDefaults`, to animate the movement instead. `cssTransitionConfig()` supplies the default durations and easing. These demos use native controls and the [example styling](/docs/overview#example-styling). They disable movement when the system requests reduced motion:
 
 <Only svelte>
 
 ```svelte example
 <script lang="ts">
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/svelte';
-	import { untrack } from 'svelte';
+	import {
+		FlexiBoard,
+		FlexiTarget,
+		FlexiWidget,
+		cssTransitionConfig,
+		type FlexiTargetPartialConfiguration
+	} from '@flexiboards/svelte';
+	import { onMount } from 'svelte';
 
-	let enableTransitions: boolean = $state(true);
+	let enableTransitions = $state(true);
+	let reducedMotion = $state(true);
 
-	let boardConfig = $state({
-		rowSizing: 'minmax(0, 1fr)',
-		layout: {
-			type: 'free',
-			minRows: 2,
-			minColumns: 2,
-			maxRows: 2,
-			maxColumns: 2
-		},
-		widgetDefaults: {
-			transition: undefined,
-			className: (widget) => [
-				'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
-				widget.isShadow && 'opacity-50',
-				widget.isGrabbed && 'animate-pulse opacity-50'
-			]
-		}
+	onMount(() => {
+		const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const update = () => {
+			reducedMotion = query.matches;
+		};
+		update();
+		query.addEventListener('change', update);
+		return () => query.removeEventListener('change', update);
 	});
 
-	$effect(() => {
-		const newEnableTransitions = enableTransitions;
-
-		// Update the config in-place, otherwise the board loses the proxy.
-		untrack(() => {
-			boardConfig.widgetDefaults.transition = enableTransitions ? cssTransitionConfig() : undefined;
-		});
+	const targetConfig: FlexiTargetPartialConfiguration = $derived({
+		layout: { type: 'free', minRows: 2, maxRows: 2, minColumns: 2, maxColumns: 2 },
+		columnSizing: '100px',
+		rowSizing: '100px',
+		widgetDefaults: {
+			transition: enableTransitions && !reducedMotion ? cssTransitionConfig() : undefined,
+			className: 'rounded-lg border bg-primary p-4 text-primary-foreground'
+		}
 	});
 </script>
 
-<div
-	class="flex w-72 items-center justify-center gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96"
->
-	<Switch id="enable-transitions" bind:checked={enableTransitions} />
-	<Label for="enable-transitions">Enable transitions</Label>
-</div>
-
-<FlexiBoard class="size-72 rounded-b-xl border p-8 lg:size-96">
-	<FlexiTarget
-		class={'h-full w-full gap-4 lg:gap-6'}
-		containerClass={'w-full h-full'}
-		config={boardConfig}
-	>
+<label><input type="checkbox" bind:checked={enableTransitions} /> Enable transitions</label>
+<p>
+	{reducedMotion
+		? 'Reduced motion is on; widgets move without animation.'
+		: 'Drag A or B to another cell.'}
+</p>
+<FlexiBoard>
+	<FlexiTarget key="main" config={targetConfig}>
 		<FlexiWidget x={0} y={0}>A</FlexiWidget>
-		<FlexiWidget x={1} y={0}>B</FlexiWidget>
+		<FlexiWidget x={1} y={1}>B</FlexiWidget>
 	</FlexiTarget>
 </FlexiBoard>
 ```
@@ -75,61 +67,61 @@ Flexiboards is headless, so widgets jump between cells by default. Set `transiti
 <Only react>
 
 ```tsx example
-import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/react';
-import type { FlexiWidgetController } from '@flexiboards/react';
-import { clsx } from 'clsx';
-import { useMemo, useState } from 'react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	FlexiWidget,
+	cssTransitionConfig,
+	type FlexiTargetPartialConfiguration
+} from '@flexiboards/react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function TransitionsExample() {
 	const [enableTransitions, setEnableTransitions] = useState(true);
+	const [reducedMotion, setReducedMotion] = useState(true);
 
-	// The config is derived from state, so flipping the switch hands the board a
-	// new object and the widgets pick up the change.
-	const targetConfig = useMemo(
+	useEffect(() => {
+		const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const update = () => setReducedMotion(query.matches);
+		update();
+		query.addEventListener('change', update);
+		return () => query.removeEventListener('change', update);
+	}, []);
+
+	const targetConfig = useMemo<FlexiTargetPartialConfiguration>(
 		() => ({
-			rowSizing: 'minmax(0, 1fr)',
-			layout: {
-				type: 'free' as const,
-				minRows: 2,
-				minColumns: 2,
-				maxRows: 2,
-				maxColumns: 2
-			},
+			layout: { type: 'free', minRows: 2, maxRows: 2, minColumns: 2, maxColumns: 2 },
+			columnSizing: '100px',
+			rowSizing: '100px',
 			widgetDefaults: {
-				transition: enableTransitions ? cssTransitionConfig() : undefined,
-				className: (widget: FlexiWidgetController) =>
-					clsx(
-						'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
-						widget.isShadow && 'opacity-50',
-						widget.isGrabbed && 'animate-pulse opacity-50'
-					)
+				transition: enableTransitions && !reducedMotion ? cssTransitionConfig() : undefined,
+				className: 'rounded-lg border bg-primary p-4 text-primary-foreground'
 			}
 		}),
-		[enableTransitions]
+		[enableTransitions, reducedMotion]
 	);
 
 	return (
 		<>
-			<div className="flex w-72 items-center justify-center gap-2 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
+			<label>
 				<input
-					id="enable-transitions"
 					type="checkbox"
 					checked={enableTransitions}
-					onChange={(e) => setEnableTransitions(e.target.checked)}
-				/>
-				<label htmlFor="enable-transitions">Enable transitions</label>
-			</div>
-
-			<FlexiBoard className="size-72 rounded-b-xl border p-8 lg:size-96">
-				<FlexiTarget
-					className="h-full w-full gap-4 lg:gap-6"
-					containerClassName="w-full h-full"
-					config={targetConfig}
-				>
+					onChange={(event) => setEnableTransitions(event.target.checked)}
+				/>{' '}
+				Enable transitions
+			</label>
+			<p>
+				{reducedMotion
+					? 'Reduced motion is on; widgets move without animation.'
+					: 'Drag A or B to another cell.'}
+			</p>
+			<FlexiBoard>
+				<FlexiTarget keyName="main" config={targetConfig}>
 					<FlexiWidget x={0} y={0}>
 						A
 					</FlexiWidget>
-					<FlexiWidget x={1} y={0}>
+					<FlexiWidget x={1} y={1}>
 						B
 					</FlexiWidget>
 				</FlexiTarget>
@@ -141,7 +133,7 @@ export function TransitionsExample() {
 
 </Only>
 
-Toggle the switch and drag a widget: with transitions on, the other widget glides out of the way and the dropped widget settles into its cell.
+Enable transitions and drag a widget to an empty cell. The dropped widget animates into place unless reduced motion is enabled. Toggle the system preference while the demo is open to check that it updates.
 
 ## Choosing a preset
 
@@ -169,73 +161,54 @@ The example below drives the `move` and `drop` durations from a slider:
 
 ```svelte example
 <script lang="ts">
-	import { Slider } from '$lib/components/ui/slider/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { FlexiBoard, FlexiTarget, FlexiWidget, cssTransitionConfig } from '@flexiboards/svelte';
-	import { untrack } from 'svelte';
+	import {
+		FlexiBoard,
+		FlexiTarget,
+		FlexiWidget,
+		cssTransitionConfig,
+		type FlexiTargetPartialConfiguration
+	} from '@flexiboards/svelte';
+	import { onMount } from 'svelte';
 
-	let duration: number = $state(150);
+	let duration = $state(150);
+	let reducedMotion = $state(true);
 
-	let boardConfig = $state({
-		rowSizing: 'minmax(0, 1fr)',
-		layout: {
-			type: 'free',
-			minRows: 2,
-			minColumns: 2,
-			maxRows: 2,
-			maxColumns: 2
-		},
-		widgetDefaults: {
-			transition: undefined,
-			className: (widget) => [
-				'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
-				widget.isShadow && 'opacity-50',
-				widget.isGrabbed && 'animate-pulse opacity-50'
-			]
-		}
+	onMount(() => {
+		const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const update = () => {
+			reducedMotion = query.matches;
+		};
+		update();
+		query.addEventListener('change', update);
+		return () => query.removeEventListener('change', update);
 	});
 
-	$effect(() => {
-		const newDuration = duration;
-
-		// Update the config in-place, otherwise the board loses the proxy.
-		untrack(() => {
-			boardConfig.widgetDefaults.transition = {
-				move: {
-					duration: newDuration,
-					easing: 'ease-in-out'
-				},
-				drop: {
-					duration: newDuration,
-					easing: 'ease-out'
-				}
-			};
-		});
+	const targetConfig: FlexiTargetPartialConfiguration = $derived({
+		layout: { type: 'free', minRows: 2, maxRows: 2, minColumns: 2, maxColumns: 2 },
+		columnSizing: '100px',
+		rowSizing: '100px',
+		widgetDefaults: {
+			transition: !reducedMotion
+				? { move: { duration, easing: 'ease-in-out' }, drop: { duration, easing: 'ease-out' } }
+				: undefined,
+			className: 'rounded-lg border bg-primary p-4 text-primary-foreground'
+		}
 	});
 </script>
 
-<div
-	class="flex w-72 flex-col items-center justify-center gap-4 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96"
+<label
+	>Transition duration: {duration}ms
+	<input type="range" min="50" max="500" step="50" bind:value={duration} /></label
 >
-	<Label for="transition-duration">Transition duration: {duration}ms</Label>
-	<Slider
-		name="transition-duration"
-		type="single"
-		bind:value={duration}
-		max={500}
-		min={50}
-		step={50}
-	/>
-</div>
-
-<FlexiBoard class="size-72 rounded-b-xl border p-8 lg:size-96">
-	<FlexiTarget
-		class={'h-full w-full gap-4 lg:gap-6'}
-		containerClass={'w-full h-full'}
-		config={boardConfig}
-	>
+<p>
+	{reducedMotion
+		? 'Reduced motion is on; widgets move without animation.'
+		: 'Drag A or B to another cell.'}
+</p>
+<FlexiBoard>
+	<FlexiTarget key="main" config={targetConfig}>
 		<FlexiWidget x={0} y={0}>A</FlexiWidget>
-		<FlexiWidget x={1} y={0}>B</FlexiWidget>
+		<FlexiWidget x={1} y={1}>B</FlexiWidget>
 	</FlexiTarget>
 </FlexiBoard>
 ```
@@ -245,65 +218,66 @@ The example below drives the `move` and `drop` durations from a slider:
 <Only react>
 
 ```tsx example
-import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
-import type { FlexiWidgetController } from '@flexiboards/react';
-import { clsx } from 'clsx';
-import { useMemo, useState } from 'react';
+import {
+	FlexiBoard,
+	FlexiTarget,
+	FlexiWidget,
+	cssTransitionConfig,
+	type FlexiTargetPartialConfiguration
+} from '@flexiboards/react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function CustomTransitionsExample() {
 	const [duration, setDuration] = useState(150);
+	const [reducedMotion, setReducedMotion] = useState(true);
 
-	const targetConfig = useMemo(
+	useEffect(() => {
+		const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const update = () => setReducedMotion(query.matches);
+		update();
+		query.addEventListener('change', update);
+		return () => query.removeEventListener('change', update);
+	}, []);
+
+	const targetConfig = useMemo<FlexiTargetPartialConfiguration>(
 		() => ({
-			rowSizing: 'minmax(0, 1fr)',
-			layout: {
-				type: 'free' as const,
-				minRows: 2,
-				minColumns: 2,
-				maxRows: 2,
-				maxColumns: 2
-			},
+			layout: { type: 'free', minRows: 2, maxRows: 2, minColumns: 2, maxColumns: 2 },
+			columnSizing: '100px',
+			rowSizing: '100px',
 			widgetDefaults: {
-				transition: {
-					move: { duration, easing: 'ease-in-out' },
-					drop: { duration, easing: 'ease-out' }
-				},
-				className: (widget: FlexiWidgetController) =>
-					clsx(
-						'rounded-lg bg-primary px-4 py-2 text-primary-foreground',
-						widget.isShadow && 'opacity-50',
-						widget.isGrabbed && 'animate-pulse opacity-50'
-					)
+				transition: !reducedMotion
+					? { move: { duration, easing: 'ease-in-out' }, drop: { duration, easing: 'ease-out' } }
+					: undefined,
+				className: 'rounded-lg border bg-primary p-4 text-primary-foreground'
 			}
 		}),
-		[duration]
+		[duration, reducedMotion]
 	);
 
 	return (
 		<>
-			<div className="flex w-72 flex-col items-center justify-center gap-4 rounded-t-xl border border-b-0 px-4 py-3 lg:w-96">
-				<label htmlFor="transition-duration">Transition duration: {duration}ms</label>
+			<label>
+				Transition duration: {duration}ms{' '}
 				<input
-					id="transition-duration"
 					type="range"
 					min={50}
 					max={500}
 					step={50}
 					value={duration}
-					onChange={(e) => setDuration(Number(e.target.value))}
+					onChange={(event) => setDuration(Number(event.target.value))}
 				/>
-			</div>
-
-			<FlexiBoard className="size-72 rounded-b-xl border p-8 lg:size-96">
-				<FlexiTarget
-					className="h-full w-full gap-4 lg:gap-6"
-					containerClassName="w-full h-full"
-					config={targetConfig}
-				>
+			</label>
+			<p>
+				{reducedMotion
+					? 'Reduced motion is on; widgets move without animation.'
+					: 'Drag A or B to another cell.'}
+			</p>
+			<FlexiBoard>
+				<FlexiTarget keyName="main" config={targetConfig}>
 					<FlexiWidget x={0} y={0}>
 						A
 					</FlexiWidget>
-					<FlexiWidget x={1} y={0}>
+					<FlexiWidget x={1} y={1}>
 						B
 					</FlexiWidget>
 				</FlexiTarget>

@@ -134,14 +134,13 @@ const typeLabels = {
 	FlexiWidgetChildrenSnippet: 'Snippet<[{ widget: FlexiWidgetController }]>',
 	FlexiComponent: 'Component',
 	FlexiContent: 'Snippet',
-	FlexiWidgetClasses: 'ClassValue | ((widget: FlexiWidgetController) => ClassValue)',
-	FlexiAddClasses: 'ClassValue | ((adder: FlexiAddController) => ClassValue)',
+
 	FlexiAddWidgetFn: '() => AdderWidgetConfiguration | null',
-	FlexiLoadLayoutFn: '() => FlexiLayout | FlexiWidgetLayoutEntry[] | undefined',
+
 	FlexiLayoutChangeFn: '(layout: FlexiLayout) => void',
 	ResponsiveFlexiLoadLayoutFn: '() => ResponsiveFlexiLayout | undefined',
 	ResponsiveFlexiLayoutChangeFn: '(layouts: ResponsiveFlexiLayout) => void',
-	FlexiDeleteClasses: 'ClassValue | ((deleter: FlexiDeleteController) => ClassValue)',
+
 	FlexiWidgetTransitionTypeConfiguration:
 		'{ duration?: number; easing?: string } | AnimationAdapter',
 	TargetSizing:
@@ -162,6 +161,14 @@ const project = new Project({
 });
 
 project.addSourceFilesAtPaths(path.join(repoRoot, 'packages/core/src/**/*.ts'));
+const publicTypes = {
+	svelte: project.addSourceFileAtPath(path.join(repoRoot, 'packages/svelte/src/index.ts')),
+	react: project.addSourceFileAtPath(path.join(repoRoot, 'packages/react/src/types.ts'))
+};
+// Read this callback's return contract from source, including layout envelopes.
+typeLabels.FlexiLoadLayoutFn = findCoreDeclaration('FlexiLoadLayoutFn')
+	.getTypeNodeOrThrow()
+	.getText();
 
 /**
  * Aliases that are plain string-literal unions (e.g. WidgetResizability) get
@@ -182,23 +189,32 @@ for (const file of project.getSourceFiles()) {
 
 /** The React adapter instantiates the same core generics with `string` classes and render functions. */
 const typeLabelsReact = {
-	FlexiWidgetChildrenSnippet: '(params: { widget: FlexiWidgetController }) => ReactNode',
-	FlexiComponent: 'ComponentType',
-	FlexiContent: 'ReactNode',
-	FlexiWidgetClasses: 'string | ((widget: FlexiWidgetController) => string)',
-	FlexiAddClasses: 'string | ((adder: FlexiAddController) => string)',
-	FlexiDeleteClasses: 'string | ((deleter: FlexiDeleteController) => string)'
+	FlexiWidgetChildrenSnippet: 'FlexiWidgetChildren',
+	FlexiComponent: 'ComponentType<any>',
+	FlexiContent: 'ReactNode'
 };
 
 function presentType(text, labels = typeLabels) {
 	let out = text
 		.replace(/import\("[^"]*"\)\./g, '')
+		.replace(/\bCore(?=Flexi|Adder)/g, '')
 		.replace(/\s+/g, ' ')
 		.trim()
 		// The React adapter's render-prop union, spelled out at its instantiation.
 		.replace(/\bFlexiChildren<(\{[^}]*\})>/g, 'ReactNode | ((params: $1) => ReactNode)');
+	for (const [name, parameter] of Object.entries({
+		FlexiWidgetClasses: 'widget: FlexiWidgetController',
+		FlexiAddClasses: 'adder: FlexiAddController',
+		FlexiDeleteClasses: 'deleter: FlexiDeleteController'
+	})) {
+		out = out.replace(new RegExp(`\\b${name}(?:<([^<>]+)>)?`, 'g'), (_, arg) => {
+			const value =
+				arg && arg !== 'unknown' ? arg : labels === typeLabelsReact ? 'string' : 'ClassValue';
+			return `(${value} | ((${parameter}) => ${value}))`;
+		});
+	}
 	for (const [name, label] of Object.entries({ ...typeLabels, ...labels })) {
-		out = out.replace(new RegExp(`\\b${name}\\b`, 'g'), label);
+		out = out.replace(new RegExp(`\\b${name}\\b`, 'g'), `(${label})`);
 	}
 	for (const [name, expansion] of literalAliases) {
 		out = out.replace(new RegExp(`\\b${name}\\b`, 'g'), expansion);
@@ -243,7 +259,7 @@ function extractMembers(type, { bindables = new Set(), location, labels } = {}) 
 		let typeText;
 		const enclosingAlias = decl.getFirstAncestorByKind(SyntaxKind.TypeAliasDeclaration);
 		const isGenericMember = (enclosingAlias?.getTypeParameters().length ?? 0) > 0;
-		if (isGenericMember && location) {
+		if (isGenericMember && location && !['snippet', 'component'].includes(symbol.getName())) {
 			// Generic members (FlexiCommonProps<T>) only mean something once
 			// instantiated; resolve at the usage site so T becomes concrete.
 			typeText = symbol.getTypeAtLocation(location).getText(location);
@@ -255,7 +271,8 @@ function extractMembers(type, { bindables = new Set(), location, labels } = {}) 
 		const entry = {
 			name: symbol.getName(),
 			type: presentType(typeText, labels),
-			description: doc.description
+			description: doc.description,
+			optional: symbol.isOptional()
 		};
 		if (doc.deprecated) entry.deprecated = doc.deprecated;
 		if (doc.default) entry.default = doc.default;
@@ -265,19 +282,23 @@ function extractMembers(type, { bindables = new Set(), location, labels } = {}) 
 	return entries;
 }
 
-function methodTypeText(member) {
+function methodTypeText(member, labels) {
 	const params = member
 		.getParameters()
-		.map((p) => `${p.getName()}: ${presentType(p.getTypeNode()?.getText() ?? 'unknown')}`)
+		.map(
+			(p) =>
+				`${p.isRestParameter() ? '...' : ''}${p.getName()}${p.isOptional() ? '?' : ''}: ${presentType(p.getTypeNode()?.getText() ?? 'unknown', labels)}`
+		)
 		.join(', ');
 	const ret = presentType(
-		member.getReturnTypeNode()?.getText() ?? member.getReturnType().getText(member)
+		member.getReturnTypeNode()?.getText() ?? member.getReturnType().getText(member),
+		labels
 	);
 	return `(${params}) => ${ret}`;
 }
 
 /** Public properties, getters, and methods of a controller class or interface. */
-function extractController(decl) {
+function extractController(decl, labels) {
 	const properties = [];
 	const methods = [];
 	const isClass = Node.isClassDeclaration(decl);
@@ -295,7 +316,7 @@ function extractController(decl) {
 			: (member.getTypeNode()?.getText() ?? member.getType().getText(member));
 		const entry = {
 			name: member.getName(),
-			type: presentType(typeText),
+			type: presentType(typeText, labels),
 			description: doc.description
 		};
 		const isReadonly = isGetter
@@ -312,7 +333,7 @@ function extractController(decl) {
 		if (doc.internal) continue;
 		const entry = {
 			name: method.getName(),
-			type: methodTypeText(method),
+			type: methodTypeText(method, labels),
 			description: doc.description
 		};
 		if (doc.deprecated) entry.deprecated = doc.deprecated;
@@ -370,8 +391,16 @@ for (const entry of manifest) {
 	}
 
 	const types = {};
+	const typesReact = {};
 	for (const typeName of entry.types) {
-		types[typeName] = extractMembers(findCoreDeclaration(typeName).getType());
+		for (const framework of ['svelte', 'react']) {
+			const decl = publicTypes[framework].getTypeAlias(typeName) ?? findCoreDeclaration(typeName);
+			const rows = extractMembers(decl.getType(), {
+				location: decl,
+				labels: framework === 'react' ? typeLabelsReact : typeLabels
+			});
+			(framework === 'react' ? typesReact : types)[typeName] = rows;
+		}
 	}
 
 	const result = {
@@ -380,9 +409,11 @@ for (const entry of manifest) {
 		props: extractMembers(propsAlias.getType(), { bindables, location: propsAlias }),
 		...(propsReact && { propsReact }),
 		...(entry.controller && {
-			controller: extractController(findCoreDeclaration(entry.controller))
+			controller: extractController(findCoreDeclaration(entry.controller)),
+			controllerReact: extractController(findCoreDeclaration(entry.controller), typeLabelsReact)
 		}),
-		types
+		types,
+		typesReact
 	};
 
 	mkdirSync(outDir, { recursive: true });

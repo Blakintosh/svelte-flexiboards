@@ -29,7 +29,7 @@ for (const framework of frameworks) {
 
 		const flying = cells(page, destination).filter({ hasText: label });
 		await expect(flying).toHaveCSS('position', 'absolute');
-		const row = Number(await flying.getAttribute('aria-rowindex')) + 1;
+		const row = Number(await flying.getAttribute('aria-rowindex'));
 		const placeholders = destination.locator('div[style*="visibility: hidden"]');
 		const index = await placeholders.evaluateAll(
 			(nodes, row) =>
@@ -84,7 +84,7 @@ for (const framework of frameworks) {
 		await page.mouse.move(midFlight.x, midFlight.y);
 		await page.mouse.down();
 		await expect(
-			page.locator('[role="cell"][aria-grabbed="true"]').filter({ hasText: label })
+			page.locator('[data-flexi-widget][aria-grabbed="true"]').filter({ hasText: label })
 		).toHaveCount(1);
 		const back = await center(source);
 		await page.mouse.move(back.x, back.y, { steps: 12 });

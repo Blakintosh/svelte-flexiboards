@@ -1,5 +1,5 @@
 ---
-title: Responsive Layouts
+title: Responsive layouts
 description: Create responsive dashboards that adapt to different screen sizes.
 category: Guides
 published: true
@@ -10,7 +10,7 @@ published: true
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
-`ResponsiveFlexiBoard` wraps a board and picks a layout for the current viewport width. Each breakpoint keeps its own widget arrangement. The simplest form is one board whose configuration reads the current breakpoint:
+`ResponsiveFlexiBoard` wraps a board and picks a layout for the current viewport width. Each breakpoint keeps its own widget arrangement. The example uses one board whose configuration reads the current breakpoint. Its utility classes use the [docs example styling](/docs/overview#example-styling):
 
 <Only svelte>
 
@@ -102,7 +102,7 @@ Each breakpoint renders its own separate Flexiboard. Moving, resizing, adding, o
 
 ## Shared board, breakpoint parameter
 
-The example above uses a single fallback snippet that receives the current breakpoint. This works well when you want the same board structure with different column counts or sizing:
+The example above uses a `children` fallback that receives the current breakpoint. This works well when you want the same board structure with different column counts or sizing:
 
 <Only svelte>
 
@@ -164,7 +164,7 @@ export function Dashboard() {
 
 ## Independent boards per breakpoint
 
-For more control, give each breakpoint its own snippet, so each one can use a different board structure. `boardConfig` below is a board configuration with a [registry](/docs/guides/exporting-importing-boards#the-registry) for the `chart` and `stats` types:
+For more control, give each breakpoint its own board content, so each one can use a different board structure. `boardConfig` below is a board configuration with a [registry](/docs/guides/exporting-importing-boards#the-registry) for the `chart` and `stats` types:
 
 <Only svelte>
 
@@ -270,22 +270,24 @@ You can define breakpoints for these keys:
 
 A default breakpoint (which uses `children`) always implicitly exists, and is used if no breakpoint is matched.
 
-Breakpoints are defined as minimum viewport widths. They're evaluated largest-first, and the first match wins:
+Breakpoints are minimum viewport widths, evaluated largest-first. The first match wins. Add the `breakpoints` property below to your responsive configuration:
 
 ```typescript
-breakpoints: {
-	lg: 1200,  // viewport >= 1200px uses lg
-	md: 900,   // viewport >= 900px uses md
-	sm: 600    // viewport >= 600px uses sm
-	// < 600px falls back to children (or 'default' breakpoint)
-}
+const config = {
+	breakpoints: {
+		lg: 1200, // viewport >= 1200px uses lg
+		md: 900, // viewport >= 900px uses md
+		sm: 600 // viewport >= 600px uses sm
+		// Below 600px, render children for the default breakpoint.
+	}
+};
 ```
 
 You don't need to define all breakpoints. If only `lg` and `children` are defined, `lg` is used for large screens and `children` for everything else.
 
 ## Import and export
 
-When using `ResponsiveFlexiBoard`, use the responsive controller's `importLayout()` and `exportLayout()` methods instead of the inner `FlexiBoard`'s methods:
+Use the responsive controller's `importLayout()` and `exportLayout()` to read or replace the collection of breakpoint layouts. These excerpts extend your existing responsive board. Define `responsiveConfig` with its breakpoints and loader, and retain the board content in the marked space. Wire `save` to your application's save button:
 
 <Only svelte>
 
@@ -296,7 +298,8 @@ When using `ResponsiveFlexiBoard`, use the responsive controller's `importLayout
 	let responsiveBoard = $state<ResponsiveFlexiBoardController>();
 
 	function save() {
-		const layouts = responsiveBoard?.exportLayout();
+		if (!responsiveBoard) return;
+		const layouts = responsiveBoard.exportLayout();
 		localStorage.setItem('layouts', JSON.stringify(layouts));
 	}
 </script>
@@ -319,7 +322,8 @@ export function Dashboard() {
 	const responsiveBoard = useRef<ResponsiveFlexiBoardController>(null);
 
 	function save() {
-		const layouts = responsiveBoard.current?.exportLayout();
+		if (!responsiveBoard.current) return;
+		const layouts = responsiveBoard.current.exportLayout();
 		localStorage.setItem('layouts', JSON.stringify(layouts));
 	}
 
@@ -346,7 +350,7 @@ When a board is rendering in a responsive context, calling `importLayout()` or `
 
 ## Auto-persistence
 
-For automatic saving, use `loadLayouts` and `onLayoutsChange`:
+For automatic saving, use `loadLayouts` and `onLayoutsChange`. These configuration excerpts keep your existing board content and registry. Stored data must contain layouts whose types exist in that registry:
 
 <Only svelte>
 
@@ -393,7 +397,7 @@ export function Dashboard() {
 }
 ```
 
-React boards render client-side only, so `loadLayouts` can read `localStorage` directly with no environment guard.
+`loadLayouts` runs only on the client, so the callback can read `localStorage`. The board itself supports server rendering.
 
 </Only>
 

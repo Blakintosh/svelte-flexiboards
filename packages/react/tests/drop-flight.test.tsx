@@ -106,7 +106,7 @@ describe('drop flight', () => {
 		keydown(window, 'Enter');
 
 		const flying = document.querySelector<HTMLElement>(
-			'[role="cell"][style*="position: absolute"]'
+			'[data-flexi-widget][style*="position: absolute"]'
 		);
 		expect(flying).not.toBeNull();
 		expect(document.querySelectorAll('[role="grid"] > div').length).toBeGreaterThan(1);

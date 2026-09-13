@@ -78,11 +78,11 @@ describe('widget rendering', () => {
 			</FlexiBoard>
 		);
 		const grid = document.querySelector<HTMLElement>('[role="grid"]')!;
-		// Direct grid children are the hidden declarations wrapper and the
-		// display:contents shields around each cell. Nothing else may take a
-		// grid cell.
+		// Ownership rows and shield wrappers must not consume grid tracks.
 		const others = Array.from(grid.children).filter(
-			(c) => (c as HTMLElement).style.display !== 'contents'
+			(c) =>
+				(c as HTMLElement).style.display !== 'contents' &&
+				(c as HTMLElement).style.position !== 'absolute'
 		);
 		// Declarations now precede the grid so its server render can read the
 		// completed layout. They still occupy no grid tracks or visible space.
@@ -127,8 +127,8 @@ describe('widget rendering', () => {
 		);
 		const cell = cells()[0];
 		expect(cell.className).toBe('w');
-		expect(cell.getAttribute('aria-colindex')).toBe('1');
-		expect(cell.getAttribute('aria-rowindex')).toBe('2');
+		expect(cell.getAttribute('aria-colindex')).toBe('2');
+		expect(cell.getAttribute('aria-rowindex')).toBe('3');
 		// Core's placed style is a CSS string and must survive the object conversion.
 		expect(cell.style.gridColumnStart || cell.style.gridColumn).not.toBe('');
 		expect(document.querySelector('.board')!.getAttribute('role')).toBe('application');

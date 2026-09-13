@@ -85,7 +85,7 @@ describe('server rendering', () => {
 		expect(html).toContain('role="application"');
 		expect(html).toContain('role="grid"');
 		expect(html).toContain('<h2>head</h2>');
-		expect(html).toContain('role="cell"');
+		expect(html).toContain('role="gridcell"');
 		expect(html).toContain('>grab</button>');
 		expect(isSsrEnvironment()).toBe(true);
 	});

@@ -3,6 +3,8 @@
 		name: string;
 		type: string;
 		description: string;
+		/** Present for configuration members and component props. */
+		optional?: boolean;
 		/** Deprecation notice, when the member is deprecated. */
 		deprecated?: string;
 		/** Default value, when one is documented. */
@@ -16,61 +18,65 @@
 	export type ApiReferenceProps = {
 		title: string;
 		api: ApiReference[];
+		reactApi?: ApiReference[];
 	};
 </script>
 
 <script lang="ts">
-	let { title, api }: ApiReferenceProps = $props();
+	import { framework } from '$lib/components/brand/framework.svelte';
+	let { title, api, reactApi }: ApiReferenceProps = $props();
+	const rows = $derived(framework.current === 'react' ? (reactApi ?? api) : api);
 </script>
 
-<!--
-  API tables are rules only — no zebra striping, no radius. Prop names take
-  fx-accent, types drafting blue, prose the body grey. Deprecated members are
-  greyed out with their notice flagged fx-accent.
--->
 <div class="not-prose my-8">
-	<h3 class="label text-faint mb-3 text-[10px]" data-toc-ignore>
-		{title}
-	</h3>
-	<div class="border-ink bg-panel border">
-		<div class="border-ink bg-paper flex gap-6 border-b px-5 py-2">
-			<span class="label text-faint w-1/3 text-[10px]">Prop</span>
-			<span class="label text-faint flex-1 text-[10px]">Type</span>
-		</div>
-		{#each api as item}
-			<div class="border-rule flex flex-col gap-2 border-b px-5 py-4 last:border-b-0">
-				<div class="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-					<span class="flex w-1/3 min-w-fit items-baseline gap-2">
-						<code
-							class="font-mono text-[13px] {item.deprecated
-								? 'text-faint line-through'
-								: 'text-fx-accent'}">{item.name}</code
+	<div class="border-ink bg-panel @container border">
+		<!-- Explicit roles preserve table semantics when narrow layouts use block and grid. -->
+		<!-- svelte-ignore a11y_no_redundant_roles -->
+		<table role="table" class="@max-[32rem]:block w-full table-fixed border-collapse text-left">
+			<colgroup class="@max-[32rem]:hidden"><col class="w-[52%]" /><col /></colgroup>
+			<caption class="bg-paper text-ink @max-[32rem]:block px-5 py-3 text-left text-sm font-medium"
+				>{title}</caption
+			>
+			<thead role="rowgroup" class="border-ink bg-paper @max-[32rem]:sr-only border-y">
+				<tr role="row" class="label text-body text-[10px]">
+					<th scope="col" class="px-5 py-2 font-medium">Name</th>
+					<th scope="col" class="px-5 py-2 font-medium">Description</th>
+				</tr>
+			</thead>
+			<tbody role="rowgroup" class="@max-[32rem]:block">
+				{#each rows as item}
+					<tr role="row" class="border-rule @max-[32rem]:grid border-b align-top last:border-b-0">
+						<th role="rowheader" scope="row" class="px-5 py-4 font-normal">
+							<div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+								<code
+									class="font-mono text-[13px] {item.deprecated
+										? 'text-body line-through'
+										: 'text-fx-accent-hover dark:text-fx-accent'}">{item.name}</code
+								>
+								<div class="text-body flex flex-wrap gap-x-2 text-[11px]">
+									{#if item.optional !== undefined}<span
+											>{item.optional ? 'Optional' : 'Required'}</span
+										>{/if}
+									{#if item.bindable}<span>Bindable</span>{/if}
+									{#if item.readonly}<span>Readonly</span>{/if}
+								</div>
+							</div>
+							<code
+								class="text-blue mt-2 block whitespace-pre-wrap break-words font-mono text-xs leading-relaxed [overflow-wrap:anywhere]"
+								>{item.type}</code
+							>
+						</th>
+						<td
+							role="cell"
+							class="text-body @max-[32rem]:pt-0 px-5 py-4 text-sm leading-relaxed [overflow-wrap:anywhere]"
 						>
-						{#if item.bindable}
-							<span class="label border-rule text-faint border px-1 py-px text-[9px]">bindable</span
-							>
-						{/if}
-						{#if item.readonly}
-							<span class="label border-rule text-faint border px-1 py-px text-[9px]">readonly</span
-							>
-						{/if}
-					</span>
-					<code class="text-blue flex-1 font-mono text-[12.5px]">{item.type}</code>
-				</div>
-				{#if item.description}
-					<p class="text-body m-0 text-[14px] leading-relaxed">{item.description}</p>
-				{/if}
-				{#if item.default}
-					<p class="text-faint m-0 font-mono text-[12px]">
-						Default: <code class="text-body">{item.default}</code>
-					</p>
-				{/if}
-				{#if item.deprecated}
-					<p class="text-body m-0 text-[13px] leading-relaxed">
-						<span class="label text-fx-accent mr-1.5 text-[9px]">Deprecated</span>{item.deprecated}
-					</p>
-				{/if}
-			</div>
-		{/each}
+							{#if item.description}<p class="m-0">{item.description}</p>{/if}
+							{#if item.default}<p class="m-0 mt-2">Default: <code>{item.default}</code></p>{/if}
+							{#if item.deprecated}<p class="m-0 mt-2">Deprecated: {item.deprecated}</p>{/if}
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	</div>
 </div>

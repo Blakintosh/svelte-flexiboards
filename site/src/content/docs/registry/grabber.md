@@ -122,7 +122,7 @@ The handle is also re-exported from the component families.
 | ------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `label`                                                 | `Move widget`      | Screen-reader text; use a specific label when several handles are present.                                                         |
 | `size`                                                  | `16`               | Icon size in pixels. The button remains 32px.                                                                                      |
-| <FrameworkText svelte="class" react="className" code /> | —                  | Override styles; accepts a widget-state function too.                                                                              |
+| <FrameworkText svelte="class" react="className" code /> | None               | Override styles; accepts a widget-state function too.                                                                              |
 | `children`                                              | Vertical grip icon | Replace the icon with <FrameworkText svelte="a snippet" react="a render function or content" />. The accessible label is retained. |
 
 ## Behavior and keyboard access

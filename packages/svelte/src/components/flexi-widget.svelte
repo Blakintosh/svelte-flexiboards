@@ -12,7 +12,7 @@
 	import type { ClassValue } from 'svelte/elements';
 
 	export type FlexiWidgetProps = FlexiCommonProps<FlexiWidgetController> &
-		Exclude<FlexiWidgetConfiguration<ClassValue>, 'className' | 'snippet'> & {
+		Omit<FlexiWidgetConfiguration<ClassValue>, 'className' | 'snippet'> & {
 			/**
 			 * The class names to apply to this widget. Either a class value, or a
 			 * function deriving one from the widget's state.
@@ -74,43 +74,4 @@
 			...(children !== undefined && { snippet: children })
 		});
 	});
-
-	// let derivedClassName = $derived.by(() => {
-	// 	if (typeof widget.className === 'function') {
-	// 		return widget.className(widget);
-	// 	}
-
-	// 	return widget.className;
-	// });
-
-	// let assistiveTextId = generateUniqueId();
 </script>
-
-<!-- noscript only as an SSR fallback, since it will not look like the hydrated version. -->
-<!-- <noscript style="display: contents;">
-	<div
-		class={derivedClassName}
-		aria-grabbed={widget.isGrabbed}
-		style={widget.style}
-		role="cell"
-		aria-label="Idle widget"
-		aria-colindex={widget.x}
-		aria-rowindex={widget.y}
-		aria-colspan={widget.width}
-		aria-rowspan={widget.height}
-		aria-describedby={assistiveTextId}
-		tabindex={0}
-		bind:this={widget.ref}
-	>
-		<span style={assistiveTextStyle} id={assistiveTextId}>
-			JavaScript is required to manipulate this widget.
-		</span>
-		{#if widget.snippet}
-			{@render widget.snippet({
-				widget
-			})}
-		{:else if widget.component}
-			<widget.component {...widget.componentProps ?? {}} />
-		{/if}
-	</div>
-</noscript> -->

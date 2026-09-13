@@ -70,6 +70,7 @@
 	const { target } = flexitarget(snapshotConfig(config), key);
 
 	// The reactive consumer-facing handle.
+	const accessibilityId = $props.id();
 	const publicTarget = reactive(target as FlexiTargetController);
 	controller = publicTarget;
 	onfirstcreate?.(publicTarget);
@@ -115,11 +116,11 @@
 	     dimensions and the block below renders the placed widgets. -->
 	<FlexiTargetLoader />
 
-	<FlexiGrid class={className}>
+	<FlexiGrid class={className} {accessibilityId}>
 		{#if prepared()}
 			<!-- Deterministic order, for tabbing and consistent DOM ordering. -->
-			{#each orderedWidgets() as widget (widget.id)}
-				<RenderedFlexiWidget {widget} />
+			{#each orderedWidgets() as widget, index (widget.id)}
+				<RenderedFlexiWidget {widget} id={`${accessibilityId}-cell-${index}`} />
 			{/each}
 
 			{#if dropzoneWidget() && shouldRenderDropzoneWidget()}

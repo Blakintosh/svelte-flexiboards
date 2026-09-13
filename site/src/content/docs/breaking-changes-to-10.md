@@ -10,18 +10,17 @@ framework: svelte
 	import InstallCommand from '$lib/components/docs/install-command.svelte';
 </script>
 
-_Applies to Flexiboards 1.0.0, September 2026. Migrating from v0.3 or earlier? Apply [v0.4](/docs/breaking-changes-to-04) first._
+_Applies to the upcoming Flexiboards 1.0.0 release. Migrating from v0.3 or earlier? Apply [v0.4](/docs/breaking-changes-to-04) first._
 
 ## What changed and why
 
-Flexiboards 1.0 splits the library into a framework-agnostic core and thin adapters, so the React port shares one engine with Svelte. For a Svelte project the public API is unchanged apart from the package name. The rest of this page lists what you can now remove or rename.
+Flexiboards 1.0 moves the Svelte library to `@flexiboards/svelte` and its shared engine to `@flexiboards/core`. Svelte projects must update the package name, replace removed props, and handle untyped exported entries. The sections below list the required changes.
 
 ## Renamed packages
 
 | v0.4                 | v1.0                                                                 |
 | -------------------- | -------------------------------------------------------------------- |
 | `svelte-flexiboards` | `@flexiboards/svelte`                                                |
-| Not in v0.4          | `@flexiboards/react` (new)                                           |
 | Not in v0.4          | `@flexiboards/core` (types and helpers, re-exported by each adapter) |
 
 <InstallCommand steps={[{ action: 'remove', package: 'svelte-flexiboards' }, { package: '@flexiboards/svelte' }]} />
@@ -34,6 +33,12 @@ Then replace the import specifier:
 ```
 
 Every export from v0.4 is still exported from `@flexiboards/svelte` under the same name.
+
+## Accessibility selectors and coordinates
+
+Replace `[role="cell"]` selectors with `[data-flexi-widget]` when styling or finding widgets in every interaction state. Placed widgets now use `role="gridcell"` inside accessible rows; a held widget temporarily uses `role="group"`.
+
+`aria-colindex` and `aria-rowindex` start at 1. Controller coordinates and stored layouts remain zero-based. For example, `x: 0, y: 0` is exposed as column 1, row 1. Update tests that read these attributes directly; `cellAt(0, 0)` still finds the first model cell.
 
 ## Changed helpers
 
@@ -81,9 +86,7 @@ Use `canDrop` on the board or an individual target to reject a placement. See [C
 
 ### Component behavior
 
-In React, `FlexiBoard` forwards `ref` to its root element.
-
-In both frameworks, you can mount new `FlexiWidget` declarations after the target has loaded. Each one is added through the existing placement rules. A placement that cannot fit is rejected with a warning. See [Adding widgets later](/docs/components/widget#adding-widgets-later).
+In Svelte, you can mount new `FlexiWidget` declarations after the target has loaded. Each one is added through the existing placement rules. A placement that cannot fit is rejected with a warning. See [Adding widgets later](/docs/components/widget#adding-widgets-later).
 
 ### Other additions
 

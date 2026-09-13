@@ -10,92 +10,172 @@
 			"name": "controller",
 			"type": "FlexiTargetController | undefined",
 			"description": "The controller managing this component's state and behaviour. Bind to it to access the component's imperative API.",
+			"optional": true,
 			"bindable": true
 		},
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiTargetController) => void) | undefined",
-			"description": "Fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created.",
+			"optional": true
 		},
 		{
 			"name": "header",
 			"type": "Snippet<[{ target: FlexiTargetController }]>",
-			"description": "The header content of the target, above the grid."
+			"description": "The header content of the target, above the grid.",
+			"optional": true
 		},
 		{
 			"name": "children",
 			"type": "Snippet",
-			"description": "The child content of the target, which should contain inner FlexiWidget definitions."
+			"description": "The child content of the target, which should contain inner FlexiWidget definitions.",
+			"optional": true
 		},
 		{
 			"name": "footer",
 			"type": "Snippet<[{ target: FlexiTargetController }]>",
-			"description": "The footer content of the target, below the grid."
+			"description": "The footer content of the target, below the grid.",
+			"optional": true
 		},
 		{
 			"name": "containerClass",
 			"type": "string",
-			"description": "The class names to apply to the target's container element."
+			"description": "The class names to apply to the target's container element.",
+			"optional": true
 		},
 		{
 			"name": "class",
 			"type": "string",
-			"description": "The class names to apply to the target's grid element."
+			"description": "The class names to apply to the target's grid element.",
+			"optional": true
 		},
 		{
 			"name": "config",
 			"type": "FlexiTargetPartialConfiguration<ClassValue>",
-			"description": "The configuration object for the target."
+			"description": "The configuration object for the target.",
+			"optional": true
 		},
 		{
 			"name": "key",
 			"type": "string",
-			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported."
+			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported.",
+			"optional": true
 		}
 	],
 	"propsReact": [
 		{
 			"name": "onfirstcreate",
 			"type": "((instance: FlexiTargetController) => void) | undefined",
-			"description": "Fires when the component's controller is first created."
+			"description": "Fires when the component's controller is first created.",
+			"optional": true
 		},
 		{
 			"name": "header",
 			"type": "ReactNode | ((params: { target: FlexiTargetController }) => ReactNode)",
-			"description": "The header content of the target, above the grid."
+			"description": "The header content of the target, above the grid.",
+			"optional": true
 		},
 		{
 			"name": "children",
 			"type": "ReactNode",
-			"description": "The child content of the target, which should contain inner FlexiWidget definitions."
+			"description": "The child content of the target, which should contain inner FlexiWidget definitions.",
+			"optional": true
 		},
 		{
 			"name": "footer",
 			"type": "ReactNode | ((params: { target: FlexiTargetController }) => ReactNode)",
-			"description": "The footer content of the target, below the grid."
+			"description": "The footer content of the target, below the grid.",
+			"optional": true
 		},
 		{
 			"name": "containerClassName",
 			"type": "string",
-			"description": "The class names to apply to the target's container element."
+			"description": "The class names to apply to the target's container element.",
+			"optional": true
 		},
 		{
 			"name": "className",
 			"type": "string",
-			"description": "The class names to apply to the target's grid element."
+			"description": "The class names to apply to the target's grid element.",
+			"optional": true
 		},
 		{
 			"name": "config",
 			"type": "FlexiTargetPartialConfiguration",
-			"description": "The configuration object for the target."
+			"description": "The configuration object for the target.",
+			"optional": true
 		},
 		{
 			"name": "keyName",
 			"type": "string",
-			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported."
+			"description": "The unique identifier for the target. Used to identify the target when layouts are imported or exported.",
+			"optional": true
 		}
 	],
 	"controller": {
+		"name": "FlexiTargetController",
+		"properties": [
+			{
+				"name": "key",
+				"type": "string",
+				"description": "The stable target identifier used in exported layouts and drop callbacks.",
+				"readonly": true
+			},
+			{
+				"name": "config",
+				"type": "FlexiTargetConfiguration",
+				"description": "The reactive configuration of the target."
+			},
+			{
+				"name": "providerWidgetDefaults",
+				"type": "FlexiWidgetDefaults",
+				"description": "The reactive default widget configuration passed through from the provider, if it exists."
+			},
+			{
+				"name": "prepared",
+				"type": "boolean",
+				"description": "Whether the target is prepared and ready to render widgets.",
+				"readonly": true
+			},
+			{
+				"name": "dropRejected",
+				"type": "boolean",
+				"description": "Whether a widget is currently being grabbed or resized over this target at a position where it cannot be placed. Use it to signal that the drop will be rejected.",
+				"readonly": true
+			},
+			{
+				"name": "columns",
+				"type": "number",
+				"description": "The number of columns currently being used in the target grid. This value is readonly.",
+				"readonly": true
+			},
+			{
+				"name": "rows",
+				"type": "number",
+				"description": "The number of rows currently being used in the target grid. This value is readonly.",
+				"readonly": true
+			},
+			{
+				"name": "widgets",
+				"type": "ReactiveSet<FlexiWidgetController>",
+				"description": "The widgets currently in this target.",
+				"readonly": true
+			}
+		],
+		"methods": [
+			{
+				"name": "createWidget",
+				"type": "(config: FlexiWidgetConfiguration) => FlexiWidgetController | undefined",
+				"description": "Creates a new widget under this target."
+			},
+			{
+				"name": "clear",
+				"type": "() => void",
+				"description": "Deletes every widget in this target. Fires `onWidgetDelete` per widget."
+			}
+		]
+	},
+	"controllerReact": {
 		"name": "FlexiTargetController",
 		"properties": [
 			{
@@ -162,174 +242,418 @@
 		"FlexiTargetPartialConfiguration": [
 			{
 				"name": "rowSizing",
-				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "The value inside the target's `grid-template-rows` `repeat()` function."
+				"type": "(string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string))",
+				"description": "The value inside the target's `grid-template-rows` `repeat()` function.",
+				"optional": true
 			},
 			{
 				"name": "columnSizing",
-				"type": "string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string)",
-				"description": "The value inside the target's `grid-template-columns` `repeat()` function."
+				"type": "(string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string))",
+				"description": "The value inside the target's `grid-template-columns` `repeat()` function.",
+				"optional": true
 			},
 			{
 				"name": "layout",
 				"type": "TargetLayout",
-				"description": "The layout algorithm and parameters to use for the target grid."
+				"description": "The layout algorithm and parameters to use for the target grid.",
+				"optional": true
 			},
 			{
 				"name": "canDrop",
-				"type": "(check: FlexiDropCheck) => boolean",
-				"description": "See FlexiTargetConfiguration.canDrop."
+				"type": "((check: FlexiDropCheck) => boolean) | undefined",
+				"description": "See FlexiTargetConfiguration.canDrop.",
+				"optional": true
 			},
 			{
 				"name": "widgetDefaults",
-				"type": "FlexiWidgetDefaults<TClass>",
-				"description": "The default configuration for widgets within this target."
+				"type": "FlexiWidgetDefaults<ClassValue> | undefined",
+				"description": "The default configuration for widgets within this target.",
+				"optional": true
 			}
 		],
 		"FlexiWidgetDefaults": [
 			{
 				"name": "draggability",
-				"type": "'none' | 'movable' | 'full'",
-				"description": "The draggability of the widget."
+				"type": "'none' | 'movable' | 'full' | undefined",
+				"description": "The draggability of the widget.",
+				"optional": true,
+				"default": "full"
 			},
 			{
 				"name": "resizability",
-				"type": "'none' | 'horizontal' | 'vertical' | 'both'",
-				"description": "The resizability of the widget."
+				"type": "'none' | 'horizontal' | 'vertical' | 'both' | undefined",
+				"description": "The resizability of the widget.",
+				"optional": true,
+				"default": "none"
 			},
 			{
 				"name": "snippet",
-				"type": "Snippet<[{ widget: FlexiWidgetController }]>",
-				"description": "The snippet that is rendered by this widget."
+				"type": "(Snippet<[{ widget: FlexiWidgetController }]>)",
+				"description": "The render function used for this widget's content.",
+				"optional": true
 			},
 			{
 				"name": "component",
-				"type": "Component",
-				"description": "The component that is rendered by this widget."
+				"type": "(Component)",
+				"description": "The component that is rendered by this widget.",
+				"optional": true
 			},
 			{
 				"name": "componentProps",
-				"type": "Record<string, any>",
-				"description": "The props applied to the component rendered, if it has one."
+				"type": "Record<string, any> | undefined",
+				"description": "The props applied to the component rendered, if it has one.",
+				"optional": true
 			},
 			{
 				"name": "className",
-				"type": "ClassValue | ((widget: FlexiWidgetController) => ClassValue)<TClass>",
-				"description": "The class names to apply to this widget."
+				"type": "(ClassValue | ((widget: FlexiWidgetController) => ClassValue)) | undefined",
+				"description": "The class names to apply to this widget.",
+				"optional": true
 			},
 			{
 				"name": "transition",
-				"type": "FlexiWidgetTransitionConfiguration",
-				"description": "The transition configuration for this widget."
+				"type": "FlexiWidgetTransitionConfiguration | undefined",
+				"description": "The transition configuration for this widget.",
+				"optional": true
 			},
 			{
 				"name": "grabTrigger",
-				"type": "FlexiWidgetTriggerConfiguration",
-				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press."
+				"type": "FlexiWidgetTriggerConfiguration | undefined",
+				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press.",
+				"optional": true
 			},
 			{
 				"name": "resizeTrigger",
-				"type": "FlexiWidgetTriggerConfiguration",
-				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press."
+				"type": "FlexiWidgetTriggerConfiguration | undefined",
+				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press.",
+				"optional": true
 			},
 			{
 				"name": "minWidth",
-				"type": "number",
-				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1."
+				"type": "number | undefined",
+				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1.",
+				"optional": true
 			},
 			{
 				"name": "minHeight",
-				"type": "number",
-				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1."
+				"type": "number | undefined",
+				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1.",
+				"optional": true
 			},
 			{
 				"name": "maxWidth",
-				"type": "number",
-				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1."
+				"type": "number | undefined",
+				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.",
+				"optional": true
 			},
 			{
 				"name": "maxHeight",
-				"type": "number",
-				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1."
+				"type": "number | undefined",
+				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.",
+				"optional": true
 			}
 		],
 		"FlowTargetLayout": [
 			{
 				"name": "type",
 				"type": "'flow'",
-				"description": ""
+				"description": "",
+				"optional": false
 			},
 			{
 				"name": "placementStrategy",
 				"type": "'append' | 'prepend'",
-				"description": "Specifies how widgets should be added when no coordinates are specified. - \"append\" will add a widget after the last widget in the grid. - \"prepend\" will add a widget before the first widget in the grid."
+				"description": "Specifies how widgets should be added when no coordinates are specified. - \"append\" will add a widget after the last widget in the grid. - \"prepend\" will add a widget before the first widget in the grid.",
+				"optional": false
 			},
 			{
 				"name": "disallowInsert",
 				"type": "boolean",
-				"description": "When set to true, the grid will ignore coordinates provided when adding widgets and instead default to the placement strategy's behaviour."
+				"description": "When set to true, the grid will ignore coordinates provided when adding widgets and instead default to the placement strategy's behaviour.",
+				"optional": true
 			},
 			{
 				"name": "flowAxis",
 				"type": "'row' | 'column'",
-				"description": "The axis that widgets are placed along. - When set to \"row\", widgets are added along the columns of a row before wrapping to the next row. - When set to \"column\", widgets are added along the rows of a column before wrapping to the next column."
+				"description": "The axis that widgets are placed along. - When set to \"row\", widgets are added along the columns of a row before wrapping to the next row. - When set to \"column\", widgets are added along the rows of a column before wrapping to the next column.",
+				"optional": false
 			},
 			{
 				"name": "maxFlowAxis",
 				"type": "number",
-				"description": "The maximum number of rows or columns that can be used depending on what the flow axis is set to. - When flowAxis is set to \"row\", the grid will not allow more rows than this value. - When flowAxis is set to \"column\", the grid will not allow more columns than this value."
+				"description": "The maximum number of rows or columns that can be used depending on what the flow axis is set to. - When flowAxis is set to \"row\", the grid will not allow more rows than this value. - When flowAxis is set to \"column\", the grid will not allow more columns than this value.",
+				"optional": true
 			},
 			{
 				"name": "rows",
 				"type": "number",
-				"description": "The number of rows that the grid should have."
+				"description": "The number of rows that the grid should have.",
+				"optional": true
 			},
 			{
 				"name": "columns",
 				"type": "number",
-				"description": "The number of columns that the grid should have."
+				"description": "The number of columns that the grid should have.",
+				"optional": true
 			}
 		],
 		"FreeFormTargetLayout": [
 			{
 				"name": "type",
 				"type": "'free'",
-				"description": ""
+				"description": "",
+				"optional": false
 			},
 			{
 				"name": "minRows",
 				"type": "number",
 				"description": "The minimum number of rows the grid should have. The grid never shrinks below this.",
+				"optional": true,
 				"default": "1"
 			},
 			{
 				"name": "minColumns",
 				"type": "number",
 				"description": "The minimum number of columns the grid should have. The grid never shrinks below this.",
+				"optional": true,
 				"default": "1"
 			},
 			{
 				"name": "maxRows",
 				"type": "number",
 				"description": "The maximum number of rows the grid may expand to. Set equal to `minRows` to fix the row count.",
+				"optional": true,
 				"default": "Infinity"
 			},
 			{
 				"name": "maxColumns",
 				"type": "number",
 				"description": "The maximum number of columns the grid may expand to, capped at 32. Set equal to `minColumns` to fix the column count.",
+				"optional": true,
 				"default": "Infinity"
 			},
 			{
 				"name": "collapsibility",
 				"type": "'none' | 'leading' | 'trailing' | 'endings' | 'any'",
 				"description": "Whether the grid collapses to remove empty rows and columns, and where. - \"none\" never collapses. - \"leading\" collapses empty rows/columns at the start of the grid. - \"trailing\" collapses empty rows/columns at the end of the grid. - \"endings\" collapses at either end. - \"any\" collapses any empty row/column.",
+				"optional": true,
 				"default": "\"none\""
 			},
 			{
 				"name": "packing",
 				"type": "'none' | 'horizontal' | 'vertical'",
 				"description": "Whether widgets are packed towards an edge after each change, closing gaps. - \"none\" leaves widgets where they were placed. - \"horizontal\" slides widgets left as far as they can go, left-most first. - \"vertical\" slides widgets up as far as they can go, top-most first.",
+				"optional": true,
+				"default": "\"none\""
+			}
+		]
+	},
+	"typesReact": {
+		"FlexiTargetPartialConfiguration": [
+			{
+				"name": "rowSizing",
+				"type": "(string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string))",
+				"description": "The value inside the target's `grid-template-rows` `repeat()` function.",
+				"optional": true
+			},
+			{
+				"name": "columnSizing",
+				"type": "(string | (({ target, grid }: { target: FlexiTargetController; grid: FlexiGrid }) => string))",
+				"description": "The value inside the target's `grid-template-columns` `repeat()` function.",
+				"optional": true
+			},
+			{
+				"name": "layout",
+				"type": "TargetLayout",
+				"description": "The layout algorithm and parameters to use for the target grid.",
+				"optional": true
+			},
+			{
+				"name": "canDrop",
+				"type": "((check: FlexiDropCheck) => boolean) | undefined",
+				"description": "See FlexiTargetConfiguration.canDrop.",
+				"optional": true
+			},
+			{
+				"name": "widgetDefaults",
+				"type": "FlexiWidgetDefaults",
+				"description": "The default configuration for widgets within this target.",
+				"optional": true
+			}
+		],
+		"FlexiWidgetDefaults": [
+			{
+				"name": "draggability",
+				"type": "'none' | 'movable' | 'full' | undefined",
+				"description": "The draggability of the widget.",
+				"optional": true,
+				"default": "full"
+			},
+			{
+				"name": "resizability",
+				"type": "'none' | 'horizontal' | 'vertical' | 'both' | undefined",
+				"description": "The resizability of the widget.",
+				"optional": true,
+				"default": "none"
+			},
+			{
+				"name": "componentProps",
+				"type": "Record<string, any> | undefined",
+				"description": "The props applied to the component rendered, if it has one.",
+				"optional": true
+			},
+			{
+				"name": "className",
+				"type": "(string | ((widget: FlexiWidgetController) => string)) | undefined",
+				"description": "The class names to apply to this widget.",
+				"optional": true
+			},
+			{
+				"name": "transition",
+				"type": "FlexiWidgetTransitionConfiguration | undefined",
+				"description": "The transition configuration for this widget.",
+				"optional": true
+			},
+			{
+				"name": "grabTrigger",
+				"type": "FlexiWidgetTriggerConfiguration | undefined",
+				"description": "The configuration for how pointer events should trigger a grab event on the widget. E.g. a long press.",
+				"optional": true
+			},
+			{
+				"name": "resizeTrigger",
+				"type": "FlexiWidgetTriggerConfiguration | undefined",
+				"description": "The configuration for how pointer events should trigger a resize event on the widget. E.g. a long press.",
+				"optional": true
+			},
+			{
+				"name": "minWidth",
+				"type": "number | undefined",
+				"description": "The minimum width of the widget in units. Defaults to 1, cannot be less than 1.",
+				"optional": true
+			},
+			{
+				"name": "minHeight",
+				"type": "number | undefined",
+				"description": "The minimum height of the widget in units. Defaults to 1, cannot be less than 1.",
+				"optional": true
+			},
+			{
+				"name": "maxWidth",
+				"type": "number | undefined",
+				"description": "The maximum width of the widget in units. Defaults to Infinity, cannot be less than 1.",
+				"optional": true
+			},
+			{
+				"name": "maxHeight",
+				"type": "number | undefined",
+				"description": "The maximum height of the widget in units. Defaults to Infinity, cannot be less than 1.",
+				"optional": true
+			},
+			{
+				"name": "component",
+				"type": "ComponentType<any>",
+				"description": "The component rendered by this widget, receiving `componentProps`.",
+				"optional": true
+			},
+			{
+				"name": "snippet",
+				"type": "FlexiWidgetChildren",
+				"description": "The children render function for this widget; receives the reactive widget and its event handlers.",
+				"optional": true
+			}
+		],
+		"FlowTargetLayout": [
+			{
+				"name": "type",
+				"type": "'flow'",
+				"description": "",
+				"optional": false
+			},
+			{
+				"name": "placementStrategy",
+				"type": "'append' | 'prepend'",
+				"description": "Specifies how widgets should be added when no coordinates are specified. - \"append\" will add a widget after the last widget in the grid. - \"prepend\" will add a widget before the first widget in the grid.",
+				"optional": false
+			},
+			{
+				"name": "disallowInsert",
+				"type": "boolean",
+				"description": "When set to true, the grid will ignore coordinates provided when adding widgets and instead default to the placement strategy's behaviour.",
+				"optional": true
+			},
+			{
+				"name": "flowAxis",
+				"type": "'row' | 'column'",
+				"description": "The axis that widgets are placed along. - When set to \"row\", widgets are added along the columns of a row before wrapping to the next row. - When set to \"column\", widgets are added along the rows of a column before wrapping to the next column.",
+				"optional": false
+			},
+			{
+				"name": "maxFlowAxis",
+				"type": "number",
+				"description": "The maximum number of rows or columns that can be used depending on what the flow axis is set to. - When flowAxis is set to \"row\", the grid will not allow more rows than this value. - When flowAxis is set to \"column\", the grid will not allow more columns than this value.",
+				"optional": true
+			},
+			{
+				"name": "rows",
+				"type": "number",
+				"description": "The number of rows that the grid should have.",
+				"optional": true
+			},
+			{
+				"name": "columns",
+				"type": "number",
+				"description": "The number of columns that the grid should have.",
+				"optional": true
+			}
+		],
+		"FreeFormTargetLayout": [
+			{
+				"name": "type",
+				"type": "'free'",
+				"description": "",
+				"optional": false
+			},
+			{
+				"name": "minRows",
+				"type": "number",
+				"description": "The minimum number of rows the grid should have. The grid never shrinks below this.",
+				"optional": true,
+				"default": "1"
+			},
+			{
+				"name": "minColumns",
+				"type": "number",
+				"description": "The minimum number of columns the grid should have. The grid never shrinks below this.",
+				"optional": true,
+				"default": "1"
+			},
+			{
+				"name": "maxRows",
+				"type": "number",
+				"description": "The maximum number of rows the grid may expand to. Set equal to `minRows` to fix the row count.",
+				"optional": true,
+				"default": "Infinity"
+			},
+			{
+				"name": "maxColumns",
+				"type": "number",
+				"description": "The maximum number of columns the grid may expand to, capped at 32. Set equal to `minColumns` to fix the column count.",
+				"optional": true,
+				"default": "Infinity"
+			},
+			{
+				"name": "collapsibility",
+				"type": "'none' | 'leading' | 'trailing' | 'endings' | 'any'",
+				"description": "Whether the grid collapses to remove empty rows and columns, and where. - \"none\" never collapses. - \"leading\" collapses empty rows/columns at the start of the grid. - \"trailing\" collapses empty rows/columns at the end of the grid. - \"endings\" collapses at either end. - \"any\" collapses any empty row/column.",
+				"optional": true,
+				"default": "\"none\""
+			},
+			{
+				"name": "packing",
+				"type": "'none' | 'horizontal' | 'vertical'",
+				"description": "Whether widgets are packed towards an edge after each change, closing gaps. - \"none\" leaves widgets where they were placed. - \"horizontal\" slides widgets left as far as they can go, left-most first. - \"vertical\" slides widgets up as far as they can go, top-most first.",
+				"optional": true,
 				"default": "\"none\""
 			}
 		]

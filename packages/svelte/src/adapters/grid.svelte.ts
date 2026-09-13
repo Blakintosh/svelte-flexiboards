@@ -18,6 +18,7 @@ export function flexigrid() {
 	$effect(() => grid.watchGridElementDimensions());
 
 	return {
+		target,
 		grid
 	};
 }

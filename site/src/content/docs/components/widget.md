@@ -140,8 +140,6 @@ An accepted addition fires `onfirstcreate` and reports the new layout through `o
 
 ## FlexiWidgetController
 
-`FlexiWidget` uses a [controller](/docs/controllers) to manage its state and behaviour.
-
 <Only svelte>
 
 You can access the controller by binding to the `controller` prop, from the `onfirstcreate` callback, or from the `children` snippet parameter. Inside a component rendered by the `component` prop, call `getFlexiwidgetCtx()`.
@@ -175,33 +173,25 @@ export function Tile() {
 
 Use the `FlexiWidgetController` to read widget state directly.
 
-<ApiReference title="Properties" api={api.controller.properties} />
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
-{#if api.controller.methods.length}
-
-<ApiReference title="Methods" api={api.controller.methods} />
-
-{:else}
-
-`FlexiWidgetController` does not expose any methods.
-
-{/if}
+<ApiReference title="Methods" api={api.controller.methods} reactApi={api.controllerReact.methods} />
 
 ## FlexiWidgetConfiguration
 
-The configuration object for the `FlexiWidget` component. This is not reactive when invoked as props on the component, so to mutate it reactively you will need to mutate properties on the controller.
+`FlexiWidget` accepts configuration as props. Changes to rendering, metadata, interaction options, size limits, and transitions update the existing widget. `id`, `type`, `x`, `y`, `width`, and `height` initialize the widget; changing those props does not recreate or reposition it. Use `moveTo()` for movement, or import a layout to replace widget positions and sizes. See [Configuration reactivity](/docs/configuration#reactivity).
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetConfiguration} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetConfiguration} reactApi={api.typesReact.FlexiWidgetConfiguration} />
 
 ## FlexiWidgetTransitionConfiguration
 
 The `transition` property of a widget's configuration (or of `widgetDefaults`). See the [Transitions](/docs/transitions) guide for presets and the animation adapters.
 
-<ApiReference title="Properties" api={api.types.FlexiWidgetTransitionConfiguration} />
+<ApiReference title="Properties" api={api.types.FlexiWidgetTransitionConfiguration} reactApi={api.typesReact.FlexiWidgetTransitionConfiguration} />
 
 ## Accessibility
 
-Each widget renders as `role="cell"` with `aria-colindex`, `aria-rowindex`, `aria-colspan`, `aria-rowspan`, and `aria-grabbed` while held. A grabbable widget is in the tab order unless it contains a [FlexiGrab](/docs/components/grab), in which case the handle is.
+Each placed widget renders as `role="gridcell"` with one-based `aria-colindex` and `aria-rowindex`, plus `aria-colspan` and `aria-rowspan`. The held widget temporarily uses `role="group"`; its preview is hidden and inert. The `data-flexi-widget` attribute remains present in every state. A grabbable widget is in the tab order unless it contains a [FlexiGrab](/docs/components/grab), in which case the handle is.
 
 | Key               | Effect                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------- |
