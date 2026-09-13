@@ -26,7 +26,9 @@ Added
 - `dropRejected` state on targets and widgets; `initialLayout` for server-provided layouts; layouts loaded on the client can show a `suspense` fallback.
 - Every exported layout entry carries an `id`; layouts can be stored as a `{ version, layout }` envelope.
 - `FlexiGrab` and `FlexiResize` components; class functions on both.
-- Markdown twins of every docs page, `/llms.txt`, and a skill for AI assistants.
+- Markdown twins of every docs page and `/llms.txt`.
+
+<!-- - Markdown twins of every docs page, `/llms.txt`, and a skill for AI assistants. -->
 
 Fixed
 

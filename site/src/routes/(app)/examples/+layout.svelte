@@ -279,16 +279,6 @@
 				{/each}
 			</nav>
 		{/each}
-
-		{#if fw === 'react'}
-			<p
-				class="border-rule-soft bg-tint text-body mt-auto rounded-[10px] border px-3 py-2.5 text-[14px] leading-[1.5]"
-				role="note"
-			>
-				<code>@flexiboards/react</code> is in public preview. We'll add more React examples as we approach
-				stability.
-			</p>
-		{/if}
 	</aside>
 
 	<!-- Viewer: one rounded card, toolbar on top, recessed stage below. -->

@@ -1,12 +1,13 @@
 ---
 title: Docs for LLMs
-description: Give an AI assistant the Flexiboards docs as plain Markdown, or install the Flexiboards skill.
+# description: Give an AI assistant the Flexiboards docs as plain Markdown, or install the Flexiboards skill.
+description: Give an AI assistant the Flexiboards docs as plain Markdown.
 category: Introduction
 published: true
 ---
 
 <script lang="ts">
-	import InstallCommand from '$lib/components/docs/install-command.svelte';
+	// import InstallCommand from '$lib/components/docs/install-command.svelte';
 	import Only from '$lib/components/docs/only.svelte';
 </script>
 
@@ -46,6 +47,8 @@ Each HTML page advertises the selected version with `<link rel="alternate" type=
 
 Every docs page has a **Copy as Markdown** action under its title, next to the edit link. It copies only the currently selected framework's documentation. **Open Markdown** opens that same version in a new tab. Both actions follow the framework picker automatically.
 
+<!-- Skill promotion is paused until validation.
+
 ## Skill
 
 The repository ships a skill that gives an assistant the parts of Flexiboards it would otherwise guess at: which layout to pick, the naming differences between the adapters, the controller actions and callbacks, React lifecycle and reactivity constraints, and how to test a board.
@@ -53,3 +56,5 @@ The repository ships a skill that gives an assistant the parts of Flexiboards it
 <InstallCommand action="dlx" package="skills add Blakintosh/svelte-flexiboards" />
 
 If you do not use that installer, copy `skills/flexiboards/` from [the repository](https://github.com/Blakintosh/svelte-flexiboards/tree/main/skills/flexiboards) into your project's `.claude/skills/` directory. The skill links back to the Markdown pages above, so it stays short and the docs stay the source of truth.
+
+-->

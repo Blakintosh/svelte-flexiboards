@@ -562,8 +562,8 @@
 		<div>
 			<SectionHeading class="mb-3">Docs for your coding agent</SectionHeading>
 			<p class="text-body m-0 mb-5 max-w-[520px] text-base leading-relaxed">
-				Give your agent framework-specific Markdown docs and the Flexiboards skill. The llms.txt
-				index points it to the relevant API and examples.
+				Give your agent framework-specific Markdown docs<!-- and the Flexiboards skill -->. The
+				llms.txt index points it to the relevant API and examples.
 			</p>
 			<div class="flex flex-wrap gap-x-6 gap-y-3">
 				<Button href="/docs/llms" variant="link">Read the setup guide</Button>

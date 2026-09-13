@@ -522,7 +522,8 @@ export function buildDocs() {
 			`- [Examples](${ORIGIN}/examples): Browse working boards, including a dashboard, a Kanban board, a form builder, and a gallery.`,
 			'- [@flexiboards/svelte](https://www.npmjs.com/package/@flexiboards/svelte): The Svelte 5 adapter, published on npm.',
 			'- [@flexiboards/react](https://www.npmjs.com/package/@flexiboards/react): The React 18 and 19 adapter, published on npm.',
-			'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.\n- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): An agent skill covering the API, adapter behavior, controller actions, and testing; install it to build boards with an assistant.'
+			'- [@flexiboards/core](https://www.npmjs.com/package/@flexiboards/core): The framework-independent grid engine both adapters build on.'
+			// '- [Flexiboards skill for AI agents](https://github.com/Blakintosh/svelte-flexiboards/blob/main/skills/flexiboards/SKILL.md): An agent skill covering the API, adapter behavior, controller actions, and testing; install it to build boards with an assistant.'
 		]
 	});
 
