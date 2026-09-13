@@ -7,7 +7,7 @@ published: true
 
 Dates are the npm publish dates. Breaking changes link to their migration page.
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-09-13)
 
 The first release of the split packages: `@flexiboards/core` holds the grid engine, `@flexiboards/svelte` and `@flexiboards/react` are adapters over it with mirrored APIs. `svelte-flexiboards` stops at 0.4.2. See [Migrating to v1.0](/docs/breaking-changes-to-10).
 

@@ -2,11 +2,33 @@
 
 Flexiboards uses the existing Node and Caddy installation on `ssh hetzner`. Run it as a systemd service on `127.0.0.1:3003`. The other apps currently use ports 3000, 3001, and 3002. No Docker installation is needed.
 
-The server has Node 22.22.1 and Caddy 2.11.4. Build from a Git checkout, export a standalone release directory, then switch the service to that release. The running site keeps its own dependencies while the next version builds.
+The server has Node 22.22.1 and Caddy 2.11.4. The current deployment runs directly from `/opt/apps/flexiboards/site`. The installed systemd unit uses that working directory and starts `/usr/bin/node build` as the `flexiboards` user. Caddy already redirects the bare domain and proxies the canonical host to port 3003.
+
+## Update the current deployment
+
+From an interactive root shell on Hetzner:
+
+```sh
+cd /opt/apps/flexiboards
+git status --short
+git pull --ff-only
+pnpm install --frozen-lockfile
+pnpm build:packages && pnpm -C site build
+```
+
+Preserve the server's local change to `deploy/flexiboards.service`, which sets the working directory to `/opt/apps/flexiboards/site`. Only restart after the build succeeds:
+
+```sh
+systemctl restart flexiboards
+node scripts/check-site-server.mjs http://127.0.0.1:3003
+node scripts/check-site-server.mjs https://www.flexiboards.dev
+```
+
+Building in the live checkout replaces assets while the old process is running. Use the isolated release layout below when moving to deployments that keep the current build intact. The remaining sections describe that optional setup; its `repo`, `releases`, and `current` paths are not used by the current service.
 
 ## First-time setup
 
-After the reviewed launch branch has been pushed, connect with `ssh hetzner` and run these commands as root:
+For a new installation using isolated release directories, connect with `ssh hetzner` and run these commands as root:
 
 ```sh
 useradd --system --user-group --create-home --home-dir /opt/apps/flexiboards --shell /usr/sbin/nologin flexiboards
@@ -14,7 +36,7 @@ install -d -o flexiboards -g flexiboards /opt/apps/flexiboards/releases
 runuser -u flexiboards -- git clone https://github.com/Blakintosh/svelte-flexiboards.git /opt/apps/flexiboards/repo
 ```
 
-Use these account-creation commands only for the initial setup. Check out the reviewed launch branch in `/opt/apps/flexiboards/repo` before building. The default branch may still contain the old release.
+Use these account-creation commands only for a new installation. On the existing server, the `flexiboards` account and `/opt/apps/flexiboards` checkout already exist. Prepare the release directories and a separate checkout without replacing the live checkout. Check out the reviewed release commit in `/opt/apps/flexiboards/repo` before building.
 
 Install the repository's pnpm version for this app:
 

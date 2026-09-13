@@ -6,11 +6,11 @@ The release contains `@flexiboards/core`, `@flexiboards/svelte`, `@flexiboards/r
 
 As checked on 2026-09-13:
 
-- The four scoped packages are absent from npm. Confirm that the publishing account can create public packages in the `@flexiboards` scope. Package availability alone does not establish scope ownership.
-- Create the `flexiboards` organization on npm's website if it does not exist. The four package manifests already have their scoped names; do not run `npm init` in this repository.
-- Enable 2FA on the publishing npm account. The first release needs an interactive login because npm cannot stage brand-new packages. Later releases use the repository's `NPM_TOKEN` secret with **Read and write (stage only)** permission for the `@flexiboards` scope. This token does not need **Bypass two-factor authentication**; the maintainer completes 2FA when approving a staged version.
+- All four scoped packages were published at `1.0.0` with the `latest` tag. Their Git tags point to release commit `53f6838` and have been pushed to GitHub.
+- Clean npm installs passed the existing React 19.2.8 and Svelte 5.38.6 consumer checks, including server rendering and hydration. The public site passed all three launch tests and the production server smoke check.
+- Later releases use the repository's `NPM_TOKEN` secret with **Read and write (stage only)** permission for the `@flexiboards` scope. Keep 2FA enabled on the publishing account. The token does not need **Bypass two-factor authentication**; the maintainer completes 2FA when approving a staged version.
 - GitHub Actions cannot currently create pull requests. Enable **Allow GitHub Actions to create and approve pull requests** before using the Changesets version-PR flow for later releases.
-- Hetzner is reachable through `ssh hetzner`. It already runs Node and Caddy; Flexiboards needs its own service and two Caddy site blocks. Follow the [server deployment instructions](deploy/README.md).
+- Hetzner serves `https://www.flexiboards.dev` through Caddy and the running `flexiboards` systemd service. The bare domain redirects to the canonical host. The current checkout is `/opt/apps/flexiboards`; follow the [server deployment instructions](deploy/README.md).
 - NVDA verification is pending. Test both adapters at `/dev/accessibility-testbed?framework=svelte` and `/dev/accessibility-testbed?framework=react`. Check reading order, widget labels, grab/cancel/drop announcements, resizing, moving between targets, and where focus lands after each action. Record the NVDA and browser versions with the result.
 
 ## Verify the candidate

@@ -10,7 +10,7 @@ framework: svelte
 	import InstallCommand from '$lib/components/docs/install-command.svelte';
 </script>
 
-_Applies to the upcoming Flexiboards 1.0.0 release. Migrating from v0.3 or earlier? Apply [v0.4](/docs/breaking-changes-to-04) first._
+_Migrating from v0.3 or earlier? Apply [v0.4](/docs/breaking-changes-to-04) first._
 
 ## What changed and why
 
