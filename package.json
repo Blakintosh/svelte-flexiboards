@@ -8,7 +8,8 @@
 		"build:packages": "pnpm -r --filter './packages/*' build",
 		"check": "pnpm build:packages && pnpm -r check",
 		"check:artifacts": "node scripts/check-package-artifacts.mjs",
-		"ci:publish": "pnpm release:check && changeset publish",
+		"release:stage": "node scripts/stage-packages.mjs",
+		"test:release": "node --test scripts/stage-packages.test.mjs",
 		"dev": "pnpm -r --parallel dev",
 		"dev:host": "pnpm -r --parallel dev:host",
 		"format": "prettier --write .",
@@ -19,7 +20,7 @@
 		"changeset": "changeset",
 		"version": "changeset version",
 		"test:consumers": "node scripts/test-package-consumers.mjs",
-		"release:check": "pnpm check && pnpm check:artifacts && pnpm -r test && pnpm lint && pnpm test:consumers && pnpm -C site check:e2e && pnpm -C site e2e"
+		"release:check": "pnpm check && pnpm check:artifacts && pnpm -r test && pnpm test:release && pnpm lint && pnpm test:consumers && pnpm -C site check:e2e && pnpm -C site e2e"
 	},
 	"files": [
 		"dist",

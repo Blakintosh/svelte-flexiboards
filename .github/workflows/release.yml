@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency: release-${{ github.ref }}
 
@@ -20,7 +21,7 @@ jobs:
 
   release:
     needs: validate
-    name: Version or publish
+    name: Version or stage packages
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -33,16 +34,30 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      - name: Install npm with staged publishing support
+        run: npm install --global npm@11.19.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r --filter './packages/*' build
       - run: pnpm check:artifacts
-      # With pending changesets this opens (or updates) a "Version packages" PR;
-      # once that PR is merged it publishes to npm. Needs the NPM_TOKEN secret.
-      - uses: changesets/action@v1
+      - name: Create or update the version PR
+        uses: changesets/action@v1
+        id: changesets
         with:
           version: pnpm changeset version
-          publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Pack unpublished versions
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm changeset pack --out-dir "$RUNNER_TEMP/flexiboards-release"
+      - name: Stage packages for maintainer approval
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm release:stage "$RUNNER_TEMP/flexiboards-release"
+        env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Save release candidates
+        if: always() && steps.changesets.outputs.hasChangesets == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-release-candidates
+          path: ${{ runner.temp }}/flexiboards-release
+          retention-days: 14

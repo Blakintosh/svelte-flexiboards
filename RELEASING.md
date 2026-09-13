@@ -7,14 +7,15 @@ The release contains `@flexiboards/core`, `@flexiboards/svelte`, `@flexiboards/r
 As checked on 2026-09-13:
 
 - The four scoped packages are absent from npm. Confirm that the publishing account can create public packages in the `@flexiboards` scope. Package availability alone does not establish scope ownership.
-- This checkout has no working npm login. The repository and its Preview and Production environments have no `NPM_TOKEN` secret. Configure the repository secret for the existing release workflow, or log in locally for the initial publish. Keep credentials out of the repository and terminal transcripts.
+- Create the `flexiboards` organization on npm's website if it does not exist. The four package manifests already have their scoped names; do not run `npm init` in this repository.
+- Enable 2FA on the publishing npm account. The first release needs an interactive login because npm cannot stage brand-new packages. Later releases use the repository's `NPM_TOKEN` secret with **Read and write (stage only)** permission for the `@flexiboards` scope. This token does not need **Bypass two-factor authentication**; the maintainer completes 2FA when approving a staged version.
 - GitHub Actions cannot currently create pull requests. Enable **Allow GitHub Actions to create and approve pull requests** before using the Changesets version-PR flow for later releases.
 - Hetzner is reachable through `ssh hetzner`. It already runs Node and Caddy; Flexiboards needs its own service and two Caddy site blocks. Follow the [server deployment instructions](deploy/README.md).
 - NVDA verification is pending. Test both adapters at `/dev/accessibility-testbed?framework=svelte` and `/dev/accessibility-testbed?framework=react`. Check reading order, widget labels, grab/cancel/drop announcements, resizing, moving between targets, and where focus lands after each action. Record the NVDA and browser versions with the result.
 
 ## Verify the candidate
 
-Use Node 22.13 or later and the repository's pinned pnpm 11.26.0. GitHub Actions installs that pin from `package.json`; the server setup installs the same version for Flexiboards.
+Use Node 22.14 or later, npm 11.15 or later, and the repository's pinned pnpm 11.26.0 for release checks. GitHub Actions installs the pnpm pin from `package.json` and npm 11.19.1 for staging. The server setup uses the same pnpm version for Flexiboards.
 
 From the repository root:
 
@@ -24,7 +25,7 @@ pnpm -C site exec playwright install chromium
 pnpm release:check
 ```
 
-The release check covers types, lint, unit/component tests, production browser tests, packed exports, license and changelog inclusion, resolved internal dependencies, and isolated React/Svelte consumer installs. Playwright includes axe checks and explicit browser accessibility-tree checks. These checks complement the manual screen-reader pass.
+The release check covers types, lint, unit/component tests, staging behavior, production browser tests, packed exports, license and changelog inclusion, resolved internal dependencies, and isolated React/Svelte consumer installs. Playwright includes axe checks and explicit browser accessibility-tree checks. These checks complement the manual screen-reader pass.
 
 Inspect the read-only publish plan immediately before publication:
 
@@ -42,29 +43,62 @@ Follow [the Hetzner deployment instructions](deploy/README.md) to pull the revie
 
 The canonical public host is `https://www.flexiboards.dev`; the bare domain redirects there. `SITE_ORIGIN` controls generated absolute URLs at build time. `ORIGIN` tells the running Node server its public URL. Both should match the canonical host for production.
 
-## Publish before promoting the site
+## Publish the first versions interactively
 
-A push to `main` starts the Release workflow, which can publish missing npm versions after CI passes. Deploying the site over SSH is a separate action. Keep the new installation instructions behind the loopback service until the packages are published.
+A push to `main` starts the Release workflow, which stages unpublished versions after CI passes. A maintainer approves those staged versions before they become public. npm requires each package to exist before it can be staged, so the initial `1.0.0` publication happens from an interactive terminal. Until then, CI reports **Initial publication required** in the release summary and saves the candidate tarballs without submitting them.
 
-For the initial launch:
+From a local checkout of the reviewed release commit, run:
 
-1. Finish the checks above and log in with the npm account that owns the scope.
-2. Run `pnpm ci:publish` from the reviewed commit. This runs the release checks again, then publishes the missing package versions. This is the public release action.
-3. Verify all four package versions and `latest` tags on npm. Install each adapter into a clean project from npm and render the documented first board; the tarball tests alone do not verify registry access.
-4. Push the four release tags created by Changesets, then merge the reviewed candidate to `main`. The workflow skips versions already on npm. Activate the tested Hetzner release, add the Caddy blocks, and switch DNS when ready.
-5. Run the production HTTP smoke check:
+```sh
+npm login
+pnpm build:packages
+pnpm changeset publish-plan
+pnpm changeset publish
+```
 
-   ```sh
-   LAUNCH_URL=https://www.flexiboards.dev pnpm -C site e2e:launch
-   ```
+Complete npm's login and 2FA prompts. `pnpm changeset publish` publishes the four public `1.0.0` packages and creates their Git tags. Use the interactive npm login for this step; the staging-only CI token cannot publish directly. Keep all versions at `1.0.0` when retrying the initial release.
 
-6. Replace the site's **1.0.0 (unreleased)** label with the actual publication date and remove the upcoming-release note from the migration guide. Publish the release announcement only after the package and production checks pass.
+Verify all four package versions and their `latest` tags on npm. Install each adapter into a clean project from npm and render the documented first board; tarball tests alone do not verify registry access. Push the four release tags created by Changesets:
 
-For later releases, follow the [Changesets workflow](.changeset/README.md), then pull and deploy the published commit on Hetzner.
+```sh
+git push origin @flexiboards/core@1.0.0 @flexiboards/testing@1.0.0 @flexiboards/svelte@1.0.0 @flexiboards/react@1.0.0
+```
+
+## Stage and approve later releases
+
+Follow the [Changesets workflow](.changeset/README.md) to version later releases. After merging the version PR, the Release workflow packs the candidates with pnpm, preserving resolved workspace dependencies, then runs `npm stage publish` on each tarball. The workflow uses npm 11.19.1. Local staging commands require npm 11.15.0 or later and Node 22.14.0 or later.
+
+Open the Release run's summary for the stage IDs, package versions, and approval commands. Review the packages in npm's **Staged Packages** page, or from a terminal logged in with your maintainer account:
+
+```sh
+npm stage list
+npm stage view <stage-id>
+npm stage approve <stage-id>
+```
+
+Replace `<stage-id>` with the ID from the release summary. Approval prompts for 2FA and makes that version public. Approve `core` and `testing` before the adapters, then verify all four versions are available before promoting the site. From the release commit, run `pnpm changeset git-tag` and push the four version tags after publication is confirmed. Staging does not create Git tags or GitHub releases.
+
+The Release workflow can also be started with **Run workflow** on GitHub. A rerun reuses matching pending stages and skips already published versions. Keep the **npm-release-candidates** artifact with the release record.
+
+See npm's [staged publishing instructions](https://docs.npmjs.com/staged-publishing/) for the first-publication restriction and approval requirements.
+
+## Promote the site after publication
+
+Activate the tested Hetzner release, add the Caddy blocks, and switch DNS when ready. Run the production HTTP smoke check:
+
+```sh
+LAUNCH_URL=https://www.flexiboards.dev pnpm -C site e2e:launch
+```
+
+Replace the site's **1.0.0 (unreleased)** label with the actual publication date and remove the upcoming-release note from the migration guide. Publish the release announcement only after the package and production checks pass.
+
+For later releases, pull and deploy the approved release commit on Hetzner.
 
 ## Recover from a failed launch
 
-If publication stops partway through, inspect `pnpm changeset publish-plan` again. Changesets skips versions already published; rerun from the same reviewed commit after correcting the failure. Do not bump every package just to retry, and do not unpublish a working package.
+If the initial publication stops partway through, inspect `pnpm changeset publish-plan` again. Changesets skips versions already published; rerun the interactive publish from the same reviewed commit after correcting the failure. Do not bump every package just to retry, and do not unpublish a working package.
+
+If staging stops partway through, rerun the workflow from the same commit. Identical pending stages are reused. If a pending stage differs, review it on npm and reject it with 2FA before staging a replacement. The workflow never deletes or approves pending stages automatically. If approval stops partway through, approve the remaining stages and verify the full release before promoting the site.
 
 If a published package needs a code fix, add a patch changeset and release the corrected fixed group. npm package versions cannot be overwritten.
 

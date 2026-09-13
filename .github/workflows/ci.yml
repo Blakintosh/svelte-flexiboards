@@ -33,6 +33,8 @@ jobs:
 
       - name: Unit and component tests
         run: pnpm -r test
+      - name: Release staging tests
+        run: npm install --global npm@11.19.1 && pnpm test:release
 
       - name: React adapter types and lint
         run: pnpm -C packages/react check && pnpm -C packages/react lint
