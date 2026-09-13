@@ -1,36 +1,45 @@
 <script lang="ts" module>
-	import { cn, type WithElementRef } from "$lib/utils.js";
-	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
-	import { type VariantProps, tv } from "tailwind-variants";
+	import { cn, type WithElementRef } from '$lib/utils.js';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
+	import { type VariantProps, tv } from 'tailwind-variants';
 
+	// Blueprint: sans semibold labels, no radius, no shadow. Hover shifts fill
+	// only — never scale or lift; the press answers with a 0.97 squash. One
+	// accent button per screen.
 	export const buttonVariants = tv({
-		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+		base: "focus-visible:ring-ring/50 aria-invalid:border-destructive ui inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap text-[13.5px] outline-none transition-[color,background-color,border-color,opacity,scale] duration-[130ms] ease-[cubic-bezier(0.25,0.8,0.25,1)] focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 motion-safe:active:scale-[0.97] [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
 		variants: {
 			variant: {
-				default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-				destructive:
-					"bg-destructive shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 text-white",
-				outline:
-					"bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border",
-				secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-				ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-				link: "text-primary underline-offset-4 hover:underline",
+				default: 'bg-ink text-paper hover:bg-blue hover:text-white',
+				destructive: 'bg-fx-accent text-white hover:bg-fx-accent-hover',
+				accent: 'bg-fx-accent text-white hover:bg-fx-accent-hover',
+				outline: 'border border-ink bg-transparent hover:bg-tint hover:text-ink',
+				secondary: 'bg-tint text-ink hover:bg-rule',
+				ghost: 'text-body hover:bg-tint hover:text-ink',
+				link: 'border-b border-ink text-[13px] hover:border-fx-accent hover:text-fx-accent'
 			},
 			size: {
-				default: "h-9 px-4 py-2 has-[>svg]:px-3",
-				sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-				lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-				icon: "size-9",
-			},
+				default: 'h-11 px-5 py-3',
+				sm: 'h-9 gap-1.5 px-3',
+				lg: 'h-12 px-6',
+				icon: 'size-9'
+			}
 		},
+		// A quiet link is a rule under a label, not a box — so it sheds the
+		// size padding whichever size it is given. Compounds apply last, after
+		// the size variant, so this wins the tailwind-merge conflict.
+		compoundVariants: [
+			// A link is a rule under a label — it doesn't squash like a box.
+			{ variant: 'link', class: 'h-auto px-0 py-0.5 active:scale-100' }
+		],
 		defaultVariants: {
-			variant: "default",
-			size: "default",
-		},
+			variant: 'default',
+			size: 'default'
+		}
 	});
 
-	export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
-	export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
+	export type ButtonVariant = VariantProps<typeof buttonVariants>['variant'];
+	export type ButtonSize = VariantProps<typeof buttonVariants>['size'];
 
 	export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 		WithElementRef<HTMLAnchorAttributes> & {
@@ -42,11 +51,11 @@
 <script lang="ts">
 	let {
 		class: className,
-		variant = "default",
-		size = "default",
+		variant = 'default',
+		size = 'default',
 		ref = $bindable(null),
 		href = undefined,
-		type = "button",
+		type = 'button',
 		disabled,
 		children,
 		...restProps
@@ -60,7 +69,7 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
-		role={disabled ? "link" : undefined}
+		role={disabled ? 'link' : undefined}
 		tabindex={disabled ? -1 : undefined}
 		{...restProps}
 	>

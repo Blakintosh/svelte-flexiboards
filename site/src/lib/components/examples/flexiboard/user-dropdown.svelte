@@ -1,26 +1,43 @@
 <script lang="ts">
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+
+	// A native <details> is the whole dropdown: no library, no roving keyboard
+	// handling. The account menu is set dressing around the board demo.
 </script>
 
-<Sidebar.Menu>
-	<Sidebar.MenuItem>
-		<Sidebar.MenuButton
-			size="lg"
-			class="w-full hover:bg-accent data-[state=open]:bg-accent"
+<details class="relative">
+	<summary
+		class="hover:bg-tint flex w-full cursor-pointer list-none items-center gap-3 rounded-[9px] p-2 text-left transition-colors duration-[120ms] [&::-webkit-details-marker]:hidden"
+	>
+		<img
+			src="https://github.com/blakintosh.png"
+			alt="Blakintosh"
+			class="border-rule-soft size-8 shrink-0 rounded-full border"
+		/>
+		<div class="flex flex-1 flex-col items-start">
+			<span class="text-ink text-[13px]">Blakintosh</span>
+			<span class="text-faint text-[10.5px] font-semibold">Free plan</span>
+		</div>
+		<ChevronsUpDown class="text-faint size-4" />
+	</summary>
+
+	<div
+		class="bg-panel border-rule-soft shadow-card-lg absolute bottom-full left-0 z-10 mb-2 w-full rounded-[12px] border p-1"
+	>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>Account</button
 		>
-			<div class="flex w-full items-center gap-3">
-				<Avatar.Root class="size-8 rounded-lg ring-2 ring-primary/10">
-					<Avatar.Image src="https://github.com/blakintosh.png" alt="Blakintosh" />
-					<Avatar.Fallback class="rounded-lg bg-primary/10 text-primary">B</Avatar.Fallback>
-				</Avatar.Root>
-				<div class="flex flex-1 flex-col items-start text-left text-sm">
-					<span class="font-medium">Blakintosh</span>
-					<span class="text-xs text-muted-foreground">Free plan</span>
-				</div>
-				<ChevronsUpDown class="size-4 text-muted-foreground" />
-			</div>
-		</Sidebar.MenuButton>
-	</Sidebar.MenuItem>
-</Sidebar.Menu>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>Billing</button
+		>
+		<button
+			type="button"
+			class="text-body hover:bg-tint hover:text-ink w-full cursor-pointer rounded-[9px] px-2.5 py-[7px] text-left text-[13px]"
+			>Sign out</button
+		>
+	</div>
+</details>

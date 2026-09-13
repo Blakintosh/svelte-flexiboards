@@ -1,0 +1,83 @@
+import type { FlexiDropCheck } from '../board/types.js';
+import type { FreeFormTargetLayout } from '../grid/free-grid.js';
+import type { FlexiGrid } from '../grid/base.js';
+import type { FlowTargetLayout } from '../grid/flow-grid.js';
+import type { InternalWidgetAction } from '../internal-types.js';
+import type { FlexiWidgetController } from '../widget/base.js';
+import type { InternalFlexiWidgetController } from '../widget/controller.js';
+import type { FlexiWidgetDefaults } from '../widget/types.js';
+import type { FlexiTargetController } from './base.js';
+
+export type FlexiTargetActionWidget = {
+	action: InternalWidgetAction['action'];
+	widget: InternalFlexiWidgetController;
+};
+
+export type FlexiTargetState = {
+	/**
+	 * Whether the target is currently being hovered over by the mouse.
+	 */
+	hovered: boolean;
+
+	/**
+	 * When set, this indicates a widget action that is currently being performed (or is focused) on this target.
+	 */
+	actionWidget: FlexiTargetActionWidget | null;
+
+	/**
+	 * Whether the target is mounted and ready to render widgets.
+	 */
+	prepared: boolean;
+};
+
+type TargetSizingFn = ({
+	target,
+	grid
+}: {
+	target: FlexiTargetController;
+	grid: FlexiGrid;
+}) => string;
+export type TargetSizing = TargetSizingFn | string;
+
+export type FlexiTargetDefaults = {
+	/**
+	 * The value inside the target's `grid-template-rows` `repeat()` function.
+	 */
+	rowSizing?: TargetSizing;
+	/**
+	 * The value inside the target's `grid-template-columns` `repeat()` function.
+	 */
+	columnSizing?: TargetSizing;
+
+	/**
+	 * The layout algorithm and parameters to use for the target grid.
+	 */
+	layout?: TargetLayout;
+};
+
+type RequiredFlexiTargetProperties = Required<FlexiTargetDefaults>;
+
+export type FlexiTargetPartialConfiguration<TClass = unknown> = FlexiTargetDefaults & {
+	/** See FlexiTargetConfiguration.canDrop. */
+	canDrop?: (check: FlexiDropCheck) => boolean;
+	/**
+	 * The default configuration for widgets within this target.
+	 */
+	widgetDefaults?: FlexiWidgetDefaults<TClass>;
+};
+
+export type FlexiTargetConfiguration<TClass = unknown> = RequiredFlexiTargetProperties & {
+	/**
+	 * The default configuration for widgets within this target.
+	 */
+	widgetDefaults?: FlexiWidgetDefaults<TClass>;
+
+	/**
+	 * Decides whether a widget may be placed at a position in this target, on
+	 * top of the board's own `canDrop`. Return false to refuse. Runs while the
+	 * user hovers (the drop preview shows the rejection) and again on release.
+	 */
+	canDrop?: (check: FlexiDropCheck) => boolean;
+};
+
+export type TargetLayout = FlowTargetLayout | FreeFormTargetLayout;

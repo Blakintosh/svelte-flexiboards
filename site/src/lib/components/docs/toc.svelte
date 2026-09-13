@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { MessageSquareWarning } from 'lucide-svelte';
 	import TocTree from './toc-tree.svelte';
 	import { createTableOfContents } from '@melt-ui/svelte';
 	import { pushState } from '$app/navigation';
@@ -16,18 +15,9 @@
 	});
 </script>
 
-<nav class="flex flex-col gap-3">
-	<h2 class="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-		On this page
-	</h2>
+<nav aria-label="On this page" class="flex flex-col gap-3">
+	<h2 class="label text-faint text-[10px]">On this page</h2>
 	{#key $headingsTree}
 		<TocTree tree={$headingsTree} activeHeadingIdxs={$activeHeadingIdxs} {item} />
 	{/key}
 </nav>
-
-<div
-	class="flex items-start gap-3 rounded-lg border border-dashed px-3 py-2.5 text-xs text-muted-foreground"
->
-	<MessageSquareWarning class="mt-0.5 size-4 shrink-0" />
-	<span>These docs are still a work in progress.</span>
-</div>

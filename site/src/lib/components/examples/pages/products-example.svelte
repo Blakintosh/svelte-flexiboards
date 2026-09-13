@@ -4,20 +4,19 @@
 		FlexiTarget,
 		FlexiWidget,
 		ResponsiveFlexiBoard,
-		simpleTransitionConfig,
+		cssTransitionConfig,
 		type FlexiBoardConfiguration,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
+	import type { FlexiBoardSuspenseReason } from '@flexiboards/svelte';
+	import BoardSkeleton from '$lib/components/examples/common/board-skeleton.svelte';
 	import ProductCard, { type Product } from '$lib/components/examples/products/product-card.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import Button from '$lib/components/examples/common/button.svelte';
+	import { fieldClass, selectClass } from '$lib/components/examples/common/button-classes.js';
 	import Search from 'lucide-svelte/icons/search';
 	import Plus from 'lucide-svelte/icons/plus';
 	import ArrowUpDown from 'lucide-svelte/icons/arrow-up-down';
 	import Filter from 'lucide-svelte/icons/filter';
-	import Package from 'lucide-svelte/icons/package';
 
 	const products: Product[] = [
 		{
@@ -29,7 +28,6 @@
 			reviewCount: 2341,
 			badge: 'sale',
 			category: 'Audio',
-			gradient: 'from-violet-500 to-purple-600',
 			featured: true,
 			stock: 45
 		},
@@ -41,7 +39,6 @@
 			reviewCount: 892,
 			badge: 'new',
 			category: 'Accessories',
-			gradient: 'from-slate-400 to-slate-600',
 			featured: false,
 			stock: 23
 		},
@@ -52,7 +49,6 @@
 			rating: 4.3,
 			reviewCount: 1567,
 			category: 'Audio',
-			gradient: 'from-emerald-400 to-teal-600',
 			featured: false,
 			stock: 156
 		},
@@ -64,7 +60,6 @@
 			reviewCount: 743,
 			badge: 'bestseller',
 			category: 'Peripherals',
-			gradient: 'from-amber-400 to-orange-500',
 			featured: true,
 			stock: 89
 		},
@@ -75,7 +70,6 @@
 			rating: 4.4,
 			reviewCount: 3201,
 			category: 'Accessories',
-			gradient: 'from-blue-400 to-cyan-500',
 			featured: false,
 			stock: 412
 		},
@@ -88,7 +82,6 @@
 			reviewCount: 1823,
 			badge: 'sale',
 			category: 'Audio',
-			gradient: 'from-pink-400 to-rose-500',
 			featured: false,
 			stock: 67
 		},
@@ -100,7 +93,6 @@
 			reviewCount: 456,
 			badge: 'new',
 			category: 'Home Office',
-			gradient: 'from-yellow-300 to-amber-400',
 			featured: false,
 			stock: 34
 		},
@@ -111,17 +103,33 @@
 			rating: 4.5,
 			reviewCount: 2104,
 			category: 'Peripherals',
-			gradient: 'from-gray-400 to-zinc-600',
 			featured: false,
 			stock: 198
 		}
 	];
 
 	let searchQuery = $state('');
-	let selectedCategory = $state<string | null>(null);
+	// '' is "All categories"; a native <select> option can't carry null.
+	let selectedCategory = $state('');
 	let sortBy = $state<'name' | 'price' | 'rating'>('name');
 
 	const categories = ['Audio', 'Accessories', 'Peripherals', 'Home Office'];
+
+	const sortLabels: Record<typeof sortBy, string> = {
+		name: 'Name ↓',
+		price: 'Price ↓',
+		rating: 'Rating ↓'
+	};
+
+	// Reflow on drag is a snap, not a glide: 160ms, no overshoot.
+	const reflowTransition = (() => {
+		const base = cssTransitionConfig();
+		return {
+			move: { ...base.move, duration: 160 },
+			drop: { ...base.drop, duration: 160 },
+			resize: { ...base.resize, duration: 160 }
+		};
+	})();
 
 	let filteredProducts = $derived(() => {
 		let result = products;
@@ -144,120 +152,110 @@
 		}
 	});
 
+	// The drop preview is dashed fx-accent; the widget in hand lifts instead,
+	// with shadow-lift and a slight tilt, no border.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'opacity-50',
-		widget.isGrabbed && 'animate-pulse opacity-50'
+		'motion-safe:transition-[rotate] motion-safe:duration-[160ms] motion-safe:ease-out',
+		widget.isShadow &&
+			'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'rounded-[14px] shadow-lift rotate-[2.5deg] opacity-95'
 	];
 </script>
 
 <main
-	class="relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
+	class="bg-paper relative flex h-full min-h-0 w-full flex-col gap-4 px-4 py-6 lg:gap-6 lg:px-12 lg:py-8"
 >
-	<!-- Header -->
-	<header class="shrink-0">
-		<div class="flex items-center justify-between gap-3">
-			<div class="flex items-center gap-2 sm:gap-3">
-				<div class="bg-primary/10 hidden size-10 items-center justify-center rounded-lg sm:flex">
-					<Package class="text-primary size-5" />
-				</div>
-				<div>
-					<h1 class="text-xl font-semibold sm:text-2xl lg:text-3xl">Products</h1>
-					<p class="text-muted-foreground hidden text-sm sm:block">Manage your product catalog</p>
-				</div>
-			</div>
-			<Button size="sm" class="shrink-0">
-				<Plus class="size-4 sm:mr-2" />
-				<span class="hidden sm:inline">Add Product</span>
-			</Button>
+	<!-- Header: title, count and the two board affordances in one mono line. -->
+	<header class="border-rule-soft flex shrink-0 items-center justify-between gap-3 border-b pb-3.5">
+		<div class="flex min-w-0 items-baseline gap-3">
+			<h1 class="text-ink font-serif text-xl leading-tight sm:text-2xl lg:text-[28px]">Products</h1>
+			<p class="text-faint hidden font-mono text-[11px] sm:block">
+				{filteredProducts().length} items · drag to curate · resize featured
+			</p>
 		</div>
+		<Button size="sm" class="shrink-0 rounded-full">
+			<Plus class="size-4 sm:mr-2" />
+			<span class="hidden sm:inline">Add product</span>
+		</Button>
 	</header>
 
-	<!-- Toolbar -->
-	<div class="flex shrink-0 flex-col gap-2 sm:gap-3">
-		<div class="flex items-center gap-2">
-			<div class="relative min-w-0 flex-1 sm:max-w-xs">
-				<Search class="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-				<Input type="search" placeholder="Search..." class="pl-9" bind:value={searchQuery} />
-			</div>
-
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="outline" size="icon" class="shrink-0 sm:hidden" {...props}>
-							<Filter class="size-4" />
-						</Button>
-						<Button variant="outline" size="sm" class="hidden shrink-0 sm:flex" {...props}>
-							<Filter class="mr-2 size-4" />
-							{selectedCategory ?? 'All'}
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Item onclick={() => (selectedCategory = null)}>
-						All Categories
-					</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					{#each categories as category}
-						<DropdownMenu.Item onclick={() => (selectedCategory = category)}>
-							{category}
-						</DropdownMenu.Item>
-					{/each}
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="outline" size="icon" class="shrink-0" {...props}>
-							<ArrowUpDown class="size-4" />
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Label>Sort by</DropdownMenu.Label>
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item onclick={() => (sortBy = 'name')}>Name</DropdownMenu.Item>
-					<DropdownMenu.Item onclick={() => (sortBy = 'price')}>Price</DropdownMenu.Item>
-					<DropdownMenu.Item onclick={() => (sortBy = 'rating')}>Rating</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+	<!-- Toolbar: one row of search, category, sort, and the status key it explains. -->
+	<div class="flex shrink-0 flex-wrap items-center gap-2">
+		<div class="relative min-w-0 flex-1 sm:max-w-[288px] sm:flex-none">
+			<Search class="text-faint absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+			<input
+				type="search"
+				placeholder="Search products…"
+				aria-label="Search products"
+				class="{fieldClass} rounded-full pl-9 sm:w-[288px]"
+				bind:value={searchQuery}
+			/>
 		</div>
 
-		<div class="flex items-center justify-between text-xs sm:text-sm">
-			<span class="text-muted-foreground">
-				{filteredProducts().length} products
+		<!-- Filter and sort are choices, so they are native selects: they say what
+			they are set to, and the platform draws the list. -->
+		<div class="relative shrink-0">
+			<Filter
+				class="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2"
+			/>
+			<select
+				class="{selectClass} border-rule-soft h-9 w-auto rounded-full pl-8"
+				aria-label="Filter by category"
+				bind:value={selectedCategory}
+			>
+				<option value="">All categories</option>
+				{#each categories as category (category)}
+					<option value={category}>{category}</option>
+				{/each}
+			</select>
+		</div>
+
+		<div class="relative shrink-0">
+			<ArrowUpDown
+				class="text-faint pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2"
+			/>
+			<select
+				class="{selectClass} text-body border-rule-soft h-9 w-auto rounded-full pl-8"
+				aria-label="Sort by"
+				bind:value={sortBy}
+			>
+				<option value="name">{sortLabels.name}</option>
+				<option value="price">{sortLabels.price}</option>
+				<option value="rating">{sortLabels.rating}</option>
+			</select>
+		</div>
+
+		<!-- Status key: soft dots, one per state a card can show. -->
+		<div class="ml-auto flex items-center gap-3 sm:gap-3.5">
+			<span class="text-body flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-blue size-1.5 rounded-full"></span>In stock
 			</span>
-			<div class="flex items-center gap-1.5 sm:gap-2">
-				<Badge
-					variant="secondary"
-					class="gap-1 px-1.5 py-0.5 text-[10px] sm:px-2 sm:py-0.5 sm:text-xs"
-				>
-					<span class="size-1.5 rounded-full bg-emerald-500 sm:size-2"></span>
-					In Stock
-				</Badge>
-				<Badge
-					variant="outline"
-					class="gap-1 px-1.5 py-0.5 text-[10px] text-amber-600 sm:px-2 sm:py-0.5 sm:text-xs"
-				>
-					<span class="size-1.5 rounded-full bg-amber-500 sm:size-2"></span>
-					Low
-				</Badge>
-			</div>
+			<span class="text-faint flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-faint size-1.5 rounded-full"></span>Low
+			</span>
+			<span class="text-fx-accent flex items-center gap-1.5 font-mono text-[11px]">
+				<span class="bg-fx-accent size-1.5 rounded-full"></span>Limited
+			</span>
 		</div>
 	</div>
-
 	<!-- Board -->
 	<ResponsiveFlexiBoard
 		config={{
 			breakpoints: {
 				lg: 1024,
 				sm: 640
-			}
+			},
+			// SSR can't match a media query; render the desktop board so widget
+			// sizes are right for most first paints (see launcher).
+			ssrBreakpoint: 'lg'
 		}}
 	>
 		<!-- Desktop: 3 columns -->
 		{#snippet lg()}
-			<FlexiBoard class="min-h-0 flex-1 overflow-x-clip overflow-y-auto" config={boardConfig}>
+			<FlexiBoard class="min-h-0 flex-1 overflow-y-auto overflow-x-clip" config={boardConfig}>
+				{#snippet suspense(_: FlexiBoardSuspenseReason)}
+					<BoardSkeleton bars={4} class="p-1" />
+				{/snippet}
 				<FlexiTarget
 					key="products"
 					class="gap-4 p-1"
@@ -271,7 +269,7 @@
 							columns: 3
 						},
 						widgetDefaults: {
-							transition: simpleTransitionConfig()
+							transition: reflowTransition
 						}
 					}}
 				>
@@ -292,7 +290,7 @@
 		<!-- Tablet: 2 columns -->
 		{#snippet sm()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
+				class="products-board min-h-0 flex-1 overflow-y-auto overflow-x-clip"
 				config={boardConfig}
 			>
 				<FlexiTarget
@@ -308,7 +306,7 @@
 							columns: 2
 						},
 						widgetDefaults: {
-							transition: simpleTransitionConfig()
+							transition: reflowTransition
 						}
 					}}
 				>
@@ -329,7 +327,7 @@
 		<!-- Phone: 1 column, full vertical cards -->
 		{#snippet children()}
 			<FlexiBoard
-				class="products-board min-h-0 flex-1 overflow-x-clip overflow-y-auto"
+				class="products-board min-h-0 flex-1 overflow-y-auto overflow-x-clip"
 				config={boardConfig}
 			>
 				<FlexiTarget
@@ -345,7 +343,7 @@
 							columns: 1
 						},
 						widgetDefaults: {
-							transition: simpleTransitionConfig()
+							transition: reflowTransition
 						}
 					}}
 				>

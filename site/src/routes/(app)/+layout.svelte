@@ -1,20 +1,109 @@
 <script lang="ts">
 	import Header from '$lib/components/nav/header.svelte';
+	import FlexiMark from '$lib/components/brand/flexi-mark.svelte';
+	import { page } from '$app/state';
+	import { framework } from '$lib/components/brand/framework.svelte';
 
 	let { children } = $props();
+
+	// The splash runs edge to edge. Its sections supply their own gutters so the
+	// 1px rules between them reach the viewport edge.
+	const fullBleed = $derived(page.url.pathname === '/');
+	// Header and footer gutters read --page-max. Match it to each route's width:
+	// examples runs wider (sidebar + stage + features rail), docs spans full width.
+	const pageMax = $derived(
+		page.url.pathname.startsWith('/docs')
+			? '100%'
+			: page.url.pathname.startsWith('/examples')
+				? '100rem'
+				: undefined
+	);
+
+	const footerColumns = $derived([
+		{
+			heading: 'Docs',
+			links: [
+				{ label: 'Overview', href: '/docs/overview' },
+				{ label: 'Free-form grids', href: '/docs/free-form-grids' },
+				{ label: 'Flow grids', href: '/docs/flow-grids' },
+				{ label: 'Configuration', href: '/docs/configuration' },
+				{ label: 'Transitions', href: '/docs/transitions' }
+			]
+		},
+		{
+			heading: 'Components',
+			links: [
+				{ label: 'FlexiBoard', href: '/docs/components/board' },
+				{ label: 'FlexiTarget', href: '/docs/components/target' },
+				{ label: 'FlexiWidget', href: '/docs/components/widget' },
+				{ label: 'FlexiAdd', href: '/docs/components/adder' },
+				{ label: 'Responsive board', href: '/docs/components/responsive-board' }
+			]
+		},
+		{
+			heading: 'Project',
+			links: [
+				{ label: 'GitHub', href: 'https://github.com/Blakintosh/svelte-flexiboards' },
+				// npm page for the adapter set by the framework picker.
+				{ label: 'npm', href: `https://www.npmjs.com/package/${framework.meta.package}` },
+				{ label: 'Examples', href: '/examples' }
+			]
+		}
+	]);
 </script>
 
-<div class="min-h-svh">
+<div class="flex min-h-svh flex-col" style:--page-max={pageMax}>
 	<Header />
 
-	<main class="mb-14 flex min-h-0 flex-1 flex-col px-4 lg:px-8" id="main-content">
+	<main class="flex min-h-0 flex-1 flex-col {fullBleed ? '' : 'px-4 lg:px-8'}" id="main-content">
 		{@render children()}
 	</main>
-</div>
 
-<footer
-	class="h-14 w-full shrink-0 border-t border-dashed bg-background/80 py-4 text-center text-sm text-muted-foreground backdrop-blur-sm"
->
-	Made by <a href="https://github.com/Blakintosh" class="underline font-medium underline-offset-4" target="_blank">Blakintosh</a>.
-	The Flexiboards source code is available on <a href="https://github.com/Blakintosh/svelte-flexiboards" class="underline font-medium underline-offset-4" target="_blank">GitHub</a>.
-</footer>
+	<footer class="border-rule bg-paper border-t">
+		<div
+			class="page-gutter text-body grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-8 py-12 text-[13.5px]"
+		>
+			<div>
+				<div class="mb-2.5 flex items-center gap-2.5">
+					<FlexiMark />
+					<span class="text-ink font-serif text-base">Flexiboards</span>
+				</div>
+				<p class="m-0 max-w-[34ch] leading-relaxed">
+					A headless drag-and-drop grids library. We'll bring the grid, you bring the style.
+				</p>
+			</div>
+
+			{#each footerColumns as column (column.heading)}
+				<div>
+					<b class="label text-faint mb-2.5 block text-[11px] tracking-[0.12em]">
+						{column.heading}
+					</b>
+					<div class="flex flex-col gap-1.5">
+						{#each column.links as link (link.href)}
+							<a
+								href={link.href}
+								class="hover:text-fx-accent w-fit transition-colors duration-[120ms]"
+								target={link.href.startsWith('http') ? '_blank' : undefined}
+							>
+								{link.label}
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<div
+			class="page-gutter label border-rule text-faint flex flex-wrap items-center justify-between gap-3 border-t py-4 text-[10px]"
+		>
+			<span>MIT licensed</span>
+			<span class="normal-case tracking-normal">
+				Made by <a
+					href="https://github.com/Blakintosh"
+					class="text-body hover:text-fx-accent transition-colors duration-[120ms]"
+					target="_blank">Blakintosh</a
+				>
+			</span>
+		</div>
+	</footer>
+</div>

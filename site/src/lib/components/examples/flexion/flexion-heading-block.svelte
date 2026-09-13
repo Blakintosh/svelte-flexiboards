@@ -1,1 +1,5 @@
-<h3 class="text-xl font-semibold lg:text-2xl">Acme Home</h3>
+<script lang="ts">
+	let { content = 'Heading' }: { content?: string } = $props();
+</script>
+
+<h3 class="text-ink font-serif text-xl lg:text-[20px]">{content}</h3>

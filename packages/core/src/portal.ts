@@ -1,0 +1,205 @@
+import type { InternalFlexiBoardController } from './board/controller.js';
+import { getFlexiEventBus, type FlexiEventBus } from './shared/event-bus.js';
+import type { InternalWidgetEvent, InternalWidgetGrabbedEvent } from './internal-types.js';
+import type { FlexiWidgetController } from './widget/index.js';
+
+/**
+ * GrabbedPortal manages a single container in the DOM where grabbed/resizing
+ * widgets can be rendered on top of the application.
+ */
+export class FlexiPortalController {
+	#containerElement: HTMLElement | null = null;
+	#widgetRefs = new Map<
+		FlexiWidgetController,
+		{
+			// The element captured at move time. Return this exact node.
+			// By release time widget.ref may already point at a new element
+			// (the target mounts its own render of the same controller on drop).
+			element: HTMLElement;
+			// Null when the element was detached at grab time (an adapter may
+			// tear the node down mid-drag). The element is discarded on return.
+			originalParent: Node | null;
+			nextSibling: Node | null;
+		}
+	>();
+
+	#dependencyCount = 0;
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+
+	#hasPortalledWidget = false;
+
+	constructor() {
+		this.#eventBus = getFlexiEventBus();
+	}
+
+	createPortal() {
+		this.#containerElement = document.createElement('div');
+		this.#containerElement.id = 'flexi-portal';
+		this.#containerElement.style.position = 'fixed';
+		this.#containerElement.style.top = '0';
+		this.#containerElement.style.left = '0';
+		this.#containerElement.style.width = '100%';
+		this.#containerElement.style.height = '100%';
+		this.#containerElement.style.pointerEvents = 'none';
+		this.#containerElement.style.zIndex = '9999';
+
+		document.body.appendChild(this.#containerElement);
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onWidgetGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetRelease.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetRelease.bind(this))
+		);
+	}
+
+	onWidgetGrabbed(event: InternalWidgetGrabbedEvent) {
+		this.moveWidgetToPortal(event.widget);
+		this.#hasPortalledWidget = true;
+	}
+
+	onWidgetRelease(event: InternalWidgetEvent) {
+		if (!this.#hasPortalledWidget) {
+			return;
+		}
+
+		// The flight that follows must start from the element's position now, before
+		// it leaves the portal. Bus subscription order means a board created after
+		// this portal (a nested board mounted later, as React does) would otherwise
+		// run its own capture too late, so the capture happens here instead.
+		event.widget.captureReleaseState();
+		this.returnWidgetFromPortal(event.widget);
+		this.#hasPortalledWidget = false;
+	}
+
+	/**
+	 * Hosts a widget's in-grid element in the portal for the duration of a drop
+	 * flight, so the interpolation can't clip at the board's overflow lock or
+	 * paint behind later siblings. Returns whether the element was taken; the
+	 * interpolator returns it via returnWidgetFromPortal when the flight ends.
+	 */
+	hostInterpolatingWidget(widget: FlexiWidgetController): boolean {
+		if (!this.#containerElement || !widget.ref || this.#widgetRefs.has(widget)) {
+			return false;
+		}
+		this.moveWidgetToPortal(widget);
+		return this.#widgetRefs.has(widget);
+	}
+
+	/**
+	 * Moves a widget's DOM element to the portal container
+	 */
+	moveWidgetToPortal(widget: FlexiWidgetController) {
+		if (!widget.ref) {
+			return;
+		}
+
+		// Already hosted (e.g. a widget re-grabbed mid-flight): keep the original
+		// record. Overwriting it would make the portal its own return target.
+		if (this.#widgetRefs.has(widget)) {
+			return;
+		}
+
+		this.#widgetRefs.set(widget, {
+			element: widget.ref,
+			originalParent: widget.ref.parentNode,
+			nextSibling: widget.ref.nextSibling
+		});
+
+		const focused = document.activeElement;
+		this.#containerElement!.appendChild(widget.ref);
+		if (focused instanceof HTMLElement && widget.ref.contains(focused)) {
+			focused.focus({ preventScroll: true });
+		}
+	}
+
+	/**
+	 * Returns a widget's DOM element to its original position
+	 */
+	returnWidgetFromPortal(widget: FlexiWidgetController) {
+		const originalPosition = this.#widgetRefs.get(widget);
+		if (originalPosition) {
+			const focused = document.activeElement;
+			if (originalPosition.originalParent) {
+				originalPosition.originalParent.insertBefore(
+					originalPosition.element,
+					originalPosition.nextSibling?.parentNode === originalPosition.originalParent
+						? originalPosition.nextSibling
+						: null
+				);
+			} else {
+				// Nowhere to return to, discard rather than strand in the portal.
+				originalPosition.element.remove();
+			}
+			if (focused instanceof HTMLElement && originalPosition.element.contains(focused)) {
+				focused.focus({ preventScroll: true });
+			}
+			this.#widgetRefs.delete(widget);
+		}
+	}
+
+	/**
+	 * Destroys the portal container and resets the singleton instance
+	 */
+	destroy() {
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+
+		// Return any widgets still in the portal before tearing it down.
+		this.#widgetRefs.forEach((position) => {
+			if (position.originalParent) {
+				position.originalParent.insertBefore(position.element, position.nextSibling);
+			} else {
+				position.element.remove();
+			}
+		});
+		this.#widgetRefs.clear();
+
+		if (this.#containerElement && this.#containerElement.parentNode) {
+			this.#containerElement.parentNode.removeChild(this.#containerElement);
+		}
+
+		this.#containerElement = null;
+	}
+
+	addDependency() {
+		this.#dependencyCount++;
+
+		if (!this.#containerElement) {
+			this.createPortal();
+		}
+	}
+
+	removeDependency() {
+		this.#dependencyCount--;
+		if (this.#dependencyCount === 0 && this.#containerElement) {
+			this.destroy();
+			portal = null;
+		}
+	}
+}
+
+let portal: FlexiPortalController | null = null;
+
+export function flexiportal(board: InternalFlexiBoardController) {
+	if (!board) {
+		throw new Error('flexiportal() was called outside of a FlexiBoard context.');
+	}
+
+	// Singleton portal, shared across boards, so the DOM has only one instance.
+	if (!portal) {
+		portal = new FlexiPortalController();
+	}
+
+	board.portal = portal;
+	portal.addDependency();
+
+	return portal;
+}
+
+export function destroyFlexiportal() {
+	// Stop tracking this dependency, destroying the portal if no other boards depend on it.
+	if (portal) {
+		portal.removeDependency();
+	}
+}

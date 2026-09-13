@@ -1,0 +1,189 @@
+import type { InternalFlexiBoardController } from '../board/controller.js';
+import type { InternalAdderWidgetReadyEvent } from '../internal-types.js';
+import { InternalFlexiWidgetController } from '../widget/controller.js';
+import type { FlexiWidgetConfiguration } from '../widget/index.js';
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import { isGrabPointerEvent } from '../shared/utils.js';
+import type { Signal } from '../types.js';
+import { signal } from '../reactivity.js';
+
+export type FlexiAddWidgetFn<TClass = unknown> = () => AdderWidgetConfiguration<TClass> | null;
+
+export type AdderWidgetConfiguration<TClass = unknown> = {
+	/**
+	 * The configuration of the widget that is created and grabbed.
+	 */
+	widget: FlexiWidgetConfiguration<TClass>;
+
+	/**
+	 * The initial width of the grabbed widget in pixels.
+	 */
+	widthPx?: number;
+
+	/**
+	 * The initial height of the grabbed widget in pixels.
+	 */
+	heightPx?: number;
+};
+
+export type FlexiAddClassFunction<TClass = unknown> = (adder: FlexiAddController) => TClass;
+export type FlexiAddClasses<TClass = unknown> = TClass | FlexiAddClassFunction<TClass>;
+
+export interface FlexiAddController {
+	/**
+	 * The DOM element bound to this adder.
+	 */
+	ref: HTMLElement | undefined;
+}
+
+type NewWidgetDragInParams = {
+	clientX: number;
+	clientY: number;
+	capturedHeightPx: number;
+	capturedWidthPx: number;
+};
+
+export class InternalFlexiAddController implements FlexiAddController {
+	provider: InternalFlexiBoardController;
+	#addWidget: FlexiAddWidgetFn;
+
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+
+	newWidget$: Signal<InternalFlexiWidgetController | undefined> = signal(undefined);
+
+	toCreateParams$: Signal<NewWidgetDragInParams | null> = signal(null);
+
+	ref$: Signal<HTMLElement | undefined> = signal(undefined);
+
+	constructor(provider: InternalFlexiBoardController, addWidgetFn: FlexiAddWidgetFn) {
+		this.provider = provider;
+		this.#addWidget = addWidgetFn;
+
+		this.#eventBus = getFlexiEventBus();
+
+		this.onpointerdown = this.onpointerdown.bind(this);
+		this.onkeydown = this.onkeydown.bind(this);
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('adder:widgetready', this.onWidgetReady.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onWidgetDragInCancel.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onWidgetDragInComplete.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onWidgetDragInComplete.bind(this))
+		);
+	}
+
+	onpointerdown(event: PointerEvent) {
+		if (!isGrabPointerEvent(event)) {
+			return;
+		}
+
+		this.#initiateWidgetDragIn(event.clientX, event.clientY);
+
+		// Don't implicitly keep the pointer capture, as then mobile can't move the widget in and out of targets.
+		(event.target as HTMLElement).releasePointerCapture(event.pointerId);
+		event.preventDefault();
+	}
+
+	onkeydown(event: KeyboardEvent) {
+		const ref = this.ref$();
+		if (event.key !== 'Enter' || !ref || this.newWidget$()) {
+			return;
+		}
+
+		const rect = ref.getBoundingClientRect();
+		event.stopPropagation();
+
+		this.#initiateWidgetDragIn(rect.left + rect.width / 2, rect.top + rect.height / 2);
+	}
+
+	#initiateWidgetDragIn(clientX: number, clientY: number) {
+		const config = this.#addWidget();
+
+		if (!config || !config.widget) {
+			return;
+		}
+
+		this.newWidget$(
+			new InternalFlexiWidgetController({
+				config: config.widget,
+				provider: this.provider
+			})
+		);
+
+		this.toCreateParams$({
+			clientX,
+			clientY,
+			capturedHeightPx: config.heightPx ?? 100,
+			capturedWidthPx: config.widthPx ?? 100
+		});
+		// When the widget mounts, it'll automatically trigger the drag in event.
+	}
+
+	onWidgetReady(event: InternalAdderWidgetReadyEvent) {
+		const toCreateParams = this.toCreateParams$();
+		if (event.adder !== this || !toCreateParams) {
+			return;
+		}
+
+		this.#eventBus.dispatch('widget:grabbed', {
+			board: this.provider,
+			widget: event.widget,
+			xOffset: 0,
+			yOffset: 0,
+			...toCreateParams
+		});
+	}
+
+	onWidgetDragInComplete(event: { widget: InternalFlexiWidgetController }) {
+		if (event.widget !== this.newWidget$()) {
+			return;
+		}
+
+		this.#clearWidget();
+	}
+
+	onWidgetDragInCancel(event: { widget: InternalFlexiWidgetController }) {
+		if (event.widget !== this.newWidget$()) {
+			return;
+		}
+		this.#clearWidget();
+	}
+
+	#clearWidget() {
+		this.newWidget$(undefined);
+		this.toCreateParams$(null);
+	}
+
+	/**
+	 * Called when the adder is destroyed.
+	 */
+	destroy() {
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
+
+	get ref() {
+		return this.ref$();
+	}
+	set ref(value: HTMLElement | undefined) {
+		this.ref$(value);
+	}
+}
+
+/**
+ * Dispatches the adder's widget-ready event once the newly created widget has mounted,
+ * triggering the drag-in. Call at mount time (the adapter's responsibility) for widgets
+ * rendered under a FlexiAdd.
+ */
+export function dragInOnceMounted(
+	adder: InternalFlexiAddController,
+	widget: InternalFlexiWidgetController
+) {
+	const eventBus = getFlexiEventBus();
+
+	eventBus.dispatch('adder:widgetready', {
+		adder,
+		widget
+	});
+}

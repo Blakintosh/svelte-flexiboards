@@ -1,0 +1,53 @@
+{
+	"name": "@flexiboards/core",
+	"version": "1.0.0",
+	"description": "Framework-agnostic core library for Flexiboards.",
+	"scripts": {
+		"dev": "tsc -w --noEmit",
+		"dev:host": "pnpm dev",
+		"build": "tsc",
+		"check": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*",
+		"CHANGELOG.md"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"keywords": [
+		"flexiboards",
+		"drag-and-drop",
+		"grid",
+		"dashboard"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git",
+		"directory": "packages/core"
+	},
+	"author": "Blakintosh",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
+	},
+	"homepage": "https://www.flexiboards.dev/",
+	"dependencies": {
+		"alien-signals": "3.2.1"
+	},
+	"devDependencies": {
+		"happy-dom": "^20.11.2",
+		"typescript": "^5.0.0",
+		"vitest": "^3.0.7"
+	},
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	}
+}

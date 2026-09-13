@@ -1,0 +1,56 @@
+# @flexiboards/react
+
+Headless drag-and-drop boards for React 18 and 19. Docs: [flexiboards.dev](https://flexiboards.dev/)
+
+`@flexiboards/react` is the React adapter over the framework-agnostic `@flexiboards/core`: the same boards, targets, widgets, adders and deleters as the Svelte package, with hooks (`useFlexiBoard()`, `useFlexiTarget()`, `useFlexiWidget()`, ...) in place of context getters and `onfirstcreate` callbacks in place of `bind:controller`.
+
+Issues go on the [GitHub issues page](https://github.com/Blakintosh/svelte-flexiboards/issues).
+
+## Installation
+
+```
+npm i @flexiboards/react
+```
+
+Requires React 18 or 19.
+
+## Server rendering
+
+Declared widgets and `config.initialLayout` render on the server and hydrate on the client. Storage callbacks (`loadLayout` and `loadLayouts`) run only after the client commits. Responsive boards hydrate the `ssrBreakpoint` guess before switching to the real viewport. Use the `suspense` prop to cover provisional layouts.
+
+With Next.js App Router, compose boards in a `'use client'` component; this still allows server rendering. Keep registry components and render functions inside that boundary, and pass serializable layout data from the server. `onfirstcreate` is a client callback, so use `initialLayout` for server-provided data. See the [SSR guide](https://flexiboards.dev/docs/guides/server-side-rendering).
+
+## Usage
+
+```tsx
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
+
+export function Board() {
+	return (
+		<FlexiBoard config={{ widgetDefaults: { draggability: 'full' } }}>
+			<FlexiTarget
+				keyName="main"
+				config={{
+					layout: {
+						type: 'free',
+						minColumns: 3,
+						maxColumns: 3,
+						minRows: 3,
+						maxRows: 3
+					}
+				}}
+			>
+				<FlexiWidget x={0} y={0} width={1} height={1}>
+					Drag me
+				</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
+}
+```
+
+The docs site has the guides and the full API reference. Select React for its prop names, render functions, controller hooks, reactivity, and server-rendering instructions.
+
+## Licence
+
+MIT. See [LICENSE.md](https://github.com/Blakintosh/svelte-flexiboards/blob/main/LICENSE.md).

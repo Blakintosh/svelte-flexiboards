@@ -7,152 +7,107 @@ published: true
 
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
+    import ApiProps from '$lib/components/docs/api-props.svelte';
+    import Only from '$lib/components/docs/only.svelte';
+    import api from '$lib/generated/api/responsive-flexi-board.json';
 </script>
+
+<!--
+  The tables below are generated from the package sources by
+  `site/scripts/extract-api.mjs`. Edit the JSDoc in the source, not this page.
+-->
 
 ## ResponsiveFlexiBoard (component)
 
-<ApiReference title="Props" api={[
-{
-name: "config",
-type: "ResponsiveFlexiBoardConfiguration",
-description: "The configuration object for the responsive board."
-},
-{
-name: "lg",
-type: "Snippet",
-description: "Snippet rendered for large breakpoints. No parameters."
-},
-{
-name: "md",
-type: "Snippet",
-description: "Snippet rendered for medium breakpoints. No parameters."
-},
-{
-name: "sm",
-type: "Snippet",
-description: "Snippet rendered for small breakpoints. No parameters."
-},
-{
-name: "xs",
-type: "Snippet",
-description: "Snippet rendered for extra-small breakpoints. No parameters."
-},
-{
-name: "children",
-type: "Snippet<[{ currentBreakpoint: string }]>",
-description: "Fallback snippet rendered when no breakpoint-specific snippet matches. Receives the current breakpoint as a parameter."
-},
-{
-name: "controller",
-type: "ResponsiveFlexiBoardController (bindable)",
-description: "The controller for the responsive board."
-},
-{
-name: "onfirstcreate",
-type: "(controller: ResponsiveFlexiBoardController) => void",
-description: "A callback that fires when the board's controller is first created."
+<ApiProps {api} />
+
+<Only svelte>
+
+This excerpt assumes `DesktopBoard` and `MobileBoard` are your existing board components. The `lg`, `md`, `sm` and `xs` props are snippets, one per breakpoint; `children` is the fallback snippet used when no breakpoint snippet matches, and receives the current breakpoint.
+
+```svelte
+<script lang="ts">
+	import { ResponsiveFlexiBoard } from '@flexiboards/svelte';
+
+	import DesktopBoard from './desktop-board.svelte';
+	import MobileBoard from './mobile-board.svelte';
+</script>
+
+<ResponsiveFlexiBoard>
+	{#snippet lg()}
+		<DesktopBoard />
+	{/snippet}
+
+	{#snippet xs()}
+		<MobileBoard />
+	{/snippet}
+</ResponsiveFlexiBoard>
+```
+
+</Only>
+
+<Only react>
+
+This excerpt assumes `DesktopBoard` and `MobileBoard` are your existing board components. The `lg`, `md`, `sm` and `xs` props take nodes, one per breakpoint; `children` is the fallback used when no breakpoint prop matches, and can be a function receiving the current breakpoint.
+
+```tsx
+import { ResponsiveFlexiBoard } from '@flexiboards/react';
+
+import { DesktopBoard } from './desktop-board';
+import { MobileBoard } from './mobile-board';
+
+export function Board() {
+	return (
+		<ResponsiveFlexiBoard lg={<DesktopBoard />} xs={<MobileBoard />}>
+			{({ currentBreakpoint }) => <p>No board for {currentBreakpoint}.</p>}
+		</ResponsiveFlexiBoard>
+	);
 }
-]} />
+```
+
+</Only>
 
 ## ResponsiveFlexiBoardController
 
-`ResponsiveFlexiBoard` uses a [controller](/docs/controllers) to manage its state and behaviour. You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
+<Only svelte>
 
-<ApiReference title="Properties" api={[
-{
-name: "currentBreakpoint",
-type: "string",
-description: "The currently active breakpoint key (e.g., 'lg', 'md', or 'default')."
-},
-{
-name: "definedBreakpoints",
-type: "string[]",
-description: "All breakpoint keys that have stored layouts."
-},
-{
-name: "configuredBreakpoints",
-type: "string[]",
-description: "All breakpoint keys from the configuration."
-}
-]} />
+You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
 
-<ApiReference title="Methods" api={[
-{
-name: "importLayout",
-type: "(layout: ResponsiveFlexiLayout) => void",
-description: "Imports layouts for all breakpoints, replacing any existing stored layouts."
-},
-{
-name: "exportLayout",
-type: "() => ResponsiveFlexiLayout",
-description: "Exports layouts for all breakpoints that have been used."
-},
-{
-name: "getLayoutForBreakpoint",
-type: "(breakpoint: string) => FlexiLayout | undefined",
-description: "Gets the stored layout for a specific breakpoint."
-},
-{
-name: "setLayoutForBreakpoint",
-type: "(breakpoint: string, layout: FlexiLayout) => void",
-description: "Sets the layout for a specific breakpoint."
-},
-{
-name: "hasLayoutForBreakpoint",
-type: "(breakpoint: string) => boolean",
-description: "Checks if a layout exists for a specific breakpoint."
-}
-]} />
+</Only>
+
+<Only react>
+
+You can access the controller from the `onfirstcreate` callback. From any component rendered inside the board, call the `useResponsiveFlexiBoard()` hook.
+
+</Only>
+
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
+
+<ApiReference title="Methods" api={api.controller.methods} reactApi={api.controllerReact.methods} />
 
 ## ResponsiveFlexiBoardConfiguration
 
 The configuration object for the `ResponsiveFlexiBoard` component.
 
-<ApiReference title="Properties" api={[
-{
-name: "breakpoints",
-type: "Record<string, number>",
-description: "Breakpoint definitions mapping keys (lg, md, sm, xs) to minimum viewport widths in pixels. Evaluated largest-first; the first match wins."
-},
-{
-name: "loadLayouts",
-type: "() => ResponsiveFlexiLayout | undefined",
-description: "Function to load initial layouts on mount. Called once when the responsive board is ready."
-},
-{
-name: "onLayoutsChange",
-type: "(layouts: ResponsiveFlexiLayout) => void",
-description: "Callback fired when any layout changes (widget moved, resized, added, or removed). Receives all breakpoint layouts."
-},
-{
-name: "onBreakpointChange",
-type: "(newBreakpoint: string, oldBreakpoint: string) => void",
-description: "Callback fired when the active breakpoint changes."
-}
-]} />
+<ApiReference title="Properties" api={api.types.ResponsiveFlexiBoardConfiguration} reactApi={api.typesReact.ResponsiveFlexiBoardConfiguration} />
 
 ## ResponsiveFlexiLayout
 
-A responsive layout is a map of breakpoint keys to `FlexiLayout` objects:
+A `ResponsiveFlexiLayout` maps breakpoint keys to `FlexiLayout` objects. Entries use the same IDs and registry types as [ordinary stored layouts](/docs/guides/exporting-importing-boards).
 
-```typescript
-type ResponsiveFlexiLayout = {
-    [breakpoint: string]: FlexiLayout;
-};
+This illustrative JSON contains stored layouts for two visited breakpoints:
 
-// Example
+```json
 {
-    lg: {
-        "main": [
-            { type: "chart", x: 0, y: 0, width: 2, height: 2 }
-        ]
-    },
-    default: {
-        "main": [
-            { type: "chart", x: 0, y: 0, width: 1, height: 2 }
-        ]
-    }
+	"lg": { "main": [{ "id": "chart", "type": "chart", "x": 0, "y": 0, "width": 2, "height": 2 }] },
+	"default": {
+		"main": [{ "id": "chart", "type": "chart", "x": 0, "y": 0, "width": 1, "height": 2 }]
+	}
 }
 ```
 
-**Note:** Layouts are lazily initialized. Only breakpoints that have been actively visited will have stored layouts.
+Layouts are initialized lazily, so only breakpoints that have actually been visited have stored layouts.
+
+## Accessibility
+
+Each child board provides the [keyboard interactions and announcements](/docs/accessibility). Switching breakpoint content can unmount the focused element. The responsive wrapper does not transfer focus to a corresponding widget in the new layout. If your application needs that behavior, track the focused widget's stable ID and restore focus after the replacement board mounts. Avoid moving focus when it was outside the board.

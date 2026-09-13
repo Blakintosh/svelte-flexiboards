@@ -1,0 +1,48 @@
+{
+	"name": "@flexiboards/testing",
+	"version": "1.0.0",
+	"description": "Helpers for testing Flexiboards boards in a DOM that has no layout (happy-dom, jsdom).",
+	"scripts": {
+		"build": "tsc",
+		"check": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"CHANGELOG.md"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"keywords": [
+		"flexiboards",
+		"drag-and-drop",
+		"grid",
+		"dashboard",
+		"testing"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Blakintosh/svelte-flexiboards.git",
+		"directory": "packages/testing"
+	},
+	"author": "Blakintosh",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/Blakintosh/svelte-flexiboards/issues"
+	},
+	"homepage": "https://www.flexiboards.dev/docs/guides/testing",
+	"devDependencies": {
+		"happy-dom": "^20.11.2",
+		"typescript": "^5.0.0",
+		"vitest": "^3.0.7"
+	},
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	}
+}

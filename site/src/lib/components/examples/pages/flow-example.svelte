@@ -1,36 +1,36 @@
 <script lang="ts">
 	import {
 		FlexiBoard,
-		FlexiDelete,
 		FlexiTarget,
 		FlexiWidget,
-		type AdderWidgetConfiguration,
 		type FlexiWidgetController
-	} from 'svelte-flexiboards';
-	import {
-		FlexiAdd,
-		type FlexiBoardConfiguration,
-		type FlexiBoardController
-	} from 'svelte-flexiboards';
+	} from '@flexiboards/svelte';
+	import { type FlexiBoardConfiguration, type FlexiBoardController } from '@flexiboards/svelte';
 	import FlowTile from '$lib/components/examples/flow/flow-tile.svelte';
 
 	let boardConfig: FlexiBoardConfiguration = $state({
 		widgetDefaults: {
-			draggable: true,
+			draggability: 'full',
 			resizability: 'horizontal'
 		}
 	});
 
+	// The drop preview is a dashed accent outline; the widget in hand lifts off
+	// the sheet instead of taking an accent border.
 	const className = (widget: FlexiWidgetController) => [
-		widget.isShadow && 'opacity-50',
-		widget.isGrabbed && 'animate-pulse opacity-50'
+		widget.isShadow &&
+			'rounded-[14px] border-[1.5px] border-dashed border-fx-accent/50 bg-tint-accent',
+		widget.isGrabbed && 'rounded-[10px] shadow-lift opacity-90'
 	];
 
 	let boardController: FlexiBoardController = $state() as FlexiBoardController;
 </script>
 
-<main class="flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
-	<h1 class="flex shrink-0 justify-between text-2xl font-semibold lg:text-3xl">Flow.</h1>
+<main class="bg-paper flex h-full min-h-0 w-full flex-col gap-8 px-12 py-8 lg:px-16">
+	<header class="flex shrink-0 items-baseline justify-between gap-4">
+		<h1 class="text-ink font-serif text-2xl lg:text-[30px]">Flow</h1>
+		<span class="text-faint font-mono text-[11px]">3 × 3 · flow · row axis</span>
+	</header>
 
 	<FlexiBoard
 		class="flex min-h-0 min-w-0 flex-col items-center justify-center gap-4 lg:flex-row lg:gap-6"
@@ -39,7 +39,7 @@
 	>
 		<FlexiTarget
 			key="target"
-			class={'aspect-square h-64 gap-2 rounded-lg border p-4 lg:h-128 lg:gap-6'}
+			class={'border-rule-soft bg-panel shadow-card lg:h-128 aspect-square h-64 gap-2 rounded-[14px] border p-4 lg:gap-6'}
 			config={{
 				rowSizing: 'minmax(0, 6rem)',
 				layout: {

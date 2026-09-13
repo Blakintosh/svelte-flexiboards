@@ -1,0 +1,106 @@
+// Components
+import FlexiBoard, {
+	type FlexiBoardProps,
+	type FlexiBoardSuspenseReason
+} from './components/flexi-board.svelte';
+import FlexiTarget, { type FlexiTargetProps } from './components/flexi-target.svelte';
+import FlexiSortable, { type FlexiSortableProps } from './components/flexi-sortable.svelte';
+import FlexiDashboard, { type FlexiDashboardProps } from './components/flexi-dashboard.svelte';
+import FlexiWidget, { type FlexiWidgetProps } from './components/flexi-widget.svelte';
+import FlexiGrab from './components/flexi-grab.svelte';
+import FlexiResize from './components/flexi-resize.svelte';
+import FlexiAdd from './components/flexi-add.svelte';
+import FlexiDelete from './components/flexi-delete.svelte';
+import ResponsiveFlexiBoard, {
+	type BreakpointSnippetParams,
+	type ResponsiveFlexiBoardProps
+} from './components/responsive-flexi-board.svelte';
+
+// Adapter context getters
+import { getFlexiwidgetCtx } from './adapters/widget.js';
+
+// Core-provided configuration helpers
+import {
+	LAYOUT_FORMAT_VERSION,
+	immediateTriggerConfig,
+	longPressTriggerConfig,
+	cssTransitionConfig,
+	simpleTransitionConfig,
+	springTransitionConfig,
+	cssTransition,
+	spring
+} from '@flexiboards/core';
+
+// All public types come from core. The Svelte prop types exported below shadow
+// their core namesakes where both exist.
+export type * from '@flexiboards/core';
+
+// Svelte instantiations of core's class-generic types. Class values are
+// Svelte's ClassValue: strings, arrays and records, resolved natively by
+// class={...}. These aliases shadow the unknown-instantiated star re-exports
+// above, so consumers annotating with these names never see the generic.
+import type { ClassValue } from 'svelte/elements';
+import type {
+	AdderWidgetConfiguration as CoreAdderWidgetConfiguration,
+	FlexiAddClasses as CoreFlexiAddClasses,
+	FlexiAddClassFunction as CoreFlexiAddClassFunction,
+	FlexiAddWidgetFn as CoreFlexiAddWidgetFn,
+	FlexiBoardConfiguration as CoreFlexiBoardConfiguration,
+	FlexiDeleteClasses as CoreFlexiDeleteClasses,
+	FlexiDeleteClassFunction as CoreFlexiDeleteClassFunction,
+	FlexiRegistryEntry as CoreFlexiRegistryEntry,
+	FlexiTargetConfiguration as CoreFlexiTargetConfiguration,
+	FlexiTargetPartialConfiguration as CoreFlexiTargetPartialConfiguration,
+	FlexiWidgetClasses as CoreFlexiWidgetClasses,
+	FlexiWidgetClassFunction as CoreFlexiWidgetClassFunction,
+	FlexiWidgetConfiguration as CoreFlexiWidgetConfiguration,
+	FlexiWidgetDefaults as CoreFlexiWidgetDefaults
+} from '@flexiboards/core';
+
+export type AdderWidgetConfiguration = CoreAdderWidgetConfiguration<ClassValue>;
+export type FlexiAddClasses = CoreFlexiAddClasses<ClassValue>;
+export type FlexiAddClassFunction = CoreFlexiAddClassFunction<ClassValue>;
+export type FlexiAddWidgetFn = CoreFlexiAddWidgetFn<ClassValue>;
+export type FlexiBoardConfiguration = CoreFlexiBoardConfiguration<ClassValue>;
+export type FlexiDeleteClasses = CoreFlexiDeleteClasses<ClassValue>;
+export type FlexiDeleteClassFunction = CoreFlexiDeleteClassFunction<ClassValue>;
+export type FlexiRegistryEntry = CoreFlexiRegistryEntry<ClassValue>;
+export type FlexiTargetConfiguration = CoreFlexiTargetConfiguration<ClassValue>;
+export type FlexiTargetPartialConfiguration = CoreFlexiTargetPartialConfiguration<ClassValue>;
+export type FlexiWidgetClasses = CoreFlexiWidgetClasses<ClassValue>;
+export type FlexiWidgetClassFunction = CoreFlexiWidgetClassFunction<ClassValue>;
+export type FlexiWidgetConfiguration = CoreFlexiWidgetConfiguration<ClassValue>;
+export type FlexiWidgetDefaults = CoreFlexiWidgetDefaults<ClassValue>;
+
+export {
+	FlexiBoard,
+	type FlexiBoardProps,
+	type FlexiBoardSuspenseReason,
+	FlexiTarget,
+	type FlexiTargetProps,
+	FlexiSortable,
+	type FlexiSortableProps,
+	FlexiDashboard,
+	type FlexiDashboardProps,
+	FlexiWidget,
+	type FlexiWidgetProps,
+	FlexiGrab,
+	FlexiResize,
+	FlexiAdd,
+	FlexiDelete,
+	ResponsiveFlexiBoard,
+	type ResponsiveFlexiBoardProps,
+	type BreakpointSnippetParams,
+	LAYOUT_FORMAT_VERSION,
+	immediateTriggerConfig,
+	longPressTriggerConfig,
+	cssTransitionConfig,
+	simpleTransitionConfig,
+	springTransitionConfig,
+	cssTransition,
+	spring,
+	getFlexiwidgetCtx
+};
+
+// Re-exported so adapter consumers can type target header/footer snippet params.
+export type { FlexiTargetController } from '@flexiboards/core';

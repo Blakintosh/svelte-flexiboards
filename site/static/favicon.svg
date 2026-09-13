@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- The mark in a square ink field, never rounded. -->
+  <rect width="64" height="64" fill="#10202E"/>
+  <rect x="17" y="20" width="30" height="6" fill="#F7F7F4"/>
+  <rect x="17" y="29" width="20" height="6" fill="#F7F7F4"/>
+  <rect x="17" y="38" width="10" height="6" fill="#E2452B"/>
+</svg>

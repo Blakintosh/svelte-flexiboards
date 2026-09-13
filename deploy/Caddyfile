@@ -1,0 +1,8 @@
+flexiboards.dev {
+	redir https://www.flexiboards.dev{uri} permanent
+}
+
+www.flexiboards.dev {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3003
+}

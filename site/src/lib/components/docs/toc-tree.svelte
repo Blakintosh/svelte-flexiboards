@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		type TableOfContentsItem,
-		type TableOfContentsElements,
-		melt
-	} from '@melt-ui/svelte';
+	import { type TableOfContentsItem, type TableOfContentsElements, melt } from '@melt-ui/svelte';
 	import { cn } from '$lib/utils';
 
 	export let tree: TableOfContentsItem[] = [];
@@ -12,7 +8,8 @@
 	export let level = 1;
 </script>
 
-<ul class={cn('m-0 flex list-none flex-col gap-0.5', level !== 1 && 'ml-3 border-l pl-3')}>
+<!-- Ruler ticks: a short rule marks each entry; the active tick lengthens and inks fx-accent. -->
+<ul class={cn('m-0 flex list-none flex-col', level !== 1 && 'pl-[17px]')}>
 	{#if tree && tree.length}
 		{#each tree as heading, i (i)}
 			<li class="mt-0">
@@ -20,12 +17,19 @@
 					href="#{heading.id}"
 					use:melt={$item(heading.id)}
 					class={cn(
-						'block rounded-md px-2 py-1.5 text-sm text-muted-foreground no-underline transition-colors',
-						'hover:text-foreground',
-						'data-[active]:text-foreground data-[active]:font-medium'
+						'text-body group flex items-center gap-2.5 py-1.5 font-mono text-[12px] leading-snug no-underline transition-colors duration-[120ms]',
+						'hover:text-ink',
+						'data-[active]:text-fx-accent'
 					)}
 				>
-					{@html heading.node.innerHTML}
+					{#if level === 1}
+						<span
+							class="bg-rule group-data-[active]:bg-fx-accent h-px w-[7px] shrink-0 transition-all duration-[120ms] group-data-[active]:w-[14px]"
+						></span>
+					{/if}
+					<!-- The heading's own rendered markup (inline code), copied from the page. -->
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+					<span class="min-w-0 break-all">{@html heading.node.innerHTML}</span>
 				</a>
 				{#if heading.children && heading.children.length}
 					<svelte:self tree={heading.children} level={level + 1} {activeHeadingIdxs} {item} />

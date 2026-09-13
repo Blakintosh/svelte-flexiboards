@@ -1,0 +1,661 @@
+import { getFlexiEventBus, type FlexiEventBus } from '../shared/event-bus.js';
+import {
+	generateUniqueId,
+	getLayoutRect,
+	getPointerService,
+	type PointerService
+} from '../shared/utils.js';
+import type {
+	ReadonlySignal,
+	Signal,
+	WidgetAction,
+	WidgetGrabAction,
+	WidgetResizeAction
+} from '../types.js';
+import { computed, signal } from '../reactivity.js';
+import type {
+	InternalWidgetDroppedEvent,
+	InternalWidgetEvent,
+	InternalWidgetGrabbedEvent,
+	InternalWidgetResizingEvent
+} from '../internal-types.js';
+import { FlexiWidgetController } from './base.js';
+import type { InternalFlexiTargetController } from '../target/controller.js';
+import type { FlexiTargetController } from '../target/base.js';
+import { WidgetMoveInterpolator } from './interpolator.js';
+import type { WidgetMovementAnimation } from './animation.js';
+import type { FlexiWidgetConfiguration, FlexiWidgetConstructorParams } from './types.js';
+import type { AnimationBox } from './animation.js';
+import type { InternalFlexiBoardController } from '../board/controller.js';
+
+export class InternalFlexiWidgetController extends FlexiWidgetController {
+	#pointerService: PointerService = getPointerService();
+
+	// Grabber and resizer tracking
+	#grabbers: number = 0;
+	#resizers: number = 0;
+	#disposed: boolean = false;
+
+	// Movement interpolation
+	interpolator: WidgetMoveInterpolator;
+
+	internalTarget?: InternalFlexiTargetController = undefined;
+	provider: InternalFlexiBoardController;
+
+	#mounted$: Signal<boolean> = signal(false);
+
+	#eventBus: FlexiEventBus;
+	#unsubscribers: (() => void)[] = [];
+	#lastActionType: WidgetAction['action'] | null = null;
+	/**
+	 * What the widget looked like the instant its action was released or cancelled. The bounds
+	 * that follow may arrive after the action state is cleared and the portal clone torn down
+	 * (e.g. the board's restore-on-cancel microtask), so the animation reads its start from here.
+	 */
+	#releasedActionState: { action: WidgetAction['action']; rect: AnimationBox } | null = null;
+	/** Pixel size the widget had when its current resize began; the placeholder holds this, not the preview. */
+	#preResizeSizePx: { width: number; height: number } | null = null;
+	#interpolationAnimationHint: WidgetMovementAnimation | null = null;
+
+	#type?: string;
+	#userProvidedId?: string;
+
+	override get type(): string | undefined {
+		return this.#type;
+	}
+
+	override get userProvidedId(): string | undefined {
+		return this.#userProvidedId;
+	}
+
+	get mounted() {
+		return this.#mounted$();
+	}
+
+	set mounted(value: boolean) {
+		this.#mounted$(value);
+	}
+
+	/**
+	 * The adapter's prop seam: syncs the component's config props into the
+	 * widget's reactive state. See FlexiWidgetController.syncConfig.
+	 */
+	updateConfig(config: FlexiWidgetConfiguration): void {
+		this.syncConfig(config);
+	}
+
+	/**
+	 * The styling to apply to the widget.
+	 */
+	style$: ReadonlySignal<string> = computed(() => {
+		const currentAction = this.currentAction;
+
+		if (!currentAction) {
+			return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
+		}
+
+		if (currentAction.action == 'grab') {
+			return this.#getGrabbedWidgetStyle(currentAction);
+		}
+
+		if (currentAction.action == 'resize') {
+			return this.#getResizingWidgetStyle(currentAction);
+		}
+
+		return this.#getPlacedWidgetStyle() + this.#getCursorStyle();
+	});
+
+	get style(): string {
+		return this.style$();
+	}
+
+	// Unique within the page. The random suffix also keeps it from colliding
+	// with an id from an earlier session once exported and stored.
+	readonly id = generateUniqueId('flexiwidget-') + '-' + Math.random().toString(36).slice(2, 8);
+
+	#getCursorStyle() {
+		if (!this.mounted) {
+			return '';
+		}
+
+		if (!this.isGrabbable) {
+			return '';
+		}
+
+		if (this.isGrabbed) {
+			return 'pointer-events: none; user-select: none; cursor: grabbing;';
+		}
+
+		if (this.isResizing) {
+			return 'pointer-events: none; user-select: none; cursor: nwse-resize;';
+		}
+
+		if (this.#grabbers == 0) {
+			return 'user-select: none; cursor: grab; touch-action: none;';
+		}
+
+		return '';
+	}
+
+	#getPlacedWidgetStyle() {
+		if (!this.interpolator?.active$()) {
+			// The shadow sits under anything mid-interpolation (z: 2) by rule, not
+			// DOM order. Otherwise the stack order flickers as elements re-sort.
+			const layer = this.isShadow ? ' z-index: 1;' : '';
+			return `grid-column: ${this.x + 1} / span ${this.width}; grid-row: ${this.y + 1} / span ${this.height};${layer}`;
+		}
+
+		return this.interpolator.widgetStyle$();
+	}
+
+	#getGrabbedWidgetStyle(action: WidgetGrabAction) {
+		const locationOffsetX = this.#pointerService.position.x - action.offsetX;
+		const locationOffsetY = this.#pointerService.position.y - action.offsetY;
+
+		// Size stays fixed at what was captured on grab.
+		const height = action.capturedHeightPx;
+		const width = action.capturedWidthPx;
+
+		const cursor = this.dropRejected ? 'not-allowed' : 'grabbing';
+		return `pointer-events: none; user-select: none; cursor: ${cursor}; position: absolute; top: ${locationOffsetY}px; left: ${locationOffsetX}px; height: ${height}px; width: ${width}px;`;
+	}
+
+	#getResizingWidgetStyle(action: WidgetResizeAction) {
+		const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+		const parseGap = (value?: string) => {
+			if (!value || value === 'normal') {
+				return 0;
+			}
+			const numeric = Number.parseFloat(value);
+			return Number.isFinite(numeric) ? numeric : 0;
+		};
+		const toPx = (units: number, unitSize: number, gapSize: number) => {
+			if (!Number.isFinite(units)) {
+				return Infinity;
+			}
+			return units * unitSize + Math.max(0, units - 1) * gapSize;
+		};
+
+		const gridRef = this.internalTarget?.grid?.ref;
+		const gridColumns = this.internalTarget?.columns ?? 0;
+		const gridRows = this.internalTarget?.rows ?? 0;
+		const gridStyle =
+			gridRef && typeof window !== 'undefined' ? window.getComputedStyle(gridRef) : null;
+		const columnGapPx = parseGap(gridStyle?.columnGap);
+		const rowGapPx = parseGap(gridStyle?.rowGap);
+
+		// Calculate size of one grid unit in pixels
+		const fallbackUnitSizeY =
+			(action.capturedHeightPx - Math.max(0, action.initialHeightUnits - 1) * rowGapPx) /
+			action.initialHeightUnits;
+		// Guard against division by zero if initial width is somehow 0
+		const fallbackUnitSizeX =
+			action.initialWidthUnits > 0
+				? (action.capturedWidthPx - Math.max(0, action.initialWidthUnits - 1) * columnGapPx) /
+					action.initialWidthUnits
+				: 1;
+		const liveUnitSizeX =
+			gridRef && gridColumns > 0
+				? (gridRef.clientWidth - Math.max(0, gridColumns - 1) * columnGapPx) / gridColumns
+				: NaN;
+		const liveUnitSizeY =
+			gridRef && gridRows > 0
+				? (gridRef.clientHeight - Math.max(0, gridRows - 1) * rowGapPx) / gridRows
+				: NaN;
+		const unitSizeX =
+			Number.isFinite(liveUnitSizeX) && liveUnitSizeX > 0 ? liveUnitSizeX : fallbackUnitSizeX;
+		const unitSizeY =
+			Number.isFinite(liveUnitSizeY) && liveUnitSizeY > 0 ? liveUnitSizeY : fallbackUnitSizeY;
+
+		const deltaX = this.#pointerService.position.x - action.offsetX - action.left;
+		const deltaY = this.#pointerService.position.y - action.offsetY - action.top;
+
+		// Top and left stay fixed at their initial positions during a resize.
+		const top = action.top;
+		const left = action.left;
+
+		let height = action.capturedHeightPx;
+		let width = action.capturedWidthPx;
+
+		const minWidthPx = toPx(this.minWidth, unitSizeX, columnGapPx);
+		const minHeightPx = toPx(this.minHeight, unitSizeY, rowGapPx);
+		const gridMaxWidthUnits =
+			this.internalTarget && this.internalTarget.columns > 0
+				? Math.max(1, this.internalTarget.columns - this.x)
+				: Infinity;
+		const gridMaxHeightUnits =
+			this.internalTarget && this.internalTarget.rows > 0
+				? Math.max(1, this.internalTarget.rows - this.y)
+				: Infinity;
+		const configMaxWidthUnits = Number.isFinite(this.maxWidth) ? this.maxWidth : Infinity;
+		const configMaxHeightUnits = Number.isFinite(this.maxHeight) ? this.maxHeight : Infinity;
+		const maxWidthPx = toPx(
+			Math.min(configMaxWidthUnits, gridMaxWidthUnits),
+			unitSizeX,
+			columnGapPx
+		);
+		const maxHeightPx = toPx(
+			Math.min(configMaxHeightUnits, gridMaxHeightUnits),
+			unitSizeY,
+			rowGapPx
+		);
+
+		switch (this.resizability) {
+			case 'horizontal':
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
+				break;
+			case 'vertical':
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
+				break;
+			case 'both':
+				height = clamp(action.capturedHeightPx + deltaY, minHeightPx, maxHeightPx);
+				width = clamp(action.capturedWidthPx + deltaX, minWidthPx, maxWidthPx);
+				break;
+		}
+
+		const cursor = this.dropRejected ? 'not-allowed' : 'nwse-resize';
+		return `pointer-events: none; user-select: none; cursor: ${cursor}; position: absolute; top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px;`;
+	}
+
+	constructor(params: FlexiWidgetConstructorParams) {
+		super(
+			{
+				currentAction: null,
+				width: params.config.width ?? 1,
+				height: params.config.height ?? 1,
+				x: 0,
+				y: 0,
+				hasGrabbers: false,
+				hasResizers: false,
+				isBeingDropped: false
+			},
+			params
+		);
+
+		if (params.target) {
+			this.internalTarget = params.target;
+		}
+
+		this.provider = params.provider;
+		this.#type = params.type;
+		this.#userProvidedId = params.config.id;
+
+		this.interpolator = new WidgetMoveInterpolator(this.provider, this);
+
+		this.#eventBus = getFlexiEventBus();
+
+		this.#unsubscribers.push(
+			this.#eventBus.subscribe('widget:grabbed', this.onGrabbed.bind(this)),
+			this.#eventBus.subscribe('widget:resizing', this.onResizing.bind(this)),
+			this.#eventBus.subscribe('widget:release', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:cancel', this.onReleased.bind(this)),
+			this.#eventBus.subscribe('widget:delete', this.onDelete.bind(this)),
+			this.#eventBus.subscribe('widget:dropped', this.onDropped.bind(this))
+		);
+	}
+
+	onDropped(event: InternalWidgetDroppedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.internalTarget = event.newTarget;
+	}
+
+	onGrabbed(event: InternalWidgetGrabbedEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.#lastActionType = 'grab';
+
+		// Wait a tick: the widget may need to be portalled before it can be focused.
+		setTimeout(() => {
+			if (typeof document === 'undefined' || !this.ref?.contains(document.activeElement)) {
+				this.ref?.focus();
+			}
+		}, 0);
+
+		this.currentAction$({
+			action: 'grab',
+			widget: this,
+			offsetX: event.xOffset,
+			offsetY: event.yOffset,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx
+		});
+	}
+
+	onResizing(event: InternalWidgetResizingEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		this.#lastActionType = 'resize';
+		this.#preResizeSizePx = { width: event.capturedWidthPx, height: event.capturedHeightPx };
+
+		// Wait a tick: the widget may need to be portalled before it can be focused.
+		setTimeout(() => {
+			if (typeof document === 'undefined' || !this.ref?.contains(document.activeElement)) {
+				this.ref?.focus();
+			}
+		}, 0);
+
+		this.currentAction$({
+			action: 'resize',
+			widget: this,
+			offsetX: event.offsetX,
+			offsetY: event.offsetY,
+			left: event.left,
+			top: event.top,
+			capturedHeightPx: event.capturedHeightPx,
+			capturedWidthPx: event.capturedWidthPx,
+			initialHeightUnits: this.height,
+			initialWidthUnits: this.width
+		});
+	}
+
+	onReleased(event: InternalWidgetEvent) {
+		if (event.widget !== this) {
+			return;
+		}
+
+		// A cross-target drop mounts a new copy of the content. Restore the
+		// corresponding control after the adapter commits that copy.
+		const focused = typeof document === 'undefined' ? null : document.activeElement;
+		if (
+			typeof HTMLElement !== 'undefined' &&
+			focused instanceof HTMLElement &&
+			this.ref?.contains(focused)
+		) {
+			const path: number[] = [];
+			let node: Element = focused;
+			while (node !== this.ref && node.parentElement) {
+				path.unshift(Array.from(node.parentElement.children).indexOf(node));
+				node = node.parentElement;
+			}
+			setTimeout(() => {
+				if (!this.ref?.isConnected) return;
+				const active = document.activeElement;
+				if (active !== document.body && active !== focused && !this.ref.contains(active)) return;
+				const next = path.reduce<Element | undefined>(
+					(parent, index) => parent?.children[index],
+					this.ref
+				);
+				(next instanceof HTMLElement ? next : this.ref).focus({ preventScroll: true });
+			}, 0);
+		}
+		this.currentAction$(null);
+	}
+
+	/**
+	 * Records the current action and on-screen box before the action is released, so a
+	 * subsequent placement (drop, or restore after cancel) can still animate from it.
+	 * @internal
+	 */
+	captureReleaseState() {
+		// Idempotent within a release: the board and the portal both capture, in
+		// whichever order the bus has them, and the first capture is the one taken
+		// while the element is still where the user let go of it.
+		if (this.#releasedActionState) {
+			return;
+		}
+		const action = this.currentAction$();
+		// Layout rect: a decorative grab transform (tilt/scale) transitions out on
+		// release, so the placement animation should start from the laid-out box.
+		const rect = this.ref ? getLayoutRect(this.ref) : undefined;
+		if (!action || !rect) {
+			return;
+		}
+
+		this.#releasedActionState = {
+			action: action.action,
+			rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+		};
+		// Outlives the release microtasks, but not an unrelated later placement.
+		setTimeout(() => {
+			this.#releasedActionState = null;
+		}, 0);
+	}
+
+	/**
+	 * Sets the bounds of the widget.
+	 * @internal
+	 * @param x The x-coordinate of the widget.
+	 * @param y The y-coordinate of the widget.
+	 * @param width The width of the widget.
+	 * @param height The height of the widget.
+	 */
+	setBounds(x: number, y: number, width: number, height: number, interpolate: boolean = true) {
+		const previousDimensions = {
+			width: this.width,
+			height: this.height
+		};
+
+		const positionUnchanged =
+			this.x == x && this.y == y && this.width == width && this.height == height;
+
+		if (positionUnchanged) {
+			// The grid units may be unchanged while the widget on screen is not: a grab that lands
+			// back on its own cell (or is cancelled) and a resize whose preview rounded back to
+			// the same size both still need to animate to the committed box.
+			const action = this.currentAction$()?.action ?? this.#releasedActionState?.action;
+			if (interpolate && (action === 'grab' || action === 'resize')) {
+				this.#interpolateMove(x, y, this.width, this.height, previousDimensions);
+			}
+			return;
+		}
+
+		const constrainedWidth = Math.max(this.minWidth, Math.min(this.maxWidth, width));
+		const constrainedHeight = Math.max(this.minHeight, Math.min(this.maxHeight, height));
+
+		this.x$(x);
+		this.y$(y);
+		this.width$(constrainedWidth);
+		this.height$(constrainedHeight);
+
+		if (interpolate) {
+			this.#interpolateMove(x, y, constrainedWidth, constrainedHeight, previousDimensions);
+		}
+	}
+
+	#getMovementAnimation(): WidgetMovementAnimation {
+		switch (this.currentAction$()?.action) {
+			case 'grab':
+				return 'drop';
+			case 'resize':
+				return 'resize';
+		}
+
+		// If action state has already been released but this update is part of a drop placement,
+		// preserve the last interaction animation type for interpolation.
+		if (this.isBeingDropped$()) {
+			return this.#lastActionType === 'resize' ? 'resize' : 'drop';
+		}
+
+		// Likewise for a placement that follows a release/cancel (e.g. a snapshot restore).
+		if (this.#releasedActionState) {
+			return this.#releasedActionState.action === 'resize' ? 'resize' : 'drop';
+		}
+
+		// Shadow/dropzone widgets can hint the desired interpolation mode even without an action state.
+		if (this.#interpolationAnimationHint) {
+			return this.#interpolationAnimationHint;
+		}
+
+		return 'move';
+	}
+
+	#interpolateMove(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		previousDimensions?: { width: number; height: number }
+	) {
+		const rect =
+			this.#releasedActionState?.rect ?? (this.ref ? getLayoutRect(this.ref) : undefined);
+		if (!rect || !this.interpolator) {
+			return;
+		}
+
+		const animation = this.#getMovementAnimation();
+		// A resize renders the widget at the pointer-driven preview size, so the on-screen rect
+		// is the right place to animate *from* but not the size for the placeholder to hold.
+		const lockSize = animation === 'resize' ? (this.#preResizeSizePx ?? undefined) : undefined;
+		this.#preResizeSizePx = null;
+
+		this.interpolator.interpolateMove(
+			{
+				x,
+				y,
+				width,
+				height
+			},
+			{
+				left: rect.left,
+				top: rect.top,
+				width: rect.width,
+				height: rect.height
+			},
+			animation,
+			previousDimensions,
+			lockSize
+		);
+		this.isBeingDropped$(false);
+	}
+
+	/**
+	 * Registers a grabber to the widget.
+	 */
+	addGrabber(): number {
+		this.#grabbers++;
+		this.hasGrabbers$(this.#grabbers > 0);
+		return this.#grabbers;
+	}
+
+	/**
+	 * Unregisters a grabber from the widget.
+	 */
+	removeGrabber(): number {
+		if (this.#disposed) {
+			return 0;
+		}
+		this.#grabbers--;
+		this.hasGrabbers$(this.#grabbers > 0);
+		return this.#grabbers;
+	}
+
+	/**
+	 * Registers a resizer to the widget.
+	 */
+	addResizer(): number {
+		this.#resizers++;
+		this.hasResizers$(this.#resizers > 0);
+		return this.#resizers;
+	}
+
+	/**
+	 * Unregisters a resizer from the widget.
+	 */
+	removeResizer(): number {
+		if (this.#disposed) {
+			return 0;
+		}
+		this.#resizers--;
+		this.hasResizers$(this.#resizers > 0);
+		return this.#resizers;
+	}
+
+	/**
+	 * Gets the current grabber count
+	 */
+	get grabberCount(): number {
+		return this.#grabbers;
+	}
+
+	/**
+	 * Gets the current resizer count
+	 */
+	get resizerCount(): number {
+		return this.#resizers;
+	}
+
+	moveTo({ target, x, y }: { target?: FlexiTargetController; x?: number; y?: number }): boolean {
+		const to = (target as InternalFlexiTargetController | undefined) ?? this.internalTarget;
+		if (!to) {
+			return false;
+		}
+		return to.provider$().placeWidget(this, to, x, y);
+	}
+
+	/**
+	 * Deletes this widget from its target and board.
+	 */
+	delete() {
+		if (!this.internalTarget) {
+			return;
+		}
+
+		this.#eventBus.dispatch('widget:delete', {
+			board: this.internalTarget!.provider$(),
+			widget: this,
+			target: this.internalTarget
+		});
+
+		// // If the widget hasn't been assigned to a target yet, then we just need to take it off the adder that
+		// // created it.
+		// if (this.adder) {
+		// 	this.adder.onstopwidgetdragin();
+		// 	return;
+		// }
+
+		// // Otherwise it should have a target.
+		// if (!this.target) {
+		// 	throw new Error(
+		// 		'A FlexiWidget was deleted without a bound target. This is likely a Flexiboards bug.'
+		// 	);
+		// }
+
+		// this.target.deleteWidget(this);
+		// this.currentAction = null;
+	}
+
+	onDelete(event: InternalWidgetEvent) {
+		if (event.widget != this) {
+			return;
+		}
+
+		this.currentAction$(null);
+		this.destroy();
+	}
+
+	/**
+	 * Cleanup method to be called when the widget is destroyed.
+	 */
+	destroy() {
+		// Ignore any deferred cleanup callbacks that arrive after this.
+		this.#disposed = true;
+
+		this.#grabbers = 0;
+		this.#resizers = 0;
+
+		this.#unsubscribers.forEach((unsubscribe) => unsubscribe());
+		this.#unsubscribers = [];
+	}
+
+	/**
+	 * Whether the widget should draw a placeholder widget in the DOM.
+	 */
+	get shouldDrawPlaceholder() {
+		return this.interpolator?.active$() ?? false;
+	}
+
+	override get isInterpolating() {
+		return this.interpolator?.active$() ?? false;
+	}
+
+	set interpolationAnimationHint(value: WidgetMovementAnimation | null) {
+		this.#interpolationAnimationHint = value;
+	}
+}

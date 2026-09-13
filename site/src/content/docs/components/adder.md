@@ -1,75 +1,112 @@
 ---
 title: FlexiAdd
-description: A component that allows you to drag in new widgets into a board.
+description: A button that creates a new widget and hands it to the user to drop into a board.
 category: Components
 published: true
 ---
 
 <script lang="ts">
     import ApiReference from '$lib/components/docs/api-reference.svelte';
-    import HeadsUp from '$lib/components/docs/heads-up.svelte';
+    import ApiProps from '$lib/components/docs/api-props.svelte';
+    import Only from '$lib/components/docs/only.svelte';
+    import api from '$lib/generated/api/flexi-add.json';
 </script>
+
+<!--
+  The tables below are generated from the package sources by
+  `site/scripts/extract-api.mjs`. Edit the JSDoc in the source, not this page.
+-->
 
 ## FlexiAdd (component)
 
-<ApiReference title="Props" api={[
-{
-name: "children",
-type: "Snippet<[{ adder: FlexiAddController }]>",
-description: "The child content of the adder, containing the contents of the adder button."
-},
-{
-name: "class",
-type: "FlexiAddClasses",
-description: "The class names to apply to the adder's button element."
-},
-{
-name: "addWidget",
-type: "() => AdderWidgetConfiguration",
-description: "When the user interacts with the adder, this function allows you to specify the configuration of the widget that is created and grabbed."
-},
-{
-name: "controller",
-type: "FlexiAddController (bindable)",
-description: "The controller for the adder."
-},
-{
-name: "onfirstcreate",
-type: "(controller: FlexiAddController) => void",
-description: "A callback that fires when the adder's controller is first created."
+<ApiProps {api} />
+
+`FlexiAdd` renders a button inside your board. The `addWidget` prop returns the configuration of the widget to create when the button is grabbed, or `null` to add nothing.
+
+<Only svelte>
+
+```svelte
+<script lang="ts">
+	import { FlexiAdd, type AdderWidgetConfiguration } from '@flexiboards/svelte';
+	import NumberTile from './number-tile.svelte';
+
+	function addWidget(): AdderWidgetConfiguration {
+		return {
+			widget: {
+				component: NumberTile,
+				componentProps: { number: Math.floor(Math.random() * 10) },
+				draggability: 'full'
+			},
+			widthPx: 100,
+			heightPx: 100
+		};
+	}
+</script>
+
+<FlexiAdd {addWidget} class="rounded-lg border border-dashed p-4">Add a widget</FlexiAdd>
+```
+
+</Only>
+
+<Only react>
+
+```tsx
+import { FlexiAdd, type AdderWidgetConfiguration } from '@flexiboards/react';
+import { NumberTile } from './number-tile';
+
+export function Adder() {
+	function addWidget(): AdderWidgetConfiguration {
+		return {
+			widget: {
+				component: NumberTile,
+				componentProps: { number: Math.floor(Math.random() * 10) },
+				draggability: 'full'
+			},
+			widthPx: 100,
+			heightPx: 100
+		};
+	}
+
+	return (
+		<FlexiAdd addWidget={addWidget} className="rounded-lg border border-dashed p-4">
+			Add a widget
+		</FlexiAdd>
+	);
 }
-]} />
+```
+
+The `children` prop also accepts a function receiving the adder controller, and `className` may be a function too:
+
+```tsx
+<FlexiAdd addWidget={addWidget} className={(adder) => clsx('rounded-lg border p-4')}>
+	{({ adder }) => <span>Add a widget</span>}
+</FlexiAdd>
+```
+
+</Only>
 
 ## FlexiAddController
 
-`FlexiAdd` uses a [controller](/docs/controllers) to manage its state and behaviour. You can access the controller via binding to the `controller` prop or using the `onfirstcreate` callback.
+<Only svelte>
 
-<ApiReference title="Properties" api={[
-{
-name: "ref",
-type: "HTMLElement | undefined",
-description: ""
-}
-]} />
+You can access the controller via binding to the `controller` prop, using the `onfirstcreate` callback, or from the `children` snippet parameter.
+
+</Only>
+
+<Only react>
+
+You can access the controller from the `onfirstcreate` callback or the `children` function parameter. From a component rendered inside the adder, call the `useFlexiAdd()` hook.
+
+</Only>
+
+<ApiReference title="Properties" api={api.controller.properties} reactApi={api.controllerReact.properties} />
 
 ## AdderWidgetConfiguration
 
-`AdderWidgetConfiguration` allows you to specify the configuration of the widget that is created and grabbed, as well as the initial width and height that the grabbed widget will have.
+`AdderWidgetConfiguration` describes the widget that gets created and grabbed, along with the width and height the grabbed widget starts at.
 
-<ApiReference title="Properties" api={[
-{
-name: "widget",
-type: "FlexiWidgetConfiguration",
-description: "The configuration of the widget that is created and grabbed."
-},
-{
-name: "widthPx",
-type: "number",
-description: "The initial width of the grabbed widget in pixels."
-},
-{
-name: "heightPx",
-type: "number",
-description: "The initial height of the grabbed widget in pixels."
-}
-]} />
+<ApiReference title="Properties" api={api.types.AdderWidgetConfiguration} reactApi={api.typesReact.AdderWidgetConfiguration} />
+
+## Accessibility
+
+`FlexiAdd` renders a native `button`, so it is focusable with <kbd>Tab</kbd>, and <kbd>Enter</kbd> creates the widget and grabs it for a keyboard drop. The button has no text of its own: put a label, or a visually hidden `span` for icon-only content, inside it. See [Accessibility](/docs/accessibility).

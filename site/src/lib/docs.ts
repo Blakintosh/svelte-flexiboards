@@ -1,7 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { Component } from 'svelte';
 
-// Find all docs files in the content/docs directory and its subdirectories
 const modules = import.meta.glob<MarkdownModule>('/src/content/docs/**/*.md');
 
 export type DocsPageMeta = {
@@ -9,6 +8,7 @@ export type DocsPageMeta = {
 	description: string;
 	category: string;
 	published: boolean;
+	framework?: 'svelte' | 'react';
 };
 
 export type DocsPage = {
@@ -30,10 +30,8 @@ export async function getDoc(path: string): Promise<DocsPage> {
 	}
 
 	try {
-		// Execute the importer function to get the module
 		const doc = await importer();
 
-		// Access metadata and default export (the Svelte component)
 		const metadata = doc.metadata;
 		const content = doc.default;
 
@@ -53,10 +51,10 @@ export async function getDoc(path: string): Promise<DocsPage> {
 		};
 	} catch (e: unknown) {
 		if (e instanceof Error && e.message === 'Doc not published') {
-			error(404, 'That guide does not exist.'); // Treat unpublished same as not found
+			error(404, 'That guide does not exist.'); // Treat unpublished as not found
 		} else {
 			console.error(`Error loading doc (${path}):`, e);
-			error(500, 'Could not load the guide.'); // Or a more specific error if possible
+			error(500, 'Could not load the guide.');
 		}
 	}
 }

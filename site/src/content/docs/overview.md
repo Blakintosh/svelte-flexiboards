@@ -1,99 +1,150 @@
 ---
 title: Overview
-description: Learn how to install Flexiboards and create your first Flexiboard.
+description: Install Flexiboards and create a board with movable widgets.
 category: Introduction
 published: true
 ---
 
 <script lang="ts">
 	import FlexiBoardAnatomy from '$lib/components/docs/overview/flexiboard-anatomy.svelte';
-    import FlexiBoardExample from '$lib/components/docs/overview/flexiboard-example.svelte';
-
-	import { FlexiBoard, FlexiTarget, FlexiWidget } from 'svelte-flexiboards';
+	import Only from '$lib/components/docs/only.svelte';
+	import InstallCommand from '$lib/components/docs/install-command.svelte';
 </script>
+
+Build a board with one grid and two widgets. Drag A or B to another cell, or focus a widget and press Enter, use the arrow keys until the preview reaches another cell, and press Enter again to drop it.
 
 ## Installation
 
-Flexiboards is available from npm, and can be installed using your preferred package manager:
+Start with an existing application in your selected framework. Choose a package manager in the command below; the remaining install commands use that choice.
 
-```
-npm install svelte-flexiboards
+<Only svelte>
+
+<InstallCommand package="@flexiboards/svelte" />
+
+Use Svelte 5.20 or later in the Svelte 5 release line.
+
+</Only>
+
+<Only react>
+
+<InstallCommand package="@flexiboards/react" />
+
+Use React 18 or 19. Boards also support [server-side rendering](/docs/guides/server-side-rendering).
+
+</Only>
+
+## Create a board
+
+This example includes its sizing and styles. It needs no CSS framework. Put it in a component and render that component in your application.
+
+<Only svelte>
+
+```svelte example title="First board"
+<script lang="ts">
+	import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/svelte';
+</script>
+
+<FlexiBoard>
+	<FlexiTarget
+		key="main"
+		config={{
+			layout: { type: 'free', minColumns: 2, maxColumns: 2, minRows: 2, maxRows: 2 },
+			columnSizing: '100px',
+			rowSizing: '100px'
+		}}
+	>
+		<FlexiWidget x={0} y={0}>
+			<div
+				style="height: 100%; padding: 16px; border: 1px solid currentColor; box-sizing: border-box;"
+			>
+				A
+			</div>
+		</FlexiWidget>
+		<FlexiWidget x={1} y={1}>
+			<div
+				style="height: 100%; padding: 16px; border: 1px solid currentColor; box-sizing: border-box;"
+			>
+				B
+			</div>
+		</FlexiWidget>
+	</FlexiTarget>
+</FlexiBoard>
 ```
 
-```
-pnpm add svelte-flexiboards
+</Only>
+
+<Only react>
+
+```tsx example title="First board"
+import { FlexiBoard, FlexiTarget, FlexiWidget } from '@flexiboards/react';
+
+export function FirstBoard() {
+	return (
+		<FlexiBoard>
+			<FlexiTarget
+				keyName="main"
+				config={{
+					layout: { type: 'free', minColumns: 2, maxColumns: 2, minRows: 2, maxRows: 2 },
+					columnSizing: '100px',
+					rowSizing: '100px'
+				}}
+			>
+				<FlexiWidget x={0} y={0}>
+					<div
+						style={{
+							height: '100%',
+							padding: 16,
+							border: '1px solid currentColor',
+							boxSizing: 'border-box'
+						}}
+					>
+						A
+					</div>
+				</FlexiWidget>
+				<FlexiWidget x={1} y={1}>
+					<div
+						style={{
+							height: '100%',
+							padding: 16,
+							border: '1px solid currentColor',
+							boxSizing: 'border-box'
+						}}
+					>
+						B
+					</div>
+				</FlexiWidget>
+			</FlexiTarget>
+		</FlexiBoard>
+	);
+}
 ```
 
-```
-yarn add svelte-flexiboards
-```
+</Only>
 
-Flexiboards was built from the ground up to be a Svelte 5 library, so it is incompatible with Svelte 4 or earlier.
+The target has two columns and two rows, each 100 pixels. Widget positions are zero-based: A starts at column 0, row 0; B starts at column 1, row 1. Set B's `x` to `0` before mounting to start it beneath A.
 
 ## Anatomy of a Flexiboard
 
-Flexiboards are constructed from a series of components, namely `FlexiBoard`, `FlexiTarget`, and `FlexiWidget`. When used together, they allow you to build drag-and-drop grids for various use cases.
+- `FlexiBoard` owns the interaction state and isolates its targets. Widgets move between targets within one board.
+- `FlexiTarget` defines a grid and holds its widgets. Choose a [free-form grid](/docs/free-form-grids) for positions or a [flow grid](/docs/flow-grids) for an ordered collection.
+- `FlexiWidget` registers a widget in its target. Pass children for inline content, or use a component to reuse a renderer. See [Widget rendering](/docs/widget-rendering).
 
-Below is a diagram showing the anatomy of a Flexiboard that would be used for a todos board.
-<FlexiBoardAnatomy />
+A board can contain several targets. In this diagram, one target contains one widget and the other contains two:
 
-Here's how you would create a board like this in Svelte, using Flexiboards:
+<FlexiBoardAnatomy alt="Component anatomy: a FlexiBoard contains two FlexiTarget grids side by side. The first target holds one FlexiWidget; the second holds two widgets stacked vertically." />
 
-```svelte example
-<script lang="ts">
-	import {
-		FlexiBoard,
-		FlexiTarget,
-		FlexiWidget,
-		type FlexiWidgetController
-	} from 'svelte-flexiboards';
-</script>
+Follow [Multiple targets](/docs/multiple-targets) to build a board with several columns and move widgets between them.
 
-<div class="not-prose">
-	<FlexiBoard
-		class="flex flex-col justify-center gap-8 lg:flex-row"
-		config={{
-			targetDefaults: {
-				layout: {
-					type: 'flow',
-					flowAxis: 'row',
-					placementStrategy: 'append'
-				}
-			},
-			widgetDefaults: {
-				draggable: true,
-				className: (widget: FlexiWidgetController) => {
-					return [
-						'bg-muted px-4 py-2 rounded-lg w-64',
-						widget.isShadow && 'opacity-50',
-						widget.isGrabbed && 'animate-pulse opacity-50'
-					];
-				}
-			}
-		}}
-	>
-		<div class="rounded-xl border bg-background px-4 py-2">
-			<h5 class="mb-4 text-lg font-semibold">Incomplete</h5>
-			<FlexiTarget key="todo" class="gap-2">
-				<FlexiWidget>Study for exam</FlexiWidget>
-				<FlexiWidget>Research for project</FlexiWidget>
-			</FlexiTarget>
-		</div>
+## Example styling
 
-		<div class="rounded-xl border bg-background px-4 py-2">
-			<h5 class="mb-4 text-lg font-semibold">Done</h5>
-			<FlexiTarget key="done" class="gap-2">
-				<FlexiWidget>Purchase eggs</FlexiWidget>
-				<FlexiWidget>Recharge car</FlexiWidget>
-				<FlexiWidget>Feed the cat</FlexiWidget>
-			</FlexiTarget>
-		</div>
-	</FlexiBoard>
-</div>
-```
+The first board above uses inline CSS. Many later demos use Tailwind utility classes and shadcn theme variables to make widget states visible. Their layout behavior does not require those tools. To reproduce their appearance, configure the [theme setup for your framework](/docs/guides/registry#your-theme-your-source), or replace the utility classes with your own CSS. You do not need to install registry components to use the core board components.
 
-In a Flexiboard, each of these components serves a specific purpose:
+<Only react>
 
-- `FlexiBoard` is the main container for the board, creating the drag-and-drop environment. It isolates the targets and widgets; you can have multiple boards on a single page, but widgets cannot be dragged between different FlexiBoards.
-- `FlexiTarget` is a dropzone and container for widgets. You can store widgets within it in a customisable layout, and you can move widgets between different FlexiTargets of the same board.
-- `FlexiWidget` is the widget itself. These can be moved, resized, and customised in a number of ways. Within a FlexiWidget, you can render content in two ways: either you can use the `children` snippet, or you can use the `component` prop to render any custom component of your choosing. You can also combine them, which is helpful if you want to have a series of consistent looking widgets that can still render their own component.
+Examples that import `clsx` also require that package:
+
+<InstallCommand package="clsx" />
+
+</Only>
+
+When a guide imports an application component or shows a configuration excerpt, keep the named setup from that guide. Copied registry examples require the installation command on their page.

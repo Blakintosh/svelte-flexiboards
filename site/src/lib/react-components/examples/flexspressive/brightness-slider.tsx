@@ -1,0 +1,38 @@
+import { SunMedium } from 'lucide-react';
+import { useState } from 'react';
+
+/**
+ * A gauge softened into a pill: ink fill in a rounded trough. The Svelte
+ * example uses bits-ui's Slider, but the site has no React equivalent, so
+ * this is a native range input laid over the same visuals. Same look, same
+ * keyboard behaviour, one element fewer.
+ */
+export default function BrightnessSlider() {
+	const [value, setValue] = useState(80);
+
+	return (
+		<div className="w-full">
+			<div className="relative mb-1.5 mt-2.5 flex w-full touch-none select-none items-center">
+				<span className="border-rule-soft bg-tint relative h-[26px] w-full grow cursor-pointer overflow-hidden rounded-full border">
+					<span className="bg-ink absolute h-full" style={{ width: `${value}%` }}></span>
+					<span className="text-paper absolute left-0 top-0 p-[5px]">
+						<SunMedium className="size-4" />
+					</span>
+				</span>
+				<span
+					className="bg-fx-accent pointer-events-none absolute block h-9 w-2 rounded-full transition-colors duration-[120ms]"
+					style={{ left: `calc(${value}% - ${value * 0.08}px)` }}
+				></span>
+				<input
+					type="range"
+					min={0}
+					max={100}
+					value={value}
+					aria-label="Brightness"
+					onChange={(event) => setValue(Number(event.target.value))}
+					className="focus-visible:outline-hidden absolute inset-0 h-full w-full cursor-pointer opacity-0"
+				/>
+			</div>
+		</div>
+	);
+}

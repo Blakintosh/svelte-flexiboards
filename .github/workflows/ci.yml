@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [react]
+  pull_request:
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build, test and check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The adapters and the site consume the built packages.
+      - run: pnpm -C packages/core build
+      - run: pnpm -C packages/testing build
+      - run: pnpm -C packages/svelte build
+      - run: pnpm -C packages/react build
+      - run: pnpm check:artifacts
+
+      - name: Unit and component tests
+        run: pnpm -r test
+
+      - name: React adapter types and lint
+        run: pnpm -C packages/react check && pnpm -C packages/react lint
+
+      - name: Svelte adapter check
+        run: pnpm -C packages/svelte check
+
+      - name: Site check (includes generated API tables and Markdown docs)
+        run: pnpm -C site extract-api && pnpm -C site check
+      - name: Lint
+        run: pnpm lint
+
+  package-consumers:
+    name: Packed consumer (${{ matrix.consumer }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        consumer: ['react@18.0.0', 'react@19.2.8', 'svelte@5.20.0', 'svelte@5.38.6']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:packages
+      - name: Install and hydrate packed packages in an isolated consumer
+        env:
+          CONSUMER: ${{ matrix.consumer }}
+        run: pnpm test:consumers "$CONSUMER"
+
+  e2e:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C packages/core build && pnpm -C packages/testing build && pnpm -C packages/svelte build && pnpm -C packages/react build
+      - run: pnpm -C site exec playwright install --with-deps chromium
+      - run: pnpm -C site check:e2e
+      - name: Playwright
+        run: pnpm -C site e2e
+      - name: Standalone Node server
+        run: |
+          candidate_dir="$RUNNER_TEMP/flexiboards-site"
+          pnpm --config.hoist-workspace-packages=false --filter=svelte-flexiboards-docs deploy --prod --legacy "$candidate_dir"
+          node scripts/check-site-artifact.mjs "$candidate_dir"
+          HOST=127.0.0.1 PORT=4174 ORIGIN=http://localhost:4174 node "$candidate_dir/build" > "$RUNNER_TEMP/flexiboards-server.log" 2>&1 &
+          candidate_pid=$!
+          trap 'kill "$candidate_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:4174/healthz > /dev/null; then break; fi
+            sleep 1
+          done
+          if ! node scripts/check-site-server.mjs http://localhost:4174; then
+            cat "$RUNNER_TEMP/flexiboards-server.log"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: site/playwright-report
+          retention-days: 7

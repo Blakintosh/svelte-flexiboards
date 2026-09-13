@@ -10,7 +10,6 @@
 		reviewCount: number;
 		badge?: ProductBadge;
 		category: string;
-		gradient: string;
 		featured: boolean;
 		stock: number;
 	};
@@ -22,11 +21,7 @@
 </script>
 
 <script lang="ts">
-	import { getFlexiwidgetCtx } from 'svelte-flexiboards';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { getFlexiwidgetCtx } from '@flexiboards/svelte';
 	import Grabber from '$lib/components/examples/common/grabber.svelte';
 	import Resizer from '$lib/components/examples/common/resizer.svelte';
 	import Star from 'lucide-svelte/icons/star';
@@ -39,18 +34,41 @@
 
 	let { product, phone = false }: ProductCardProps = $props();
 
+	// The card's overflow menu is a native <details>: the summary is the trigger,
+	// the panel is a plain list of buttons. No JS popover, no roving tabindex.
+	let menuOpen = $state(false);
+
 	const widget = getFlexiwidgetCtx();
 
 	let isWide = $derived(widget.width > 1);
 
-	const badgeVariants: Record<
-		ProductBadge,
-		{ variant: 'default' | 'secondary' | 'destructive'; label: string }
-	> = {
-		sale: { variant: 'destructive', label: 'Sale' },
-		new: { variant: 'default', label: 'New' },
-		bestseller: { variant: 'secondary', label: 'Bestseller' }
-	};
+	// Cards are soft, rounded tiles at rest. Hover deepens the shadow, never
+	// adds a border.
+	const cardClass =
+		'group relative flex h-full overflow-hidden rounded-[14px] border border-rule-soft bg-panel shadow-card transition-shadow duration-[150ms] hover:shadow-card-lg';
+
+	// At rest a card is only its product. Grab, menu and resize chrome fades in on
+	// hover, and on focus-within so keyboard users can still reach it.
+	const chromeClass =
+		'z-10 opacity-0 transition-opacity duration-[120ms] group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none';
+
+	// One badge per card: a live promotion is the only thing worth a fill. The
+	// rest ("Featured", "New", "Bestseller") is demoted to the category line.
+	let discount = $derived(
+		product.originalPrice
+			? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+			: 0
+	);
+	let saleLabel = $derived(discount > 0 ? `Sale −${discount}%` : 'Sale');
+	let qualifier = $derived(
+		product.featured
+			? 'Featured'
+			: product.badge === 'new'
+				? 'New'
+				: product.badge === 'bestseller'
+					? 'Bestseller'
+					: null
+	);
 
 	function formatReviewCount(count: number): string {
 		if (count >= 1000) {
@@ -59,290 +77,220 @@
 		return count.toString();
 	}
 
-	function getStockStatus(stock: number): { label: string; class: string } {
-		if (stock > 50) return { label: 'In Stock', class: 'text-emerald-600' };
-		if (stock > 10) return { label: 'Low Stock', class: 'text-amber-600' };
-		return { label: 'Limited', class: 'text-red-600' };
+	function getStockStatus(stock: number): { label: string; class: string; bar: string } {
+		if (stock > 50) return { label: 'In stock', class: 'text-blue', bar: 'bg-blue' };
+		if (stock > 10) return { label: 'Low stock', class: 'text-body', bar: 'bg-faint' };
+		return { label: 'Limited', class: 'text-fx-accent', bar: 'bg-fx-accent' };
 	}
 
 	let stockStatus = $derived(getStockStatus(product.stock));
+
+	// Duplicate only makes sense on a card wide enough to have been featured.
+	let menuItems = $derived([
+		{ label: 'View', icon: Eye },
+		{ label: 'Edit', icon: PencilLine },
+		...(isWide ? [{ label: 'Duplicate', icon: Copy }] : []),
+		{ label: 'Delete', icon: Trash2, separator: true, danger: true }
+	] as { label: string; icon: typeof Eye; separator?: boolean; danger?: boolean }[]);
 </script>
+
+<!-- Thumbnails are placeholders: a plain recessed stage, never stock imagery. -->
+{#snippet thumbnail(iconSize: string)}
+	<div class="bg-stage absolute inset-0"></div>
+	<div class="absolute inset-0 flex items-center justify-center">
+		<ShoppingCart class="{iconSize} text-faint" />
+	</div>
+{/snippet}
+
+<!-- One star and the number: five glyphs said no more than one did. -->
+{#snippet rating(large: boolean)}
+	<div class="mt-1.5 flex items-center gap-1.5">
+		<Star class="{large ? 'size-3.5' : 'size-3'} fill-ink text-ink" />
+		<span class="text-ink font-mono text-[11px]">{product.rating}</span>
+		<span class="text-faint font-mono text-[11px]">
+			{#if large}
+				· {product.reviewCount.toLocaleString()} reviews · {product.stock} units
+			{:else}
+				({formatReviewCount(product.reviewCount)})
+			{/if}
+		</span>
+		{#if !large}
+			<span class="ml-auto size-1.5 shrink-0 rounded-full {stockStatus.bar}"></span>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet categoryLine()}
+	<p class="text-faint truncate text-[11.5px] font-semibold">
+		{product.category}{qualifier ? ` · ${qualifier}` : ''}
+	</p>
+{/snippet}
+
+<!-- A live promotion is the only thing worth a filled pill. -->
+{#snippet saleBadge(position: string)}
+	{#if product.badge === 'sale'}
+		<span
+			class="absolute {position} bg-fx-accent shadow-card rounded-full px-2.5 py-1 text-[11px] font-bold text-white"
+		>
+			{saleLabel}
+		</span>
+	{/if}
+{/snippet}
+
+{#snippet controls()}
+	<details class="relative" bind:open={menuOpen}>
+		<summary
+			class="text-body hover:bg-tint hover:text-ink flex size-7 cursor-pointer list-none items-center justify-center rounded-full transition-colors duration-[130ms] [&::-webkit-details-marker]:hidden"
+			title="Product actions"
+		>
+			<MoreVertical class="size-4" />
+			<span class="sr-only">Product actions</span>
+		</summary>
+		<div
+			class="border-rule-soft bg-panel shadow-card-lg absolute right-0 top-full z-20 mt-1 w-40 rounded-[12px] border p-1"
+		>
+			{#each menuItems as item (item.label)}
+				{@const Icon = item.icon}
+				{#if item.separator}
+					<div class="bg-rule-faint my-1 h-px"></div>
+				{/if}
+				<button
+					type="button"
+					class="ui hover:bg-tint flex w-full cursor-pointer items-center gap-2 rounded-[8px] px-2 py-1.5 text-left text-[13px] transition-colors duration-[130ms] {item.danger
+						? 'text-fx-accent'
+						: 'text-ink'}"
+					onclick={() => (menuOpen = false)}
+				>
+					<Icon class="size-4" />
+					{item.label}
+				</button>
+			{/each}
+		</div>
+	</details>
+{/snippet}
 
 {#if phone}
 	<!-- Phone: Full-width vertical card -->
-	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+	<div class="{cardClass} flex-col">
+		<div class="absolute left-2 top-2 {chromeClass}">
+			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
-							<MoreVertical class="size-4" />
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Item><Eye class="mr-2 size-4" />View</DropdownMenu.Item>
-					<DropdownMenu.Item><PencilLine class="mr-2 size-4" />Edit</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item class="text-destructive"><Trash2 class="mr-2 size-4" />Delete</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
+			{@render controls()}
 		</div>
 
-		<!-- Image (top) -->
-		<div class="relative h-28 shrink-0">
-			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
-			<div class="absolute inset-0 flex items-center justify-center">
-				<ShoppingCart class="size-12 text-white/20" />
-			</div>
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute top-2 left-2">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
+		<!-- Placeholder (top) -->
+		<div class="border-rule-faint relative h-28 shrink-0 border-b">
+			{@render thumbnail('size-12')}
+			{@render saleBadge('bottom-2 left-2')}
 		</div>
 
 		<!-- Content (bottom) -->
 		<div class="flex min-h-0 flex-1 flex-col p-3">
 			<div class="flex items-center gap-2">
-				<p class="text-muted-foreground text-xs uppercase tracking-wide">{product.category}</p>
-				<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
+				{@render categoryLine()}
+				<span class="text-[11px] font-semibold {stockStatus.class}">{stockStatus.label}</span>
 			</div>
-			<h3 class="mt-1 text-base font-semibold leading-tight">{product.name}</h3>
+			<h3 class="text-ink mt-1 font-serif text-base leading-tight">{product.name}</h3>
 
-			<!-- Rating -->
-			<div class="mt-2 flex items-center gap-1">
-				{#each Array(5) as _, i}
-					<Star
-						class="size-4 {i < Math.round(product.rating)
-							? 'fill-amber-400 text-amber-400'
-							: 'text-muted-foreground/30'}"
-					/>
-				{/each}
-				<span class="text-muted-foreground ml-1 text-xs">
-					{product.rating} ({formatReviewCount(product.reviewCount)})
-				</span>
-			</div>
+			{@render rating(false)}
 
-			<!-- Price -->
-			<div class="mt-auto pt-2">
-				<div class="flex items-baseline gap-2">
-					<span class="text-xl font-bold">${product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="text-muted-foreground text-sm line-through">${product.originalPrice.toFixed(2)}</span>
-						<Badge variant="secondary" class="text-xs">
-							-{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-						</Badge>
-					{/if}
-				</div>
+			<!-- Price sits on a hairline shelf at the foot of the card. -->
+			<div class="border-rule-faint mt-auto flex items-baseline gap-2 border-t pt-2.5">
+				<span class="text-ink font-mono text-xl">£{product.price.toFixed(2)}</span>
+				{#if product.originalPrice}
+					<span class="text-faint font-mono text-[11px] line-through">
+						£{product.originalPrice.toFixed(2)}
+					</span>
+				{/if}
 			</div>
 		</div>
-	</Card.Root>
+	</div>
 {:else if isWide}
-	<!-- Wide card layout: horizontal -->
-	<Card.Root class="group relative flex h-full flex-row overflow-hidden transition-shadow hover:shadow-md">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+	<!-- Wide (featured) card layout: horizontal -->
+	<div class="{cardClass} flex-row">
+		<div class="absolute left-2 top-2 {chromeClass}">
+			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
-							<MoreVertical class="size-4" />
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Item>
-						<Eye class="mr-2 size-4" />
-						View Details
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<PencilLine class="mr-2 size-4" />
-						Edit Product
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<Copy class="mr-2 size-4" />
-						Duplicate
-					</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item class="text-destructive">
-						<Trash2 class="mr-2 size-4" />
-						Delete
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
+			{@render controls()}
 		</div>
 
-		<!-- Resizer - bottom right -->
-		<div class="absolute bottom-2 right-2 z-10">
-			<Resizer size={16} class="text-muted-foreground" />
+		<div class="absolute bottom-2 right-2 {chromeClass}">
+			<Resizer size={16} />
 		</div>
 
-		<!-- Image placeholder (left) -->
-		<div class="relative w-2/5 shrink-0">
-			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
-			<div class="absolute inset-0 flex items-center justify-center">
-				<ShoppingCart class="size-16 text-white/20" />
-			</div>
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute top-3 left-3">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
-			{#if product.featured}
-				<Badge variant="outline" class="absolute bottom-3 left-3 border-white/30 bg-black/20 text-white backdrop-blur-sm">
-					Featured
-				</Badge>
-			{/if}
+		<!-- Placeholder (left) -->
+		<div class="border-rule-faint relative w-2/5 shrink-0 border-r">
+			{@render thumbnail('size-16')}
+			{@render saleBadge('top-3 left-3')}
 		</div>
 
 		<!-- Content (right) -->
-		<div class="flex flex-1 flex-col p-4 pr-12">
-			<div class="flex items-center gap-2">
-				<p class="text-muted-foreground text-xs font-medium uppercase tracking-wide">{product.category}</p>
-				<span class="text-muted-foreground/50">·</span>
-				<span class="text-xs {stockStatus.class}">{stockStatus.label}</span>
-			</div>
-			<h3 class="mt-1 truncate text-lg leading-tight font-semibold">{product.name}</h3>
+		<div class="flex min-h-0 flex-1 flex-col p-4 pr-12">
+			{@render categoryLine()}
+			<h3 class="text-ink mt-1.5 truncate font-serif text-[19px] leading-tight">{product.name}</h3>
 
-			<!-- Rating -->
-			<div class="mt-2 flex items-center gap-1">
-				{#each Array(5) as _, i}
-					<Star
-						class="size-4 {i < Math.round(product.rating)
-							? 'fill-amber-400 text-amber-400'
-							: 'text-muted-foreground/30'}"
-					/>
-				{/each}
-				<span class="text-muted-foreground ml-1 text-xs">
-					{product.rating} ({product.reviewCount.toLocaleString()} reviews)
-				</span>
-			</div>
+			{@render rating(true)}
 
-			<!-- Stock indicator -->
-			<div class="mt-2 flex items-center gap-2">
-				<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+			<!-- Stock bar is reserved for the featured card, where there is room to read it. -->
+			<div class="mt-3 flex items-center gap-2">
+				<div class="bg-tint h-1.5 flex-1 overflow-hidden rounded-full">
 					<div
-						class="h-full rounded-full transition-all {product.stock > 50
-							? 'bg-emerald-500'
-							: product.stock > 10
-								? 'bg-amber-500'
-								: 'bg-red-500'}"
+						class="h-full rounded-full {stockStatus.bar}"
 						style="width: {Math.min(product.stock, 100)}%"
 					></div>
 				</div>
-				<span class="text-muted-foreground text-xs">{product.stock} units</span>
+				<span class="text-[11px] font-semibold {stockStatus.class}">{stockStatus.label}</span>
 			</div>
 
-			<!-- Price -->
-			<div class="mt-auto pt-4">
-				<div class="flex items-baseline gap-2">
-					<span class="text-2xl font-bold">${product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="text-muted-foreground text-sm line-through">
-							${product.originalPrice.toFixed(2)}
-						</span>
-						<Badge variant="secondary" class="text-xs">
-							-{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-						</Badge>
-					{/if}
-				</div>
+			<div class="border-rule-faint mt-auto flex items-baseline gap-2.5 border-t pt-3">
+				<span class="text-ink font-mono text-2xl">£{product.price.toFixed(2)}</span>
+				{#if product.originalPrice}
+					<span class="text-faint font-mono text-xs line-through">
+						£{product.originalPrice.toFixed(2)}
+					</span>
+				{/if}
 			</div>
 		</div>
-	</Card.Root>
+	</div>
 {:else}
 	<!-- Narrow card layout: vertical (tablet/desktop 1x1) -->
-	<Card.Root class="group relative flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
-		<!-- Grab handle - top left -->
-		<div class="absolute top-2 left-2 z-10">
-			<Grabber size={16} class="bg-background/50 text-muted-foreground" />
+	<div class="{cardClass} flex-col">
+		<div class="absolute left-2 top-2 {chromeClass}">
+			<Grabber size={16} class="bg-paper" />
 		</div>
 
-		<!-- Controls - top right -->
-		<div class="absolute top-2 right-2 z-10">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<Button variant="ghost" size="icon" class="size-7 bg-background/50 text-muted-foreground backdrop-blur-sm" {...props}>
-							<MoreVertical class="size-4" />
-						</Button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<DropdownMenu.Item>
-						<Eye class="mr-2 size-4" />
-						View
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<PencilLine class="mr-2 size-4" />
-						Edit
-					</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item class="text-destructive">
-						<Trash2 class="mr-2 size-4" />
-						Delete
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+		<div class="bg-paper absolute right-2 top-2 rounded-full {chromeClass}">
+			{@render controls()}
 		</div>
 
-		<!-- Resizer - bottom right -->
-		<div class="absolute bottom-2 right-2 z-10">
-			<Resizer size={16} class="text-muted-foreground" />
+		<div class="absolute bottom-2 right-2 {chromeClass}">
+			<Resizer size={16} />
 		</div>
 
-		<!-- Image placeholder (top) -->
-		<div class="relative h-24 shrink-0 lg:h-28">
-			<div class="absolute inset-0 bg-gradient-to-br {product.gradient}"></div>
-			<div class="absolute inset-0 flex items-center justify-center">
-				<ShoppingCart class="size-10 text-white/20" />
-			</div>
-			{#if product.badge}
-				<Badge variant={badgeVariants[product.badge].variant} class="absolute top-2 left-2">
-					{badgeVariants[product.badge].label}
-				</Badge>
-			{/if}
+		<!-- Placeholder (top) -->
+		<div class="border-rule-faint relative h-24 shrink-0 border-b lg:h-28">
+			{@render thumbnail('size-10')}
+			{@render saleBadge('bottom-2 left-2')}
 		</div>
 
 		<!-- Content (bottom) -->
-		<div class="flex min-h-0 flex-1 flex-col px-2.5 pt-1.5 pb-2">
-			<div class="min-w-0 pr-6">
-				<div class="flex items-center gap-1.5">
-					<p class="text-muted-foreground truncate text-[10px] uppercase tracking-wide">{product.category}</p>
-					<span class="size-1.5 shrink-0 rounded-full {product.stock > 50 ? 'bg-emerald-500' : product.stock > 10 ? 'bg-amber-500' : 'bg-red-500'}"></span>
-				</div>
-				<h3 class="line-clamp-2 text-sm font-semibold leading-tight">{product.name}</h3>
+		<div class="flex min-h-0 flex-1 flex-col px-3 pb-2 pt-2">
+			<div class="min-w-0">
+				{@render categoryLine()}
+				<h3 class="text-ink mt-0.5 line-clamp-2 font-serif text-[13px] leading-tight">
+					{product.name}
+				</h3>
 			</div>
 
-			<!-- Rating -->
-			<div class="mt-1.5 flex items-center gap-1">
-				<Star class="size-3 fill-amber-400 text-amber-400" />
-				<span class="text-xs font-medium">{product.rating}</span>
-				<span class="text-muted-foreground text-xs">({formatReviewCount(product.reviewCount)})</span>
-			</div>
+			{@render rating(false)}
 
-			<!-- Price -->
-			<div class="mt-auto">
-				<div class="flex items-baseline gap-1">
-					<span class="text-base font-bold">${product.price.toFixed(2)}</span>
-					{#if product.originalPrice}
-						<span class="text-muted-foreground text-[10px] line-through">
-							${product.originalPrice.toFixed(2)}
-						</span>
-					{/if}
-				</div>
+			<div class="border-rule-faint mt-auto border-t pt-2">
+				<span class="text-ink font-mono text-base">£{product.price.toFixed(2)}</span>
 			</div>
 		</div>
-	</Card.Root>
+	</div>
 {/if}
